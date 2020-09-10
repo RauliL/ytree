@@ -3067,7 +3067,7 @@ static void ListJump( DirEntry * dir_entry, const char *str )
     char *newStr = NULL;
     FileEntry * fe_ptr = NULL;
     int i=0, j=0, n=0, start_x=0, ic=0, tmp2=0;
-    char * jumpmsg = "Press initial of file to jump to... ";
+    const char* jumpmsg = "Press initial of file to jump to... ";
 
     ClearHelp();
     MvAddStr( LINES - 2, 1, jumpmsg );
@@ -3099,7 +3099,7 @@ static void ListJump( DirEntry * dir_entry, const char *str )
     /* index of current entry in list */
     tmp2 = (incremental && n == 0) ? 0 : dir_entry->start_file + dir_entry->cursor_pos;
 
-    if( tmp2 == file_count - 1 )
+    if (tmp2 == static_cast<int>(file_count - 1))
     {
         ClearHelp();
         MvAddStr( LINES - 2, 1, "Last entry!");
@@ -3112,14 +3112,14 @@ static void ListJump( DirEntry * dir_entry, const char *str )
         return;
     }
 
-    for( i=tmp2; i < file_count; i++ )
+    for (i = tmp2; i < static_cast<int>(file_count); ++i)
     {
         fe_ptr = file_entry_list[i].file;
 	if(!strncasecmp(newStr, fe_ptr->name, n+1))
           break;
     }
 
-    if ( i == file_count )
+    if (i == static_cast<int>(file_count))
     {
         ClearHelp();
         MvAddStr( LINES - 2, 1, "No match!");

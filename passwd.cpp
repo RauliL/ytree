@@ -41,14 +41,14 @@ int ReadPasswdEntries(void)
 
   int i;
   struct passwd *pwd_ptr;
-  
+
 
   for( passwd_count=0; getpwent(); passwd_count++ )
     ;
 
   setpwent();
 
-  if( passwd_array ) 
+  if( passwd_array )
   {
     free( passwd_array );
     passwd_array = NULL;
@@ -60,7 +60,7 @@ int ReadPasswdEntries(void)
   }
   else
   {
-    if( ( passwd_array = (PasswdEntry *) calloc( passwd_count, 
+    if( ( passwd_array = (PasswdEntry *) calloc( passwd_count,
 					         sizeof( PasswdEntry )
 					       ) ) == NULL )
     {
@@ -101,9 +101,6 @@ int ReadPasswdEntries(void)
 
   return( 0 );
 }
-
-
-
 
 char *GetPasswdName(unsigned int uid)
 {
@@ -161,37 +158,23 @@ char *GetDisplayPasswdName(unsigned int uid)
 
 }
 
-
-
-
-int GetPasswdUid(char *name)
+int GetPasswdUid(const char* name)
 {
 #ifdef WIN32
+  struct passwd* pwd_ptr = getpwnam(name);
 
-  struct passwd *pwd_ptr;
-
-  pwd_ptr = getpwnam( name );
-
-  if( pwd_ptr ) return( pwd_ptr->pw_uid );
-  else          return( -1 );
-
+  return pwd_ptr ? pwd_ptr->pw_uid : -1;
 #else
-
   int i;
 
-  for( i=0; i < (int)passwd_count; i++ )
+  for(i = 0; i < static_cast<int>(passwd_count); ++i)
   {
-    if( !strcmp( name, passwd_array[i].name ) )
-      return( (int) passwd_array[i].uid );
+    if (!std::strcmp(name, passwd_array[i].name))
+    {
+      return static_cast<int>(passwd_array[i].uid);
+    }
   }
 
-  return( -1 );
-
+  return -1;
 #endif /* WIN32 */
-
 }
-
-
-
-
-

@@ -20,7 +20,7 @@ static int GetStatFromRPM(char *rpm_line, char *name, struct stat *stat);
 /*---------------------------------*/
 
 int ReadTreeFromRPM(DirEntry *dir_entry, FILE *f)
-{ 
+{
   char rpm_line[RPM_LINE_LENGTH + 1];
   char path_name[PATH_LENGTH +1];
   struct stat stat;
@@ -48,7 +48,7 @@ int ReadTreeFromRPM(DirEntry *dir_entry, FILE *f)
       {
         /* Directory */
         /*-----------*/
-        
+
 #ifdef DEBUG
   fprintf( stderr, "DIR: %s\n", path_name );
 #endif
@@ -67,7 +67,7 @@ int ReadTreeFromRPM(DirEntry *dir_entry, FILE *f)
       {
         /* File */
         /*------*/
-  
+
 #ifdef DEBUG
   fprintf( stderr, "FILE: \"%s\"\n", path_name );
 #endif
@@ -75,7 +75,7 @@ int ReadTreeFromRPM(DirEntry *dir_entry, FILE *f)
       }
     }
   }
-  
+
   if( dir_flag == FALSE )
   {
     statistic.disk_total_directories++;
@@ -91,7 +91,8 @@ int ReadTreeFromRPM(DirEntry *dir_entry, FILE *f)
 
 static int GetStatFromRPM(char *rpm_line, char *name, struct stat *stat)
 {
-  char *t, *old;
+  const char* t;
+  char* old;
   int  id;
 
 
@@ -122,7 +123,7 @@ static int GetStatFromRPM(char *rpm_line, char *name, struct stat *stat)
 
   stat->st_mtime = atoi( t );
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
-  
+
   /* M5 */
   if(strlen(t) > 20) {
     t = Strtok_r( NULL, " \t/", &old ); if( t == NULL ) return( -1 );
@@ -150,7 +151,7 @@ static int GetStatFromRPM(char *rpm_line, char *name, struct stat *stat)
   id = GetGroupId( t );
   if( id == -1 ) id = atoi( t );
   stat->st_gid = (unsigned) id;
-  
+
 
   if( S_ISLNK( stat->st_mode ) )
   {

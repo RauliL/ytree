@@ -292,7 +292,7 @@ char* tilde_expand(const char* string)
 static char* get_home_dir()
 {
   static char* home_dir = nullptr;
-  struct passwd* entry;
+  struct passwd* entry = nullptr;
 
   if (home_dir)
   {

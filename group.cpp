@@ -42,14 +42,14 @@ int ReadGroupEntries(void)
 
   int i;
   struct group *grp_ptr;
-  
+
 
   for( group_count=0; getgrent(); group_count++ )
     ;
 
   setgrent();
 
-  if( group_array ) 
+  if( group_array )
   {
     free( group_array );
     group_array = NULL;
@@ -61,7 +61,7 @@ int ReadGroupEntries(void)
   }
   else
   {
-    if( ( group_array = (GroupEntry *) calloc( group_count, 
+    if( ( group_array = (GroupEntry *) calloc( group_count,
 					       sizeof( GroupEntry )
 					     ) ) == NULL )
     {
@@ -84,10 +84,10 @@ int ReadGroupEntries(void)
     }
     else
     {
-      if(errno == 0) 
+      if(errno == 0)
       {
 	group_count = i;  /* Not sure why this can happen, but continue... */
-        break; 
+        break;
       }
 
       ERROR_MSG( "Getgrent Failed" );
@@ -162,32 +162,21 @@ char *GetDisplayGroupName(unsigned int gid)
 
 }
 
-
-
-int GetGroupId(char *name)
+int GetGroupId(const char* name)
 {
 #ifdef WIN32
+  struct group* group_ptr = getgrnam(name);
 
-  struct group *group_ptr;
-
-  group_ptr = getgrnam( name );
-
-  if( group_ptr ) return( group_ptr->gr_gid );
-  else            return( -1 );
-
+  return group_ptr ? group_ptr->gr_gid : -1;
 #else
-
-  int i;
-
-  for( i=0; i < (int)group_count; i++ )
+  for(int i = 0; i < static_cast<int>(group_count); ++i)
   {
-    if( !strcmp( name, group_array[i].name ) )
-      return( (int) group_array[i].gid );
+    if (!std::strcmp(name, group_array[i].name))
+    {
+      return static_cast<int>(group_array[i].gid);
+    }
   }
-  return( -1 );
 
+  return -1;
 #endif /* WIN32 */
-
 }
-
-

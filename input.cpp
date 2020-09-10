@@ -72,7 +72,8 @@ char *StrRight(const char *str, size_t count)
   p = tmp;
   i = 0;
   rez = NULL;
-  while ( (p - tmp) < byte_len ) {
+  while ((p - tmp) < static_cast<long>(byte_len))
+  {
     if (i == (char_len - count) ) {
       rez = Strdup(p);
     }
@@ -89,27 +90,35 @@ char *StrRight(const char *str, size_t count)
   return(rez);
 }
 
-int StrVisualLength(const char *str)
+std::size_t StrVisualLength(const char* str)
 {
-#ifdef WITH_UTF8
+#if defined(WITH_UTF8)
   mbstate_t state;
-  int len = 0;
+  std::ssize_t len = 0;
 
   memset(&state, '\0', sizeof(state));
-  len = mbsrtowcs(NULL, &str, strlen(str), &state);
-  if(len < 0) {
-    /* Invalid multibyte sequence */
-    len = strlen(str);
+  len = mbsrtowcs(nullptr, &str, std::strlen(str), &state);
+  if (len < 0)
+  {
+    // Invalid multibyte sequence.
+    return std::strlen(str);
   }
 
-  return len;
+  return static_cast<std::size_t>(len);
 #else
-  return(strlen(str));
+  return std::strlen(str);
 #endif
 }
 
 
-int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
+int InputString(
+  char *s,
+  int y,
+  int x,
+  int cursor_pos,
+  std::size_t length,
+  const std::string& term
+)
                                /* Ein- und Ausgabestring              */
                                /* Position auf Bildschirm             */
                                /* max. Laenge                         */
@@ -117,7 +126,7 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
 {
   int p;                       /* Aktuelle Position                   */
   int c1;                      /* Gelesenes Zeichen                   */
-  int i;                       /* Laufvariable                        */
+                               /* Laufvariable                        */
   char *pp;
   BOOL len_flag = FALSE;
   char path[PATH_LENGTH + 1];
@@ -134,8 +143,10 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
   MvAddStr( y, x, s );
   leaveok(stdscr, FALSE);
 
-  for(i=strlen(s); i < length; i++)
-    addch( '_' );
+  for(std::size_t i = std::strlen(s); i < length; ++i)
+  {
+    addch('_');
+  }
 
   p = cursor_pos;
 
@@ -165,7 +176,7 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
                               else
                                 beep();
                               break;
-        case KEY_RIGHT      : if( p < StrVisualLength(s) )
+        case KEY_RIGHT      : if( p < static_cast<int>(StrVisualLength(s) ))
                                 p++;
                               else
                                 beep();
@@ -182,8 +193,10 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
 			       free(ls);
 			       p = StrVisualLength(s);
                                MvAddStr( y, x, s );
-                               for(i=p; i < length; i++)
-                                 addch( '_' );
+                               for(std::size_t i = p; i < length; ++i)
+                               {
+                                 addch('_');
+                               }
                                RefreshWindow( stdscr );
                                doupdate();
                              }
@@ -193,7 +206,7 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
                               break;
         case KEY_END        : p = StrVisualLength( s );
                               break;
-        case KEY_DC         : if( p < StrVisualLength(s) )
+        case KEY_DC         : if( p < static_cast<int>(StrVisualLength(s) ))
                               {
 			        ls = StrLeft(s, p);
 				rs = StrRight(s, StrVisualLength(s) - p - 1);
@@ -222,11 +235,16 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
                               else
                                 beep();
                               break;
-        case KEY_DL         : for(i=0; i < StrVisualLength(s) - p; i++) addch( '_' );
-			      ls = StrLeft(s, p);
-			      strcpy(s, ls);
-			      free(ls);
-                              break;
+        case KEY_DL:
+          for(std::size_t i = 0; i < StrVisualLength(s) - p; ++i)
+          {
+            addch('_');
+          }
+          ls = StrLeft(s, p);
+          strcpy(s, ls);
+          free(ls);
+          break;
+
 	case KEY_EIC        :
         case KEY_IC         : insert_flag ^= TRUE;
                               break;
@@ -241,7 +259,10 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
 			       p = StrVisualLength(s);
 			       free(pp);
                                MvAddStr( y, x, s );
-                               for(i=p; i < length; i++) addch( '_' );
+                               for(std::size_t i = p; i < length; ++i)
+                               {
+                                 addch('_');
+                               }
                                RefreshWindow( stdscr );
                                doupdate();
                              }
@@ -263,7 +284,10 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
 				free(ls);
 			        p = StrVisualLength(s);
                                 MvAddStr( y, x, s );
-                                for(i=p; i < length; i++) addch( '_' );
+                                for (std::size_t i = p; i < length; ++i)
+                                {
+                                  addch('_');
+                                }
                                 RefreshWindow( stdscr );
                                 doupdate();
                               }
@@ -278,7 +302,10 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
       if (strlen(sbuf) > 0) {
        if ( insert_flag ) {
   	    /* append symbol */
-	    if ( p >= StrVisualLength(s)) strcat(s, sbuf);
+	    if (p >= static_cast<int>(StrVisualLength(s)))
+      {
+        std::strcat(s, sbuf);
+      }
 	    else {
 	      /* insert symbol at cursor position */
 	      if ( p > 0 ) ls = StrLeft(s, p);
@@ -292,7 +319,10 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
 	    }
           } else {
             /* owerwrite symbol at cursor position */
-	    if ( p > StrVisualLength(s) - 1) strcat(s, sbuf);
+	    if (p > static_cast<int>(StrVisualLength(s)) - 1)
+      {
+        std::strcat(s, sbuf);
+      }
 	    else {
   	      if (p > 0) ls = StrLeft(s, p);
 	      else ls = Strdup("");
@@ -322,8 +352,10 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
   p = strlen( s );
   move( y, x + p );
 
-  for(i=0; i < length - p; i++ )
-   addch( ' ' );
+  for(std::size_t i = 0; i < length - p; ++i)
+  {
+    addch(' ');
+  }
 
   move( y, x );
   leaveok( stdscr, TRUE);

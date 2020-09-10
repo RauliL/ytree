@@ -253,11 +253,12 @@ FNC_XIT:
   return( result );
 }
 
-
-
-
-
-int GetCopyParameter(char *from_file, BOOL path_copy, char *to_file, char *to_dir)
+int GetCopyParameter(
+  const char* from_file,
+  bool path_copy,
+  char* to_file,
+  char* to_dir
+)
 {
   char buffer[PATH_LENGTH + 1];
 

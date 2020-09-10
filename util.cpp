@@ -336,30 +336,25 @@ void PrintSpecialString(
   }
 }
 
-
-void Print(WINDOW *win, int y, int x, char *str, int color)
+void Print(WINDOW* win, int y, int x, const std::string& str, int color)
 {
- int ch;
-
-  if(x < 0 || y < 0) {
-     /* screen too small */
-    return;
+  if (x < 0 || y < 0)
+  {
+    return; // Screen too small.
   }
   wmove(win, y, x);
-  for( ; *str; str++ )
+  for (auto ch : str)
   {
-    ch = PRINT((int) *str);
-
+    ch = PRINT(ch);
 #ifdef COLOR_SUPPORT
-    wattrset( win, COLOR_PAIR(color) | A_BOLD);
+    wattrset(win, COLOR_PAIR(color) | A_BOLD);
 #endif /* COLOR_SUPPORT */
     waddch(win, ch );
 #ifdef COLOR_SUPPORT
-    wattrset( win, 0);
+    wattrset(win, 0);
 #endif /* COLOR_SUPPORT */
   }
 }
-
 
 void PrintOptions(WINDOW* win, int y, int x, const std::string& str)
 {
@@ -692,10 +687,10 @@ char *getcwd(char *dest, int len)
 
 #endif
 
-
-void NormPath( char *in_path, char *out_path )
+void NormPath(const char* in_path, char* out_path)
 {
-  char *s, *d;
+  const char* s;
+  char *d;
   char *old, *opath;
   int  level;
   char *in_path_dup;
@@ -1073,28 +1068,14 @@ int GetUserFileEntryLength( int max_filename_len, int max_linkname_len, const ch
   return(len);
 }
 
-
-LONGLONG AtoLL(char *cptr)
+std::int64_t AtoLL(const char* cptr)
 {
-  LONGLONG ll;
+  long long int ll;
 
-#ifdef HAS_LONGLONG
+  std::sscanf(cptr, "%lld", &ll);
 
-  sscanf(cptr, "%lld", &ll);
-
-#else
-#ifdef __QNX__
-  sscanf(cptr, "%ld", &ll);
-#else
-  sscanf(ll, "%ld", cptr);
-#endif
-#endif
-
-  return(ll);
+  return ll;
 }
-
-
-
 
 #ifndef HAVE_STRERROR
 const char *StrError(int errnum)
