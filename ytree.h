@@ -13,6 +13,7 @@
 #include <cmath>
 #include <cctype>
 #include <cstdio>
+#include <optional>
 #include <string>
 
 #if defined(__OpenBSD__) || defined(__NetBSD__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__APPLE__)
@@ -950,13 +951,13 @@ extern char *GetAttributes(unsigned short modus, char *buffer);
 extern void SwitchToSmallFileWindow(void);
 extern void SwitchToBigFileWindow(void);
 extern int  ReadGroupEntries(void);
-extern char *GetGroupName(unsigned int gid);
-extern char *GetDisplayGroupName(unsigned int gid);
-int GetGroupId(const char*);
+std::optional<std::string> GetGroupName(unsigned int);
+std::optional<std::string> GetDisplayGroupName(unsigned int);
+std::optional<int> GetGroupId(const std::string&);
 extern int  ReadPasswdEntries(void);
-extern char *GetPasswdName(unsigned int uid);
-extern char *GetDisplayPasswdName(unsigned int uid);
-int GetPasswdUid(const char*);
+std::optional<std::string> GetPasswdName(unsigned int);
+std::optional<std::string> GetDisplayPasswdName(unsigned int uid);
+std::optional<int> GetPasswdUid(const std::string&);
 extern char *GetFileNamePath(FileEntry *file_entry, char *buffer);
 extern char *GetRealFileNamePath(FileEntry *file_entry, char *buffer);
 extern int  SystemCall(char *command_line);

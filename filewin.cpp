@@ -431,71 +431,65 @@ static int SortByOwner(const void* a, const void* b)
 {
   const auto e1 = static_cast<const FileEntryList*>(a);
   const auto e2 = static_cast<const FileEntryList*>(b);
-  char *o1, *o2;
-  char n1[10], n2[10];
+  std::string o1;
+  std::string o2;
 
-  o1 = GetPasswdName( e1->file->stat_struct.st_uid );
-  o2 = GetPasswdName( e2->file->stat_struct.st_uid );
-
-  if( o1 == NULL )
+  if (const auto result = GetPasswdName(e1->file->stat_struct.st_uid))
   {
-    (void) sprintf( n1, "%d", (int) e1->file->stat_struct.st_uid );
-    o1 = n1;
+    o1 = *result;
+  } else {
+    o1 = std::to_string(e1->file->stat_struct.st_uid);
+  }
+  if (const auto result = GetPasswdName(e2->file->stat_struct.st_uid))
+  {
+    o2 = *result;
+  } else {
+    o2 = std::to_string(e2->file->stat_struct.st_uid);
   }
 
-  if( o2 == NULL )
-  {
-    (void) sprintf( n2, "%d", (int) e2->file->stat_struct.st_uid );
-    o2 = n2;
-  }
   if (do_case)
-     if (order)
-        return( strcmp( o1, o2 ) );
-     else
-        return( - (strcmp( o1, o2 ) ) );
-  else
-     if (order)
-        return( strcasecmp( o1, o2 ) );
-     else
-        return( - (strcasecmp( o1, o2 ) ) );
+  {
+    return order ? o1.compare(o2) : -o1.compare(o2);
+  }
+  else if (order)
+  {
+    return strcasecmp(o1.c_str(), o2.c_str());
+  } else {
+    return -strcasecmp(o1.c_str(), o2.c_str());
+  }
 }
-
-
 
 static int SortByGroup(const void* a, const void* b)
 {
   const auto e1 = static_cast<const FileEntryList*>(a);
   const auto e2 = static_cast<const FileEntryList*>(b);
-  char *g1, *g2;
-  char n1[10], n2[10];
+  std::string g1;
+  std::string g2;
 
-  g1 = GetGroupName( e1->file->stat_struct.st_gid );
-  g2 = GetGroupName( e2->file->stat_struct.st_gid );
-
-  if( g1 == NULL )
+  if (const auto result = GetGroupName(e1->file->stat_struct.st_gid))
   {
-    (void) sprintf( n1, "%d", (int) e1->file->stat_struct.st_uid );
-    g1 = n1;
+    g1 = *result;
+  } else {
+    g1 = std::to_string(static_cast<int>(e1->file->stat_struct.st_gid));
+  }
+  if (const auto result = GetGroupName(e2->file->stat_struct.st_gid))
+  {
+    g2 = *result;
+  } else {
+    g2 = std::to_string(static_cast<int>(e2->file->stat_struct.st_gid));
   }
 
-  if( g2 == NULL )
-  {
-    (void) sprintf( n2, "%d", (int) e2->file->stat_struct.st_uid );
-    g2 = n2;
-  }
   if (do_case)
-     if (order)
-        return( strcmp( g1, g2 ) );
-     else
-        return( - (strcmp( g1, g2 ) ) );
-  else
-     if (order)
-        return( strcasecmp( g1, g2 ) );
-     else
-        return( - (strcasecmp( g1, g2 ) ) );
+  {
+    return order ? g1.compare(g2) : -g1.compare(g2);
+  }
+  else if (order)
+  {
+    return strcasecmp(g1.c_str(), g2.c_str());
+  } else {
+    return -strcasecmp(g1.c_str(), g2.c_str());
+  }
 }
-
-
 
 void SetKindOfSort(int new_kind_of_sort)
 {
@@ -591,10 +585,8 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   FileEntry *fe_ptr;
   static char *line_buffer = NULL;
   static int  old_cols = -1;
-  char owner[OWNER_NAME_MAX + 1];
-  char group[GROUP_NAME_MAX + 1];
-  char *owner_name_ptr;
-  char *group_name_ptr;
+  std::string owner_name;
+  std::string group_name;
   int  ef_window_width;
   const char* sym_link_name = nullptr;
   char type_of_file = ' ';
@@ -730,20 +722,18 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		                          attributes
 				        );
 
-                    owner_name_ptr = GetDisplayPasswdName(fe_ptr->stat_struct.st_uid);
-                    group_name_ptr = GetDisplayGroupName(fe_ptr->stat_struct.st_gid);
-
-		    if( owner_name_ptr == NULL )
-		    {
-		      (void) sprintf( owner, "%d", (int) fe_ptr->stat_struct.st_uid );
-		      owner_name_ptr = owner;
-		    }
-		    if( group_name_ptr == NULL )
-		    {
-		      (void) sprintf( group, "%d", (int) fe_ptr->stat_struct.st_gid );
-		      group_name_ptr = group;
-		    }
-
+        if (const auto result = GetDisplayPasswdName(fe_ptr->stat_struct.st_uid))
+        {
+          owner_name = *result;
+        } else {
+          owner_name = std::to_string(fe_ptr->stat_struct.st_uid);
+        }
+        if (const auto result = GetDisplayGroupName(fe_ptr->stat_struct.st_gid))
+        {
+          group_name = *result;
+        } else {
+          group_name = std::to_string(static_cast<int>(fe_ptr->stat_struct.st_gid));
+        }
                     if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
 		    {
 #ifdef HAS_LONGLONG
@@ -757,8 +747,8 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      type_of_file,
 				      fe_ptr->name,
 				      (LONGLONG)fe_ptr->stat_struct.st_ino,
-				      owner_name_ptr,
-				      group_name_ptr,
+				      owner_name.c_str(),
+				      group_name.c_str(),
 				      sym_link_name
 				    );
 #else
@@ -772,8 +762,8 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      type_of_file,
 				      fe_ptr->name,
 				      (int)fe_ptr->stat_struct.st_ino,
-				      owner_name_ptr,
-				      group_name_ptr,
+				      owner_name.c_str(),
+				      group_name.c_str(),
 				      sym_link_name
 				    );
 #endif
@@ -790,8 +780,8 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      type_of_file,
 				      fe_ptr->name,
 				      (LONGLONG)fe_ptr->stat_struct.st_ino,
-				      owner_name_ptr,
-				      group_name_ptr
+				      owner_name.c_str(),
+				      group_name.c_str()
 				    );
 #else
                       (void) sprintf( format, "%%c%%c%%%c%ds %%8u  %%-12s  %%-12s",
@@ -803,8 +793,8 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      type_of_file,
 				      fe_ptr->name,
 				      (int)fe_ptr->stat_struct.st_ino,
-				      owner_name_ptr,
-				      group_name_ptr
+				      owner_name.c_str(),
+				      group_name.c_str()
 				    );
 #endif
 

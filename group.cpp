@@ -103,80 +103,59 @@ int ReadGroupEntries(void)
   return( 0 );
 }
 
-
-
-
-char *GetGroupName(unsigned int gid)
+std::optional<std::string> GetGroupName(unsigned int gid)
 {
-#ifdef WIN32
+#if defined(WIN32)
+  const auto group_ptr = getgrgid(gid);
 
-  struct group *group_ptr;
-
-  group_ptr = getgrgid( gid );
-
-  if( group_ptr ) return( group_ptr->gr_name );
-  else            return( NULL );
-
+  return group_ptr ? group_ptr->gr_name : std::nullopt;
 #else
-
-  int i;
-
-  for( i=0; i < (int)group_count; i++ )
+  for (int i = 0; i < static_cast<int>(group_count); ++i)
   {
-    if( group_array[i].gid == (int)gid )
-      return( group_array[i].name );
+    if (group_array[i].gid == static_cast<int>(gid))
+    {
+      return group_array[i].name;
+    }
   }
 
-  return( NULL );
-
-#endif /* WIN32 */
-
+  return std::nullopt;
+#endif
 }
 
-
-
-char *GetDisplayGroupName(unsigned int gid)
+std::optional<std::string> GetDisplayGroupName(unsigned int gid)
 {
-#ifdef WIN32
+#if defined(WIN32)
+  const auto group_ptr = getgrgid(gid);
 
-  struct group *group_ptr;
-
-  group_ptr = getgrgid( gid );
-
-  if( group_ptr ) return( group_ptr->gr_name );
-  else            return( NULL );
-
+  return group_ptr ? group_ptr->gr_name : str::nullopt;
 #else
-
-  int i;
-
-  for( i=0; i < (int)group_count; i++ )
+  for (int i = 0; i < static_cast<int>(group_count); ++i)
   {
-    if( group_array[i].gid == (int)gid )
-      return( group_array[i].display_name );
+    if (group_array[i].gid == static_cast<int>(gid))
+    {
+      return group_array[i].display_name;
+    }
   }
 
-  return( NULL );
-
-#endif /* WIN32 */
-
+  return std::nullopt;
+#endif
 }
 
-int GetGroupId(const char* name)
+std::optional<int> GetGroupId(const std::string& name)
 {
 #ifdef WIN32
-  struct group* group_ptr = getgrnam(name);
+  const auto group_ptr = getgrnam(name);
 
-  return group_ptr ? group_ptr->gr_gid : -1;
+  return group_ptr ? group_ptr->gr_gid : std::nullopt;
 #else
   for(int i = 0; i < static_cast<int>(group_count); ++i)
   {
-    if (!std::strcmp(name, group_array[i].name))
+    if (!name.compare(group_array[i].name))
     {
       return static_cast<int>(group_array[i].gid);
     }
   }
 
-  return -1;
+  return std::nullopt;
 #endif /* WIN32 */
 }

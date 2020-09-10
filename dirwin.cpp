@@ -119,10 +119,8 @@ static void PrintDirEntry(WINDOW *win,
   char modify_time[13];
   char change_time[13];
   char access_time[13];
-  char owner[OWNER_NAME_MAX + 1];
-  char group[GROUP_NAME_MAX + 1];
-  char *owner_name_ptr;
-  char *group_name_ptr;
+  std::string owner_name;
+  std::string group_name;
   DirEntry *de_ptr;
   bool suppress_output = false;
 
@@ -177,31 +175,31 @@ static void PrintDirEntry(WINDOW *win,
 #endif
 		 break;
     case MODE_2 :
-                 (void)GetAttributes(de_ptr->stat_struct.st_mode, attributes);
-                 owner_name_ptr = GetDisplayPasswdName(de_ptr->stat_struct.st_uid);
-                 group_name_ptr = GetDisplayGroupName(de_ptr->stat_struct.st_gid);
-                 if( owner_name_ptr == NULL )
-                 {
-                    (void)sprintf(owner,"%d",(int)de_ptr->stat_struct.st_uid);
-                    owner_name_ptr = owner;
-                 }
-                 if( group_name_ptr == NULL )
-                 {
-                     (void) sprintf( group, "%d", (int) de_ptr->stat_struct.st_gid );
-                     group_name_ptr = group;
-                 }
-                 if ((line_buffer = (char *) malloc(40)) == NULL)
-                 {
-                    ERROR_MSG("malloc() Failed*Abort");
-                    exit(1);
-                 }
-                 (void) strcpy( format, "%12u  %-12s %-12s");
-                 (void) sprintf( line_buffer, format,
-                                 /*attributes, */
-                                 de_ptr->stat_struct.st_ino,
-                                 owner_name_ptr,
-                                 group_name_ptr);
-                 break;
+      (void)GetAttributes(de_ptr->stat_struct.st_mode, attributes);
+      if (const auto result = GetDisplayPasswdName(de_ptr->stat_struct.st_uid))
+      {
+        owner_name = *result;
+      } else {
+        owner_name = std::to_string(de_ptr->stat_struct.st_uid);
+      }
+      if (const auto result = GetDisplayGroupName(de_ptr->stat_struct.st_gid))
+      {
+       group_name = *result;
+      } else {
+       group_name = std::to_string(static_cast<int>(de_ptr->stat_struct.st_gid));
+      }
+      if ((line_buffer = (char *) malloc(40)) == NULL)
+      {
+        ERROR_MSG("malloc() Failed*Abort");
+        exit(1);
+      }
+      (void) strcpy( format, "%12u  %-12s %-12s");
+      (void) sprintf( line_buffer, format,
+                     /*attributes, */
+                     de_ptr->stat_struct.st_ino,
+                     owner_name.c_str(),
+                     group_name.c_str());
+      break;
     case MODE_3 : break;
     case MODE_4 :
                  (void) CTime( de_ptr->stat_struct.st_ctime, change_time );

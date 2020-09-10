@@ -907,10 +907,8 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
   char format1[60];
   char format2[60];
   int  n;
-  char owner[OWNER_NAME_MAX + 1];
-  char group[GROUP_NAME_MAX + 1];
-  char *owner_name_ptr;
-  char *group_name_ptr;
+  std::string owner_name;
+  std::string group_name;
   const char* sym_link_name = nullptr;
   const char* sptr;
   char *dptr;
@@ -931,20 +929,18 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
   (void) CTime( fe_ptr->stat_struct.st_ctime, change_time );
   (void) CTime( fe_ptr->stat_struct.st_atime, access_time );
 
-  owner_name_ptr = GetPasswdName(fe_ptr->stat_struct.st_uid);
-  group_name_ptr = GetGroupName(fe_ptr->stat_struct.st_gid);
-
-  if( owner_name_ptr == NULL )
+  if (const auto result = GetPasswdName(fe_ptr->stat_struct.st_uid))
   {
-    (void) sprintf( owner, "%d", (int) fe_ptr->stat_struct.st_uid );
-    owner_name_ptr = owner;
+    owner_name = *result;
+  } else {
+    owner_name = std::to_string(fe_ptr->stat_struct.st_uid);
   }
-  if( group_name_ptr == NULL )
+  if (const auto result = GetGroupName(fe_ptr->stat_struct.st_gid))
   {
-    (void) sprintf( group, "%d", (int) fe_ptr->stat_struct.st_gid );
-    group_name_ptr = group;
+    group_name = *result;
+  } else {
+    group_name = std::to_string(fe_ptr->stat_struct.st_gid);
   }
-
 
   sprintf(format1, "%%-%ds", max_filename_len);
   sprintf(format2, "%%-%ds", max_linkname_len);
@@ -972,9 +968,9 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
       } else if(!strncmp(sptr, SYMLINK_VIEWNAME, 3)) {
         n = sprintf(dptr, format2, sym_link_name);
       } else if(!strncmp(sptr, UID_VIEWNAME, 3)) {
-        n = sprintf(dptr, "%-8s", owner_name_ptr);
+        n = sprintf(dptr, "%-8s", owner_name.c_str());
       } else if(!strncmp(sptr, GID_VIEWNAME, 3)) {
-        n = sprintf(dptr, "%-8s", group_name_ptr);
+        n = sprintf(dptr, "%-8s", group_name.c_str());
       } else if(!strncmp(sptr, INODE_VIEWNAME, 3)) {
 #ifdef HAS_LONGLONG
         n = sprintf(dptr, "%7lld", (LONGLONG)fe_ptr->stat_struct.st_ino);

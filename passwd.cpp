@@ -102,79 +102,59 @@ int ReadPasswdEntries(void)
   return( 0 );
 }
 
-char *GetPasswdName(unsigned int uid)
+std::optional<std::string> GetPasswdName(unsigned int uid)
 {
+#if defined(WIN32)
+  const auto pwd_ptr = getpwuid(uid);
 
-#ifdef WIN32
-
-  struct passwd *pwd_ptr;
-
-  pwd_ptr = getpwuid( uid );
-
-  if( pwd_ptr ) return( pwd_ptr->pw_name );
-  else          return( NULL );
-
+  return pwd_ptr ? pwd_ptr->pw_name : std::nullopt;
 #else
-
-  int i;
-
-  for( i=0; i < (int)passwd_count; i++ )
+  for(int i = 0; i < static_cast<int>(passwd_count); ++i)
   {
-    if( passwd_array[i].uid == (int)uid )
-      return( passwd_array[i].name );
+    if (passwd_array[i].uid == static_cast<int>(uid))
+    {
+      return passwd_array[i].name;
+    }
   }
 
-  return( NULL );
-
+  return std::nullopt;
 #endif /* WIN32 */
-
 }
 
-char *GetDisplayPasswdName(unsigned int uid)
+std::optional<std::string> GetDisplayPasswdName(unsigned int uid)
 {
+#if defined(WIN32)
+  const auto pwd_ptr = getpwuid(uid);
 
-#ifdef WIN32
-
-  struct passwd *pwd_ptr;
-
-  pwd_ptr = getpwuid( uid );
-
-  if( pwd_ptr ) return( pwd_ptr->pw_name );
-  else          return( NULL );
-
+  return pwd_ptr ? pwd_ptr->pw_name : std::nullopt;
 #else
-
-  int i;
-
-  for( i=0; i < (int)passwd_count; i++ )
+  for(int i = 0; i < static_cast<int>(passwd_count); ++i)
   {
-    if( passwd_array[i].uid == (int)uid )
-      return( passwd_array[i].display_name );
+    if (passwd_array[i].uid == static_cast<int>(uid))
+    {
+      return passwd_array[i].display_name;
+    }
   }
 
-  return( NULL );
-
+  return std::nullopt;
 #endif /* WIN32 */
-
 }
 
-int GetPasswdUid(const char* name)
+std::optional<int> GetPasswdUid(const std::string& name)
 {
 #ifdef WIN32
-  struct passwd* pwd_ptr = getpwnam(name);
+  const auto pwd_ptr = getpwnam(name);
 
-  return pwd_ptr ? pwd_ptr->pw_uid : -1;
+  return pwd_ptr ? pwd_ptr->pw_uid : std::nullopt;
 #else
-  int i;
-
-  for(i = 0; i < static_cast<int>(passwd_count); ++i)
+  for (int i = 0; i < static_cast<int>(passwd_count); ++i)
   {
-    if (!std::strcmp(name, passwd_array[i].name))
+    if (!name.compare(passwd_array[i].name))
     {
       return static_cast<int>(passwd_array[i].uid);
     }
   }
 
-  return -1;
+  return std::nullopt;
 #endif /* WIN32 */
 }
