@@ -5,9 +5,9 @@
  * Funktionen zur Handhabung des FILE-Windows
  *
  ***************************************************************************/
-
-
 #include "ytree.h"
+
+#include <functional>
 
 
 #define MAX( a, b ) ( ( (a) > (b) ) ? (a) : (b) )
@@ -43,29 +43,36 @@ static unsigned      global_max_linkname_len;
 
 static void ReadFileList(DirEntry *dir_entry);
 static void SortFileEntryList(void);
-static int  SortByName(FileEntryList *e1, FileEntryList *e2);
-static int  SortByChgTime(FileEntryList *e1, FileEntryList *e2);
-static int  SortByAccTime(FileEntryList *e1, FileEntryList *e2);
-static int  SortByModTime(FileEntryList *e1, FileEntryList *e2);
-static int  SortBySize(FileEntryList *e1, FileEntryList *e2);
-static int  SortByOwner(FileEntryList *e1, FileEntryList *e2);
-static int  SortByGroup(FileEntryList *e1, FileEntryList *e2);
-static int  SortByExtension(FileEntryList *e1, FileEntryList *e2);
+static int  SortByName(const void*, const void*);
+static int  SortByChgTime(const void*, const void*);
+static int  SortByAccTime(const void*, const void*);
+static int  SortByModTime(const void*, const void*);
+static int  SortBySize(const void*, const void*);
+static int  SortByOwner(const void*, const void*);
+static int  SortByGroup(const void*, const void*);
+static int  SortByExtension(const void*, const void*);
 static void DisplayFiles(DirEntry *de_ptr, int start_file_no, int hilight_no, int start_x);
 static void ReadGlobalFileList(DirEntry *dir_entry);
-static void WalkTaggedFiles(int start_file, int cursor_pos, int (*fkt) (/* ??? */), WalkingPackage *walking_package);
+static void WalkTaggedFiles(
+  int,
+  int,
+  const std::function<int(FileEntry*, WalkingPackage*)>&,
+  WalkingPackage*
+);
 static BOOL IsMatchingTaggedFiles(void);
 static void RemoveFileEntry(int entry_no);
 static void ChangeFileEntry(void);
 static int  DeleteTaggedFiles(int max_dispfiles);
-static void SilentWalkTaggedFiles( int (*fkt) (/* ??? */),
-			           WalkingPackage *walking_package
-			          );
-static void SilentTagWalkTaggedFiles( int (*fkt) (/* ??? */),
-			           WalkingPackage *walking_package
-			          );
+static void SilentWalkTaggedFiles(
+  const std::function<int(FileEntry*, WalkingPackage*)>&,
+  WalkingPackage*
+);
+static void SilentTagWalkTaggedFiles(
+  const std::function<int(FileEntry*, WalkingPackage*)>&,
+  WalkingPackage*
+);
 static void RereadWindowSize(DirEntry *dir_entry);
-static void ListJump( DirEntry * dir_entry, char *str );
+static void ListJump(DirEntry*, const char *);
 
 
 
@@ -289,7 +296,7 @@ static void ReadGlobalFileList(DirEntry *dir_entry)
 static void SortFileEntryList(void)
 {
   int aux;
-  int (*compare)();
+  int (*compare)(const void*, const void*);
 
   reverse_sort = FALSE;
   if ((aux = statistic.kind_of_sort) > SORT_DSC)
@@ -325,8 +332,11 @@ static void SortFileEntryList(void)
 
 
 
-static int SortByName(FileEntryList *e1, FileEntryList *e2)
+static int SortByName(const void* a, const void* b)
 {
+  const auto e1 = static_cast<const FileEntryList*>(a);
+  const auto e2 = static_cast<const FileEntryList*>(b);
+
   if (do_case)
      if (order)
         return( strcmp( e1->file->name, e2->file->name ) );
@@ -340,22 +350,23 @@ static int SortByName(FileEntryList *e1, FileEntryList *e2)
 }
 
 
-static int SortByExtension(FileEntryList *e1, FileEntryList *e2)
+static int SortByExtension(const void* a, const void* b)
 {
-  char *ext1, *ext2;
+  const auto e1 = static_cast<const FileEntryList*>(a);
+  const auto e2 = static_cast<const FileEntryList*>(b);
+  const char* ext1 = GetExtension(e1->file->name);
+  const char* ext2 = GetExtension(e2->file->name);
   int cmp, casecmp;
 
   /* Ok, this isn't optimized */
 
-  ext1 = GetExtension(e1->file->name);
-  ext2 = GetExtension(e2->file->name);
-  cmp=strcmp( ext1, ext2 );
+  cmp=std::strcmp( ext1, ext2 );
   casecmp=strcasecmp( ext1, ext2 );
 
   if (do_case && !cmp)
-      return SortByName( e1, e2 );
+      return SortByName( a, b );
   if (!do_case && !casecmp)
-      return SortByName( e1, e2 );
+      return SortByName( a, b );
 
 
   if (do_case)
@@ -371,32 +382,44 @@ static int SortByExtension(FileEntryList *e1, FileEntryList *e2)
 }
 
 
-static int SortByModTime(FileEntryList *e1, FileEntryList *e2)
+static int SortByModTime(const void* a, const void* b)
 {
+  const auto e1 = static_cast<const FileEntryList*>(a);
+  const auto e2 = static_cast<const FileEntryList*>(b);
+
   if (order)
      return( e1->file->stat_struct.st_mtime - e2->file->stat_struct.st_mtime );
   else
      return( - (e1->file->stat_struct.st_mtime - e2->file->stat_struct.st_mtime ) );
 }
 
-static int SortByChgTime(FileEntryList *e1, FileEntryList *e2)
+static int SortByChgTime(const void* a, const void* b)
 {
+  const auto e1 = static_cast<const FileEntryList*>(a);
+  const auto e2 = static_cast<const FileEntryList*>(b);
+
   if (order)
      return( e1->file->stat_struct.st_ctime - e2->file->stat_struct.st_ctime );
   else
      return( - (e1->file->stat_struct.st_ctime - e2->file->stat_struct.st_ctime ) );
 }
 
-static int SortByAccTime(FileEntryList *e1, FileEntryList *e2)
+static int SortByAccTime(const void* a, const void* b)
 {
+  const auto e1 = static_cast<const FileEntryList*>(a);
+  const auto e2 = static_cast<const FileEntryList*>(b);
+
   if (order)
      return( e1->file->stat_struct.st_atime - e2->file->stat_struct.st_atime );
   else
      return( - (e1->file->stat_struct.st_atime - e2->file->stat_struct.st_atime ) );
 }
 
-static int SortBySize(FileEntryList *e1, FileEntryList *e2)
+static int SortBySize(const void* a, const void* b)
 {
+  const auto e1 = static_cast<const FileEntryList*>(a);
+  const auto e2 = static_cast<const FileEntryList*>(b);
+
   if (order)
      return( e1->file->stat_struct.st_size - e2->file->stat_struct.st_size );
   else
@@ -404,8 +427,10 @@ static int SortBySize(FileEntryList *e1, FileEntryList *e2)
 }
 
 
-static int SortByOwner(FileEntryList *e1, FileEntryList *e2)
+static int SortByOwner(const void* a, const void* b)
 {
+  const auto e1 = static_cast<const FileEntryList*>(a);
+  const auto e2 = static_cast<const FileEntryList*>(b);
   char *o1, *o2;
   char n1[10], n2[10];
 
@@ -437,8 +462,10 @@ static int SortByOwner(FileEntryList *e1, FileEntryList *e2)
 
 
 
-static int SortByGroup(FileEntryList *e1, FileEntryList *e2)
+static int SortByGroup(const void* a, const void* b)
 {
+  const auto e1 = static_cast<const FileEntryList*>(a);
+  const auto e2 = static_cast<const FileEntryList*>(b);
   char *g1, *g2;
   char n1[10], n2[10];
 
@@ -569,7 +596,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   char *owner_name_ptr;
   char *group_name_ptr;
   int  ef_window_width;
-  char *sym_link_name = NULL;
+  const char* sym_link_name = nullptr;
   char type_of_file = ' ';
 
 
@@ -2756,90 +2783,92 @@ int HandleFileWindow(DirEntry *dir_entry)
   return( ch );
 }
 
-
-
-
-static void WalkTaggedFiles(int start_file,
-			    int cursor_pos,
-			    int (*fkt) (/* ??? */),
-			    WalkingPackage *walking_package
-			   )
+static void WalkTaggedFiles(
+  int start_file,
+  int cursor_pos,
+  const std::function<int(FileEntry*, WalkingPackage*)>& callback,
+  WalkingPackage* walking_package
+)
 {
-  FileEntry *fe_ptr;
-  int       i;
-  int       start_x = 0;
-  int       result = 0;
-  BOOL      maybe_change_x = FALSE;
+  int result = 0;
+  int start_x = 0;
+  bool maybe_change_x = true;
 
-  if( baudrate() >= QUICK_BAUD_RATE ) typeahead( 0 );
-
-/*  GetMaxYX( file_window, &window_height, &window_width );*/
+  if (baudrate() >= QUICK_BAUD_RATE)
+  {
+    typeahead(0);
+  }
 
   max_disp_files = window_height * max_column;
 
-  for( i=0; i < (int)file_count && result == 0; i++ )
+  for (int i = 0; i < static_cast<int>(file_count) && !result; ++i)
   {
-    fe_ptr = file_entry_list[i].file;
+    auto fe_ptr = file_entry_list[i].file;
 
-    if( fe_ptr->tagged && fe_ptr->matching )
+    if (!(fe_ptr->tagged && fe_ptr->matching))
     {
-      if( maybe_change_x == FALSE &&
-	  i >= start_file && i < start_file + max_disp_files )
-      {
-	/* Walk ohne scroll moeglich */
-	/*---------------------------*/
+      continue;
+    }
+    if (!maybe_change_x && i >= start_file && i < start_file + max_disp_files)
+    {
+      /* Walk ohne scroll moeglich */
+      /*---------------------------*/
 
-  	PrintFileEntry( start_file + cursor_pos,
-			cursor_pos % window_height,
-			cursor_pos / window_height,
-			FALSE,
-		        start_x
-	 	      );
+      PrintFileEntry(
+        start_file + cursor_pos,
+        cursor_pos % window_height,
+        cursor_pos / window_height,
+        false,
+        start_x
+      );
 
-        cursor_pos = i - start_file;
+      cursor_pos = i - start_file;
 
-	PrintFileEntry( start_file + cursor_pos,
-		 	cursor_pos % window_height,
-			cursor_pos / window_height,
-			TRUE,
-		        start_x
-		      );
-      }
-      else
-      {
-	/* Scroll noetig */
-	/*---------------*/
+      PrintFileEntry(
+        start_file + cursor_pos,
+        cursor_pos % window_height,
+        cursor_pos / window_height,
+        true,
+        start_x
+      );
+    } else {
+      /* Scroll noetig */
+      /*---------------*/
+      start_file = std::max(0, i - max_disp_files + 1);
+      cursor_pos = i - start_file;
 
-	start_file = MAX( 0, i - max_disp_files + 1 );
-	cursor_pos = i - start_file;
+      DisplayFiles(
+        fe_ptr->dir_entry,
+        start_file,
+        start_file + cursor_pos,
+        start_x
+      );
+      maybe_change_x = false;
+    }
 
-        DisplayFiles( fe_ptr->dir_entry,
-		      start_file,
-		      start_file + cursor_pos,
-		      start_x
-	            );
-	maybe_change_x = FALSE;
-      }
+    if (fe_ptr->dir_entry->global_flag)
+    {
+      DisplayGlobalFileParameter(fe_ptr);
+    } else {
+      DisplayFileParameter(fe_ptr);
+    }
 
-      if( fe_ptr->dir_entry->global_flag )
-        DisplayGlobalFileParameter( fe_ptr );
-      else
-        DisplayFileParameter( fe_ptr );
-
-      RefreshWindow( file_window );
-      doupdate();
-      result = fkt( fe_ptr, walking_package );
-      if( walking_package->new_fe_ptr != fe_ptr )
-      {
-        file_entry_list[i].file = walking_package->new_fe_ptr;
-	ChangeFileEntry();
-        max_disp_files = window_height * max_column;
-	maybe_change_x = TRUE;
-      }
+    RefreshWindow(file_window);
+    doupdate();
+    result = callback(fe_ptr, walking_package);
+    if (walking_package->new_fe_ptr != fe_ptr)
+    {
+      file_entry_list[i].file = walking_package->new_fe_ptr;
+      ChangeFileEntry();
+      max_disp_files = window_height * max_column;
+      maybe_change_x = true;
     }
   }
 
-  if( baudrate() >= QUICK_BAUD_RATE ) typeahead( -1 );
+  if (baudrate() >= QUICK_BAUD_RATE)
+  {
+    typeahead(-1);
+  }
 }
 
 /*
@@ -2851,21 +2880,18 @@ static void WalkTaggedFiles(int start_file,
  --crb3 12mar04
 */
 
-static void SilentWalkTaggedFiles( int (*fkt) (/* ??? */),
-			           WalkingPackage *walking_package
-			          )
+static void SilentWalkTaggedFiles(
+  const std::function<int(FileEntry*, WalkingPackage*)>& callback,
+  WalkingPackage* walking_package
+)
 {
-  FileEntry *fe_ptr;
-  int       i;
-
-
-  for( i=0; i < (int)file_count; i++ )
+  for (int i = 0; i < static_cast<int>(file_count); ++i)
   {
-    fe_ptr = file_entry_list[i].file;
+    auto fe_ptr = file_entry_list[i].file;
 
-    if( fe_ptr->tagged && fe_ptr->matching )
+    if (fe_ptr->tagged && fe_ptr->matching)
     {
-      fkt( fe_ptr, walking_package );
+      callback(fe_ptr, walking_package);
     }
   }
 }
@@ -2886,32 +2912,21 @@ ExecuteCommand must have its retval unzeroed.
 
 */
 
-static void SilentTagWalkTaggedFiles( int (*fkt) (/* ??? */),
-			           WalkingPackage *walking_package
-			          )
+static void SilentTagWalkTaggedFiles(
+  const std::function<int(FileEntry*, WalkingPackage*)>& callback,
+  WalkingPackage* walking_package
+)
 {
-  FileEntry *fe_ptr;
-  int       i;
-  int       result = 0;
-
-
-  for( i=0; i < (int)file_count; i++ )
+  for (int i = 0; i < static_cast<int>(file_count); ++i)
   {
-    fe_ptr = file_entry_list[i].file;
+    auto fe_ptr = file_entry_list[i].file;
 
-    if( fe_ptr->tagged && fe_ptr->matching )
+    if (!callback(fe_ptr, walking_package))
     {
-      result = fkt( fe_ptr, walking_package );
-
-      if( result == 0 ) {
-      	fe_ptr->tagged = FALSE;
-      }
+      fe_ptr->tagged = false;
     }
   }
 }
-
-
-
 
 static BOOL IsMatchingTaggedFiles(void)
 {
@@ -3043,7 +3058,7 @@ static void RereadWindowSize(DirEntry *dir_entry)
 
 
 
-static void ListJump( DirEntry * dir_entry, char *str )
+static void ListJump( DirEntry * dir_entry, const char *str )
 {
    int incremental = (!strcmp(LISTJUMPSEARCH, "1")) ? 1 : 0; /* from ~/.ytree */
 
@@ -3073,7 +3088,7 @@ static void ListJump( DirEntry * dir_entry, char *str )
     }
 
     n = strlen(str);
-    if((newStr = malloc(n+2)) == NULL) {
+    if((newStr = (char*) malloc(n+2)) == NULL) {
       ERROR_MSG( "Malloc failed*ABORT" );
       exit( 1 );
     }

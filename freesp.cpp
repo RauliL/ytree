@@ -44,8 +44,8 @@
 /* Volume-Name und freien Plattenplatz ermitteln */
 /*-----------------------------------------------*/
 
-int GetDiskParameter( char *path, 
-		      char *volume_name, 
+int GetDiskParameter( char *path,
+		      char *volume_name,
 		      LONGLONG *avail_bytes,
 		      LONGLONG *total_disk_space
 		    )
@@ -71,7 +71,7 @@ int GetDiskParameter( char *path,
 #endif /* WIN32 */
 
   char *p;
-  char *fname;
+  const char* fname;
   int  result;
   LONGLONG bfree;
   LONGLONG this_disk_space;
@@ -100,7 +100,7 @@ int GetDiskParameter( char *path,
 
       if( mode == DISK_MODE || mode == USER_MODE )
       {
-  
+
 #ifdef linux
 	switch( statfs_struct.f_type ) {
 	  case 0xEF51:
@@ -217,21 +217,21 @@ int GetDiskParameter( char *path,
 #endif /* __GNU__ */
 #endif /* linux */
 
-        (void) strncpy( volume_name, 
+        (void) strncpy( volume_name,
 	                fname,
 		        MINIMUM( DISK_NAME_LENGTH, strlen( fname ) )
 		      );
         volume_name[ MINIMUM( DISK_NAME_LENGTH, strlen( fname ))] = '\0';
       }
       else
-      {  
+      {
         /* TAR/ZOO/ZIP-FILE_MODE */
         /*-----------------------*/
-        
-        if( ( p = strrchr( statistic.login_path, FILE_SEPARATOR_CHAR ) ) == NULL ) 
+
+        if( ( p = strrchr( statistic.login_path, FILE_SEPARATOR_CHAR ) ) == NULL )
           p = statistic.login_path;
         else p++;
-  
+
         (void) strncpy( volume_name, p, sizeof( statistic.disk_name ) );
         volume_name[sizeof( statistic.disk_name )] = '\0';
       }
@@ -261,11 +261,11 @@ int GetDiskParameter( char *path,
     if( bfree < 0L ) bfree = 0L;
     *avail_bytes = bfree * BLKSIZ;  /* SYSV */
     this_disk_space   = statfs_struct.f_blocks * BLKSIZ;
-#else 
+#else
 #if defined( ultrix )
     bfree = statfs_struct.fd_req.bfree;
     if( bfree < 0L ) bfree = 0L;
-#else 
+#else
 #if defined( QNX )
     *avail_bytes = free_blocks * 512;
     this_disk_space = total_blocks * 512;
@@ -280,7 +280,7 @@ int GetDiskParameter( char *path,
 #endif /* SVR4/!__DGUX__ */
 #endif /* _IBMR2/linux/sun/__NeXT__/__GNU__ */
 #endif /* WIN32 */
-    
+
     if( total_disk_space )
     {
       *total_disk_space = this_disk_space;
@@ -297,11 +297,11 @@ int GetDiskParameter( char *path,
 
 int GetAvailBytes(LONGLONG *avail_bytes)
 {
-  return( GetDiskParameter( statistic.tree->name, 
-			    NULL, 
-			    avail_bytes, 
-			    NULL 
-			  ) 
+  return( GetDiskParameter( statistic.tree->name,
+			    NULL,
+			    avail_bytes,
+			    NULL
+			  )
         );
 }
 

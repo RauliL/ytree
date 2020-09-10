@@ -13,7 +13,7 @@
 
 typedef struct
 {
-  char *extension;
+  const char* extension;
   int  method;
 } Extension2Method;
 
@@ -289,47 +289,49 @@ char *CTime(time_t f_time, char *buffer)
   return( buffer );
 }
 
-
-
-
-void PrintSpecialString(WINDOW *win, int y, int x, char *str, int color)
+void PrintSpecialString(
+  WINDOW* win,
+  int y,
+  int x,
+  const std::string& str,
+  int color
+)
 {
-  int ch;
-
-  if(x < 0 || y < 0) {
-     /* screen too small */
-    return;
+  if (x < 0 || y < 0)
+  {
+    return; // Screen too small.
   }
 
-  wmove( win, y, x);
+  wmove(win, y, x);
 
-  for( ; *str; str++ )
+  for (auto ch : str)
   {
-    if ( (!iscntrl(*str)) || (!isspace(*str)) || (*str==' ') )
-    switch( *str )
+    if ((!std::iscntrl(ch)) || (!std::isspace(ch)) || (ch == ' '))
     {
-      case '1': ch = ACS_ULCORNER; break;
-      case '2': ch = ACS_URCORNER; break;
-      case '3': ch = ACS_LLCORNER; break;
-      case '4': ch = ACS_LRCORNER; break;
-      case '5': ch = ACS_TTEE;     break;
-      case '6': ch = ACS_LTEE;     break;
-      case '7': ch = ACS_RTEE;     break;
-      case '8': ch = ACS_BTEE;     break;
-      case '9': ch = ACS_LARROW;   break;
-      case '|': ch = ACS_VLINE;    break;
-      case '-': ch = ACS_HLINE;    break;
-      default:  ch = PRINT(*str);
+      switch (ch)
+      {
+        case '1': ch = ACS_ULCORNER; break;
+        case '2': ch = ACS_URCORNER; break;
+        case '3': ch = ACS_LLCORNER; break;
+        case '4': ch = ACS_LRCORNER; break;
+        case '5': ch = ACS_TTEE;     break;
+        case '6': ch = ACS_LTEE;     break;
+        case '7': ch = ACS_RTEE;     break;
+        case '8': ch = ACS_BTEE;     break;
+        case '9': ch = ACS_LARROW;   break;
+        case '|': ch = ACS_VLINE;    break;
+        case '-': ch = ACS_HLINE;    break;
+        default:  ch = PRINT(ch);
+      }
+    } else {
+      ch = ACS_BLOCK;
     }
-    else
-            ch = ACS_BLOCK;
-
 #ifdef COLOR_SUPPORT
-    wattrset( win, COLOR_PAIR(color) | A_BOLD );
+    wattrset(win, COLOR_PAIR(color) | A_BOLD);
 #endif /* COLOR_SUPPORT */
-    waddch( win, ch );
+    waddch(win, ch);
 #ifdef COLOR_SUPPORT
-    wattrset( win, 0 );
+    wattrset(win, 0);
 #endif /* COLOR_SUPPORT */
   }
 }
@@ -359,64 +361,64 @@ void Print(WINDOW *win, int y, int x, char *str, int color)
 }
 
 
-void PrintOptions(WINDOW *win, int y, int x, char *str)
+void PrintOptions(WINDOW* win, int y, int x, const std::string& str)
 {
-  int ch;
-  int color, hi_color, lo_color;
+  int color;
+  int hi_color;
+  int lo_color;
 
-  if(x < 0 || y < 0) {
-     /* screen too small */
-    return;
+  if (x < 0 || y < 0)
+  {
+    return; // Screen too small.
   }
 
 #ifdef COLOR_SUPPORT
-     lo_color = MENU_COLOR;
-     hi_color = HIMENUS_COLOR;
+  lo_color = MENU_COLOR;
+  hi_color = HIMENUS_COLOR;
 #else
-     lo_color = A_NORMAL;
-     hi_color = A_BOLD;
+  lo_color = A_NORMAL;
+  hi_color = A_BOLD;
 #endif
 
   color = lo_color;
 
-  for( ; *str; str++ )
+  for (auto ch : str)
   {
-    ch = (int) *str;
-
-    switch( *str ) {
-        case '(': color = hi_color;  continue;
-	case ')': color = lo_color;  continue;
-
-#ifdef COLOR_SUPPORT
-	case ']': color = lo_color;  continue;
-	case '[': color = hi_color;  continue;
-#else
-	case ']':
-	case '[': /* ignore */ continue;
-#endif
-
-        case '1': ch = ACS_ULCORNER; break;
-        case '2': ch = ACS_URCORNER; break;
-        case '3': ch = ACS_LLCORNER; break;
-        case '4': ch = ACS_LRCORNER; break;
-        case '5': ch = ACS_TTEE;     break;
-        case '6': ch = ACS_LTEE;     break;
-        case '7': ch = ACS_RTEE;     break;
-        case '8': ch = ACS_BTEE;     break;
-        case '9': ch = ACS_LARROW;   break;
-        case '|': ch = ACS_VLINE;    break;
-        case '-': ch = ACS_HLINE;    break;
-        default:  ch = PRINT(*str);
-     }
+    switch (ch)
+    {
+      case '(': color = hi_color; continue;
+      case ')': color = lo_color;  continue;
 
 #ifdef COLOR_SUPPORT
-    wattrset( win, COLOR_PAIR(color) | A_BOLD);
+	  case ']': color = lo_color;  continue;
+	  case '[': color = hi_color;  continue;
 #else
-    wattrset( win, color);
+	  case ']':
+	  case '[': continue; // Ignore.
 #endif
-     mvwaddch( win, y, x++, ch );
-     wattrset( win, 0 );
-   }
+
+      case '1': ch = ACS_ULCORNER; break;
+      case '2': ch = ACS_URCORNER; break;
+      case '3': ch = ACS_LLCORNER; break;
+      case '4': ch = ACS_LRCORNER; break;
+      case '5': ch = ACS_TTEE;     break;
+      case '6': ch = ACS_LTEE;     break;
+      case '7': ch = ACS_RTEE;     break;
+      case '8': ch = ACS_BTEE;     break;
+      case '9': ch = ACS_LARROW;   break;
+      case '|': ch = ACS_VLINE;    break;
+      case '-': ch = ACS_HLINE;    break;
+      default:  ch = PRINT(ch);
+    }
+
+#ifdef COLOR_SUPPORT
+    wattrset(win, COLOR_PAIR(color) | A_BOLD);
+#else
+    wattrset(win, color);
+#endif
+    mvwaddch(win, y, x++, ch);
+    wattrset(win, 0);
+  }
 }
 
 
@@ -701,7 +703,7 @@ void NormPath( char *in_path, char *out_path )
   level = 0;
   opath = out_path;
 
-  if( ( in_path_dup = malloc( strlen( in_path ) + 1 ) ) == NULL ) {
+  if( ( in_path_dup = static_cast<char*>(std::malloc( strlen( in_path ) + 1 ) )) == NULL ) {
     ERROR_MSG( "Malloc Failed*ABORT" );
     exit( 1 );
   }
@@ -758,36 +760,33 @@ void NormPath( char *in_path, char *out_path )
   free( in_path_dup );
 }
 
-
-
 /* reentrantes strtok */
-char *Strtok_r( char *str, char *delim, char **old )
+char* Strtok_r(char* str, const char* delim, char** old)
 {
-  char *result;
-  int  l, m;
+  std::size_t length;
+  char* result;
 
-  if( str == NULL )
-    str = *old;
+  if (!str && !(str = *old))
+  {
+    return nullptr;
+  }
+  length = std::strlen(str);
+  if (!(result = std::strtok(str, delim)))
+  {
+    const auto m = std::strlen(result);
 
-  if( str == NULL )
-    return( NULL );
-
-  l = strlen( str );
-  if( ( result = strtok( str, delim ) ) != NULL ) {
-    m = strlen( result );
-    if( (m + 1) >= l)
-      *old = NULL;
-    else
+    if (m + 1 >= length)
+    {
+      *old = nullptr;
+    } else {
       *old = result + m + 1;
+    }
+  } else {
+    *old = nullptr;
+  }
 
-  } else
-    *old = NULL;
-
-  return( result );
+  return result;
 }
-
-
-
 
 void GetMaxYX(WINDOW *win, int *height, int *width)
 {
@@ -842,56 +841,55 @@ int Strrcmp(char *s1, char* s2)/*compares in reverse order 2 strings*/
    return(0);
 }
 
-
-
 /* NeXT does not define strdup */
-char *Strdup(const char *s)
+char* Strdup(const char* s)
 {
-  char *cp = NULL;
+  char* cp = nullptr;
 
-  if (s) {
-    cp = malloc(strlen(s)+1);
-    if (cp) {
-      strcpy(cp,s);
+  if (s)
+  {
+    cp = static_cast<char*>(std::malloc(std::strlen(s) + 1));
+    if (cp)
+    {
+      std::strcpy(cp, s);
     }
   }
-  return(cp);
+
+  return cp;
 }
 
 /* Solaris does not define this */
-char *Strndup(const char *s, int len)
+char* Strndup(const char *s, std::size_t len)
 {
-  char *cp = NULL;
-  int l;
+  char* cp = nullptr;
 
-  if (s) {
-    l = MINIMUM(strlen(s), len);
-    cp = malloc(l+1);
-    if (cp) {
-      memcpy(cp, s, l);
-      cp[l] = '\0';
+  if (s)
+  {
+    const auto l = std::min(std::strlen(s), len);
+
+    cp = static_cast<char*>(std::malloc(l));
+    if (cp)
+    {
+      std::memcpy(static_cast<void*>(cp), static_cast<const void*>(s), l);
+      cp[l] = 0;
     }
   }
-  return(cp);
+
+  return cp;
 }
 
-
-char *GetExtension(char *filename)
+const char* GetExtension(const char* filename)
 {
-  char *cptr;
+  auto cptr = std::strrchr(filename, '.');
 
-  cptr = strrchr(filename, '.');
+  // Filenames beginning with a dot are not an extension.
+  if (!cptr || cptr == filename)
+  {
+    return "";
+  }
 
-  if(cptr == NULL) return "";
-
-  if(cptr == filename) return "";
-  // filenames beginning with a dot are not an extension
-
-  return(cptr + 1);
+  return cptr + 1;
 }
-
-
-
 
 void StrCp(char *dest, const char *src)
 {
@@ -911,7 +909,7 @@ void StrCp(char *dest, const char *src)
 
 int BuildUserFileEntry(FileEntry *fe_ptr,
 			int max_filename_len, int max_linkname_len,
-			char *template, int linelen, char *line)
+			const char *templatez, int linelen, char *line)
 {
   char attributes[11];
   char modify_time[13];
@@ -924,8 +922,9 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
   char group[GROUP_NAME_MAX + 1];
   char *owner_name_ptr;
   char *group_name_ptr;
-  char *sym_link_name = NULL;
-  char *sptr, *dptr;
+  const char* sym_link_name = nullptr;
+  const char* sptr;
+  char *dptr;
   char tag;
   char buffer[4096]; /* enough??? */
 
@@ -961,7 +960,7 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
   sprintf(format1, "%%-%ds", max_filename_len);
   sprintf(format2, "%%-%ds", max_linkname_len);
 
-  for(sptr=template, dptr=buffer; *sptr; ) {
+  for(sptr=templatez, dptr=buffer; *sptr; ) {
 
     if(*sptr == '%') {
       sptr++;
@@ -1013,20 +1012,20 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
     }
   }
   *dptr = '\0';
-  strncpy(line, buffer, linelen);
+  std::strncpy(line, buffer, linelen);
   line[linelen - 1] = '\0';
   return(0);
 }
 
 
 
-int GetUserFileEntryLength( int max_filename_len, int max_linkname_len, char *template)
+int GetUserFileEntryLength( int max_filename_len, int max_linkname_len, const char *templatez)
 {
   int  len, n;
-  char *sptr;
+  const char *sptr;
 
 
-  for(len=0, sptr=template; *sptr; ) {
+  for(len=0, sptr=templatez; *sptr; ) {
 
     if(*sptr == '%') {
       sptr++;

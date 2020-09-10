@@ -19,7 +19,7 @@ static int GetStatFromTAR(char *tar_line, char *name, struct stat *stat);
 /*---------------------------------*/
 
 int ReadTreeFromTAR(DirEntry *dir_entry, FILE *f)
-{ 
+{
   char tar_line[TAR_LINE_LENGTH + 1];
   char path_name[PATH_LENGTH +1];
   struct stat stat;
@@ -43,12 +43,12 @@ int ReadTreeFromTAR(DirEntry *dir_entry, FILE *f)
     {
       if( (path_name[strlen( path_name ) - 1] == FILE_SEPARATOR_CHAR) ||
 	  !strcmp( path_name, "." ) ||
-	  *tar_line == 'd' 
+	  *tar_line == 'd'
 	)
       {
         /* Directory */
         /*-----------*/
-        
+
 #ifdef DEBUG
   fprintf( stderr, "DIR: %s\n", path_name );
 #endif
@@ -67,7 +67,7 @@ int ReadTreeFromTAR(DirEntry *dir_entry, FILE *f)
       {
         /* File */
         /*------*/
-  
+
 #ifdef DEBUG
   fprintf( stderr, "FILE: \"%s\"\n", path_name );
 #endif
@@ -75,7 +75,7 @@ int ReadTreeFromTAR(DirEntry *dir_entry, FILE *f)
       }
     }
   }
-  
+
   if( dir_flag == FALSE )
   {
     statistic.disk_total_directories++;
@@ -94,7 +94,7 @@ static int GetStatFromTAR(char *tar_line, char *name, struct stat *stat)
   char *t, *old;
   int  i, id;
   struct tm tm_struct;
-  static char *month[] = { "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
+  static const char *month[] = { "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
 	 	           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
 
@@ -127,7 +127,7 @@ static int GetStatFromTAR(char *tar_line, char *name, struct stat *stat)
   id = GetGroupId( t );
   if( id == -1 ) id = atoi( t );
   stat->st_gid = (unsigned) id;
-  
+
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
 
   /* Dateilaenge */
@@ -144,22 +144,22 @@ static int GetStatFromTAR(char *tar_line, char *name, struct stat *stat)
   {
     if( !strcmp( t, month[i] ) ) break;
   }
-  if( i >= 12 ) 
+  if( i >= 12 )
   {
     t[4] = t[7] = '\0';
-      
+
     tm_struct.tm_year = atoi(t) - 1900;
     tm_struct.tm_mon  = atoi(&t[5]) - 1;
     tm_struct.tm_mday = atoi(&t[8]);
-    
+
     t = Strtok_r( NULL, " \t:", &old ); if( t == NULL ) return( -1 );
     tm_struct.tm_hour = atoi( t );
     t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
     tm_struct.tm_min = atoi( t );
     t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
     goto XDATE;
-  } 
-    
+  }
+
 
   tm_struct.tm_mon = i;
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
@@ -172,10 +172,10 @@ static int GetStatFromTAR(char *tar_line, char *name, struct stat *stat)
 
   tm_struct.tm_min = atoi( t );
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
-  
+
   tm_struct.tm_year = atoi( t ) - 1900;
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
-  
+
 XDATE:
 
   tm_struct.tm_sec = 0;
@@ -197,7 +197,7 @@ XDATE:
     /* Symbolischer Link */
     /*-------------------*/
 
-    t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 ); 
+    t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
     t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
     (void) strcpy( &name[ strlen( name ) + 1 ], t );
   }

@@ -5,32 +5,33 @@
  * Enhanced Curses Functions
  *
  ***************************************************************************/
-
-
-
 #include "ytree.h"
 
-
-
-int MvAddStr(int y, int x, char *str)
+int MvAddStr(int y, int x, const std::string& str)
 {
-#ifdef WITH_UTF8
-  mvaddstr(y, x, str);
+#if defined(WITH_UTF8)
+  mvaddstr(y, x, str.c_str());
 #else
-  for(;*str != '\0';str++)
-      mvaddch(y, x++, PRINT(*str));
+  for (const auto& c : str)
+  {
+    mvaddch(y, x++, PRINT(c));
+  }
 #endif
+
   return 0;
 }
 
-int MvWAddStr(WINDOW *win, int y, int x, char *str)
+int MvWAddStr(WINDOW* win, int y, int x, const std::string& str)
 {
-#ifdef WITH_UTF8
-  mvwaddstr(win, y, x, str);
+#if defined(WITH_UTF8)
+  mvwaddstr(win, y, x, str.c_str());
 #else
-  for(;*str != '\0';str++)
-      mvwaddch(win, y, x++, PRINT(*str));
+  for (const auto& c : str)
+  {
+    mvwaddch(win, y, x++, PRINT(c));
+  }
 #endif
+
   return 0;
 }
 
@@ -59,7 +60,7 @@ int AddStr(char *str)
 
 int WAttrAddStr(WINDOW *win, int attr, char *str)
 {
-  int rc; 
+  int rc;
 
   wattrset( win, attr );
   rc = WAddStr(win, str);

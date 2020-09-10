@@ -5,16 +5,10 @@
  * Change Modus
  *
  ***************************************************************************/
-
-
 #include "ytree.h"
 
-
-
 static int SetDirModus(DirEntry *de_ptr, WalkingPackage *walking_package);
-static int GetNewModus(int old_modus, char *new_modus );
-
-
+static int GetNewModus(int, const char* );
 
 int ChangeFileModus(FileEntry *fe_ptr)
 {
@@ -23,7 +17,7 @@ int ChangeFileModus(FileEntry *fe_ptr)
   int  result;
 
   result = -1;
-  
+
   if( mode != DISK_MODE && mode != USER_MODE )
   {
     beep();
@@ -74,18 +68,15 @@ int ChangeDirModus(DirEntry *de_ptr)
   return( result );
 }
 
-
-
-
-int GetNewFileModus(int y, int x, char *modus, char *term)
+int GetNewFileModus(int y, int x, char* modus, const char* term)
 {
   int c, p;
-  static char rwx[] = "rwx";
+  static const char rwx[] = "rwx";
 
   ClearHelp();
   curs_set(1);
   MvAddStr( y, x, "New Filemodus:" );
- 
+
   x += 16;
 
   p = 0;
@@ -102,14 +93,14 @@ int GetNewFileModus(int y, int x, char *modus, char *term)
 #ifdef VI_KEYS
     c = ViKey( c );
 #endif /* VI_KEYS */
-    
+
     if( c == LF ) c = CR;
 
     if( p > 0 && ( c == '?' || c == '-' || c == rwx[(p-1) % 3] ) )
     {
       /* gueltige Eingabe */
       /*------------------*/
-      
+
       modus[p] = (char) c;
       addch( c );
       if( p < 9 ) p++;
@@ -141,7 +132,7 @@ int GetNewFileModus(int y, int x, char *modus, char *term)
   leaveok(stdscr, TRUE);
   move( y, x ); clrtoeol();
   curs_set(0);
-  
+
   return( c );
 }
 
@@ -158,12 +149,12 @@ int SetFileModus(FileEntry *fe_ptr, WalkingPackage *walking_package)
   result = -1;
 
   walking_package->new_fe_ptr = fe_ptr; /* unchanged */
-  
+
   new_modus = GetNewModus( fe_ptr->stat_struct.st_mode,
 			   walking_package->function_data.change_modus.new_modus
 			 );
 
-  new_modus = new_modus | ( fe_ptr->stat_struct.st_mode & 
+  new_modus = new_modus | ( fe_ptr->stat_struct.st_mode &
 	      ~( S_IRWXO | S_IRWXG | S_IRWXU | S_ISGID | S_ISUID ) );
 
   if( !chmod( GetFileNamePath( fe_ptr, buffer ), new_modus ) )
@@ -187,7 +178,7 @@ int SetFileModus(FileEntry *fe_ptr, WalkingPackage *walking_package)
     (void) sprintf( message, "Cant't change modus:*%s", strerror(errno) );
     MESSAGE( message );
   }
- 
+
   return( result );
 }
 
@@ -208,7 +199,7 @@ static int SetDirModus(DirEntry *de_ptr, WalkingPackage *walking_package)
 			   walking_package->function_data.change_modus.new_modus
 			 );
 
-  new_modus = new_modus | ( de_ptr->stat_struct.st_mode & 
+  new_modus = new_modus | ( de_ptr->stat_struct.st_mode &
 	      ~( S_IRWXO | S_IRWXG | S_IRWXU | S_ISGID | S_ISUID ) );
 
   if( !chmod( GetPath( de_ptr, buffer ), new_modus ) )
@@ -232,18 +223,13 @@ static int SetDirModus(DirEntry *de_ptr, WalkingPackage *walking_package)
     (void) sprintf( message, "Cant't change modus:*%s", strerror(errno) );
     MESSAGE( message );
   }
- 
+
   return( result );
 }
 
-
-
-
-static int GetNewModus(int old_modus, char *modus )
+static int GetNewModus(int old_modus, const char* modus)
 {
-  int new_modus;
-
-  new_modus = 0;
+  int new_modus = 0;
 
   if( *modus == '-' ) new_modus |= S_IFREG;
   if( *modus == 'd' ) new_modus |= S_IFDIR;
@@ -279,15 +265,7 @@ static int GetNewModus(int old_modus, char *modus )
   return( new_modus );
 }
 
-
-
-
-int GetModus(char *modus)
+int GetModus(const char* modus)
 {
-  return( GetNewModus( 0, modus ) );
+  return GetNewModus(0, modus);
 }
-
-
-
-
-

@@ -342,41 +342,38 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
   return( c1 );
 }
 
-
-
-
-
-int InputChoise(char *msg, char *term)
+int InputChoise(const std::string& msg, const std::string& term)
 {
-  int  c;
+  int c;
 
   ClearHelp();
 
   curs_set(1);
   leaveok(stdscr, FALSE);
-  mvprintw( LINES - 2, 1, msg );
-  RefreshWindow( stdscr );
+  mvprintw(LINES - 2, 1, msg.c_str());
+  RefreshWindow(stdscr);
   doupdate();
   do
   {
-    c = Getch();
-    if(c >= 0)
-      if( islower( c ) ) c = toupper( c );
-  } while( c != -1 && !strchr( term, c ) );
+    if ((c = Getch()) >= 0 && std::islower(c))
+    {
+      c = std::toupper(c);
+    }
+  }
+  while (c != -1 && term.find(c) == std::string::npos);
 
-  if(c >= 0)
-    echochar( c );
+  if (c >= 0)
+  {
+    echochar(c);
+  }
 
-  move( LINES - 2, 1 ); clrtoeol();
+  move(LINES - 2, 1);
+  clrtoeol();
   leaveok(stdscr, TRUE);
   curs_set(0);
 
-  return( c );
+  return c;
 }
-
-
-
-
 
 int GetTapeDeviceName( void )
 {
