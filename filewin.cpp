@@ -19,9 +19,9 @@ extern void qsort(void *, size_t, size_t, int (*) (const void *, const void *));
 
 
 
-static BOOL reverse_sort;
-static BOOL order;
-static BOOL do_case = FALSE;
+static bool reverse_sort = false;
+static bool order = false;
+static bool do_case = false;
 static int  file_mode;
 static int  max_column;
 
@@ -59,7 +59,7 @@ static void WalkTaggedFiles(
   const std::function<int(FileEntry*, WalkingPackage*)>&,
   WalkingPackage*
 );
-static BOOL IsMatchingTaggedFiles(void);
+static bool IsMatchingTaggedFiles(void);
 static void RemoveFileEntry(int entry_no);
 static void ChangeFileEntry(void);
 static int  DeleteTaggedFiles(int max_dispfiles);
@@ -298,15 +298,15 @@ static void SortFileEntryList(void)
   int aux;
   int (*compare)(const void*, const void*);
 
-  reverse_sort = FALSE;
+  reverse_sort = false;
   if ((aux = statistic.kind_of_sort) > SORT_DSC)
   {
-     order = FALSE;
+     order = false;
      aux -= SORT_DSC;
   }
   else
   {
-     order = TRUE;
+     order = true;
      aux -= SORT_ASC;
   }
   switch( aux )
@@ -1015,7 +1015,7 @@ static void DisplayFiles(DirEntry *de_ptr, int start_file_no, int hilight_no, in
 	}
 	else
 	{
-	  PrintFileEntry( j, y, x, FALSE, start_x);
+	  PrintFileEntry( j, y, x, false, start_x);
 	}
       }
       j++;
@@ -1023,7 +1023,7 @@ static void DisplayFiles(DirEntry *de_ptr, int start_file_no, int hilight_no, in
   }
 
   if( p_x >= 0 )
-    PrintFileEntry( hilight_no, p_y, p_x, TRUE, start_x);
+    PrintFileEntry( hilight_no, p_y, p_x, true, start_x);
 
 }
 
@@ -1045,14 +1045,14 @@ static void fmovedown(int *start_file, int *cursor_pos, int *start_x, DirEntry *
           PrintFileEntry( *start_file + *cursor_pos,
                           *cursor_pos % window_height,
                           *cursor_pos / window_height,
-                          FALSE,
+                          false,
                           *start_x
                           );
           (*cursor_pos)++;
           PrintFileEntry( *start_file + *cursor_pos,
                           *cursor_pos % window_height,
                           *cursor_pos / window_height,
-                          TRUE ,
+                          true,
                           *start_x
                           );
       }
@@ -1088,14 +1088,14 @@ static void fmoveup(int *start_file, int *cursor_pos, int *start_x, DirEntry *di
          PrintFileEntry( *start_file + *cursor_pos,
                          *cursor_pos % window_height,
                          *cursor_pos / window_height,
-                         FALSE,
+                         false,
                          *start_x
                          );
          (*cursor_pos)--;
          PrintFileEntry( *start_file + *cursor_pos,
                          *cursor_pos % window_height,
                          *cursor_pos / window_height,
-                         TRUE,
+                         true,
                          *start_x
                          );
       }
@@ -1124,7 +1124,7 @@ static void fmoveright(int *start_file, int *cursor_pos, int *start_x,DirEntry *
       PrintFileEntry( *start_file + *cursor_pos,
                       *cursor_pos % window_height,
                       *cursor_pos / window_height,
-                      TRUE ,
+                      true,
                       *start_x
                       );
       if( hide_right < 0 ) (*start_x)--;
@@ -1155,14 +1155,14 @@ static void fmoveright(int *start_file, int *cursor_pos, int *start_x,DirEntry *
           PrintFileEntry( *start_file + *cursor_pos,
                           *cursor_pos % window_height,
                           *cursor_pos / window_height,
-                          FALSE,
+                          false,
                           *start_x
                           );
           *cursor_pos += my_x_step;
           PrintFileEntry( *start_file + *cursor_pos,
                           *cursor_pos % window_height,
                           *cursor_pos / window_height,
-                          TRUE ,
+                          true,
                           *start_x
                           );
       }
@@ -1193,7 +1193,7 @@ static void fmoveleft(int *start_file, int *cursor_pos, int *start_x, DirEntry *
             PrintFileEntry( *start_file + *cursor_pos,
                             *cursor_pos % window_height,
                             *cursor_pos / window_height,
-                            TRUE ,
+                            true,
                             *start_x
                             );
      }
@@ -1223,14 +1223,14 @@ static void fmoveleft(int *start_file, int *cursor_pos, int *start_x, DirEntry *
              PrintFileEntry( *start_file + *cursor_pos,
                              *cursor_pos % window_height,
                              *cursor_pos / window_height,
-                             FALSE,
+                             false,
                              *start_x
                              );
              *cursor_pos -= my_x_step;
              PrintFileEntry( *start_file + *cursor_pos,
                              *cursor_pos % window_height,
                              *cursor_pos / window_height,
-                             TRUE,
+                             true,
                              *start_x
                              );
          }
@@ -1270,7 +1270,7 @@ static void fmovenpage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
          PrintFileEntry( *start_file + *cursor_pos,
                          *cursor_pos % window_height,
                          *cursor_pos / window_height,
-                         FALSE,
+                         false,
                          *start_x
                          );
          if( *start_file + max_disp_files <= (int)file_count - 1 )
@@ -1280,7 +1280,7 @@ static void fmovenpage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
          PrintFileEntry( *start_file + *cursor_pos,
                          *cursor_pos % window_height,
                          *cursor_pos / window_height,
-                         TRUE,
+                         true,
                          *start_x
                          );
       }
@@ -1327,14 +1327,14 @@ static void fmoveppage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
              PrintFileEntry( *start_file + *cursor_pos,
                              *cursor_pos % window_height,
                              *cursor_pos / window_height,
-                             FALSE,
+                             false,
                              *start_x
                              );
              *cursor_pos = 0;
              PrintFileEntry( *start_file + *cursor_pos,
                              *cursor_pos % window_height,
                              *cursor_pos / window_height,
-                             TRUE,
+                             true,
                              *start_x
                              );
         }
@@ -1377,14 +1377,14 @@ int HandleFileWindow(DirEntry *dir_entry)
   int start_x = 0;
   char filepath[PATH_LENGTH +1];
   char modus[11];
-  BOOL path_copy;
+  bool path_copy;
   int  term;
   int  mask;
   static char to_dir[PATH_LENGTH+1];
   static char to_path[PATH_LENGTH+1];
   static char to_file[PATH_LENGTH+1];
-  BOOL need_dsp_help;
-  BOOL maybe_change_x_step;
+  bool need_dsp_help;
+  bool maybe_change_x_step;
   char new_name[PATH_LENGTH+1];
   char new_login_path[PATH_LENGTH + 1];
   int  dir_window_width, dir_window_height;
@@ -1397,8 +1397,8 @@ int HandleFileWindow(DirEntry *dir_entry)
   /* Cursor-Positionsmerker zuruecksetzen */
   /*--------------------------------------*/
 
-  need_dsp_help = TRUE;
-  maybe_change_x_step = TRUE;
+  need_dsp_help = true;
+  maybe_change_x_step = true;
 
   BuildFileEntryList( dir_entry );
 
@@ -1424,7 +1424,7 @@ int HandleFileWindow(DirEntry *dir_entry)
   {
     if( maybe_change_x_step )
     {
-      maybe_change_x_step = FALSE;
+      maybe_change_x_step = false;
 
       x_step =  (max_column > 1) ? window_height : 1;
       max_disp_files = window_height * max_column;
@@ -1432,7 +1432,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
     if( need_dsp_help )
     {
-      need_dsp_help = FALSE;
+      need_dsp_help = false;
       DisplayFileHelp();
     }
 
@@ -1500,11 +1500,11 @@ int HandleFileWindow(DirEntry *dir_entry)
        DisplayDirStatistic(dir_entry);
        DisplayFileParameter(fe_ptr);
      }
-     need_dsp_help = TRUE;
+     need_dsp_help = true;
      DisplayAvailBytes();
      DisplayFileSpec();
      DisplayDiskName();
-     resize_request = FALSE;
+     resize_request = false;
    }
 
    if( file_mode == MODE_1 )
@@ -1532,7 +1532,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 	PrintFileEntry( dir_entry->start_file + dir_entry->cursor_pos,
 	 	        dir_entry->cursor_pos % window_height,
 		        dir_entry->cursor_pos / window_height,
-		        TRUE ,
+		        true,
 		        start_x
 	              );
      }
@@ -1547,7 +1547,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 #ifdef KEY_RESIZE
 
-      case KEY_RESIZE: resize_request = TRUE;
+      case KEY_RESIZE: resize_request = true;
                        break;
 #endif
 
@@ -1625,14 +1625,14 @@ int HandleFileWindow(DirEntry *dir_entry)
       case 'A' :
       case 'a' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
 
-	              need_dsp_help = TRUE;
+	              need_dsp_help = true;
 
 		      if( !ChangeFileModus( fe_ptr ) )
 		      {
 			PrintFileEntry( dir_entry->start_file + dir_entry->cursor_pos,
 				        dir_entry->cursor_pos % window_height,
 				        dir_entry->cursor_pos / window_height,
-				        TRUE,
+				        true,
 					start_x
 			              );
 		      }
@@ -1645,7 +1645,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 		      else
 		      {
-			need_dsp_help = TRUE;
+			need_dsp_help = true;
 
 		   	mask = S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 
@@ -1678,14 +1678,14 @@ int HandleFileWindow(DirEntry *dir_entry)
       case 'O' :
       case 'o' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
 
-		      need_dsp_help = TRUE;
+		      need_dsp_help = true;
 
 		      if( !ChangeFileOwner( fe_ptr ) )
 		      {
 			PrintFileEntry( dir_entry->start_file + dir_entry->cursor_pos,
 				        dir_entry->cursor_pos % window_height,
 				        dir_entry->cursor_pos / window_height,
-				        TRUE ,
+				        true ,
 					start_x
 			              );
 		      }
@@ -1698,7 +1698,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 		      else
 		      {
-			need_dsp_help = TRUE;
+			need_dsp_help = true;
 		        if( ( owner_id = GetNewOwner( -1 ) ) >= 0 )
 			{
 			  walking_package.function_data.change_owner.new_owner_id = owner_id;
@@ -1720,14 +1720,14 @@ int HandleFileWindow(DirEntry *dir_entry)
       case 'G' :
       case 'g' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
 
-		      need_dsp_help = TRUE;
+		      need_dsp_help = true;
 
 		      if( !ChangeFileGroup( fe_ptr ) )
 		      {
 			PrintFileEntry( dir_entry->start_file + dir_entry->cursor_pos,
 				        dir_entry->cursor_pos % window_height,
 				        dir_entry->cursor_pos / window_height,
-				        TRUE,
+				        true,
 					start_x
 			              );
 		      }
@@ -1740,7 +1740,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 		      else
 		      {
-			need_dsp_help = TRUE;
+			need_dsp_help = true;
 
 		        if( ( group_id = GetNewGroup( -1 ) ) >= 0 )
 			{
@@ -1766,12 +1766,12 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 		      if( !fe_ptr->tagged )
 		      {
-                        fe_ptr->tagged = TRUE;
+                        fe_ptr->tagged = true;
 
 			PrintFileEntry( dir_entry->start_file + dir_entry->cursor_pos,
 				        dir_entry->cursor_pos % window_height,
 				        dir_entry->cursor_pos / window_height,
-				        TRUE,
+				        true,
 					start_x
 			              );
 	       	        de_ptr->tagged_files++;
@@ -1791,12 +1791,12 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      de_ptr = fe_ptr->dir_entry;
                       if( fe_ptr->tagged )
 		      {
-			fe_ptr->tagged = FALSE;
+			fe_ptr->tagged = false;
 
 			PrintFileEntry( dir_entry->start_file + dir_entry->cursor_pos,
 				        dir_entry->cursor_pos % window_height,
 				        dir_entry->cursor_pos / window_height,
-				        TRUE,
+				        true,
 					start_x
 			              );
 
@@ -1848,7 +1848,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			{
 			  file_size = fe_ptr->stat_struct.st_size;
 
-			  fe_ptr->tagged = TRUE;
+			  fe_ptr->tagged = true;
 			  de_ptr->tagged_files++;
 			  de_ptr->tagged_bytes += file_size;
 			  statistic.disk_tagged_files++;
@@ -1879,7 +1879,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			{
 			  file_size = fe_ptr->stat_struct.st_size;
 
-			  fe_ptr->tagged = FALSE;
+			  fe_ptr->tagged = false;
 			  de_ptr->tagged_files--;
 			  de_ptr->tagged_bytes -= file_size;
 			  statistic.disk_tagged_files--;
@@ -1912,7 +1912,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			{
 			  file_size = fe_ptr->stat_struct.st_size;
 
-			  fe_ptr->tagged = TRUE;
+			  fe_ptr->tagged = true;
 			  de_ptr->tagged_files++;
 			  de_ptr->tagged_bytes += file_size;
 			  statistic.disk_tagged_files++;
@@ -1944,7 +1944,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			{
 			  file_size = fe_ptr->stat_struct.st_size;
 
-			  fe_ptr->tagged = FALSE;
+			  fe_ptr->tagged = false;
 			  de_ptr->tagged_files--;
 			  de_ptr->tagged_bytes -= file_size;
 			  statistic.disk_tagged_files--;
@@ -1969,7 +1969,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      de_ptr = fe_ptr->dir_entry;
 		      (void) GetRealFileNamePath( fe_ptr, filepath );
 		      (void) View( dir_entry, filepath );
-		      need_dsp_help = TRUE;
+		      need_dsp_help = true;
 		      break;
 
       case 'H' :
@@ -1977,7 +1977,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      de_ptr = fe_ptr->dir_entry;
 		      (void) GetRealFileNamePath( fe_ptr, filepath );
 		      (void) ViewHex( filepath );
-		      need_dsp_help = TRUE;
+		      need_dsp_help = true;
 		      break;
 
       case 'E':
@@ -1993,10 +1993,10 @@ int HandleFileWindow(DirEntry *dir_entry)
       case 'c' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
 		      de_ptr = fe_ptr->dir_entry;
 
-		      path_copy = FALSE;
-		      if( ch == 'y' || ch == 'Y' ) path_copy = TRUE;
+		      path_copy = false;
+		      if( ch == 'y' || ch == 'Y' ) path_copy = true;
 
-		      need_dsp_help = TRUE;
+		      need_dsp_help = true;
 
 		      if( GetCopyParameter( fe_ptr->name, path_copy, to_file, to_dir ) )
                       {
@@ -2022,7 +2022,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 		        if( !CopyFile( &statistic,
 				       fe_ptr,
-				       TRUE,
+				       true,
 				       to_file,
 				       dest_dir_entry,
 				       to_path,
@@ -2086,7 +2086,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			}
 		        if( !CopyFile( &disk_statistic,
 				       fe_ptr,
-				       TRUE,
+				       true,
 				       to_file,
 				       dest_dir_entry,
 				       to_path,
@@ -2106,8 +2106,8 @@ int HandleFileWindow(DirEntry *dir_entry)
       case 'C' & 0x1F :
 		      de_ptr = dir_entry;
 
-                      path_copy = FALSE;
-                      if( ch == ('Y' & 0x1F) ) path_copy = TRUE;
+                      path_copy = false;
+                      if( ch == ('Y' & 0x1F) ) path_copy = true;
 
 		      if( !IsMatchingTaggedFiles() )
 		      {
@@ -2115,7 +2115,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 		      else
 		      {
-		        need_dsp_help = TRUE;
+		        need_dsp_help = true;
 
 			if( GetCopyParameter( NULL, path_copy, to_file, to_dir ) )
                         {
@@ -2149,7 +2149,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			  walking_package.function_data.copy.to_file        = to_file;
 			  walking_package.function_data.copy.to_path        = to_path;
 			  walking_package.function_data.copy.path_copy      = path_copy;
-			  walking_package.function_data.copy.confirm = (term == 'Y') ? TRUE : FALSE;
+			  walking_package.function_data.copy.confirm = (term == 'Y') ? true : false;
 
 			  WalkTaggedFiles( dir_entry->start_file,
 					   dir_entry->cursor_pos,
@@ -2203,7 +2203,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			  walking_package.function_data.copy.to_file        = to_file;
 			  walking_package.function_data.copy.to_path        = to_path;
 			  walking_package.function_data.copy.path_copy      = path_copy;
-			  walking_package.function_data.copy.confirm = (term == 'Y') ? TRUE : FALSE;
+			  walking_package.function_data.copy.confirm = (term == 'Y') ? true : false;
 
 			  WalkTaggedFiles( dir_entry->start_file,
 					   dir_entry->cursor_pos,
@@ -2232,7 +2232,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
 		      de_ptr = fe_ptr->dir_entry;
 
-		      need_dsp_help = TRUE;
+		      need_dsp_help = true;
 
 		      if( GetMoveParameter( fe_ptr->name, to_file, to_dir ) )
                       {
@@ -2252,7 +2252,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 
 		      if( !MoveFile( fe_ptr,
-				     TRUE,
+				     true,
 				     to_file,
 				     dest_dir_entry,
 				     to_path,
@@ -2290,7 +2290,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 				      dir_entry->start_file + dir_entry->cursor_pos,
 				      start_x
 			            );
-			maybe_change_x_step = TRUE;
+			maybe_change_x_step = true;
 		      }
 		      break;
 
@@ -2301,7 +2301,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 		      else
 		      {
-		        need_dsp_help = TRUE;
+		        need_dsp_help = true;
 
 			if( GetMoveParameter( NULL, to_file, to_dir ) )
                         {
@@ -2331,7 +2331,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			walking_package.function_data.mv.dest_dir_entry = dest_dir_entry;
 			walking_package.function_data.mv.to_file = to_file;
 			walking_package.function_data.mv.to_path = to_path;
-			walking_package.function_data.mv.confirm = (term == 'Y') ? TRUE : FALSE;
+			walking_package.function_data.mv.confirm = (term == 'Y') ? true : false;
 
 			WalkTaggedFiles( dir_entry->start_file,
 					 dir_entry->cursor_pos,
@@ -2351,7 +2351,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 				      dir_entry->start_file + dir_entry->cursor_pos,
 				      start_x
 			            );
-			maybe_change_x_step = TRUE;
+			maybe_change_x_step = true;
 		      }
 		      break;
 
@@ -2366,7 +2366,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 					  "YN\033"
 					);
 
-		      need_dsp_help = TRUE;
+		      need_dsp_help = true;
 
 		      if( term != 'Y' ) break;
 
@@ -2406,7 +2406,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 				      dir_entry->start_file + dir_entry->cursor_pos,
 				      start_x
 			            );
-			maybe_change_x_step = TRUE;
+			maybe_change_x_step = true;
 		      }
                       break;
 
@@ -2417,7 +2417,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 		      else
 		      {
-		        need_dsp_help = TRUE;
+		        need_dsp_help = true;
 			(void) DeleteTaggedFiles( max_disp_files );
 			if( file_count == 0 ) unput_char = ESC;
 			dir_entry->start_file = 0;
@@ -2428,7 +2428,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 				      dir_entry->start_file + dir_entry->cursor_pos,
 				      start_x
 			            );
-			maybe_change_x_step = TRUE;
+			maybe_change_x_step = true;
 		      }
 		      break;
 
@@ -2459,10 +2459,10 @@ int HandleFileWindow(DirEntry *dir_entry)
 				        dir_entry->start_file + dir_entry->cursor_pos,
 				        start_x
 			              );
-			  maybe_change_x_step = TRUE;
+			  maybe_change_x_step = true;
                         }
 		      }
-		      need_dsp_help = TRUE;
+		      need_dsp_help = true;
 		      break;
 
       case 'R' & 0x1F :
@@ -2472,7 +2472,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 		      else
 		      {
-		        need_dsp_help = TRUE;
+		        need_dsp_help = true;
 
 			if( GetRenameParameter( NULL, new_name ) )
                         {
@@ -2481,7 +2481,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		        }
 
 			walking_package.function_data.rename.new_name = new_name;
-			walking_package.function_data.rename.confirm  = FALSE;
+			walking_package.function_data.rename.confirm  = false;
 
 			WalkTaggedFiles( dir_entry->start_file,
 					 dir_entry->cursor_pos,
@@ -2499,7 +2499,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 				      start_x
 			            );
 
-			maybe_change_x_step = TRUE;
+			maybe_change_x_step = true;
 		      }
 		      break;
 
@@ -2516,7 +2516,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 				    dir_entry->start_file + dir_entry->cursor_pos,
 				    start_x
 			          );
-		      need_dsp_help = TRUE;
+		      need_dsp_help = true;
 		      break;
 
       case 'F':
@@ -2540,9 +2540,9 @@ int HandleFileWindow(DirEntry *dir_entry)
 		          DisplayDirStatistic( dir_entry );
 
                         if( file_count == 0 ) unput_char = ESC;
-		        maybe_change_x_step = TRUE;
+		        maybe_change_x_step = true;
 	              }
-		      need_dsp_help = TRUE;
+		      need_dsp_help = true;
 		      break;
 
 #ifndef VI_KEYS
@@ -2554,19 +2554,19 @@ int HandleFileWindow(DirEntry *dir_entry)
 		       (void) GetFileNamePath( fe_ptr, new_login_path );
                        if( !GetNewLoginPath( new_login_path ) )
 		       {
-			 dir_entry->login_flag  = TRUE;
+			 dir_entry->login_flag  = true;
 
 		         (void) LoginDisk( new_login_path );
 		         unput_char = LOGIN_ESC;
 			}
-		        need_dsp_help = TRUE;
+		        need_dsp_help = true;
 		     }
 		     else beep();
 		     break;
 
       case LF:
       case CR:        if( dir_entry->big_window ) break;
-		      dir_entry->big_window = TRUE;
+		      dir_entry->big_window = true;
 		      ch = '\0';
 		      SwitchToBigFileWindow();
                       GetMaxYX( file_window, &window_height, &window_width );
@@ -2585,7 +2585,7 @@ int HandleFileWindow(DirEntry *dir_entry)
       case 'p' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
 		      de_ptr = fe_ptr->dir_entry;
 		      (void) Pipe( de_ptr, fe_ptr );
-		      need_dsp_help = TRUE;
+		      need_dsp_help = true;
 		      break;
 
       case 'P' & 0x1F :
@@ -2601,7 +2601,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 		      else
 		      {
-		        need_dsp_help = TRUE;
+		        need_dsp_help = true;
 
 			if( GetPipeCommand( filepath ) )
                         {
@@ -2626,7 +2626,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 					 &walking_package
 				       );
 
-		        clearok( stdscr, TRUE );
+		        clearok( stdscr, true );
 
 			if( pclose( walking_package.function_data.pipe_cmd.pipe_file ) )
 			{
@@ -2648,7 +2648,7 @@ int HandleFileWindow(DirEntry *dir_entry)
       case 'x' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
 		      de_ptr = fe_ptr->dir_entry;
 		      (void) Execute( de_ptr, fe_ptr );
-		      need_dsp_help = TRUE;
+		      need_dsp_help = true;
 		      break;
 
       case 'S' & 0x1F :
@@ -2670,7 +2670,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			  exit( 1 );
 			}
 
-			need_dsp_help = TRUE;
+			need_dsp_help = true;
 			*command_line = '\0';
 		        if( !GetSearchCommandLine( command_line ) )
 			{
@@ -2717,7 +2717,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			  exit( 1 );
 			}
 
-			need_dsp_help = TRUE;
+			need_dsp_help = true;
 			*command_line = '\0';
 		        if( !GetCommandLine( command_line ) )
 			{
@@ -2740,7 +2740,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'Q' & 0x1F:
-                      need_dsp_help = TRUE;
+                      need_dsp_help = true;
                       fe_ptr = file_entry_list[dir_entry->start_file
                                 + dir_entry->cursor_pos].file;
                       de_ptr = fe_ptr->dir_entry;
@@ -2748,12 +2748,12 @@ int HandleFileWindow(DirEntry *dir_entry)
                       break;
 
       case 'Q':
-      case 'q':       need_dsp_help = TRUE;
+      case 'q':       need_dsp_help = true;
                       Quit();
 		      break;
 
       case 'L' & 0x1F:
-		      clearok( stdscr, TRUE );
+		      clearok( stdscr, true );
 		      break;
 
       case '\033':    break;
@@ -2763,7 +2763,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
       case KEY_F(12):
       		      ListJump(dir_entry, "");
-		      need_dsp_help = TRUE;
+		      need_dsp_help = true;
 		      break;
 
       default:        beep();
@@ -2775,9 +2775,9 @@ int HandleFileWindow(DirEntry *dir_entry)
     SwitchToSmallFileWindow();
 
   if(ch != LOGIN_ESC) {
-    dir_entry->global_flag = FALSE;
-    dir_entry->tagged_flag = FALSE;
-    dir_entry->big_window  = FALSE;
+    dir_entry->global_flag = false;
+    dir_entry->tagged_flag = false;
+    dir_entry->big_window  = false;
   }
 
   return( ch );
@@ -2928,7 +2928,7 @@ static void SilentTagWalkTaggedFiles(
   }
 }
 
-static BOOL IsMatchingTaggedFiles(void)
+static bool IsMatchingTaggedFiles(void)
 {
   FileEntry *fe_ptr;
   int i;
@@ -2938,10 +2938,10 @@ static BOOL IsMatchingTaggedFiles(void)
     fe_ptr = file_entry_list[i].file;
 
     if( fe_ptr->matching && fe_ptr->tagged )
-      return( TRUE );
+      return true;
   }
 
-  return( FALSE );
+  return false;
 }
 
 
@@ -2956,8 +2956,8 @@ static int DeleteTaggedFiles(int max_disp_files)
   int       i;
   int       start_file;
   int       cursor_pos;
-  BOOL      deleted;
-  BOOL      confirm;
+  bool deleted;
+  bool confirm;
   int       term;
   int       start_x = 0;
   int       result = 0;
@@ -2966,14 +2966,14 @@ static int DeleteTaggedFiles(int max_disp_files)
 
   if( term == ESC ) return( -1 );
 
-  if( term == 'Y' ) confirm = TRUE;
-  else confirm = FALSE;
+  if( term == 'Y' ) confirm = true;
+  else confirm = false;
 
   if( baudrate() >= QUICK_BAUD_RATE ) typeahead( 0 );
 
   for( i=0; i < (int)file_count && result == 0; )
   {
-    deleted = FALSE;
+    deleted = false;
 
     fe_ptr = file_entry_list[i].file;
     de_ptr = fe_ptr->dir_entry;
@@ -3014,7 +3014,7 @@ static int DeleteTaggedFiles(int max_disp_files)
 	  /* File wurde geloescht */
 	  /*----------------------*/
 
-	  deleted = TRUE;
+	  deleted = true;
 
   	  if( de_ptr->global_flag )
 	    DisplayDiskStatistic();

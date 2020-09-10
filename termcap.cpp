@@ -85,14 +85,14 @@ int TermcapWgetch( WINDOW *win )
 {
   int        ch;
   SpecialKey *sk_ptr;
-  BOOL       one_matched = FALSE;
+  bool       one_matched = false;
   int        i;
 
   ch = wgetch( stdscr );
 
-  for( i=0, sk_ptr = special_key; 
-       sk_ptr->key_code > 0; 
-       sk_ptr = &special_key[++i] 
+  for( i=0, sk_ptr = special_key;
+       sk_ptr->key_code > 0;
+       sk_ptr = &special_key[++i]
      )
   {
     /* Ein-Byte Codes ausblenden */
@@ -104,14 +104,14 @@ int TermcapWgetch( WINDOW *win )
       /*------------------------*/
 
       if( sk_ptr->key_sequence[1] == '\0' )
-      { 
+      {
         /* 1 Byte-Code */
         /*-------------*/
 
         ch = sk_ptr->key_code;
         break;
       }
-      one_matched = TRUE;
+      one_matched = true;
     }
   }
 
@@ -131,7 +131,7 @@ static int TermcapMultiByte( WINDOW *win, int ch )
 {
   SpecialKey *sk_ptr;
   char buffer[80];
-  BOOL found;
+  bool found;
   int i, j;
 
   memset( buffer, 0, sizeof( buffer ) );
@@ -150,24 +150,24 @@ static int TermcapMultiByte( WINDOW *win, int ch )
 
   alarm( 1 );
 
-  for( j=1, found = FALSE; !found && j < sizeof( buffer ); j++ )
+  for( j=1, found = false; !found && j < sizeof( buffer ); j++ )
   {
     buffer[j] = wgetch( win );
 
-    for( i=0, sk_ptr = special_key; 
-	 sk_ptr->key_code > 0; 
-	 sk_ptr = &special_key[++i] 
+    for( i=0, sk_ptr = special_key;
+	 sk_ptr->key_code > 0;
+	 sk_ptr = &special_key[++i]
        )
     {
       if( sk_ptr->key_sequence && !strcmp( sk_ptr->key_sequence, buffer ) )
       {
         ch = sk_ptr->key_code;
-        found = TRUE;
+        found = true;
         break;
       }
     }
   }
-  
+
   alarm( 0 );
 
   return( ch );

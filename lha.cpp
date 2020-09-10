@@ -24,7 +24,7 @@ int ReadTreeFromLHA(DirEntry *dir_entry, FILE *f)
   char lha_line[LHA_LINE_LENGTH + 1];
   char path_name[PATH_LENGTH +1];
   struct stat stat;
-  BOOL   dir_flag = FALSE;
+  bool   dir_flag = false;
 
   *dir_entry->name = '\0';
 
@@ -61,7 +61,7 @@ int ReadTreeFromLHA(DirEntry *dir_entry, FILE *f)
   }
 
 
-  if( dir_flag == FALSE )
+  if( dir_flag == false )
   {
     statistic.disk_total_directories++;
     (void) memset( (char *) &dir_entry->stat_struct, 0, sizeof( struct stat ) );
@@ -78,7 +78,7 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
 {
   char *t, *old;
   char modus[11];
-  BOOL dos_mode = FALSE;
+  bool dos_mode = false;
   int  i, id;
   struct tm tm_struct;
   static const char *month[] = { "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
@@ -103,7 +103,7 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
   else if( *t == '[' )
   {
     stat->st_mode = GetModus( "-rw-r--r--" );
-    dos_mode = TRUE;
+    dos_mode = true;
   }
   else return( -1 );
 

@@ -23,7 +23,7 @@ int ReadTreeFromZIP(DirEntry *dir_entry, FILE *f)
   char zip_line[ZIP_LINE_LENGTH + 1];
   char path_name[PATH_LENGTH +1];
   struct stat stat;
-  BOOL   dir_flag = FALSE;
+  bool dir_flag = false;
 
   *dir_entry->name = '\0';
 

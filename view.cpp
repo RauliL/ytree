@@ -28,9 +28,9 @@ static struct stat fdstat;
 static int WLINES, WCOLS, BYTES;
 static WINDOW *VIEW, *BORDER;
 
-BOOL inhex=TRUE;
-BOOL inedit=FALSE;
-BOOL hexoffset=TRUE;
+bool inhex=true;
+bool inedit=false;
+bool hexoffset=true;
 
 
 #define CURSOR_CALC_X (10+((cursor_pos_x<(BYTES))? 2:3)+(cursor_pos_x)+(cursor_pos_x/2))
@@ -71,7 +71,7 @@ static int ViewFile(DirEntry * dir_entry, char *file_path)
   int  compress_method;
   int  result = -1;
   char *file_p_aux;
-  BOOL notice_mapped = FALSE;
+  bool notice_mapped = false;
   char cwd[PATH_LENGTH+1];
   char path[PATH_LENGTH+1];
 
@@ -338,9 +338,9 @@ void update_line(WINDOW *win, long line)
 
 void scroll_down(WINDOW *win)
 {
-    scrollok(win,TRUE);
+    scrollok(win,true);
     wscrl(win,1);
-    scrollok(win,FALSE);
+    scrollok(win,false);
     wmove(win, WLINES - 1 , 0);
     update_line(win, current_line + WLINES - 1);
     wnoutrefresh(win);
@@ -349,9 +349,9 @@ void scroll_down(WINDOW *win)
 
 void scroll_up(WINDOW *win)
 {
-    scrollok(win,TRUE);
+    scrollok(win,true);
     wscrl(win,-1);
-    scrollok(win,FALSE);
+    scrollok(win,false);
     wmove(win, 0, 0);
     update_line(win, current_line );
     wnoutrefresh(win);
@@ -433,10 +433,10 @@ void SetupViewWindow(char *file_path)
     if (VIEW)
 	delwin(VIEW);
     VIEW=newwin(WLINES, WCOLS, 2, 1);
-    keypad(VIEW,TRUE);
-    scrollok(VIEW,FALSE);
-    clearok(VIEW,TRUE);
-    leaveok(VIEW,FALSE);
+    keypad(VIEW,true);
+    scrollok(VIEW,false);
+    clearok(VIEW,true);
+    leaveok(VIEW,false);
 /*    werase(VIEW);*/
     WbkgdSet(VIEW,COLOR_PAIR(WINDIR_COLOR));
     wclear(VIEW);
@@ -575,7 +575,7 @@ void hex_edit(char *file_path)
     int ch;
     char mensaje[50];
 
-    BOOL QUIT=FALSE;
+    bool QUIT=false;
 
     cursor_pos_x = cursor_pos_y = 0;
     fd2 = fd;
@@ -587,9 +587,9 @@ void hex_edit(char *file_path)
         fd = fd2;
 	return;
     }
-    inedit=TRUE;
+    inedit=true;
     update_all_lines(VIEW,WLINES-1);
-    leaveok( VIEW, FALSE);
+    leaveok( VIEW, false);
     curs_set( 1);
     wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
     wnoutrefresh(VIEW);
@@ -611,7 +611,7 @@ void hex_edit(char *file_path)
 	}
 
 	switch(ch){
-	    case ESC: QUIT=TRUE;
+	    case ESC: QUIT=true;
 		      break;
 	    case KEY_DOWN: /*ScrollDown();*/
 			   fstat(fd,&fdstat);
@@ -740,23 +740,23 @@ void hex_edit(char *file_path)
 	    case '\t' :
 			/* move cursor to the the other part of the window*/
 			if (inhex){
-			    inhex=FALSE;
+			    inhex=false;
 			    cursor_pos_x=cursor_pos_x/2;
 			}else{
-			    inhex=TRUE;
+			    inhex=true;
 			    cursor_pos_x=cursor_pos_x*2;
 			}
 			wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
 			wnoutrefresh(VIEW);
 			break;
 	    case 'L' & 0x1f:
-			clearok(stdscr,TRUE);
+			clearok(stdscr,true);
 			RefreshWindow(stdscr);
 			break;
 
 	    case 'q':
 	    case 'Q': if (inhex) {
-		        QUIT=TRUE;
+		        QUIT=true;
 			break;
 			}
 	    default:
@@ -772,7 +772,7 @@ void hex_edit(char *file_path)
     curs_set( 0);
     close(fd);
     fd=fd2;
-    inedit=FALSE;
+    inedit=false;
     return;
 }
 
@@ -781,9 +781,9 @@ int InternalView(char *file_path)
 {
     long oldpos;
     int ch;
-    BOOL QUIT=FALSE;
+    bool QUIT=false;
 
-    hexoffset = (!strcmp(HEXEDITOFFSET, "HEX")) ? TRUE : FALSE;
+    hexoffset = (!strcmp(HEXEDITOFFSET, "HEX")) ? true : false;
 
     if (stat(file_path, &fdstat)!=0)
 	return -1;
@@ -811,7 +811,7 @@ int InternalView(char *file_path)
 	switch(ch){
 	    case ESC:
 	    case 'q':
-	    case 'Q': QUIT=TRUE;
+	    case 'Q': QUIT=true;
 		      break;
 	    case 'e':
 	    case 'E': Change2Edit(file_path);
@@ -891,7 +891,7 @@ int InternalView(char *file_path)
 			update_all_lines(VIEW,WLINES);
 	                break;
 	    case 'L' & 0x1f:
-			clearok(stdscr,TRUE);
+			clearok(stdscr,true);
 			RefreshWindow(stdscr);
 			break;
 	    default: break;

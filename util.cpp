@@ -5,11 +5,7 @@
  * Diverse Hilfsfunktionen
  *
  ***************************************************************************/
-
-
 #include "ytree.h"
-#include "xmalloc.h"
-
 
 typedef struct
 {
@@ -17,11 +13,9 @@ typedef struct
   int  method;
 } Extension2Method;
 
-
-
 static Extension2Method file_extensions[] = FILE_EXTENSIONS;
-static char *GNU_getcwd(void);
 
+static char* GNU_getcwd();
 
 char *GetPath(DirEntry *dir_entry, char *buffer)
 {
@@ -1106,21 +1100,25 @@ char *Getcwd(char *buffer, unsigned int size)
   return(getcwd(buffer, size));
 }
 
-
-static char *GNU_getcwd()
+static char* GNU_getcwd()
 {
-  unsigned int size = 100;
+  std::size_t size = 100;
 
-  while (1)
+  for (;;)
+  {
+    auto buffer = static_cast<char*>(std::malloc(size));
+
+    if (getcwd(buffer, size) == buffer)
     {
-      char *buffer = (char *) xmalloc (size);
-      if (getcwd (buffer, size) == buffer)
-        return buffer;
-      free (buffer);
-      if (errno != ERANGE)
-        return 0;
-      size *= 2;
+      return buffer;
     }
+    std::free(buffer);
+    if (errno != ERANGE)
+    {
+      return nullptr;
+    }
+    size *= 2;
+  }
 }
 
 /*****************************************************************************

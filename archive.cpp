@@ -34,22 +34,22 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
   if( ( p = strrchr( father_path, FILE_SEPARATOR_CHAR ) ) ) *p = '\0';
   else
   {
-    (void) sprintf( message, "path mismatch*missing '%c' in*%s", 
-	            FILE_SEPARATOR_CHAR, 
-	            path 
+    (void) sprintf( message, "path mismatch*missing '%c' in*%s",
+	            FILE_SEPARATOR_CHAR,
+	            path
 	          );
     ERROR_MSG( message );
     return( -1 );
   }
 
   p = strrchr( father_path, FILE_SEPARATOR_CHAR );
-  
+
   if( p == NULL )
   {
     df_ptr = tree;
-    if( !strcmp( path, FILE_SEPARATOR_STRING ) ) 
+    if( !strcmp( path, FILE_SEPARATOR_STRING ) )
       (void) strcpy( name, path );
-    else                       
+    else
       (void) strcpy( name, father_path );
   }
   else
@@ -62,8 +62,8 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
       ERROR_MSG( message );
       return( -1 );
     }
-  } 
-  
+  }
+
   if( ( de_ptr = (DirEntry *) malloc( sizeof( DirEntry ) + strlen( name ) ) ) == NULL )
   {
     ERROR_MSG( "Malloc failed*ABORT" );
@@ -71,7 +71,7 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
   }
 
   (void) memset( (char *) de_ptr, 0, sizeof( DirEntry ) );
-  (void) strcpy( de_ptr->name, name ); 
+  (void) strcpy( de_ptr->name, name );
   (void) memcpy( (char *) &de_ptr->stat_struct, (char *) stat, sizeof( struct stat ) );
 
 #ifdef DEBUG
@@ -92,11 +92,11 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
 
     for( ds_ptr = df_ptr; ds_ptr; ds_ptr = ds_ptr->next )
     {
-      if( strcmp( ds_ptr->name, de_ptr->name ) > 0 ) 
+      if( strcmp( ds_ptr->name, de_ptr->name ) > 0 )
       {
         /* ds-Element ist groesser */
         /*-------------------------*/
-  
+
         de_ptr->next = ds_ptr;
         de_ptr->prev = ds_ptr->prev;
         if( ds_ptr->prev) ds_ptr->prev->next = de_ptr;
@@ -105,12 +105,12 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
 	  de_ptr->up_tree->sub_tree = de_ptr;
         break;
       }
-  	
+
       if( ds_ptr->next == NULL )
       {
         /* Ende der Liste erreicht; ==> einfuegen */
         /*----------------------------------------*/
-  
+
         de_ptr->prev = ds_ptr;
         de_ptr->next = ds_ptr->next;
         ds_ptr->next = de_ptr;
@@ -129,11 +129,11 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
 
     for( ds_ptr = df_ptr->sub_tree; ds_ptr; ds_ptr = ds_ptr->next )
     {
-      if( strcmp( ds_ptr->name, de_ptr->name ) > 0 ) 
+      if( strcmp( ds_ptr->name, de_ptr->name ) > 0 )
       {
         /* ds-Element ist groesser */
         /*-------------------------*/
-  
+
         de_ptr->next = ds_ptr;
         de_ptr->prev = ds_ptr->prev;
         if( ds_ptr->prev ) ds_ptr->prev->next = de_ptr;
@@ -142,12 +142,12 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
 	  de_ptr->up_tree->sub_tree = de_ptr;
         break;
       }
-  	
+
       if( ds_ptr->next == NULL )
       {
         /* Ende der Liste erreicht; ==> einfuegen */
         /*----------------------------------------*/
-  
+
         de_ptr->prev = ds_ptr;
         de_ptr->next = ds_ptr->next;
         ds_ptr->next = de_ptr;
@@ -203,12 +203,12 @@ int InsertArchiveFileEntry(DirEntry *tree, char *path, struct stat *stat)
     }
   }
 
-  if( S_ISLNK( stat->st_mode ) ) 
+  if( S_ISLNK( stat->st_mode ) )
     n = strlen( &path[ strlen( path ) + 1 ] ) + 1;
   else
     n = 0;
 
-  if( ( fe_ptr = (FileEntry *) malloc( sizeof( FileEntry ) + strlen( file ) + n ) ) == NULL ) 
+  if( ( fe_ptr = (FileEntry *) malloc( sizeof( FileEntry ) + strlen( file ) + n ) ) == NULL )
   {
     ERROR_MSG( "Malloc failed*ABORT" );
     exit( 1 );
@@ -217,10 +217,10 @@ int InsertArchiveFileEntry(DirEntry *tree, char *path, struct stat *stat)
   (void) memset( fe_ptr, 0, sizeof( FileEntry ) );
   (void) memcpy( (char *) &fe_ptr->stat_struct, (char *) stat, sizeof( struct stat ) );
   (void) strcpy( fe_ptr->name, file );
-  
+
   if( S_ISLNK( stat->st_mode ) )
   {
-    (void) strcpy( &fe_ptr->name[ strlen( fe_ptr->name ) + 1 ], 
+    (void) strcpy( &fe_ptr->name[ strlen( fe_ptr->name ) + 1 ],
 		   &path[ strlen( path ) + 1 ]
 		 );
   }
@@ -257,21 +257,21 @@ static int GetArchiveDirEntry(DirEntry *tree, char *path, DirEntry **dir_entry)
 {
   int n;
   DirEntry *de_ptr;
-  BOOL is_root = FALSE;
+  bool is_root = false;
 
 #ifdef DEBUG
-  fprintf( stderr, "GetArchiveDirEntry: tree=%s, path=%s\n", 
+  fprintf( stderr, "GetArchiveDirEntry: tree=%s, path=%s\n",
   (tree) ? tree->name : "NULL", path );
 #endif
 
-  if( strchr( path, FILE_SEPARATOR_CHAR ) != NULL ) 
+  if( strchr( path, FILE_SEPARATOR_CHAR ) != NULL )
   {
     for( de_ptr = tree; de_ptr; de_ptr = de_ptr->next )
     {
       n = strlen( de_ptr->name );
-      if( !strcmp( de_ptr->name, FILE_SEPARATOR_STRING ) ) is_root = TRUE;
+      if( !strcmp( de_ptr->name, FILE_SEPARATOR_STRING ) ) is_root = true;
 
-      if( n && !strncmp( de_ptr->name, path, n ) && 
+      if( n && !strncmp( de_ptr->name, path, n ) &&
 	  (is_root || path[n] == '\0' || path[n] == FILE_SEPARATOR_CHAR ) )
       {
 	if( ( is_root && path[n] == '\0' ) ||
@@ -284,10 +284,10 @@ static int GetArchiveDirEntry(DirEntry *tree, char *path, DirEntry **dir_entry)
 	  return( 0 );
 	}
 	else
-        {	
-	  return( GetArchiveDirEntry( de_ptr->sub_tree, 
-				  ( is_root ) ? &path[n] : &path[n+1], 
-				  dir_entry 
+        {
+	  return( GetArchiveDirEntry( de_ptr->sub_tree,
+				  ( is_root ) ? &path[n] : &path[n+1],
+				  dir_entry
 				) );
 	}
       }
@@ -351,7 +351,7 @@ int MinimizeArchiveTree(DirEntry *tree)
 
 
   /* Falls tree einen Nachfolger hat und
-   * tree selbst leer ist, wird tree gestrichen 
+   * tree selbst leer ist, wird tree gestrichen
    */
 
   if( tree->prev == NULL &&
@@ -359,13 +359,13 @@ int MinimizeArchiveTree(DirEntry *tree)
       tree->file == NULL )
   {
     next_ptr = tree->next;
-    (void) memcpy( (char *) tree, 
-		   (char *) tree->next, 
-		   sizeof( DirEntry ) + strlen( tree->next->name ) 
+    (void) memcpy( (char *) tree,
+		   (char *) tree->next,
+		   sizeof( DirEntry ) + strlen( tree->next->name )
 		 );
     tree->prev = NULL;
     if( tree->next ) tree->next->prev = tree;
-    statistic.disk_total_directories--; 
+    statistic.disk_total_directories--;
     free( next_ptr );
     for( fe_ptr=tree->file; fe_ptr; fe_ptr=fe_ptr->next)
       fe_ptr->dir_entry = tree;
@@ -384,7 +384,7 @@ int MinimizeArchiveTree(DirEntry *tree)
       /* Zusammenfassung moeglich */
       /*--------------------------*/
 
-      if( strcmp( tree->name, FILE_SEPARATOR_STRING ) ) 
+      if( strcmp( tree->name, FILE_SEPARATOR_STRING ) )
 	(void) strcat( tree->name, FILE_SEPARATOR_STRING );
       (void) strcat( tree->name, de_ptr->name );
       statistic.disk_total_directories--;
@@ -406,7 +406,7 @@ int MinimizeArchiveTree(DirEntry *tree)
    * einen Subtree der Files hat, wird zusammengefasst
    */
 
-  if( tree->prev == NULL && 
+  if( tree->prev == NULL &&
       tree->next == NULL &&
       tree->file == NULL &&
       tree->sub_tree     &&
@@ -420,9 +420,9 @@ int MinimizeArchiveTree(DirEntry *tree)
     tree->file = de_ptr->file;
     for( fe_ptr=tree->file; fe_ptr; fe_ptr=fe_ptr->next )
       fe_ptr->dir_entry = tree;
-    (void) memcpy( (char *) &tree->stat_struct, 
-		   (char *) &de_ptr->stat_struct, 
-		   sizeof( struct stat ) 
+    (void) memcpy( (char *) &tree->stat_struct,
+		   (char *) &de_ptr->stat_struct,
+		   sizeof( struct stat )
 		  );
     statistic.disk_total_directories--;
     tree->sub_tree = de_ptr->sub_tree;
@@ -450,7 +450,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
     /* zoo xp FILE ?? */
     /*----------------*/
 
-    (void) sprintf( command_line, "%s '%s' '%s' %s", 
+    (void) sprintf( command_line, "%s '%s' '%s' %s",
 		    ZOOEXPAND,
 		    path,
 		    file,
@@ -462,7 +462,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
     /* xlharc p FILE ?? */
     /*------------------*/
 
-    (void) sprintf( command_line, "%s '%s' '%s' %s", 
+    (void) sprintf( command_line, "%s '%s' '%s' %s",
 		    LHAEXPAND,
 		    path,
 		    file,
@@ -474,7 +474,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
     /* unzip -c FILE ?? */
     /*------------------*/
 
-    (void) sprintf( command_line, "%s '%s' '%s' %s", 
+    (void) sprintf( command_line, "%s '%s' '%s' %s",
 		    ZIPEXPAND,
 		    path,
 		    file,
@@ -486,7 +486,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
     /* arc p FILE ?? */
     /*---------------*/
 
-    (void) sprintf( command_line, "%s '%s' '%s' %s", 
+    (void) sprintf( command_line, "%s '%s' '%s' %s",
 		    ARCEXPAND,
 		    path,
 		    file,
@@ -495,13 +495,13 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
   }
   else if( compress_method == RPM_COMPRESS )
   {
-    /* TF=/tmp/ytree.$$; mkdir $TF; cd $TF; rpm2cpio RPM_FILE | cpio -id FILE; 
+    /* TF=/tmp/ytree.$$; mkdir $TF; cd $TF; rpm2cpio RPM_FILE | cpio -id FILE;
      * cat $TF/$2; cd /tmp; rm -rf $TF; exit 0
      */
-    
+
 
     if(!strcmp(RPMEXPAND, "builtin")) {
-      (void) sprintf( command_line, 
+      (void) sprintf( command_line,
     		    "(TF=/tmp/ytree.$$; mkdir $TF; rpm2cpio '%s' | (cd $TF; cpio --no-absolute-filenames -i -d '%s'); cat \"$TF/%s\"; cd /tmp; rm -rf $TF; exit 0) %s",
 		    path,
 		    (*file == FILE_SEPARATOR_CHAR) ? &file[1] : file,
@@ -509,7 +509,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
 		    cmd
 		  );
     } else {
-      (void) sprintf( command_line, "%s '%s' '%s' %s", 
+      (void) sprintf( command_line, "%s '%s' '%s' %s",
 		    RPMEXPAND,
 		    path,
 		    file,
@@ -522,7 +522,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
     /* rar p FILE ?? */
     /*---------------*/
 
-    (void) sprintf( command_line, "%s '%s' '%s' %s", 
+    (void) sprintf( command_line, "%s '%s' '%s' %s",
 		    RAREXPAND,
 		    path,
 		    file,
@@ -534,8 +534,8 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
     /* melt < TAR_FILE | gtar xOf - FILE ?? */
     /*--------------------------------------*/
 
-    (void) sprintf( command_line, "%s < '%s' | %s '%s' %s", 
-		    MELT, 
+    (void) sprintf( command_line, "%s < '%s' | %s '%s' %s",
+		    MELT,
 		    path,
 		    TAREXPAND,
 		    file,
@@ -550,10 +550,10 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
     (void) strncpy( cat_path, path, l - 2 );
     (void) strcpy( &cat_path[l-2], "*" );
 
-    (void) sprintf( command_line, "%s %s | %s | %s '%s' %s", 
+    (void) sprintf( command_line, "%s %s | %s | %s '%s' %s",
 		    CAT,
 		    cat_path,
-		    MELT, 
+		    MELT,
 		    TAREXPAND,
 		    file,
 		    cmd
@@ -565,7 +565,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
     /*--------------------------------------------*/
 
     (void) sprintf( command_line, "%s < %s | %s '%s' %s",
-		    UNCOMPRESS, 
+		    UNCOMPRESS,
 		    path,
 		    TAREXPAND,
 		    file,
@@ -580,10 +580,10 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
     (void) strncpy( cat_path, path, l - 2 );
     (void) strcpy( &cat_path[l-2], "*" );
 
-    (void) sprintf( command_line, "%s %s | %s | %s '%s' %s", 
+    (void) sprintf( command_line, "%s %s | %s | %s '%s' %s",
 		    CAT,
 		    cat_path,
-		    UNCOMPRESS, 
+		    UNCOMPRESS,
 		    TAREXPAND,
 		    file,
 		    cmd
@@ -595,7 +595,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
     /*----------------------------------------*/
 
     (void) sprintf( command_line, "%s < '%s' | %s '%s' %s",
-		    GNUUNZIP, 
+		    GNUUNZIP,
 		    path,
 		    TAREXPAND,
 		    file,
@@ -610,10 +610,10 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
     (void) strncpy( cat_path, path, l - 2 );
     (void) strcpy( &cat_path[l-2], "*" );
 
-    (void) sprintf( command_line, "%s %s | %s | %s '%s' %s", 
+    (void) sprintf( command_line, "%s %s | %s | %s '%s' %s",
 		    CAT,
 		    cat_path,
-		    GNUUNZIP, 
+		    GNUUNZIP,
 		    TAREXPAND,
 		    file,
 		    cmd
@@ -625,7 +625,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
     /*----------------------------------------*/
 
     (void) sprintf( command_line, "%s < '%s' | %s '%s' %s",
-		    BUNZIP, 
+		    BUNZIP,
 		    path,
 		    TAREXPAND,
 		    file,
@@ -639,7 +639,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
 
     (void) sprintf( command_line, "%s '%s' < '%s' %s",
 		    TAREXPAND,
-		    file, 
+		    file,
 		    path,
 		    cmd
 		  );

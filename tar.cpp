@@ -23,7 +23,7 @@ int ReadTreeFromTAR(DirEntry *dir_entry, FILE *f)
   char tar_line[TAR_LINE_LENGTH + 1];
   char path_name[PATH_LENGTH +1];
   struct stat stat;
-  BOOL   dir_flag = FALSE;
+  bool   dir_flag = false;
 
   *dir_entry->name = '\0';
 
@@ -76,7 +76,7 @@ int ReadTreeFromTAR(DirEntry *dir_entry, FILE *f)
     }
   }
 
-  if( dir_flag == FALSE )
+  if( dir_flag == false )
   {
     statistic.disk_total_directories++;
     (void) memset( (char *) &dir_entry->stat_struct, 0, sizeof( struct stat ) );

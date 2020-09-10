@@ -17,7 +17,7 @@ void InitClock()
 #ifdef CLOCK_SUPPORT
 
   struct itimerval value, ovalue;
-  print_time = TRUE;
+  print_time = true;
 
   if (getitimer(ITIMER_REAL, &value)!= 0) {
       sprintf(message,"getitimer() failed: %s", strerror(errno));
@@ -26,7 +26,7 @@ void InitClock()
   value.it_interval.tv_sec = CLOCK_INTERVAL;
   value.it_value.tv_sec = CLOCK_INTERVAL;
   value.it_interval.tv_usec = 0;
-  
+
   if (setitimer(ITIMER_REAL, &value, &ovalue)!= 0) {
       sprintf(message,"setitimer() failed: %s", strerror(errno));
       ERROR_MSG(message);
@@ -51,7 +51,7 @@ void ClockHandler(int sig)
       time(&HORA);
       hora = localtime(&HORA);
       *strtm = '\0';
-      
+
       sprintf(strtm,"[time %.2d:%.2d:%.2d]",hora->tm_hour,hora->tm_min,hora->tm_sec);
 
 #ifdef COLOR_SUPPORT
@@ -79,4 +79,4 @@ void SuspendClock(void)
 #endif
   return;
   }
-  
+

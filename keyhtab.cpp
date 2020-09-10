@@ -159,7 +159,7 @@ char *GetMatches( char *base)
   disp_begin_pos = 1;
   cursor_pos     = 0;
   start_x        = 0;
-  /* leaveok(stdscr, TRUE); */
+  /* leaveok(stdscr, true); */
   (void) DisplayMatches();
 
   do
@@ -349,7 +349,7 @@ char *GetMatches( char *base)
 		     break;
     } /* switch */
   } while(ch != CR && ch != ESC && ch != -1);
-  /* leaveok(stdscr, FALSE); */
+  /* leaveok(stdscr, false); */
   free(Mtchs);
   free(tmpval);
   touchwin(stdscr);

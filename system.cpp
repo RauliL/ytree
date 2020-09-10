@@ -20,7 +20,7 @@ int SystemCall(char *command_line)
   endwin();
 #endif
   result = SilentSystemCall( command_line );
-  
+
   (void) GetAvailBytes( &statistic.disk_space );
   refresh();
   return( result );
@@ -48,10 +48,10 @@ extern struct itimerval value, ovalue;
 
 int SilentSystemCall(char *command_line)
 {
-  return(SilentSystemCallEx(command_line, TRUE));
+  return(SilentSystemCallEx(command_line, true));
 }
 
-int SilentSystemCallEx(char *command_line, BOOL enable_clock)
+int SilentSystemCallEx(char *command_line, bool enable_clock)
 {
   int result;
 #ifdef XCURSES
@@ -79,19 +79,19 @@ int SilentSystemCallEx(char *command_line, BOOL enable_clock)
 #endif
 
 #ifndef XCURSES
-  leaveok(stdscr, TRUE);
+  leaveok(stdscr, true);
   curs_set(0);
 #if defined( __NeXT__ )
   cbreak();
   nonl();
   noecho();
-  clearok( stdscr, TRUE );
-#endif /* linux */ 
+  clearok( stdscr, true );
+#endif /* linux */
 #endif /* XCURSES */
   if(enable_clock)
     InitClock();
   (void) GetAvailBytes( &statistic.disk_space );
-  return( result ); 
+  return( result );
 }
 
 

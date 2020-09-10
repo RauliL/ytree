@@ -48,21 +48,21 @@ void SetMatchingParam(DirEntry *dir_entry)
       {
 	matching_files++;
 	matching_bytes += fe_ptr->stat_struct.st_size;
-	fe_ptr->matching = TRUE;
+	fe_ptr->matching = true;
       }
       else
       {
-	fe_ptr->matching = FALSE;
+	fe_ptr->matching = false;
       }
     }
-   
+
     de_ptr->matching_files = matching_files;
     de_ptr->matching_bytes = matching_bytes;
 
     statistic.disk_matching_files += matching_files;
     statistic.disk_matching_bytes += matching_bytes;
-    
-    if( de_ptr->sub_tree ) 
+
+    if( de_ptr->sub_tree )
     {
       SetMatchingParam( de_ptr->sub_tree );
     }
@@ -77,7 +77,7 @@ Take in the user-specified new filespec.
 As modified, it defaults to '*'; the original version offered the
 current value as default, but that's just an up-arrow away.
 Returns 0 on success, -1 on failure (empty string).
-<<***************************************************************/            
+<<***************************************************************/
 
 int ReadFileSpec(void)
 {

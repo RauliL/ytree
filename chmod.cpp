@@ -81,7 +81,7 @@ int GetNewFileModus(int y, int x, char* modus, const char* term)
 
   p = 0;
   MvAddStr(y, x, modus );
-  leaveok(stdscr, FALSE);
+  leaveok(stdscr, false);
   do
   {
     move( y, x + p );
@@ -129,7 +129,7 @@ int GetNewFileModus(int y, int x, char* modus, const char* term)
       else if( strrchr( term, c ) == NULL ) beep();
     }
   } while( c != -1 && strrchr( term, c ) == NULL );
-  leaveok(stdscr, TRUE);
+  leaveok(stdscr, true);
   move( y, x ); clrtoeol();
   curs_set(0);
 

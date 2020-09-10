@@ -419,9 +419,9 @@ char *GetUserDirAction(int chkey, int *pchremap)
   return(NULL);
 }
 
-BOOL IsUserActionDefined(void)
+bool IsUserActionDefined(void)
 {
-  return((BOOL)(dirmenu.next != NULL || filemenu.next != NULL));
+  return((bool)(dirmenu.next != NULL || filemenu.next != NULL));
 }
 
 
