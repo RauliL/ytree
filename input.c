@@ -16,8 +16,9 @@ char *StrLeft(const char *str, size_t count)
 {
 #ifdef WITH_UTF8
   mbstate_t state;
+  char *p;
 #endif
-  char *rez, *p, *tmp;
+  char *rez, *tmp;
   size_t len, i;
 
 #ifdef WITH_UTF8
@@ -26,21 +27,23 @@ char *StrLeft(const char *str, size_t count)
   if (count == 0) return(Strdup(""));
   len = StrVisualLength(str);
   if (count >= len) return(Strdup(str));
-  
+
   len = 0;
 
   tmp = Strdup(str);
-  p = tmp; 
+#ifdef WITH_UTF8
+  p = tmp;
+#endif
   for (i = 0; i < count; i++) {
 #ifdef WITH_UTF8
     len += mbrlen(p, 4, &state);
+    p = tmp + len;
 #else
     len++;
 #endif
-    p = tmp + len;
   }
   free(tmp);
-  
+
   rez = Strndup(str, len);
   rez[len] = '\0';
   return(rez);
@@ -62,9 +65,9 @@ char *StrRight(const char *str, size_t count)
 
   byte_len = strlen(str);
   char_len = StrVisualLength(str);
-  
+
   if (count > char_len) count = char_len;
-  
+
   tmp = Strdup(str);
   p = tmp;
   i = 0;
@@ -73,7 +76,7 @@ char *StrRight(const char *str, size_t count)
     if (i == (char_len - count) ) {
       rez = Strdup(p);
     }
-#ifdef WITH_UTF8    
+#ifdef WITH_UTF8
     tmp_len = mbrlen(p, 4, &state);
 #else
     tmp_len = 1;
@@ -91,7 +94,7 @@ int StrVisualLength(const char *str)
 #ifdef WITH_UTF8
   mbstate_t state;
   int len = 0;
-  
+
   memset(&state, '\0', sizeof(state));
   len = mbsrtowcs(NULL, &str, strlen(str), &state);
   if(len < 0) {
@@ -128,20 +131,20 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
   curs_set(1);
   MvAddStr( y, x, s );
   leaveok(stdscr, FALSE);
-  
+
   for(i=strlen(s); i < length; i++)
     addch( '_' );
 
   p = cursor_pos;
-  
+
   MvAddStr( y, x, s );
 
   nodelay( stdscr, TRUE );
   do {
     c1 = wgetch(stdscr);
-    
+
     if ( c1 != ERR ) {
-    
+
       if( c1 >= ' ' && c1 < 0xff && c1 != 127 ) {
         if ( len_flag == TRUE) beep();
         else {
@@ -152,7 +155,7 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
         /* Control symbols */
         switch( c1 )
         {
-        case 'C' & 0x1f     : c1 = 27; 
+        case 'C' & 0x1f     : c1 = 27;
 			      break;
 
         case KEY_LEFT       : if( p > 0 )
@@ -165,7 +168,7 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
                               else
                                 beep();
                               break;
-	case KEY_UP         : 
+	case KEY_UP         :
 	                      nodelay(stdscr, FALSE);
 			      pp = GetHistory();
 			      nodelay(stdscr, TRUE);
@@ -223,7 +226,7 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
 			      free(ls);
                               break;
 	case KEY_EIC        :
-        case KEY_IC         : insert_flag ^= TRUE; 
+        case KEY_IC         : insert_flag ^= TRUE;
                               break;
 	case '\t'           : if(( pp = GetMatches(s)) == NULL) {
 			       break;
@@ -242,11 +245,11 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
                              }
                              break;
 #ifdef KEY_F
-        case KEY_F(2)       : 
+        case KEY_F(2)       :
 #endif
         case 'F' & 0x1f     : if(KeyF2Get( statistic.tree,
                                            statistic.disp_begin_pos,
-                                           statistic.cursor_pos, path)) 
+                                           statistic.cursor_pos, path))
                               {
 			        /* beep(); */
 				break;
@@ -269,7 +272,7 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
         } /* switch */
       } /* else control symbols */
     } else {
-     
+
       if (strlen(sbuf) > 0) {
        if ( insert_flag ) {
   	    /* append symbol */
@@ -358,7 +361,7 @@ int InputChoise(char *msg, char *term)
     if(c >= 0)
       if( islower( c ) ) c = toupper( c );
   } while( c != -1 && !strchr( term, c ) );
-  
+
   if(c >= 0)
     echochar( c );
 
@@ -462,14 +465,14 @@ int ViKey( int ch )
 
 #endif /* VI_KEYS */
 
-  
+
 #ifdef _IBMR2
 #undef wgetch
 
 int AixWgetch( WINDOW *w )
 {
   int c;
-  
+
   if( ( c = wgetch( w ) ) == KEY_ENTER ) c = LF;
 
   return( c );

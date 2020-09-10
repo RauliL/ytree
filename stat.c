@@ -19,7 +19,7 @@ void DisplayDiskStatistic(void)
   const char *fmt= "[%-17s]";
   char buff[20];
   *buff = '\0';
-  
+
   sprintf( buff, fmt, statistic.file_spec);
   PrintMenuOptions( stdscr, 2, COLS - 18, buff, MENU_COLOR, HIMENUS_COLOR);
   PrettyPrintNumber( 5,  COLS - 17, statistic.disk_space / (LONGLONG)1024 );
@@ -57,7 +57,7 @@ void DisplayDiskName(void)
 {
   const char *fmt= "[%-17s]";
   char buff[20];
-  
+
   sprintf( buff, fmt, statistic.disk_name);
   PrintMenuOptions( stdscr, 4, COLS - 18, buff, MENU_COLOR, HIMENUS_COLOR);
   RefreshWindow( stdscr );
@@ -101,7 +101,7 @@ void DisplayDirTagged(DirEntry *dir_entry)
 {
   PrettyPrintNumber( 15, COLS - 17, dir_entry->tagged_files );
   PrettyPrintNumber( 16, COLS - 17, dir_entry->tagged_bytes );
-  
+
   RefreshWindow( stdscr );
 }
 
@@ -111,7 +111,7 @@ void DisplayDiskTagged(void)
 {
   PrettyPrintNumber( 15, COLS - 17, statistic.disk_tagged_files );
   PrettyPrintNumber( 16, COLS - 17, statistic.disk_tagged_bytes );
-  
+
   RefreshWindow( stdscr );
 }
 
@@ -124,11 +124,11 @@ void DisplayDirParameter(DirEntry *dir_entry)
   char buffer[PATH_LENGTH + 1];
   char auxbuff[PATH_LENGTH + 1];
 
-  p = strrchr( dir_entry->name, FILE_SEPARATOR_CHAR ); 
- 
+  p = strrchr( dir_entry->name, FILE_SEPARATOR_CHAR );
+
   if( p == NULL ) f = dir_entry->name;
   else            f = p + 1;
- 
+
   (void) sprintf( format, "%%-%ds", COLS - 10 );
   (void) GetPath( dir_entry, statistic.path );
   if (dir_entry -> not_scanned)
@@ -163,7 +163,8 @@ void DisplayGlobalFileParameter(FileEntry *file_entry)
   wclrtoeol( stdscr);
   PrintMenuOptions( stdscr, 0, 6, buffer1, GLOBAL_COLOR, HIGLOBAL_COLOR);
   CutFilename( buffer1, file_entry->name, 20 );
-  sprintf( buffer2, "[%-20s]", buffer1 );
+  if (snprintf( buffer2, PATH_LENGTH, "[%-20s]", buffer1 ))
+    ;
   PrintMenuOptions( stdscr, 18, COLS - 22, buffer2, GLOBAL_COLOR, HIGLOBAL_COLOR);
   PrettyPrintNumber( 19, COLS - 17, (LONGLONG) file_entry->stat_struct.st_size );
   RefreshWindow( stdscr );
@@ -188,7 +189,7 @@ void PrettyPrintNumber(int y, int x, LONGLONG number)
 {
   char buffer[20];
   long terra, giga, mega, kilo, one;
-  
+
   *buffer = 0;
   terra    = (long)   ( number / (LONGLONG) 1000000000000 );
   giga     = (long) ( ( number % (LONGLONG) 1000000000000 ) / (LONGLONG) 1000000000 );

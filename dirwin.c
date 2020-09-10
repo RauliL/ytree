@@ -24,7 +24,7 @@ static int dir_mode;
 
 static void BuildDirEntryList(DirEntry *dir_entry)
 {
-  if( dir_entry_list ) 
+  if( dir_entry_list )
   {
     free( dir_entry_list );
     dir_entry_list = NULL;
@@ -32,14 +32,14 @@ static void BuildDirEntryList(DirEntry *dir_entry)
 
   /* fuer !ANSI-Systeme.. */
   /*----------------------*/
-  
+
   if( statistic.disk_total_directories == 0 )
   {
     dir_entry_list = NULL;
   }
   else
   {
-    if( ( dir_entry_list = ( DirEntryList *) 
+    if( ( dir_entry_list = ( DirEntryList *)
 		             calloc( statistic.disk_total_directories,
 	        	     sizeof( DirEntryList )
 		           ) ) == NULL )
@@ -66,7 +66,7 @@ static void RotateDirMode(void)
     case MODE_3: dir_mode = MODE_1 ; break;
     case MODE_4: dir_mode = MODE_3 ; break;
   }
-  if( (mode != DISK_MODE && mode != USER_MODE ) && 
+  if( (mode != DISK_MODE && mode != USER_MODE ) &&
       dir_mode == MODE_4 ) RotateDirMode();
 }
 
@@ -88,8 +88,8 @@ static void ReadDirList(DirEntry *dir_entry)
     dir_entry_list[current_dir_entry].indent = indent;
 
     current_dir_entry++;
-   
-    if( !de_ptr->not_scanned && de_ptr->sub_tree ) 
+
+    if( !de_ptr->not_scanned && de_ptr->sub_tree )
     {
       level++;
       ReadDirList( de_ptr->sub_tree );
@@ -102,13 +102,13 @@ static void ReadDirList(DirEntry *dir_entry)
 
 
 
-static void PrintDirEntry(WINDOW *win, 
-                          int entry_no, 
-                          int y, 
+static void PrintDirEntry(WINDOW *win,
+                          int entry_no,
+                          int y,
                           unsigned char hilight)
 {
   unsigned int j, l1, l2;
-  int  n; 
+  int  n;
   int  aux=0;
   int  color, hi_color;
   char buffer[32*3+PATH_LENGTH+1];
@@ -136,7 +136,7 @@ static void PrintDirEntry(WINDOW *win,
   }
   buffer[0] = '\0';
 
-  for(j=0; j < dir_entry_list[entry_no].level; j++) 
+  for(j=0; j < dir_entry_list[entry_no].level; j++)
   {
     if( dir_entry_list[entry_no].indent & ( 1L << j ) )
       (void) strcat( buffer, "| " );
@@ -151,7 +151,7 @@ static void PrintDirEntry(WINDOW *win,
 
   switch( dir_mode )
   {
-    case MODE_1 : 
+    case MODE_1 :
                  (void)GetAttributes(de_ptr->stat_struct.st_mode, attributes);
                  (void)CTime( de_ptr->stat_struct.st_mtime, modify_time );
                  if ((line_buffer = (char *) malloc(38)) == NULL)
@@ -161,7 +161,7 @@ static void PrintDirEntry(WINDOW *win,
                  }
 #ifdef HAS_LONGLONG
                  (void) strcpy( format, "%10s %3d %8lld %12s");
-                 
+
 		 (void) sprintf( line_buffer, format, attributes,
                                  de_ptr->stat_struct.st_nlink,
                                  (LONGLONG) de_ptr->stat_struct.st_size,
@@ -196,14 +196,14 @@ static void PrintDirEntry(WINDOW *win,
                     exit(1);
                  }
                  (void) strcpy( format, "%12u  %-12s %-12s");
-                 (void) sprintf( line_buffer, format, 
+                 (void) sprintf( line_buffer, format,
                                  /*attributes, */
-                                 de_ptr->stat_struct.st_ino, 
-                                 owner_name_ptr,         
+                                 de_ptr->stat_struct.st_ino,
+                                 owner_name_ptr,
                                  group_name_ptr);
                  break;
     case MODE_3 : break;
-    case MODE_4 : 
+    case MODE_4 :
                  (void) CTime( de_ptr->stat_struct.st_ctime, change_time );
                  (void) CTime( de_ptr->stat_struct.st_atime, access_time );
                  (void) strcpy( format, "Chg.: %12s  Acc.: %12s");
@@ -215,7 +215,7 @@ static void PrintDirEntry(WINDOW *win,
                  (void)sprintf(line_buffer, format, change_time, access_time);
                  break;
   }
-  
+
   if(window_width == 1)
     suppress_output = TRUE;
 
@@ -253,12 +253,12 @@ static void PrintDirEntry(WINDOW *win,
     if( de_ptr->not_scanned ) {
       (void) strcat( buffer, "/" );
     }
-    
+
 #ifdef NO_HIGHLIGHT
-    (void) strcat( buffer, (hilight) ? " <" : "  " ); 
+    (void) strcat( buffer, (hilight) ? " <" : "  " );
 #else /* NO_HIGHLIGHT */
 #ifdef COLOR_SUPPORT
-    if( hilight ) 
+    if( hilight )
       WbkgdSet(win, COLOR_PAIR(hi_color)|A_BOLD);
     else
       WbkgdSet(win, COLOR_PAIR(color));
@@ -293,7 +293,7 @@ void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no)
 {
   int i, y;
   int width, height;
- 
+
   y = -1;
   GetMaxYX(win, &height, &width);
   if(win == dir_window) {
@@ -303,13 +303,13 @@ void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no)
   for(i=0; i < height; i++)
   {
     wmove(win, i, 0);
-    wclrtoeol(win); 
+    wclrtoeol(win);
   }
 
   for(i=0; i < height; i++)
   {
     if( start_entry_no + i >= (int)statistic.disk_total_directories ) break;
- 
+
     if( start_entry_no + i != hilight_no )
       PrintDirEntry( win, start_entry_no + i, i, FALSE );
     else
@@ -317,7 +317,7 @@ void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no)
   }
 
   if( y >= 0 ) PrintDirEntry( win, start_entry_no + y, y, TRUE );
-  
+
 }
 
 static void Movedown(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
@@ -337,7 +337,7 @@ static void Movedown(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
           /* Element ist ohne scrollen erreichbar */
           /*--------------------------------------*/
           PrintDirEntry( dir_window,
-                         *disp_begin_pos + *cursor_pos, 
+                         *disp_begin_pos + *cursor_pos,
                          *cursor_pos,
                          FALSE
                          );
@@ -353,14 +353,14 @@ static void Movedown(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
           /* Es muss gescrollt werden */
           /*--------------------------*/
           PrintDirEntry( dir_window,
-                         *disp_begin_pos + *cursor_pos, 
+                         *disp_begin_pos + *cursor_pos,
                          *cursor_pos,
                          FALSE
                          );
           scroll( dir_window );
           (*disp_begin_pos)++;
           PrintDirEntry( dir_window,
-                         *disp_begin_pos + *cursor_pos, 
+                         *disp_begin_pos + *cursor_pos,
                          *cursor_pos,
                          TRUE
                          );
@@ -392,7 +392,7 @@ static void Moveup(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
          /* Element ist ohne scrollen erreichbar */
          /*--------------------------------------*/
          PrintDirEntry( dir_window,
-                        *disp_begin_pos + *cursor_pos, 
+                        *disp_begin_pos + *cursor_pos,
                         *cursor_pos,
                         FALSE
                         );
@@ -408,7 +408,7 @@ static void Moveup(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
           /* Es muss gescrollt werden */
           /*--------------------------*/
           PrintDirEntry( dir_window,
-                         *disp_begin_pos + *cursor_pos, 
+                         *disp_begin_pos + *cursor_pos,
                          *cursor_pos,
                          FALSE
                          );
@@ -416,7 +416,7 @@ static void Moveup(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
           winsertln( dir_window );
           (*disp_begin_pos)--;
           PrintDirEntry( dir_window,
-                         *disp_begin_pos + *cursor_pos, 
+                         *disp_begin_pos + *cursor_pos,
                          *cursor_pos,
                          TRUE
                          );
@@ -447,7 +447,7 @@ static void Movenpage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
            * der Seite
            */
            PrintDirEntry( dir_window,
-                          *disp_begin_pos + *cursor_pos, 
+                          *disp_begin_pos + *cursor_pos,
                           *cursor_pos,
                           FALSE
                           );
@@ -461,7 +461,7 @@ static void Movenpage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
            DisplayFileWindow( *dir_entry );
            RefreshWindow( file_window );
            PrintDirEntry( dir_window,
-                          *disp_begin_pos + *cursor_pos, 
+                          *disp_begin_pos + *cursor_pos,
                           *cursor_pos,
                           TRUE
                           );
@@ -508,7 +508,7 @@ static void Moveppage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
            * der Seite
            */
            PrintDirEntry( dir_window,
-                          *disp_begin_pos + *cursor_pos, 
+                          *disp_begin_pos + *cursor_pos,
                           *cursor_pos,
                           FALSE
                           );
@@ -519,7 +519,7 @@ static void Moveppage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
            DisplayFileWindow( *dir_entry );
            RefreshWindow( file_window );
            PrintDirEntry( dir_window,
-                          *disp_begin_pos + *cursor_pos, 
+                          *disp_begin_pos + *cursor_pos,
                           *cursor_pos,
                           TRUE
                           );
@@ -539,7 +539,7 @@ static void Moveppage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
          DisplayFileWindow( *dir_entry );
          RefreshWindow( file_window );
          DisplayTree(dir_window,*disp_begin_pos,*disp_begin_pos+*cursor_pos);
-      } 
+      }
    }
    return;
 }
@@ -553,7 +553,7 @@ void MoveEnd(DirEntry **dir_entry)
     (*dir_entry)->cursor_pos = -1;
     DisplayFileWindow( *dir_entry );
     RefreshWindow( file_window );
-    DisplayTree( dir_window, statistic.disp_begin_pos, 
+    DisplayTree( dir_window, statistic.disp_begin_pos,
 		statistic.disp_begin_pos + statistic.cursor_pos);
     return;
 }
@@ -574,7 +574,7 @@ void MoveHome(DirEntry **dir_entry)
        (*dir_entry)->cursor_pos = -1;
        DisplayFileWindow( *dir_entry );
        RefreshWindow( file_window );
-       DisplayTree( dir_window, statistic.disp_begin_pos, 
+       DisplayTree( dir_window, statistic.disp_begin_pos,
 		statistic.disp_begin_pos + statistic.cursor_pos);
     }
     return;
@@ -593,7 +593,7 @@ void HandlePlus(DirEntry *dir_entry, DirEntry *de_ptr, char *new_login_path,
 	}
 	dir_entry->not_scanned = FALSE;
 	BuildDirEntryList( start_dir_entry );
-	DisplayTree( dir_window, statistic.disp_begin_pos, 
+	DisplayTree( dir_window, statistic.disp_begin_pos,
                  statistic.disp_begin_pos + statistic.cursor_pos );
 	DisplayDiskStatistic();
 	DisplayAvailBytes();
@@ -606,7 +606,7 @@ void HandleReadSubTree(DirEntry *dir_entry, DirEntry *start_dir_entry,
 {
     ScanSubTree( dir_entry );
     BuildDirEntryList( start_dir_entry );
-    DisplayTree( dir_window, statistic.disp_begin_pos, 
+    DisplayTree( dir_window, statistic.disp_begin_pos,
 		 statistic.disp_begin_pos + statistic.cursor_pos );
     DisplayDiskStatistic();
     DisplayAvailBytes();
@@ -624,7 +624,7 @@ void HandleUnreadSubTree(DirEntry *dir_entry, DirEntry *de_ptr,
 	}
 	dir_entry->not_scanned = TRUE;
 	BuildDirEntryList( start_dir_entry );
-        DisplayTree( dir_window, statistic.disp_begin_pos, 
+        DisplayTree( dir_window, statistic.disp_begin_pos,
 		    statistic.disp_begin_pos + statistic.cursor_pos );
         DisplayAvailBytes();
         *need_dsp_help = TRUE;
@@ -701,7 +701,7 @@ void HandleShowAllTagged(DirEntry *dir_entry,DirEntry *start_dir_entry, BOOL *ne
 {
     if( statistic.disk_tagged_files )
     {
-	if(dir_entry->login_flag) 
+	if(dir_entry->login_flag)
 	{
 	    dir_entry->login_flag = FALSE;
 	} else {
@@ -720,11 +720,11 @@ void HandleShowAllTagged(DirEntry *dir_entry,DirEntry *start_dir_entry, BOOL *ne
             RefreshWindow( small_file_window );
             RefreshWindow( big_file_window );
 	    BuildDirEntryList( start_dir_entry );
-            DisplayTree( dir_window, statistic.disp_begin_pos, 
+            DisplayTree( dir_window, statistic.disp_begin_pos,
 			statistic.disp_begin_pos + statistic.cursor_pos);
 	}else{
 	    BuildDirEntryList( statistic.tree );
-            DisplayTree( dir_window, statistic.disp_begin_pos, 
+            DisplayTree( dir_window, statistic.disp_begin_pos,
 			statistic.disp_begin_pos + statistic.cursor_pos);
 	    *ch = 'L';
 	}
@@ -740,7 +740,7 @@ void HandleShowAll(DirEntry *dir_entry, DirEntry *start_dir_entry, BOOL *need_ds
 {
     if( statistic.disk_matching_files )
     {
-	if(dir_entry->login_flag) 
+	if(dir_entry->login_flag)
 	{
 	    dir_entry->login_flag = FALSE;
 	} else {
@@ -759,11 +759,11 @@ void HandleShowAll(DirEntry *dir_entry, DirEntry *start_dir_entry, BOOL *need_ds
             RefreshWindow( small_file_window );
             RefreshWindow( big_file_window );
 	    BuildDirEntryList( start_dir_entry );
-            DisplayTree( dir_window, statistic.disp_begin_pos, 
+            DisplayTree( dir_window, statistic.disp_begin_pos,
 			statistic.disp_begin_pos + statistic.cursor_pos);
 	} else {
 	    BuildDirEntryList( statistic.tree );
-            DisplayTree( dir_window, statistic.disp_begin_pos, 
+            DisplayTree( dir_window, statistic.disp_begin_pos,
 			statistic.disp_begin_pos + statistic.cursor_pos );
 	    *ch = 'L';
 	}
@@ -779,7 +779,7 @@ void HandleSwitchWindow(DirEntry *dir_entry, DirEntry *start_dir_entry, BOOL *ne
 {
     if( dir_entry->matching_files )
     {
-	if(dir_entry->login_flag) 
+	if(dir_entry->login_flag)
 	{
 	    dir_entry->login_flag = FALSE;
 	} else {
@@ -797,12 +797,12 @@ void HandleSwitchWindow(DirEntry *dir_entry, DirEntry *start_dir_entry, BOOL *ne
             RefreshWindow( small_file_window );
             RefreshWindow( big_file_window );
 	    BuildDirEntryList( start_dir_entry );
-            DisplayTree( dir_window, statistic.disp_begin_pos, 
+            DisplayTree( dir_window, statistic.disp_begin_pos,
 			statistic.disp_begin_pos + statistic.cursor_pos);
 	    DisplayDiskStatistic();
 	} else {
 	    BuildDirEntryList( statistic.tree );
-            DisplayTree( dir_window, statistic.disp_begin_pos, 
+            DisplayTree( dir_window, statistic.disp_begin_pos,
 			statistic.disp_begin_pos + statistic.cursor_pos);
 	    *ch = 'L';
 	}
@@ -824,7 +824,6 @@ int HandleDirWindow(DirEntry *start_dir_entry)
   char new_name[PATH_LENGTH + 1];
   char new_login_path[PATH_LENGTH + 1];
   char *home, *p;
-  struct stat fdstat;
 
   unput_char = 0;
   de_ptr = NULL;
@@ -876,10 +875,10 @@ int HandleDirWindow(DirEntry *start_dir_entry)
         }
       }
     }
-    initial_directory = NULL; 
+    initial_directory = NULL;
   }
   dir_entry = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry;
- 
+
   DisplayDiskStatistic();
 
   if(!dir_entry->login_flag) {
@@ -935,8 +934,8 @@ int HandleDirWindow(DirEntry *start_dir_entry)
          statistic.cursor_pos--;
 	 statistic.disp_begin_pos++;
        }
-       DisplayTree( dir_window, statistic.disp_begin_pos, 
-		    statistic.disp_begin_pos + statistic.cursor_pos 
+       DisplayTree( dir_window, statistic.disp_begin_pos,
+		    statistic.disp_begin_pos + statistic.cursor_pos
 		  );
        DisplayFileWindow(dir_entry);
        DisplayDiskStatistic();
@@ -967,7 +966,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
                      break;
       case KEY_UP  : Moveup(&statistic.disp_begin_pos, &statistic.cursor_pos, &dir_entry);
                      break;
-      case KEY_NPAGE:Movenpage(&statistic.disp_begin_pos, &statistic.cursor_pos, &dir_entry);		     
+      case KEY_NPAGE:Movenpage(&statistic.disp_begin_pos, &statistic.cursor_pos, &dir_entry);
                      break;
       case KEY_PPAGE:Moveppage(&statistic.disp_begin_pos, &statistic.cursor_pos, &dir_entry);
                      break;
@@ -1011,17 +1010,17 @@ int HandleDirWindow(DirEntry *start_dir_entry)
       case 'U' & 0x1F :
     		     HandleTagAllDirs(dir_entry,FALSE);
 		     break;
-      case 'F' & 0x1F : 
+      case 'F' & 0x1F :
 		     RotateDirMode();
                      /*DisplayFileWindow( dir_entry, 0, -1 );*/
-                     DisplayTree( dir_window, statistic.disp_begin_pos, 
-                                  statistic.disp_begin_pos + statistic.cursor_pos 
+                     DisplayTree( dir_window, statistic.disp_begin_pos,
+                                  statistic.disp_begin_pos + statistic.cursor_pos
                                   );
                      /*RefreshWindow( file_window );*/
 		     DisplayDiskStatistic();
 		     need_dsp_help = TRUE;
 		     break;
-      case 'S' & 0x1F : 
+      case 'S' & 0x1F :
 		     HandleShowAllTagged(dir_entry, start_dir_entry, &need_dsp_help, &ch);
 		     break;
 
@@ -1036,15 +1035,15 @@ int HandleDirWindow(DirEntry *start_dir_entry)
 		     need_dsp_help = TRUE;
 		     DisplayAvailBytes();
 		     break;
-      case 'M':      
+      case 'M':
       case 'm':      if( !MakeDirectory( dir_entry ) )
 		     {
 		       BuildDirEntryList( start_dir_entry );
-                       DisplayTree( dir_window, statistic.disp_begin_pos, 
-				    statistic.disp_begin_pos + statistic.cursor_pos 
+                       DisplayTree( dir_window, statistic.disp_begin_pos,
+				    statistic.disp_begin_pos + statistic.cursor_pos
 				  );
 		       DisplayAvailBytes();
-		     } 
+		     }
 		     need_dsp_help = TRUE;
 		     break;
       case 'D':
@@ -1062,8 +1061,8 @@ int HandleDirWindow(DirEntry *start_dir_entry)
 		     dir_entry->cursor_pos = -1;
                      DisplayFileWindow( dir_entry );
                      RefreshWindow( file_window );
-		     DisplayTree( dir_window, statistic.disp_begin_pos, 
-				  statistic.disp_begin_pos + statistic.cursor_pos 
+		     DisplayTree( dir_window, statistic.disp_begin_pos,
+				  statistic.disp_begin_pos + statistic.cursor_pos
 				);
 		     DisplayAvailBytes();
 		     need_dsp_help = TRUE;
@@ -1076,8 +1075,8 @@ int HandleDirWindow(DirEntry *start_dir_entry)
 		         /* Rename OK */
 		         /*-----------*/
 		         BuildDirEntryList( start_dir_entry );
-                         DisplayTree( dir_window, statistic.disp_begin_pos, 
-		                      statistic.disp_begin_pos + statistic.cursor_pos 
+                         DisplayTree( dir_window, statistic.disp_begin_pos,
+		                      statistic.disp_begin_pos + statistic.cursor_pos
 			            );
 		         DisplayAvailBytes();
 		         dir_entry = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry;
@@ -1113,7 +1112,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
 #ifndef VI_KEYS
       case 'l':
 #endif /* VI_KEYS */
-      case 'L':      if( mode != DISK_MODE && mode != USER_MODE ) 
+      case 'L':      if( mode != DISK_MODE && mode != USER_MODE )
 		       (void) strcpy( new_login_path, disk_statistic.login_path );
 		     else
 		       (void) GetPath( dir_entry, new_login_path );
@@ -1156,7 +1155,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
 
           	(void) LoginDisk(new_login_path);
           	need_dsp_help = TRUE;
-          	return ch; 
+          	return ch;
 
       default :      beep();
 		     break;
@@ -1190,18 +1189,16 @@ int ScanSubTree( DirEntry *dir_entry )
 
 
 
-int KeyF2Get(DirEntry *start_dir_entry, 
-             int disp_begin_pos, 
+int KeyF2Get(DirEntry *start_dir_entry,
+             int disp_begin_pos,
 	     int cursor_pos,
              char *path)
 {
-  DirEntry  *dir_entry;
   int ch;
   int result = -1;
   int win_width, win_height;
 
 
-  dir_entry = start_dir_entry;
   GetMaxYX(f2_window, &win_height, &win_width);
   MapF2Window();
   DisplayTree( f2_window, disp_begin_pos, disp_begin_pos + cursor_pos );
@@ -1212,10 +1209,10 @@ int KeyF2Get(DirEntry *start_dir_entry,
     ch = Getch();
     GetMaxYX(f2_window, &win_height, &win_width);  /* Maybe changed... */
     if( ch == LF ) ch = CR;
-  
+
 
 #ifdef VI_KEYS
-    
+
     ch = ViKey( ch );
 
 #endif /* VI_KEYS */
@@ -1225,15 +1222,15 @@ int KeyF2Get(DirEntry *start_dir_entry,
       case -1:       break;
       case ' ':      break;  /* Quick-Key */
       case KEY_DOWN: if( disp_begin_pos + cursor_pos + 1 >= total_dirs )
-		     { 
-		       beep(); 
+		     {
+		       beep();
 		     }
 		     else
 		     {
 		       if( cursor_pos + 1 < win_height )
 		       {
-			 PrintDirEntry( f2_window, 
-			                disp_begin_pos + cursor_pos, 
+			 PrintDirEntry( f2_window,
+			                disp_begin_pos + cursor_pos,
 					cursor_pos, FALSE);
 			 cursor_pos++;
 
@@ -1243,32 +1240,32 @@ int KeyF2Get(DirEntry *start_dir_entry,
 		       else
 		       {
 			 disp_begin_pos++;
-                         DisplayTree( f2_window, disp_begin_pos, 
+                         DisplayTree( f2_window, disp_begin_pos,
 				      disp_begin_pos + cursor_pos);
                        }
 		     }
                      break;
 
       case KEY_UP  : if( disp_begin_pos + cursor_pos - 1 < 0 )
-		     { 
-		       beep(); 
+		     {
+		       beep();
 		     }
 		     else
 		     {
 		       if( cursor_pos - 1 >= 0 )
 		       {
 			 PrintDirEntry( f2_window,
-			                disp_begin_pos + cursor_pos, 
+			                disp_begin_pos + cursor_pos,
 					cursor_pos, FALSE );
 			 cursor_pos--;
-			 PrintDirEntry( f2_window, 
+			 PrintDirEntry( f2_window,
 			                disp_begin_pos + cursor_pos,
 					cursor_pos, TRUE );
                        }
 		       else
 		       {
 			 disp_begin_pos--;
-                         DisplayTree( f2_window, disp_begin_pos, 
+                         DisplayTree( f2_window, disp_begin_pos,
 				      disp_begin_pos + cursor_pos);
                        }
 		     }
@@ -1276,22 +1273,22 @@ int KeyF2Get(DirEntry *start_dir_entry,
 
       case KEY_NPAGE:
 		     if( disp_begin_pos + cursor_pos >= total_dirs - 1 )
-		     { 
-		       beep(); 
+		     {
+		       beep();
 		     }
 		     else
 		     {
 		       if( cursor_pos < win_height - 1 )
 		       {
 			 PrintDirEntry( f2_window,
-			                disp_begin_pos + cursor_pos, 
+			                disp_begin_pos + cursor_pos,
 					cursor_pos, FALSE );
 		         if( disp_begin_pos + win_height > total_dirs  - 1 )
 			   cursor_pos = total_dirs - disp_begin_pos - 1;
 			 else
 			   cursor_pos = win_height - 1;
 			 PrintDirEntry( f2_window,
-			                disp_begin_pos + cursor_pos, 
+			                disp_begin_pos + cursor_pos,
 					cursor_pos, TRUE );
 		       }
 		       else
@@ -1307,27 +1304,27 @@ int KeyF2Get(DirEntry *start_dir_entry,
 			   if( disp_begin_pos < 0 ) disp_begin_pos = 0;
 			   cursor_pos = total_dirs - disp_begin_pos - 1;
 			 }
-                         DisplayTree( f2_window, disp_begin_pos, 
+                         DisplayTree( f2_window, disp_begin_pos,
 				      disp_begin_pos + cursor_pos);
-		       } 
+		       }
 		     }
                      break;
 
       case KEY_PPAGE:
 		     if( disp_begin_pos + cursor_pos <= 0 )
-		     { 
-		       beep(); 
+		     {
+		       beep();
 		     }
 		     else
 		     {
 		       if( cursor_pos > 0 )
 		       {
 			 PrintDirEntry( f2_window,
-			                disp_begin_pos + cursor_pos, 
+			                disp_begin_pos + cursor_pos,
 					cursor_pos, FALSE );
 			 cursor_pos = 0;
 			 PrintDirEntry( f2_window,
-			                disp_begin_pos + cursor_pos, 
+			                disp_begin_pos + cursor_pos,
 					cursor_pos, TRUE );
 		       }
 		       else
@@ -1337,9 +1334,9 @@ int KeyF2Get(DirEntry *start_dir_entry,
 			   disp_begin_pos = 0;
 			 }
                          cursor_pos = 0;
-                         DisplayTree( f2_window, disp_begin_pos, 
+                         DisplayTree( f2_window, disp_begin_pos,
 				      disp_begin_pos + cursor_pos);
-		       } 
+		       }
 		     }
                      break;
 
@@ -1349,14 +1346,14 @@ int KeyF2Get(DirEntry *start_dir_entry,
 		     {
 		       disp_begin_pos = 0;
 		       cursor_pos     = 0;
-                       DisplayTree( f2_window, disp_begin_pos, 
+                       DisplayTree( f2_window, disp_begin_pos,
 				    disp_begin_pos + cursor_pos);
 		     }
                      break;
 
       case KEY_END : disp_begin_pos = MAXIMUM(0, total_dirs - win_height);
 		     cursor_pos     = total_dirs - disp_begin_pos - 1;
-                     DisplayTree( f2_window, disp_begin_pos, 
+                     DisplayTree( f2_window, disp_begin_pos,
 				  disp_begin_pos + cursor_pos);
                      break;
 
@@ -1413,20 +1410,20 @@ int RefreshDirWindow()
 				statistic.cursor_pos = 0;
 			}
 		}
-	
+
        		GetMaxYX(dir_window, &window_height, &window_width);
 	        while(statistic.cursor_pos >= window_height) {
 		  statistic.cursor_pos--;
 		  statistic.disp_begin_pos++;
 	        }
-		DisplayTree( dir_window, statistic.disp_begin_pos, 
-		     	statistic.disp_begin_pos + statistic.cursor_pos 
+		DisplayTree( dir_window, statistic.disp_begin_pos,
+		     	statistic.disp_begin_pos + statistic.cursor_pos
 		   	);
-	
+
 		DisplayAvailBytes();
 		result = 0;
 	}
-	
+
 	return(result);
 }
 

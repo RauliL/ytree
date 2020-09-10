@@ -55,7 +55,7 @@ static Dirmenu dirmenu;
 static Filemenu filemenu;
 
 /* MUSS sortiert sein! */
-static Profile profile[] = { 
+static Profile profile[] = {
   { "ARCEXPAND",    	DEFAULT_ARCEXPAND,     NULL,     NULL },
   { "ARCLIST",      	DEFAULT_ARCLIST,       NULL,     NULL },
   { "BUNZIP",       	DEFAULT_BUNZIP,        NULL,     NULL },
@@ -134,7 +134,7 @@ int ReadProfile( char *filename )
     if( l > 2 ) {
       buffer[l-1] = '\0';
       /* trim whitspace */
-      for( name = buffer; isspace(*name); name++ )
+      for( name = (unsigned char *) buffer; isspace(*name); name++ )
         ;
       for(cptr=name; !isspace(*cptr) && *cptr != '='; cptr++ )
         ;
@@ -142,43 +142,45 @@ int ReadProfile( char *filename )
         *cptr = '\0';
       if(*name == '[') {
         /* section */
-	if( !strcmp(name, "[GLOBAL]") ) 
+	if( !strcmp((const char *) name, "[GLOBAL]") )
 	  section = GLOBAL_SECTION;
-	else if( !strcmp(name, "[VIEWER]") ) 
+	else if( !strcmp((const char *) name, "[VIEWER]") )
 	  section = VIEWER_SECTION;
-	else if( !strcmp(name, "[MENU]") )
+	else if( !strcmp((const char *) name, "[MENU]") )
 	  section = MENU_SECTION;
-	else if( !strcmp(name, "[FILEMAP]") )
+	else if( !strcmp((const char *) name, "[FILEMAP]") )
 	  section = FILEMAP_SECTION;
-	else if( !strcmp(name, "[FILECMD]") )
+	else if( !strcmp((const char *) name, "[FILECMD]") )
 	  section = FILECMD_SECTION;
-	else if( !strcmp(name, "[DIRMAP]") )
+	else if( !strcmp((const char *) name, "[DIRMAP]") )
 	  section = DIRMAP_SECTION;
-	else if( !strcmp(name, "[DIRCMD]") )
+	else if( !strcmp((const char *) name, "[DIRCMD]") )
 	  section = DIRCMD_SECTION;
 	else
 	  section = NO_SECTION;
-	
+
 	continue;
       }
-	  
+
 
       if( section == GLOBAL_SECTION ) {
-        value = strchr( buffer, '=' );
+        value = (unsigned char *) strchr( buffer, '=' );
         if( *name && value ) {
           *value++ = '\0';
-          key.name = name;
+          key.name = (char *) name;
           if(( p = bsearch(&key, profile, PROFILE_ENTRIES, sizeof(*p), Compare))) {
-	    p->value = Strdup( value );
+	    p->value = Strdup( (const char *) value );
           }
         }
       } else if( section == MENU_SECTION ) {
-        value = strchr( buffer, '=' );
+        value = (unsigned char *) strchr( buffer, '=' );
         if( *name && value ) {
           *value++ = '\0';
-          if (!strcmp(name, "DIR1") || !strcmp(name, "DIR2") || 
-              !strcmp(name, "FILE1") || !strcmp(name, "FILE2") ) { 
-            key.name = name;
+          if (!strcmp((const char *) name, "DIR1") ||
+              !strcmp((const char *) name, "DIR2") ||
+              !strcmp((const char *) name, "FILE1") ||
+              !strcmp((const char *) name, "FILE2") ) {
+            key.name = (char *) name;
             if(( p = bsearch(&key, profile, PROFILE_ENTRIES, sizeof(*p), Compare))) {
               /* Space pad menu strings to length COLS, ignoring '(' and ')' characters */
               l = 0;
@@ -190,32 +192,32 @@ int ReadProfile( char *filename )
               while (l++ < COLS - 1)
                 *cptr++ = ' ';
               *cptr = '\0';
-	      p->value = Strdup( value );
+	      p->value = Strdup( (const char *) value );
             }
           }
-        } 
+        }
       } else if(section == FILEMAP_SECTION ) {
-        value = strchr( buffer, '=' );
+        value = (unsigned char *) strchr( buffer, '=' );
         if( *name && value ) {
 	  *value++ = '\0';
           /* trim whitespace */
           while(*value && isspace(*value))
             value++;
-	  n = Strtok_r(name, ",", &old);
+	  n = Strtok_r((char *) name, ",", &old);
 	  /* maybe comma-separated list, eg.: k,K=x */
 	  while(n) {
             /* Check for existing entry from FILECMD_SECTION */
             for(new_m = filemenu.next; new_m != NULL; new_m = new_m->next) {
               if (new_m->chkey == ChCode( n )) {
-                new_m->chremap = ChCode( value );
+                new_m->chremap = ChCode( (const char *) value );
                 if (new_m->chremap == 0)
                   new_m->chremap = -1;   /* Don't beep if user cmd defined */
                 break;
               }
-            } 
+            }
 	    if( new_m == NULL && ( new_m = malloc( sizeof(*new_m) ) ) ) {
 	      new_m->chkey = ChCode( n );
-              new_m->chremap = ChCode( value );
+              new_m->chremap = ChCode( (const char *) value );
 	      new_m->cmd = NULL;
 	      new_m->next = NULL;
 	      m->next = new_m;
@@ -225,7 +227,7 @@ int ReadProfile( char *filename )
 	  }
         }
       } else if(section == FILECMD_SECTION ) {
-        value = strchr( buffer, '=' );
+        value = (unsigned char *) strchr( buffer, '=' );
         if( *name && value ) {
 	  *value++ = '\0';
           /* trim whitespace */
@@ -234,44 +236,44 @@ int ReadProfile( char *filename )
 	  /* may not be comma-separated list */
           /* Check for existing entry from FILEMAP_SECTION */
           for (new_m = filemenu.next; new_m != NULL; new_m = new_m->next) {
-            if (new_m->chkey == ChCode( name )) {
-	      new_m->cmd = Strdup( value );
+            if (new_m->chkey == ChCode( (const char *) name )) {
+	      new_m->cmd = Strdup( (const char *) value );
               if (new_m->chremap == 0)
                 new_m->chremap = -1;   /* Don't beep if user cmd defined */
               break;
             }
-          } 
+          }
 	  if( new_m == NULL && ( new_m = malloc( sizeof(*new_m) ) ) ) {
-            new_m->chkey = ChCode( name );
+            new_m->chkey = ChCode( (const char *) name );
 	    new_m->chremap = new_m->chkey;
-	    new_m->cmd = Strdup( value );
+	    new_m->cmd = Strdup( (const char *) value );
 	    new_m->next = NULL;
 	    m->next = new_m;
 	    m = new_m;
 	  }
         }
       } else if(section == DIRMAP_SECTION ) {
-        value = strchr( buffer, '=' );
+        value = (unsigned char *) strchr( buffer, '=' );
         if( *name && value ) {
 	  *value++ = '\0';
           /* trim whitespace */
           while(*value && isspace(*value))
             value++;
-	  n = Strtok_r(name, ",", &old);
+	  n = Strtok_r((char *) name, ",", &old);
 	  /* maybe comma-separated list, eg.: k,K=x */
 	  while(n) {
             /* Check for existing entry from DIRCMD_SECTION */
             for(new_d = dirmenu.next; new_d != NULL; new_d = new_d->next) {
               if (new_d->chkey == ChCode( n )) {
-                new_d->chremap = ChCode( value );
+                new_d->chremap = ChCode( (const char *) value );
                 if (new_d->chremap == 0)
                   new_d->chremap = -1;   /* Don't beep if user cmd defined */
                 break;
               }
-            } 
+            }
 	    if( new_d == NULL && ( new_d = malloc( sizeof(*new_d) ) ) ) {
 	      new_d->chkey = ChCode( n );
-              new_d->chremap = ChCode( value );
+              new_d->chremap = ChCode( (const char *) value );
 	      new_d->cmd = NULL;
 	      new_d->next = NULL;
 	      d->next = new_d;
@@ -281,7 +283,7 @@ int ReadProfile( char *filename )
 	  }
         }
       } else if(section == DIRCMD_SECTION ) {
-        value = strchr( buffer, '=' );
+        value = (unsigned char *) strchr( buffer, '=' );
         if( *name && value ) {
 	  *value++ = '\0';
           /* trim whitespace */
@@ -290,34 +292,34 @@ int ReadProfile( char *filename )
 	  /* may not be comma-separated list */
           /* Check for existing entry from DIRMAP_SECTION */
           for(new_d = dirmenu.next; new_d != NULL; new_d = new_d->next) {
-            if (new_d->chkey == ChCode( name )) {
-	      new_d->cmd = Strdup( value );
+            if (new_d->chkey == ChCode( (const char *) name )) {
+	      new_d->cmd = Strdup( (const char *) value );
               if (new_d->chremap == 0)
                 new_d->chremap = -1;   /* Don't beep if user cmd defined */
               break;
             }
-          } 
+          }
 	  if ( new_d == NULL && ( new_d = malloc( sizeof(*new_d) ) ) ) {
-            new_d->chkey = ChCode( name );
+            new_d->chkey = ChCode( (const char *) name );
 	    new_d->chremap = new_d->chkey;
-	    new_d->cmd = Strdup( value );
+	    new_d->cmd = Strdup( (const char *) value );
 	    new_d->next = NULL;
 	    d->next = new_d;
 	    d = new_d;
 	  }
         }
       } else if ( section == VIEWER_SECTION ) {
-        value = strchr( buffer, '=' );
+        value = (unsigned char *) strchr( buffer, '=' );
 
         if( *name && value ) {
-          
+
 	  *value++ = '\0';
-	  n = Strtok_r(name, ",", &old);
+	  n = Strtok_r((char *) name, ",", &old);
 	  /* maybe comma-separated list, eg.: .jpeg,.gif=xv */
 	  while(n) {
 	    if(( new_v = malloc( sizeof(*new_v) ) ) ) {
 	      new_v->ext = Strdup( n );
-	      new_v->cmd = Strdup( value );
+	      new_v->cmd = Strdup( (const char *) value );
 	      new_v->next = NULL;
 	      if(new_v->ext == NULL || new_v->cmd == NULL) {
 	        /* ignore entry */
@@ -343,7 +345,7 @@ FNC_XIT:
 
   if( f )
     fclose( f );
-  
+
   return( result );
 }
 
@@ -377,7 +379,7 @@ static int ChCode(const char *s)
   else
     return((int)(*s));
 }
-    
+
 static int Compare(const void *s1, const void *s2)
 {
   return( strcmp( ((Profile *)s1)->name, ((Profile *)s2)->name ) );
@@ -441,4 +443,4 @@ char *GetExtViewer(char *filename)
 }
 
 
-  
+

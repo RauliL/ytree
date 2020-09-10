@@ -54,7 +54,7 @@ int View(DirEntry * dir_entry, char *file_path)
     case TAPE_MODE:
     case RAR_FILE_MODE:
     case RPM_FILE_MODE:
-    case TAR_FILE_MODE : 
+    case TAR_FILE_MODE :
     case ZOO_FILE_MODE :
     case ZIP_FILE_MODE :
     case LHA_FILE_MODE :
@@ -70,12 +70,11 @@ static int ViewFile(DirEntry * dir_entry, char *file_path)
   char *command_line, *aux;
   int  compress_method;
   int  result = -1;
-  int  l;
   char *file_p_aux;
   BOOL notice_mapped = FALSE;
   char cwd[PATH_LENGTH+1];
   char path[PATH_LENGTH+1];
-      
+
   command_line = file_p_aux = NULL;
 
   if( ( file_p_aux = (char *) malloc( COMMAND_LINE_LENGTH + 1 ) ) == NULL )
@@ -87,10 +86,10 @@ static int ViewFile(DirEntry * dir_entry, char *file_path)
 
   if( access( file_path, R_OK ) )
   {
-    (void) sprintf( message, 
-		    "View not possible!*\"%s\"*%s", 
-		    file_path, 
-		    strerror(errno) 
+    (void) sprintf( message,
+		    "View not possible!*\"%s\"*%s",
+		    file_path,
+		    strerror(errno)
 		  );
     MESSAGE( message );
     ESCAPE;
@@ -101,64 +100,63 @@ static int ViewFile(DirEntry * dir_entry, char *file_path)
     ERROR_MSG( "Malloc failed*ABORT" );
     exit( 1 );
   }
-  
-  if (( aux = GetExtViewer(file_path))!= NULL) 
+
+  if (( aux = GetExtViewer(file_path))!= NULL)
   {
-     if (strstr(aux,"%s") != NULL) 
+     if (strstr(aux,"%s") != NULL)
      {
         (void) sprintf(command_line, aux, file_p_aux);
-     } 
-     else 
+     }
+     else
           (void) sprintf(command_line, "%s %s", aux, file_p_aux);
-  } 
-  else 
+  }
+  else
   {
     compress_method = GetFileMethod( file_path );
-    l = strlen( file_path );
     if( compress_method == FREEZE_COMPRESS )
     {
-      (void) sprintf( command_line, 
-		      "%s < %s %s | %s", 
-		      MELT, 
-		      file_p_aux, 
+      (void) sprintf( command_line,
+		      "%s < %s %s | %s",
+		      MELT,
+		      file_p_aux,
 		      ERR_TO_STDOUT,
-		      PAGER 
+		      PAGER
 		    );
   }
   else if( compress_method == COMPRESS_COMPRESS )
   {
-    (void) sprintf( command_line, 
-		    "%s < %s %s | %s", 
-		    UNCOMPRESS, 
-		    file_p_aux, 
+    (void) sprintf( command_line,
+		    "%s < %s %s | %s",
+		    UNCOMPRESS,
+		    file_p_aux,
 		    ERR_TO_STDOUT,
-		    PAGER 
+		    PAGER
 		  );
   }
   else if( compress_method == GZIP_COMPRESS )
   {
-    (void) sprintf( command_line, 
-                    "%s < %s %s | %s", 
-		    GNUUNZIP, 
-		    file_p_aux, 
+    (void) sprintf( command_line,
+                    "%s < %s %s | %s",
+		    GNUUNZIP,
+		    file_p_aux,
 		    ERR_TO_STDOUT,
-		    PAGER 
+		    PAGER
 		  );
   }
   else if( compress_method == BZIP_COMPRESS )
   {
-    (void) sprintf( command_line, 
-                    "%s < %s %s | %s", 
-		    BUNZIP, 
-		    file_p_aux, 
+    (void) sprintf( command_line,
+                    "%s < %s %s | %s",
+		    BUNZIP,
+		    file_p_aux,
 		    ERR_TO_STDOUT,
-		    PAGER 
+		    PAGER
 		  );
   }
   else
   {
-    (void) sprintf( command_line, 
-		    "%s %s", 
+    (void) sprintf( command_line,
+		    "%s %s",
 		    PAGER,
 		    file_p_aux
 		  );
@@ -168,7 +166,7 @@ static int ViewFile(DirEntry * dir_entry, char *file_path)
 /* --crb3 01oct02: replicating what I did to <e>dit, eliminate
 the problem with jstar-chained-thru-less writing new files to
 the ytree starting cwd. new code grabbed from execute.c.
-*/                                                                                
+*/
 
 
   if (mode == DISK_MODE)
@@ -176,7 +174,7 @@ the ytree starting cwd. new code grabbed from execute.c.
   	if (Getcwd(cwd, PATH_LENGTH) == NULL)
   	{
   		WARNING("Getcwd failed*\".\"assumed");
-  		(void) strcpy(cwd, ".");    
+  		(void) strcpy(cwd, ".");
   	}
   	if (chdir(GetPath(dir_entry, path)))
   	{
@@ -191,17 +189,17 @@ the ytree starting cwd. new code grabbed from execute.c.
   		MESSAGE(message);
 	}
   }else{
-  	result = SystemCall(command_line);  
+  	result = SystemCall(command_line);
   }
-  
+
   /*  if((result = SilentSystemCall( command_line )))   ..did systemcall just above */
-  if(result)                                                                      
+  if(result)
   {
     (void) sprintf( message, "can't execute*%s", command_line );
     MESSAGE( message );
   }
 
-  if( notice_mapped ) 
+  if( notice_mapped )
   {
     UnmapNoticeWindow();
   }
@@ -223,7 +221,6 @@ static int ViewArchiveFile(char *file_path)
   char *command_line, *aux;
   char buffer[100];
   char *archive;
-  int  l;
   int  result = -1;
 
   if( ( command_line = malloc( COMMAND_LINE_LENGTH + 1 ) ) == NULL )
@@ -232,8 +229,6 @@ static int ViewArchiveFile(char *file_path)
     exit( 1 );
   }
 
-  l = strlen( file_path );
-  
   if (( aux = GetExtViewer(file_path)) != NULL) {
      if (strstr(aux,"%s") != NULL) {
   	(void) sprintf( buffer, "| %s", PAGER );
@@ -246,9 +241,9 @@ static int ViewArchiveFile(char *file_path)
 
   archive = (mode == TAPE_MODE) ? statistic.tape_name : statistic.login_path;
 
-  MakeExtractCommandLine( command_line, 
+  MakeExtractCommandLine( command_line,
 			  archive,
-			  file_path, 
+			  file_path,
 			  buffer
 			);
   if((result = SystemCall( command_line )))
@@ -288,7 +283,7 @@ void printhexline(WINDOW *win, char *line, char *buf, int r, long offset)
     } else {
       sprintf(line, "%010d  ", (int)offset);
     }
-    for (i = 1; i <= r; i++ ) 
+    for (i = 1; i <= r; i++ )
     {
         if ((i == (BYTES / 2) ) || (i == BYTES ))
 	    sprintf(aux, "%02hhX  ", buf[i-1]);
@@ -310,7 +305,7 @@ void printhexline(WINDOW *win, char *line, char *buf, int r, long offset)
     for (i=0; i< WCOLS-BYTES; i++)
 	waddch(win, line[i]| THECOLOR);
     for( i=0; i< BYTES; i++)
-	isprint(buf[i]) ? waddch(win, buf[i] | THECOLOR) : 
+	isprint(buf[i]) ? waddch(win, buf[i] | THECOLOR) :
 			  waddch(win, ACS_BLOCK | COLOR_PAIR(HIDIR_COLOR));
     free(aux);
     return;
@@ -326,7 +321,7 @@ void update_line(WINDOW *win, long line)
     line_string = (char *) xmalloc(WCOLS);
     memset(line_string, ' ', WCOLS);
     line_string[0] = '\0';
-    buf = (char *) xmalloc(BYTES);
+    buf = (unsigned char *) xmalloc(BYTES);
     memset(buf, ' ', BYTES);
     if (lseek(fd, (line - 1) * BYTES, SEEK_SET)== -1 )
     {
@@ -336,7 +331,7 @@ void update_line(WINDOW *win, long line)
 	return;
     }
     r = read(fd, buf, BYTES);
-    printhexline(win, line_string, buf, r, (line - 1) * (BYTES));
+    printhexline(win, line_string, (char *) buf, r, (line - 1) * (BYTES));
     xfree(line_string);
     xfree(buf);
 }
@@ -349,7 +344,7 @@ void scroll_down(WINDOW *win)
     wmove(win, WLINES - 1 , 0);
     update_line(win, current_line + WLINES - 1);
     wnoutrefresh(win);
-    doupdate();    
+    doupdate();
 }
 
 void scroll_up(WINDOW *win)
@@ -360,7 +355,7 @@ void scroll_up(WINDOW *win)
     wmove(win, 0, 0);
     update_line(win, current_line );
     wnoutrefresh(win);
-    doupdate();    
+    doupdate();
 }
 
 void update_all_lines(WINDOW *win, char l)
@@ -373,7 +368,7 @@ void update_all_lines(WINDOW *win, char l)
 	update_line(win, i);
     }
     wnoutrefresh(win);
-    doupdate();    
+    doupdate();
 }
 
 
@@ -383,19 +378,19 @@ void Change2Edit(char *file_path)
     char *str;
 
     str = (char *)xmalloc(COLS);
-    
+
     for(i = WLINES + 4; i < LINES; i++)
     {
 	wmove(stdscr,i , 0);
 	wclrtoeol(stdscr);
     }
     doupdate();
-    
+
     Print( stdscr, 0, 0, "File: ", MENU_COLOR );
     Print( stdscr, 0, 6, CutPathname(str,file_path,WCOLS-5), HIMENUS_COLOR );
     PrintOptions( stdscr, LINES - 3, 0, "(Edit file in hexadecimal mode)");
     PrintOptions( stdscr, LINES - 2, 0, "(Q)uit   (^L) redraw  (<TAB>) change edit mode");
-    PrintOptions( stdscr, LINES - 1, 0, 
+    PrintOptions( stdscr, LINES - 1, 0,
 		"(NEXT)-(RIGHT)/(PREV)-(LEFT) page   (HOME)-(END) of line   (DOWN)-(UP) line");
     free(str);
     return;
@@ -405,7 +400,7 @@ void Change2View(char *file_path)
 {
     int i;
     char *str;
-    
+
     str = (char *)xmalloc(COLS);
     for(i = WLINES + 4; i < LINES; i++)
     {
@@ -413,12 +408,12 @@ void Change2View(char *file_path)
 	wclrtoeol(stdscr);
     }
     doupdate();
-    
+
     Print( stdscr, 0, 0, "File: ", MENU_COLOR );
     Print( stdscr, 0, 6, CutPathname(str,file_path,WCOLS-5), HIMENUS_COLOR );
     PrintOptions( stdscr, LINES - 3, 0, "View file in hexadecimal mode");
     PrintOptions( stdscr, LINES - 2, 0, "(Q)uit   (^L) redraw  (E)dit hex");
-    PrintOptions( stdscr, LINES - 1, 0, 
+    PrintOptions( stdscr, LINES - 1, 0,
 		"(NEXT)-(RIGHT)/(PREV)-(LEFT) page   (HOME)-(END) of line   (DOWN)-(UP) line");
     free(str);
     return;
@@ -428,7 +423,7 @@ void SetupViewWindow(char *file_path)
 {
     int i;
     char *str;
-    
+
     str = (char *)xmalloc(COLS);
     WLINES= LINES - 6;
     WCOLS= COLS - 2;
@@ -453,7 +448,7 @@ void SetupViewWindow(char *file_path)
     WbkgdSet(BORDER,COLOR_PAIR(WINDIR_COLOR)|A_BOLD);
     box(BORDER,0,0);
     RefreshWindow(BORDER);
-    RefreshWindow(VIEW);  
+    RefreshWindow(VIEW);
     Change2View(file_path);
     BYTES = (WCOLS - 13) / 4;
     free(str);
@@ -478,7 +473,7 @@ void change_char(int ch)
     CHANGES *cambio=NULL;
     char pp=0;
     char mensaje[50];
-    
+
     cambio = malloc(sizeof(struct MODIF));
     cambio -> pos = ( (cursor_pos_y + current_line - 1) * BYTES) + CURSOR_POSX;
     if (lseek(fd, cambio -> pos, SEEK_SET)== -1 )
@@ -490,7 +485,7 @@ void change_char(int ch)
 	return;
     }
     if ((read(fd, &cambio -> old_char,1)==1))
-	
+
     if (lseek(fd, cambio -> pos, SEEK_SET)!= -1 )
     {
 	if (inhex) {
@@ -578,13 +573,11 @@ void move_right(WINDOW *win)
 void hex_edit(char *file_path)
 {
     int ch;
-    long cursor_byte;
     char mensaje[50];
 
     BOOL QUIT=FALSE;
 
     cursor_pos_x = cursor_pos_y = 0;
-    cursor_byte = 0;
     fd2 = fd;
     fd=open(file_path,O_RDWR);
     if (fd == -1){
@@ -625,7 +618,7 @@ void hex_edit(char *file_path)
 			   if (fdstat.st_size > ((cursor_pos_y + current_line - 1) * BYTES + CURSOR_POSX)) {
 
 			   	if (fdstat.st_size > ((cursor_pos_y + current_line - 1 + 1) * BYTES + CURSOR_POSX)) {
-					
+
 					if (cursor_pos_y < WLINES-1){
 				    		wmove( VIEW, ++cursor_pos_y, CURSOR_POS_X);
 				    		wnoutrefresh(VIEW);
@@ -639,7 +632,7 @@ void hex_edit(char *file_path)
 					/* special case: last line */
 
 					if (fdstat.st_size > ((cursor_pos_y + current_line - 1 + 1) * BYTES)) {
-						
+
 						for(cursor_pos_x = 0; (CURSOR_POSX + 1) < (fdstat.st_size % BYTES); cursor_pos_x++);
 
 						if (cursor_pos_y < WLINES-1){
@@ -667,7 +660,7 @@ void hex_edit(char *file_path)
 			    scroll_up(VIEW);
 			    wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
     			    wnoutrefresh(VIEW);
-			} else			
+			} else
 			    beep();
 	                break;
 	    case KEY_LEFT: /* move 1 char left */
@@ -683,7 +676,7 @@ void hex_edit(char *file_path)
 				scroll_up(VIEW);
 				cursor_pos_x=CANTX(BYTES) - 1;
 				wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
-			    } else 
+			    } else
 				beep();
 			wnoutrefresh(VIEW);
 			break;
@@ -726,7 +719,7 @@ void hex_edit(char *file_path)
 			    wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
 			    wnoutrefresh(VIEW);
 		            break;
-	    case KEY_HOME: 
+	    case KEY_HOME:
 			    if (CURSOR_POSX > 0) {
 				cursor_pos_x = 0;
 				wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
@@ -734,7 +727,7 @@ void hex_edit(char *file_path)
 				beep();
 			    wnoutrefresh(VIEW);
 	                    break;
-	    case KEY_END: 
+	    case KEY_END:
 			 fstat(fd,&fdstat);
 			 if ( ((cursor_pos_y + current_line) * BYTES) > fdstat.st_size ) {
 			        cursor_pos_x = CANTX(fdstat.st_size % BYTES) - 1;
@@ -756,18 +749,18 @@ void hex_edit(char *file_path)
 			wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
 			wnoutrefresh(VIEW);
 			break;
-	    case 'L' & 0x1f: 
+	    case 'L' & 0x1f:
 			clearok(stdscr,TRUE);
 			RefreshWindow(stdscr);
 			break;
 
-	    case 'q': 
+	    case 'q':
 	    case 'Q': if (inhex) {
 		        QUIT=TRUE;
 			break;
 			}
 	    default:
-		    change_char(ch); 
+		    change_char(ch);
 		    wmove(VIEW, cursor_pos_y, 0);
 		    update_line(VIEW, current_line+cursor_pos_y);
 		    move_right(VIEW);
@@ -789,7 +782,7 @@ int InternalView(char *file_path)
     long oldpos;
     int ch;
     BOOL QUIT=FALSE;
-    
+
     hexoffset = (!strcmp(HEXEDITOFFSET, "HEX")) ? TRUE : FALSE;
 
     if (stat(file_path, &fdstat)!=0)
@@ -886,18 +879,18 @@ int InternalView(char *file_path)
 				oldpos = current_line * BYTES;
 				update_all_lines(VIEW,WLINES-1);
 			    }else
-				beep();			    
+				beep();
 	                    break;
 	    case KEY_END: /*ScrollEnd();*/
 			 fstat(fd,&fdstat);
-			 if (fdstat.st_size >= BYTES * 2) 
+			 if (fdstat.st_size >= BYTES * 2)
 			    current_line = (fdstat.st_size - BYTES) / BYTES;
 			 else
 			    beep();
 			oldpos = current_line * BYTES;
 			update_all_lines(VIEW,WLINES);
 	                break;
-	    case 'L' & 0x1f: 
+	    case 'L' & 0x1f:
 			clearok(stdscr,TRUE);
 			RefreshWindow(stdscr);
 			break;
