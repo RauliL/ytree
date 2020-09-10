@@ -101,6 +101,8 @@ int StrVisualLength(const char *str)
     /* Invalid multibyte sequence */
     len = strlen(str);
   }
+
+  return len;
 #else
   return(strlen(str));
 #endif
