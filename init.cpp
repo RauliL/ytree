@@ -46,16 +46,16 @@ int Init(char *configuration_file, char *history_file)
 
   file_window = small_file_window;
 
-  if( ReadGroupEntries() )
+  if (!ReadGroupEntries())
   {
-    ERROR_MSG( "ReadGroupEntries failed*ABORT" );
-    exit( 1 );
+    ERROR_MSG("ReadGroupEntries failed*ABORT");
+    std::exit(EXIT_FAILURE);
   }
 
-  if( ReadPasswdEntries() )
+  if (!ReadPasswdEntries())
   {
-    ERROR_MSG( "ReadPasswdEntries failed*ABORT" );
-    exit( 1 );
+    ERROR_MSG("ReadPasswdEntries failed*ABORT");
+    std::exit(EXIT_FAILURE);
   }
 
   if (configuration_file != NULL) {

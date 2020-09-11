@@ -5,9 +5,9 @@
  * Handhabung von Gruppen-Nummern / Namen
  *
  ***************************************************************************/
-
-
 #include "ytree.h"
+
+#include <vector>
 
 #ifdef WIN32
 
@@ -15,92 +15,61 @@
 
 #else
 
-typedef struct
+struct Group
 {
-  int   gid;
-  char  name[GROUP_NAME_MAX + 1];
-  char  display_name[DISPLAY_GROUP_NAME_MAX + 1];
-} GroupEntry;
+  int gid;
+  std::string name;
+  std::string display_name;
+};
 
+static std::vector<Group> group_array;
 
 extern struct group *getgrent(void);
 #if !defined(__OpenBSD__) && !defined(__NetBSD__) && !defined( __FreeBSD__ ) && !defined( OSF1 ) && !defined( __APPLE__ )
 extern void         setgrent(void);
 #endif
 
-static GroupEntry   *group_array;
-static unsigned int group_count;
-
-
 #endif /* WIN32 */
 
-
-
-int ReadGroupEntries(void)
+bool ReadGroupEntries()
 {
-#ifndef WIN32
+#if !defined(WIN32)
+  std::size_t group_count = 0;
 
-  int i;
-  struct group *grp_ptr;
-
-
-  for( group_count=0; getgrent(); group_count++ )
-    ;
+  for (; getgrent(); ++group_count);
 
   setgrent();
 
-  if( group_array )
-  {
-    free( group_array );
-    group_array = NULL;
-  }
+  group_array.clear();
+  group_array.reserve(group_count);
 
-  if( group_count == 0 )
-  {
-    group_array = NULL;
-  }
-  else
-  {
-    if( ( group_array = (GroupEntry *) calloc( group_count,
-					       sizeof( GroupEntry )
-					     ) ) == NULL )
-    {
-      ERROR_MSG( "Calloc Failed" );
-      group_array = NULL;
-      group_count = 0;
-      return( 1 );
-    }
-  }
-
-  for(i=0; i < (int)group_count; i++)
+  for (std::size_t i = 0; i < group_count; ++i)
   {
     errno = 0;
-    if( ( grp_ptr = getgrent() ) != NULL )
+    if (const auto grp_ptr = getgrent())
     {
-      group_array[i].gid = grp_ptr->gr_gid;
-      (void)strncpy( group_array[i].name, grp_ptr->gr_name, GROUP_NAME_MAX );
-      group_array[i].name[GROUP_NAME_MAX] = '\0';
-      CutName(group_array[i].display_name, grp_ptr->gr_name, DISPLAY_GROUP_NAME_MAX);
-    }
-    else
-    {
-      if(errno == 0)
+      const std::string name(grp_ptr->gr_name);
+
+      group_array.push_back({
+        static_cast<int>(grp_ptr->gr_gid),
+        name.substr(0, GROUP_NAME_MAX),
+        CutName(name, DISPLAY_GROUP_NAME_MAX),
+      });
+    } else {
+      if (errno == 0)
       {
-	group_count = i;  /* Not sure why this can happen, but continue... */
+        // Not syre why this can happen, but continue...
         break;
       }
+      ERROR_MSG("Getgrent Failed");
+      group_array.clear();
 
-      ERROR_MSG( "Getgrent Failed" );
-      if( group_array) free( group_array );
-      group_array = NULL;
-      group_count = 0;
-      return( 1 );
+      return false;
     }
   }
+#endif
 
-#endif /* WIN32 */
-
-  return( 0 );
+  return true;
 }
 
 std::optional<std::string> GetGroupName(unsigned int gid)
@@ -110,11 +79,11 @@ std::optional<std::string> GetGroupName(unsigned int gid)
 
   return group_ptr ? group_ptr->gr_name : std::nullopt;
 #else
-  for (int i = 0; i < static_cast<int>(group_count); ++i)
+  for (const auto& group : group_array)
   {
-    if (group_array[i].gid == static_cast<int>(gid))
+    if (group.gid == static_cast<int>(gid))
     {
-      return group_array[i].name;
+      return group.name;
     }
   }
 
@@ -129,11 +98,11 @@ std::optional<std::string> GetDisplayGroupName(unsigned int gid)
 
   return group_ptr ? group_ptr->gr_name : str::nullopt;
 #else
-  for (int i = 0; i < static_cast<int>(group_count); ++i)
+  for (const auto& group : group_array)
   {
-    if (group_array[i].gid == static_cast<int>(gid))
+    if (group.gid == static_cast<int>(gid))
     {
-      return group_array[i].display_name;
+      return group.display_name;
     }
   }
 
@@ -143,16 +112,16 @@ std::optional<std::string> GetDisplayGroupName(unsigned int gid)
 
 std::optional<int> GetGroupId(const std::string& name)
 {
-#ifdef WIN32
+#if defined(WIN32)
   const auto group_ptr = getgrnam(name);
 
   return group_ptr ? group_ptr->gr_gid : std::nullopt;
 #else
-  for(int i = 0; i < static_cast<int>(group_count); ++i)
+  for (const auto& group : group_array)
   {
-    if (!name.compare(group_array[i].name))
+    if (!name.compare(group.name))
     {
-      return static_cast<int>(group_array[i].gid);
+      return group.gid;
     }
   }
 

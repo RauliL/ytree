@@ -5,10 +5,9 @@
  * Handhabung von User-Nummern / Namen
  *
  ***************************************************************************/
-
-
 #include "ytree.h"
 
+#include <vector>
 
 #ifdef WIN32
 
@@ -16,90 +15,61 @@
 
 #else
 
-typedef struct
+struct Passwd
 {
-  int   uid;
-  char  name[OWNER_NAME_MAX + 1];
-  char  display_name[DISPLAY_OWNER_NAME_MAX + 1];
-} PasswdEntry;
+  int uid;
+  std::string name;
+  std::string display_name;
+};
 
+static std::vector<Passwd> passwd_array;
 
 extern struct passwd *getpwent(void);
 #if !defined(__OpenBSD__) && !defined(__NetBSD__) && !defined( __FreeBSD__ ) && !defined( OSF1 ) && !defined( __APPLE__ )
 extern void          setpwent(void);
 #endif
 
-static PasswdEntry   *passwd_array;
-static unsigned int  passwd_count;
-
 #endif /* WIN32 */
 
-
-int ReadPasswdEntries(void)
+bool ReadPasswdEntries()
 {
-#ifndef WIN32
+#if !defined(WIN32)
+  std::size_t passwd_count = 0;
 
-  int i;
-  struct passwd *pwd_ptr;
-
-
-  for( passwd_count=0; getpwent(); passwd_count++ )
-    ;
+  for (; getpwent(); ++passwd_count);
 
   setpwent();
 
-  if( passwd_array )
-  {
-    free( passwd_array );
-    passwd_array = NULL;
-  }
+  passwd_array.clear();
+  passwd_array.reserve(passwd_count);
 
-  if( passwd_count == 0 )
-  {
-    passwd_array = NULL;
-  }
-  else
-  {
-    if( ( passwd_array = (PasswdEntry *) calloc( passwd_count,
-					         sizeof( PasswdEntry )
-					       ) ) == NULL )
-    {
-      ERROR_MSG( "Calloc Failed" );
-      passwd_array = NULL;
-      passwd_count = 0;
-      return( 1 );
-    }
-  }
-
-  for(i=0; i < (int)passwd_count; i++)
+  for (std::size_t i = 0; i < passwd_count; ++i)
   {
     errno = 0;
-    if( ( pwd_ptr = getpwent() ) != NULL )
+    if (const auto pwd_ptr = getpwent())
     {
-      passwd_array[i].uid = pwd_ptr->pw_uid;
-      (void) strncpy( passwd_array[i].name, pwd_ptr->pw_name, OWNER_NAME_MAX );
-      passwd_array[i].name[OWNER_NAME_MAX] = '\0';
-      CutName(passwd_array[i].display_name, pwd_ptr->pw_name, DISPLAY_OWNER_NAME_MAX);
-    }
-    else
-    {
-      if(errno == 0)
+      const std::string name(pwd_ptr->pw_name);
+
+      passwd_array.push_back({
+        static_cast<int>(pwd_ptr->pw_uid),
+        name.substr(0, OWNER_NAME_MAX),
+        CutName(name, DISPLAY_OWNER_NAME_MAX),
+      });
+    } else {
+      if (errno == 0)
       {
-        passwd_count = i;  /* Not sure why this can happen, but continue... */
+        // Not sure why this can happen, but continue...
         break;
       }
+      ERROR_MSG("Getpwent Failed");
+      passwd_array.clear();
 
-      ERROR_MSG( "Getpwent Failed" );
-      if( passwd_array) free( passwd_array );
-      passwd_array = NULL;
-      passwd_count = 0;
-      return( 1 );
+      return false;
     }
   }
+#endif
 
-#endif /* WIN32 */
-
-  return( 0 );
+  return true;
 }
 
 std::optional<std::string> GetPasswdName(unsigned int uid)
@@ -109,11 +79,11 @@ std::optional<std::string> GetPasswdName(unsigned int uid)
 
   return pwd_ptr ? pwd_ptr->pw_name : std::nullopt;
 #else
-  for(int i = 0; i < static_cast<int>(passwd_count); ++i)
+  for (const auto& passwd : passwd_array)
   {
-    if (passwd_array[i].uid == static_cast<int>(uid))
+    if (passwd.uid == static_cast<int>(uid))
     {
-      return passwd_array[i].name;
+      return passwd.name;
     }
   }
 
@@ -128,11 +98,11 @@ std::optional<std::string> GetDisplayPasswdName(unsigned int uid)
 
   return pwd_ptr ? pwd_ptr->pw_name : std::nullopt;
 #else
-  for(int i = 0; i < static_cast<int>(passwd_count); ++i)
+  for (const auto& passwd : passwd_array)
   {
-    if (passwd_array[i].uid == static_cast<int>(uid))
+    if (passwd.uid == static_cast<int>(uid))
     {
-      return passwd_array[i].display_name;
+      return passwd.display_name;
     }
   }
 
@@ -147,11 +117,11 @@ std::optional<int> GetPasswdUid(const std::string& name)
 
   return pwd_ptr ? pwd_ptr->pw_uid : std::nullopt;
 #else
-  for (int i = 0; i < static_cast<int>(passwd_count); ++i)
+  for (const auto& passwd : passwd_array)
   {
-    if (!name.compare(passwd_array[i].name))
+    if (!name.compare(passwd.name))
     {
-      return static_cast<int>(passwd_array[i].uid);
+      return static_cast<int>(passwd.uid);
     }
   }
 

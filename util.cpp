@@ -1117,24 +1117,9 @@ static char* GNU_getcwd()
   }
 }
 
-/*****************************************************************************
- *                              CutName                                      *
- *****************************************************************************/
-
-char *CutName(char *dest, char *src, unsigned int max_len)
+std::string CutName(const std::string& src, std::size_t max_length)
 {
-  unsigned int l;
+  const auto length = src.length();
 
-  l = strlen(src);
-
-  if( l <= max_len )
-    return( strcpy( dest, src ) );
-  else
-  {
-    (void) strncpy( dest, src, max_len - 3 );
-    return strcpy( &dest[max_len - 3], "..." );
-  }
+  return length <= max_length ? src : src.substr(0, max_length - 3) + "...";
 }
-
-
-
