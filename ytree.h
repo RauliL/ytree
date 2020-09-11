@@ -938,7 +938,10 @@ extern int  GetDiskParameter(char *path,
 			    );
 extern int  HandleDirWindow(DirEntry *start_dir_entry);
 extern void DisplayFileWindow(DirEntry *dir_entry);
-extern int Init(char *configuration_file, char *history_file);
+void Init(
+  const std::optional<std::string>&,
+  const std::optional<std::string>&
+);
 extern char *GetPath(DirEntry *dir_entry, char *buffer);
 extern bool Match(char *file_name);
 extern int  SetMatchSpec(char *new_spec);
@@ -963,10 +966,10 @@ std::optional<std::string> GetDisplayPasswdName(unsigned int uid);
 std::optional<int> GetPasswdUid(const std::string&);
 extern char *GetFileNamePath(FileEntry *file_entry, char *buffer);
 extern char *GetRealFileNamePath(FileEntry *file_entry, char *buffer);
-extern int  SystemCall(char *command_line);
-extern int  QuerySystemCall(char *command_line);
-extern int  SilentSystemCall(char *command_line);
-extern int  SilentSystemCallEx(char *command_line, bool enable_clock);
+int SystemCall(const std::string&);
+int QuerySystemCall(const std::string&);
+int SilentSystemCall(const std::string&);
+int SilentSystemCallEx(const std::string&, bool);
 extern int  View(DirEntry * dir_entry, char *file_path);
 extern int  ViewHex(char *file_path);
 extern int  InternalView(char *file_path);
@@ -1045,7 +1048,7 @@ extern void TermcapInitscr(void);
 extern void TermcapEndwin(void);
 extern int  BuildFilename( char *in_filename, char *pattern, char *out_filename);
 extern int  ViKey( int ch );
-extern int  GetFileMethod( char *filename );
+int GetFileMethod(const std::string&);
 extern int  AixWgetch( WINDOW *w );
 extern bool KeyPressed(void);
 extern bool EscapeKeyPressed(void);
@@ -1054,14 +1057,14 @@ extern int  MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry 
 extern int  MakeDirEntry( DirEntry *father_dir_entry, char *dir_name );
 void NormPath(const char*, char*);
 char* Strtok_r(char*, const char*, char**);
-extern int  ReadProfile( char *filename );
+void ReadProfile(const std::string&);
 const char* GetProfileValue(const char*);
 extern int  ScanSubTree( DirEntry *dir_entry );
 extern void GetMaxYX(WINDOW *win, int *height, int *width);
 
 extern char *GetHistory(void);
-extern void InsHistory(char *new_hist);
-extern void ReadHistory(char *filename);
+void InsHistory(const std::string&);
+void ReadHistory(const std::string&);
 extern void SaveHistory(char *filename);
 extern char *GetMatches(char *);
 extern int  KeyF2Get(DirEntry *start_dir_entry,
@@ -1071,12 +1074,10 @@ extern int  KeyF2Get(DirEntry *start_dir_entry,
 extern void Switch2F2Window(void);
 extern void MapF2Window(void);
 extern void UnmapF2Window(void);
-extern void ReadExtFile(char *);
-extern char *GetExtCmd(char *);
-int MvAddStr(int, int, const std::string&);
-int MvWAddStr(WINDOW*, int, int, const std::string&);
-extern int  WAddStr(WINDOW *win, char *str);
-extern int  AddStr(char *str);
+void MvAddStr(int, int, const std::string&);
+void MvWAddStr(WINDOW*, int, int, const std::string&);
+void WAddStr(WINDOW*, const std::string&);
+void AddStr(const std::string&);
 extern void ClockHandler(int);
 extern int Strrcmp(char *s1, char* s2);
 char* Strdup(const char*);
@@ -1103,6 +1104,6 @@ extern char *Getcwd(char *buffer, unsigned int len);
 extern int  RefreshDirWindow();
 extern char *StrLeft(const char *str, size_t count);
 std::size_t StrVisualLength(const char*);
-extern int  WAttrAddStr(WINDOW *win, int attr, char *str);
+void WAttrAddStr(WINDOW*, int, const std::string&);
 char* Strndup(const char*, std::size_t);
 std::string CutName(const std::string&, std::size_t);

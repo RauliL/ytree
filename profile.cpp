@@ -101,9 +101,9 @@ static int Compare(const void *s1, const void *s2);
 
 static int ChCode(const char *s);
 
-int ReadProfile( char *filename )
+void ReadProfile(const std::string& filename)
 {
-  int  l, result = -1;
+  int l;
   char buffer[1024], *n, *old;
   unsigned char *name, *value, *cptr;
   Section section = Section::NO_SECTION;
@@ -118,7 +118,7 @@ int ReadProfile( char *filename )
   m->next = NULL;
   d->next = NULL;
 
-  if( ( f = fopen( filename, "r" ) ) == NULL ) {
+  if( ( f = fopen( filename.c_str(), "r" ) ) == NULL ) {
     ESCAPE;
   }
 
@@ -323,14 +323,11 @@ int ReadProfile( char *filename )
       }
     }
   }
-  result = 0;
 
 FNC_XIT:
 
   if( f )
     fclose( f );
-
-  return( result );
 }
 
 const char* GetProfileValue(const char* name)

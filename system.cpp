@@ -5,93 +5,77 @@
  * System Call
  *
  ***************************************************************************/
-
-
 #include "ytree.h"
 
-
-
-
-int SystemCall(char *command_line)
+int SystemCall(const std::string& command_line)
 {
   int result;
 
-#ifndef XCURSES
+#if !defined(XCURSES)
   endwin();
 #endif
-  result = SilentSystemCall( command_line );
-
-  (void) GetAvailBytes( &statistic.disk_space );
+  result = SilentSystemCall(command_line);
+  GetAvailBytes(&statistic.disk_space);
   refresh();
-  return( result );
+
+  return result;
 }
 
-
-int QuerySystemCall(char *command_line)
+int QuerySystemCall(const std::string& command_line)
 {
   int result;
 
-#ifndef XCURSES
+#if !defined(XCURSES)
   endwin();
 #endif
-  result = SilentSystemCall( command_line );
+  result = SilentSystemCall(command_line);
   HitReturnToContinue();
-  (void) GetAvailBytes( &statistic.disk_space );
+  GetAvailBytes(&statistic.disk_space);
   refresh();
 
-  return( result );
+  return result;
 }
 
-
-
-extern struct itimerval value, ovalue;
-
-int SilentSystemCall(char *command_line)
+int SilentSystemCall(const std::string& command_line)
 {
-  return(SilentSystemCallEx(command_line, true));
+  return SilentSystemCallEx(command_line, true);
 }
 
-int SilentSystemCallEx(char *command_line, bool enable_clock)
+int SilentSystemCallEx(const std::string& command_line, bool enable_clock)
 {
   int result;
-#ifdef XCURSES
-  char *xterm=NULL;
+#if defined(XCURSES)
+  std::string xterm = "xterm -e " + command_line + " &";
 #endif
 
-  /* Hier ist die einzige Stelle, in der Kommandos aufgerufen werden! */
-
+  // Hier ist die einzige Stelle, in der Kommandos aufgerufen werden!
 #if defined( __NeXT__ )
   nl();
 #endif /* linux */
 
-    SuspendClock();
+  SuspendClock();
 
-#ifdef XCURSES
-  if( ( xterm = malloc( strlen( command_line ) + 10 ) ) == NULL ) {
-    ERROR_MSG( "Malloc Failed*ABORT" );
-    exit( 1 );
-  }
-  sprintf(xterm, "xterm -e %s &", command_line);
-  result = system( xterm );
-  free(xterm);
+#if defined(XCURSES)
+  result = std::system(xterm.c_str());
 #else
-  result = system( command_line );
+  result = std::system(command_line.c_str());
 #endif
 
-#ifndef XCURSES
+#if !defined(XCURSES)
   leaveok(stdscr, true);
   curs_set(0);
 #if defined( __NeXT__ )
   cbreak();
   nonl();
   noecho();
-  clearok( stdscr, true );
+  clearok(stdscr, true);
 #endif /* linux */
 #endif /* XCURSES */
-  if(enable_clock)
+  if (enable_clock)
+  {
     InitClock();
-  (void) GetAvailBytes( &statistic.disk_space );
-  return( result );
+  }
+  GetAvailBytes(&statistic.disk_space);
+
+  return result;
 }
-
-

@@ -7,13 +7,15 @@
  ***************************************************************************/
 #include "ytree.h"
 
-typedef struct
-{
-  const char* extension;
-  int  method;
-} Extension2Method;
+#include <vector>
 
-static Extension2Method file_extensions[] = FILE_EXTENSIONS;
+struct Extension2Method
+{
+  const std::string extension;
+  int method;
+};
+
+static const std::vector<Extension2Method> file_extensions = FILE_EXTENSIONS;
 
 static char* GNU_getcwd();
 
@@ -621,28 +623,22 @@ int BuildFilename( char *in_filename,
   return( result );
 }
 
-
-
-int GetFileMethod( char *filename )
+int GetFileMethod(const std::string& filename)
 {
-  int i, k, l;
+  const auto l = filename.length();
 
-  l = strlen( filename );
-
-  for( i=0;
-       i < (int)(sizeof( file_extensions ) / sizeof( file_extensions[0] ));
-       i++
-     )
+  for (const auto& mapping : file_extensions)
   {
-    k = strlen( file_extensions[i].extension );
-    if( l >= k && !strcmp( &filename[l-k], file_extensions[i].extension ) )
-      return( file_extensions[i].method );
+    const auto k = mapping.extension.length();
+
+    if (l >= k && !filename.substr(l - k).compare(mapping.extension))
+    {
+      return mapping.method;
+    }
   }
 
-  return( NO_COMPRESS );
+  return NO_COMPRESS;
 }
-
-
 
 #ifdef __NeXT__
 

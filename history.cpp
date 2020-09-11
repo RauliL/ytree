@@ -5,11 +5,9 @@
  * Functionkey F2 History
  *
  ***************************************************************************/
-
-
 #include "ytree.h"
 
-
+#include <fstream>
 
 #define MAX_HST_FILE_LINES 50
 #define MAX(a,b) (((a) > (b)) ? (a):(b))
@@ -27,28 +25,24 @@ static int cursor_pos     = 0;
 static int disp_begin_pos = 0;
 static History *Hist = NULL ;
 
-
-
-void ReadHistory(char *Filename)
+void ReadHistory(const std::string& filename)
 {
-  FILE *HstFile;
-  char buffer[BUFSIZ];
+  std::ifstream is(filename, std::ios_base::in);
+  std::string line;
 
-  if ( (HstFile = fopen( Filename, "r" ) ) != NULL) {
-    while( fgets( buffer, sizeof( buffer ), HstFile ) )
-    {
-        if (strlen(buffer) > 0)
-        {
-          buffer[strlen(buffer) -1] = '\0';
-          InsHistory(buffer);
-        }
-    }
-    fclose( HstFile );
+  if (!is.good())
+  {
+    return;
   }
-  return;
+  while (std::getline(is, line))
+  {
+    if (line.length() > 0)
+    {
+      InsHistory(line.c_str());
+    }
+  }
+  is.close();
 }
-
-
 
 void SaveHistory(char *Filename)
 {
@@ -77,18 +71,20 @@ void SaveHistory(char *Filename)
 }
 
 
-void InsHistory( char *NewHst)
+void InsHistory(const std::string& entry)
 {
    History *TMP, *TMP2 = NULL;
    int flag = 0;
 
-   if (strlen(NewHst)== 0)
-     return;
+ if (entry.empty())
+ {
+   return;
+ }
 
    TMP2 = Hist;
    for ( TMP = Hist; TMP != NULL; TMP = TMP -> next)
    {
-       if (strcmp(TMP -> hst, NewHst) == 0)
+       if (!std::strcmp(TMP->hst, entry.c_str()))
        {
          if (TMP2 != TMP)
          {
@@ -108,7 +104,7 @@ void InsHistory( char *NewHst)
       {
          TMP -> next = Hist;
 	 TMP -> prev = NULL;
-	 if(( TMP -> hst = Strdup(NewHst)) == NULL)
+	 if(( TMP -> hst = Strdup(entry.c_str())) == NULL)
 	 {
 	    free(TMP);
 	    return;
@@ -120,10 +116,7 @@ void InsHistory( char *NewHst)
          total_hist++;
       }
    }
-   return;
 }
-
-
 
 void PrintHstEntry(int entry_no, int y, int color,
                    int start_x, int *hide_left, int *hide_right)

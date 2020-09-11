@@ -19,16 +19,13 @@ int main(int argc, char **argv)
 {
   const char* p;
   int argi;
-  char *hist;
-  char *conf;
+  std::optional<std::string> hist;
+  std::optional<std::string> conf;
 
 #if (!defined(sun) && !defined(__DJGPP__))
   setlocale(LC_ALL, "");
 #endif
 
-
-  hist = NULL;
-  conf = NULL;
   p = DEFAULT_TREE;
   for (argi = 1; argi < argc; argi++)
   {
@@ -72,8 +69,7 @@ int main(int argc, char **argv)
     }
   }
 
-  if (Init(conf, hist))
-      exit(1);
+  Init(conf, hist);
 
   if( *p != FILE_SEPARATOR_CHAR )
   {

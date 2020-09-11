@@ -19,7 +19,10 @@ static WINDOW *Newwin(int nlines, int ncols,
 char *XCursesProgramName = "ytree";
 #endif
 
-int Init(char *configuration_file, char *history_file)
+void Init(
+  const std::optional<std::string>& configuration_file,
+  const std::optional<std::string>& history_file
+)
 {
   char buffer[PATH_LENGTH + 1];
   char *home = NULL;
@@ -58,18 +61,36 @@ int Init(char *configuration_file, char *history_file)
     std::exit(EXIT_FAILURE);
   }
 
-  if (configuration_file != NULL) {
-    ReadProfile(configuration_file);
+  if (configuration_file)
+  {
+    ReadProfile(*configuration_file);
   }
-  else if( ( home = getenv("HOME") ) ) {
-    sprintf(buffer, "%s%c%s", home, FILE_SEPARATOR_CHAR, PROFILE_FILENAME);
+  else if ((home = std::getenv("HOME")))
+  {
+    std::snprintf(
+      buffer,
+      PATH_LENGTH,
+      "%s%c%s",
+      home,
+      FILE_SEPARATOR_CHAR,
+      PROFILE_FILENAME
+    );
     ReadProfile(buffer);
   }
-  if (history_file != NULL) {
-    ReadHistory(history_file);
+  if (history_file)
+  {
+    ReadHistory(*history_file);
   }
-  else if ( home ) {
-    sprintf(buffer, "%s%c%s", home, FILE_SEPARATOR_CHAR, HISTORY_FILENAME);
+  else if (home)
+  {
+    std::snprintf(
+      buffer,
+      PATH_LENGTH,
+      "%s%c%s",
+      home,
+      FILE_SEPARATOR_CHAR,
+      HISTORY_FILENAME
+    );
     ReadHistory(buffer);
   }
 
@@ -80,11 +101,7 @@ int Init(char *configuration_file, char *history_file)
   initial_directory = INITIALDIR;
 
   InitClock();
-
-  return( 0 );
 }
-
-
 
 void ReCreateWindows()
 {
