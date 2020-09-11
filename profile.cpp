@@ -5,21 +5,21 @@
  * Profile support
  *
  ***************************************************************************/
-
-
 #include "ytree.h"
 
+#include <vector>
 
-
-#define NO_SECTION	0
-#define GLOBAL_SECTION	1
-#define VIEWER_SECTION	2
-#define MENU_SECTION 3
-#define FILEMAP_SECTION 4
-#define FILECMD_SECTION 5
-#define DIRMAP_SECTION 6
-#define DIRCMD_SECTION 7
-
+enum class Section
+{
+  NO_SECTION = 0,
+  GLOBAL_SECTION = 1,
+  VIEWER_SECTION = 2,
+  MENU_SECTION = 3,
+  FILEMAP_SECTION = 4,
+  FILECMD_SECTION = 5,
+  DIRMAP_SECTION = 6,
+  DIRCMD_SECTION = 7,
+};
 
 typedef struct
 {
@@ -29,12 +29,11 @@ typedef struct
   char *value;
 } Profile;
 
-
-typedef struct _viewer {
-  char *ext;
-  char *cmd;
-  struct _viewer *next;
-} Viewer;
+struct Viewer
+{
+  const std::string ext;
+  const std::string cmd;
+};
 
 typedef struct _dirmenu {
   int chkey;
@@ -50,12 +49,12 @@ typedef struct _filemenu {
   struct _filemenu *next;
 } Filemenu;
 
-static Viewer viewer;
+static std::vector<Viewer> viewer_array;
 static Dirmenu dirmenu;
 static Filemenu filemenu;
 
 /* MUSS sortiert sein! */
-static Profile profile[] = {
+static const Profile profile[] = {
   { "ARCEXPAND",    	DEFAULT_ARCEXPAND,     NULL,     NULL },
   { "ARCLIST",      	DEFAULT_ARCLIST,       NULL,     NULL },
   { "BUNZIP",       	DEFAULT_BUNZIP,        NULL,     NULL },
@@ -107,19 +106,15 @@ int ReadProfile( char *filename )
   int  l, result = -1;
   char buffer[1024], *n, *old;
   unsigned char *name, *value, *cptr;
-  int section;
+  Section section = Section::NO_SECTION;
   Profile *p, key;
-  Viewer *v, *new_v;
   Filemenu *m, *new_m;
   Dirmenu *d, *new_d;
   FILE *f;
 
-  section = NO_SECTION;
-  v = &viewer;
   m = &filemenu;
   d = &dirmenu;
 
-  v->next = NULL;
   m->next = NULL;
   d->next = NULL;
 
@@ -143,27 +138,27 @@ int ReadProfile( char *filename )
       if(*name == '[') {
         /* section */
 	if( !strcmp((const char *) name, "[GLOBAL]") )
-	  section = GLOBAL_SECTION;
+	  section = Section::GLOBAL_SECTION;
 	else if( !strcmp((const char *) name, "[VIEWER]") )
-	  section = VIEWER_SECTION;
+	  section = Section::VIEWER_SECTION;
 	else if( !strcmp((const char *) name, "[MENU]") )
-	  section = MENU_SECTION;
+	  section = Section::MENU_SECTION;
 	else if( !strcmp((const char *) name, "[FILEMAP]") )
-	  section = FILEMAP_SECTION;
+	  section = Section::FILEMAP_SECTION;
 	else if( !strcmp((const char *) name, "[FILECMD]") )
-	  section = FILECMD_SECTION;
+	  section = Section::FILECMD_SECTION;
 	else if( !strcmp((const char *) name, "[DIRMAP]") )
-	  section = DIRMAP_SECTION;
+	  section = Section::DIRMAP_SECTION;
 	else if( !strcmp((const char *) name, "[DIRCMD]") )
-	  section = DIRCMD_SECTION;
+	  section = Section::DIRCMD_SECTION;
 	else
-	  section = NO_SECTION;
+	  section = Section::NO_SECTION;
 
 	continue;
       }
 
 
-      if( section == GLOBAL_SECTION ) {
+      if( section == Section::GLOBAL_SECTION ) {
         value = (unsigned char *) strchr( buffer, '=' );
         if( *name && value ) {
           *value++ = '\0';
@@ -172,7 +167,7 @@ int ReadProfile( char *filename )
 	    p->value = Strdup( (const char *) value );
           }
         }
-      } else if( section == MENU_SECTION ) {
+      } else if( section == Section::MENU_SECTION ) {
         value = (unsigned char *) strchr( buffer, '=' );
         if( *name && value ) {
           *value++ = '\0';
@@ -196,7 +191,7 @@ int ReadProfile( char *filename )
             }
           }
         }
-      } else if(section == FILEMAP_SECTION ) {
+      } else if(section == Section::FILEMAP_SECTION ) {
         value = (unsigned char *) std::strchr( buffer, '=' );
         if( *name && value ) {
 	  *value++ = '\0';
@@ -226,7 +221,7 @@ int ReadProfile( char *filename )
 	    n = Strtok_r(NULL, ",", &old);
 	  }
         }
-      } else if(section == FILECMD_SECTION ) {
+      } else if(section == Section::FILECMD_SECTION ) {
         value = (unsigned char *) strchr( buffer, '=' );
         if( *name && value ) {
 	  *value++ = '\0';
@@ -252,7 +247,7 @@ int ReadProfile( char *filename )
 	    m = new_m;
 	  }
         }
-      } else if(section == DIRMAP_SECTION ) {
+      } else if(section == Section::DIRMAP_SECTION ) {
         value = (unsigned char *) strchr( buffer, '=' );
         if( *name && value ) {
 	  *value++ = '\0';
@@ -282,7 +277,7 @@ int ReadProfile( char *filename )
 	    n = Strtok_r(NULL, ",", &old);
 	  }
         }
-      } else if(section == DIRCMD_SECTION ) {
+      } else if(section == Section::DIRCMD_SECTION ) {
         value = (unsigned char *) strchr( buffer, '=' );
         if( *name && value ) {
 	  *value++ = '\0';
@@ -308,7 +303,7 @@ int ReadProfile( char *filename )
 	    d = new_d;
 	  }
         }
-      } else if ( section == VIEWER_SECTION ) {
+      } else if ( section == Section::VIEWER_SECTION ) {
         value = (unsigned char *) strchr( buffer, '=' );
 
         if( *name && value ) {
@@ -316,24 +311,13 @@ int ReadProfile( char *filename )
 	  *value++ = '\0';
 	  n = Strtok_r((char *) name, ",", &old);
 	  /* maybe comma-separated list, eg.: .jpeg,.gif=xv */
-	  while(n) {
-	    if(( new_v = static_cast<Viewer*>(std::malloc( sizeof(*new_v) ) ) )) {
-	      new_v->ext = Strdup( n );
-	      new_v->cmd = Strdup( (const char *) value );
-	      new_v->next = NULL;
-	      if(new_v->ext == NULL || new_v->cmd == NULL) {
-	        /* ignore entry */
-	        if(new_v->ext)
-	          free(new_v->ext);
-	        if(new_v->cmd)
-	          free(new_v->cmd);
-	        free(new_v);
-	      } else {
-	        v->next = new_v;
-	        v = new_v;
-	      }
-	    }
-	    n = Strtok_r(NULL, ",", &old);
+	  while (n)
+    {
+      viewer_array.push_back({
+        n,
+        (const char*) value,
+      });
+	    n = Strtok_r(nullptr, ",", &old);
 	  }
         }
       }
@@ -419,30 +403,24 @@ char *GetUserDirAction(int chkey, int *pchremap)
   return(NULL);
 }
 
-bool IsUserActionDefined(void)
+bool IsUserActionDefined()
 {
-  return((bool)(dirmenu.next != NULL || filemenu.next != NULL));
+  return dirmenu.next && filemenu.next;
 }
 
-
-char *GetExtViewer(char *filename)
+std::optional<std::string> GetExtViewer(const std::string& filename)
 {
-  Viewer *v;
-  int l, x;
+  const auto length = filename.length();
 
-  l = strlen(filename);
+  for (const auto& viewer : viewer_array)
+  {
+    const auto x = viewer.ext.length();
 
-  for(v=viewer.next; v; v=v->next) {
-    x = strlen(v->ext);
-
-    if(l > x) {
-      if(!strcmp(&filename[l - x], v->ext)) {
-        return(v->cmd);
-      }
+    if (length > x && !filename.substr(length - x).compare(viewer.ext))
+    {
+      return viewer.ext;
     }
   }
-  return(NULL);
+
+  return std::nullopt;
 }
-
-
-

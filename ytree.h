@@ -712,8 +712,12 @@ extern char *getcwd();
 
 #define ESCAPE               goto FNC_XIT
 
-#define PRINT(ch) (iscntrl(ch) && (((unsigned char)(ch)) < ' ')) ? (ACS_BLOCK) : ((unsigned char)(ch))
-/* #define PRINT(ch) (ch) */
+inline unsigned char PRINT(char ch)
+{
+  return std::iscntrl(ch) && static_cast<unsigned char>(ch) < ' '
+    ? ACS_BLOCK
+    : static_cast<unsigned char>(ch);
+}
 
 #ifdef COLOR_SUPPORT
 extern void StartColors(void);
@@ -864,12 +868,11 @@ typedef union
 
 } FunctionData;
 
-
-typedef struct
+struct WalkingPackage
 {
-  FileEntry     *new_fe_ptr;
-  FunctionData  function_data;
-} WalkingPackage;
+  FileEntry* new_fe_ptr;
+  FunctionData function_data;
+};
 
 /* strerror() is POSIX, and all modern operating systems provide it.  */
 #define HAVE_STRERROR 1
@@ -1077,7 +1080,7 @@ extern int  AddStr(char *str);
 extern void ClockHandler(int);
 extern int Strrcmp(char *s1, char* s2);
 char* Strdup(const char*);
-extern char *GetExtViewer(char *filename);
+std::optional<std::string> GetExtViewer(const std::string&);
 extern void InitClock(void);
 extern void SuspendClock(void);
 const char* GetExtension(const char*);
@@ -1095,7 +1098,7 @@ extern int  DirUserMode(DirEntry *dir_entry, int ch);
 extern int  FileUserMode(FileEntryList *file_entry_list, int ch);
 extern char *GetUserFileAction(int chkey, int *pchremap);
 extern char *GetUserDirAction(int chkey, int *pchremap);
-extern bool IsUserActionDefined(void);
+bool IsUserActionDefined();
 extern char *Getcwd(char *buffer, unsigned int len);
 extern int  RefreshDirWindow();
 extern char *StrLeft(const char *str, size_t count);

@@ -67,7 +67,7 @@ int View(DirEntry * dir_entry, char *file_path)
 
 static int ViewFile(DirEntry * dir_entry, char *file_path)
 {
-  char *command_line, *aux;
+  char *command_line;
   int  compress_method;
   int  result = -1;
   char *file_p_aux;
@@ -101,17 +101,15 @@ static int ViewFile(DirEntry * dir_entry, char *file_path)
     exit( 1 );
   }
 
-  if (( aux = GetExtViewer(file_path))!= NULL)
+  if (const auto aux = GetExtViewer(file_path))
   {
-     if (strstr(aux,"%s") != NULL)
-     {
-        (void) sprintf(command_line, aux, file_p_aux);
-     }
-     else
-          (void) sprintf(command_line, "%s %s", aux, file_p_aux);
-  }
-  else
-  {
+    if (aux->find("%s") != std::string::npos)
+    {
+      std::sprintf(command_line, aux->c_str(), file_p_aux);
+    } else {
+      std::sprintf(command_line, "%s %s", aux->c_str(), file_p_aux);
+    }
+  } else {
     compress_method = GetFileMethod( file_path );
     if( compress_method == FREEZE_COMPRESS )
     {
@@ -218,7 +216,7 @@ FNC_XIT:
 
 static int ViewArchiveFile(char *file_path)
 {
-  char *command_line, *aux;
+  char *command_line;
   char buffer[100];
   char *archive;
   int  result = -1;
@@ -229,14 +227,16 @@ static int ViewArchiveFile(char *file_path)
     exit( 1 );
   }
 
-  if (( aux = GetExtViewer(file_path)) != NULL) {
-     if (strstr(aux,"%s") != NULL) {
-  	(void) sprintf( buffer, "| %s", PAGER );
-     } else {
-  	(void) sprintf( buffer, "| %s", aux ); /* maybe pipe-able */
-     }
+  if (const auto aux = GetExtViewer(file_path))
+  {
+    if (aux->find("%s") != std::string::npos)
+    {
+  	  std::sprintf(buffer, "| %s", PAGER);
+    } else {
+    	std::sprintf(buffer, "| %s", aux->c_str()); // Maybe pipe-able.
+    }
   } else {
-    (void) sprintf( buffer, "| %s", PAGER );
+    std::sprintf(buffer, "| %s", PAGER);
   }
 
   archive = (mode == TAPE_MODE) ? statistic.tape_name : statistic.login_path;
