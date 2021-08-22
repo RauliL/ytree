@@ -63,12 +63,10 @@
 #endif
 
 #ifdef __OpenBSD__
-#define STATFS(a, b, c, d )     statfs( a, b )
 #define LONGLONG		long long
 #define HAS_LONGLONG		1
 #else
 #ifdef __NetBSD__
-#define STATFS(a, b, c, d )     statvfs( a, b )
 #define LONGLONG		long long
 #define HAS_LONGLONG		1
 #define typeahead( file )
@@ -76,55 +74,44 @@
 #define putp( str )             tputs( str, 1, putchar )
 #else
 #ifdef __APPLE__
-#define STATFS(a, b, c, d )     statfs( a, b )
 #define LONGLONG		long long
 #define HAS_LONGLONG		1
 #else
 #ifdef __FreeBSD__
-#define STATFS(a, b, c, d )     statfs( a, b )
 #define LONGLONG		long long
 #define HAS_LONGLONG		1
 #else
 #ifdef OSF1
-#define STATFS(a, b, c, d )     statvfs( a, b )
 #define echochar( ch )          { addch( ch ); refresh(); }
 #define LONGLONG		unsigned long
 #else
 #ifdef SVR4
-#define STATFS(a, b, c, d )     statvfs( a, b )
 #define LONGLONG		unsigned long
 #else
 #ifdef SVR3
 #define LONGLONG		unsigned long
-#define STATFS(a, b, c, d )     statfs( a, b, c, d )
 #define LONGLONG		unsigned long
 #else
 #ifdef _IBMR2
-#define STATFS(a, b, c, d )     statfs( a, b )
 #define LONGLONG		long long
 #define HAS_LONGLONG		1
 #else
 #if defined(linux)
-#define STATFS(a, b, c, d )     statfs( a, b )
 #define LONGLONG               long long
 #define HAS_LONGLONG           1
 #else
 #if defined(__GNU__)
-#define STATFS(a, b, c, d )     statfs( a, b )
 #define LONGLONG		long long
 #define HAS_LONGLONG		1
 #else
 #ifdef hpux
-#define STATFS(a, b, c, d )     statfs( a, b )
 #define echochar( ch )          { addch( ch ); refresh(); }
 #define LONGLONG		long long
 #define HAS_LONGLONG		1
 #else
 #ifdef __QNX__
-#define STATFS(a, b, c, d )	statfs( a, b )
 #define LONGLONG		unsigned long
 #else
-#define STATFS(a, b, c, d )     statfs( a, b, c, d )
 #define LONGLONG		long long
 #define HAS_LONGLONG		1
 #endif /* __QNX__ */

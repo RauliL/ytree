@@ -84,7 +84,7 @@ int GetDiskParameter( char *path,
   if( ( result = disk_space( fd, &free_blocks, &total_blocks ) ) == 0 )
 #else
 
-  if( ( result = STATFS( path, &statfs_struct, sizeof( statfs_struct ), 0 ) ) == 0 )
+  if( ( result = statfs( path, &statfs_struct ) ) == 0 )
 #endif /* QNX */
 #endif /* __DJGPP__ */
 #endif /* WIN32 */
