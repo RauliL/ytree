@@ -10,13 +10,29 @@
 #define _LARGEFILE64_SOURCE 1
 #define _FILE_OFFSET_BITS 64
 
-#include <stdio.h>
 #include <ctype.h>
-#include <math.h>
-
-#if defined(__OpenBSD__) || defined(__NetBSD__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__APPLE__)
+#include <errno.h>
+#include <limits.h>
 #include <locale.h>
+#include <math.h>
+#include <memory.h>
+#include <setjmp.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+#if defined(WITH_UTF8)
+# include <wchar.h>
 #endif
+
+#include <dirent.h>
+#include <fcntl.h>
+#include <grp.h>
+#include <pwd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #ifdef XCURSES
 #include <xcurses.h>
@@ -37,41 +53,13 @@
 #endif
 #endif /* __FreeBSD__ */
 
-#include <limits.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <time.h>
 #if defined(linux) || defined(__GNU__)
-#include <locale.h>
 #include <sys/wait.h>
 #include <sys/time.h>	/* needed vor RedHed5 (thanks to Robert Spier) */
 #endif
 
-
-#if __STDC__ || defined( _IBMR2 )
-#include <stdlib.h>
-#endif /* __STDC__ || _IBMR2 */
-
-#include <unistd.h>
-#include <dirent.h>
-
-#include <errno.h>
-#include <fcntl.h>
-#include <grp.h>
-#ifndef __QNX__
-#include <memory.h>
-#endif
-#include <pwd.h>
-#include <setjmp.h>
-#include <signal.h>
-#include <string.h>
-
 #if defined( TERMCAP )
 #include <termcap.h>
-#endif
-
-#ifdef WITH_UTF8
-#include <wchar.h>
 #endif
 
 #ifdef __OpenBSD__
