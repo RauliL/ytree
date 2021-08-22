@@ -245,7 +245,7 @@ char *GetHistory()
   disp_begin_pos = 0;
   cursor_pos     = 0;
   start_x        = 0;
-  /* leaveok(stdscr, TRUE); */
+  /* leaveok(stdscr, true); */
   (void) DisplayHistory();
 
   do
@@ -440,7 +440,7 @@ char *GetHistory()
 		     break;
     } /* switch */
   } while(ch != CR && ch != ESC && ch != -1);
-  /* leaveok(stdscr, FALSE); */
+  /* leaveok(stdscr, false); */
   touchwin(stdscr);
   return RetVal;
 }

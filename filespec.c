@@ -48,11 +48,11 @@ void SetMatchingParam(DirEntry *dir_entry)
       {
 	matching_files++;
 	matching_bytes += fe_ptr->stat_struct.st_size;
-	fe_ptr->matching = TRUE;
+	fe_ptr->matching = true;
       }
       else
       {
-	fe_ptr->matching = FALSE;
+	fe_ptr->matching = false;
       }
     }
 

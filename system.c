@@ -48,10 +48,10 @@ extern struct itimerval value, ovalue;
 
 int SilentSystemCall(char *command_line)
 {
-  return(SilentSystemCallEx(command_line, TRUE));
+  return(SilentSystemCallEx(command_line, true));
 }
 
-int SilentSystemCallEx(char *command_line, BOOL enable_clock)
+int SilentSystemCallEx(char *command_line, bool enable_clock)
 {
   int result;
 #ifdef XCURSES
@@ -75,7 +75,7 @@ int SilentSystemCallEx(char *command_line, BOOL enable_clock)
 #endif
 
 #ifndef XCURSES
-  leaveok(stdscr, TRUE);
+  leaveok(stdscr, true);
   curs_set(0);
 #endif /* XCURSES */
   if(enable_clock)

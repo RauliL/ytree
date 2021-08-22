@@ -24,7 +24,7 @@ int Execute(DirEntry *dir_entry, FileEntry *file_entry)
 
   if( file_entry )
   {
-    if( file_entry->stat_struct.st_mode & 
+    if( file_entry->stat_struct.st_mode &
 	( S_IXUSR | S_IXGRP | S_IXOTH ) )
     {
       /* ausfuehrbare Datei */
@@ -67,7 +67,7 @@ int Execute(DirEntry *dir_entry, FileEntry *file_entry)
       result = QuerySystemCall( command_line );
     }
   }
-  
+
   return( result );
 }
 
@@ -94,7 +94,7 @@ int GetCommandLine(char *command_line)
   return( result );
 }
 
-    
+
 
 int GetSearchCommandLine(char *command_line)
 {
@@ -128,7 +128,7 @@ int GetSearchCommandLine(char *command_line)
   return( result );
 }
 
-    
+
 
 int ExecuteCommand(FileEntry *fe_ptr, WalkingPackage *walking_package)
 {
@@ -157,7 +157,7 @@ int ExecuteCommand(FileEntry *fe_ptr, WalkingPackage *walking_package)
   }
   *cptr = '\0';
 
-  result = SilentSystemCallEx( command_line, FALSE );
+  result = SilentSystemCallEx( command_line, false );
 
   /* Ignore Result */
   /*---------------*/

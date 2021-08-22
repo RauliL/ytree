@@ -22,7 +22,7 @@ int CopyFile(Statistic *statistic_ptr,
              char *to_file,
              DirEntry *dest_dir_entry,
              char *to_dir_path,       /* absoluter Pfad */
-             BOOL path_copy
+             bool path_copy
 	    )
 {
   long long file_size;
@@ -37,7 +37,7 @@ int CopyFile(Statistic *statistic_ptr,
   int         term;
   int         result;
   DIR         *tmpdir = NULL;
-  int	      refresh_dirwindow = FALSE;
+  int	      refresh_dirwindow = false;
 
 
   result = -1;
@@ -103,7 +103,7 @@ int CopyFile(Statistic *statistic_ptr,
         }
 	else
 	{
-		refresh_dirwindow = TRUE;
+		refresh_dirwindow = true;
 	}
      }
      else
@@ -226,7 +226,7 @@ int CopyFile(Statistic *statistic_ptr,
 		   );
 
       fen_ptr->dir_entry   = dest_dir_entry;
-      fen_ptr->tagged      = FALSE;
+      fen_ptr->tagged      = false;
       fen_ptr->matching    = Match( fen_ptr->name );
       fen_ptr->next        = dest_dir_entry->file;
       fen_ptr->prev        = NULL;
@@ -257,7 +257,7 @@ FNC_XIT:
 
 
 
-int GetCopyParameter(char *from_file, BOOL path_copy, char *to_file, char *to_dir)
+int GetCopyParameter(char *from_file, bool path_copy, char *to_file, char *to_dir)
 {
   char buffer[PATH_LENGTH + 1];
 

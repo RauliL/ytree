@@ -459,7 +459,7 @@ int LoginDisk(char *path)
       }
       (void) close( p[1] );
 
-      if( result == 0 && SilentSystemCallEx( command_line, FALSE ) )
+      if( result == 0 && SilentSystemCallEx( command_line, false ) )
       {
         result = 1;
 	/* (void) fprintf(stderr, "system(%s)*failed\n", command_line ); */

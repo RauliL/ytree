@@ -119,20 +119,20 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
   int c1;                      /* Gelesenes Zeichen                   */
   int i;                       /* Laufvariable                        */
   char *pp;
-  BOOL len_flag = FALSE;
+  bool len_flag = false;
   char path[PATH_LENGTH + 1];
   char buf[2], sbuf[20], *ls, *rs;
-  static BOOL insert_flag = TRUE;
+  static bool insert_flag = true;
 
   buf[1] = '\0';
   strcpy(sbuf, "");
 
   /* Feld gefuellt ausgeben */
   /*------------------------*/
-  print_time = FALSE;
+  print_time = false;
   curs_set(1);
   MvAddStr( y, x, s );
-  leaveok(stdscr, FALSE);
+  leaveok(stdscr, false);
 
   for(i=strlen(s); i < length; i++)
     addch( '_' );
@@ -141,14 +141,14 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
 
   MvAddStr( y, x, s );
 
-  nodelay( stdscr, TRUE );
+  nodelay( stdscr, true );
   do {
     c1 = wgetch(stdscr);
 
     if ( c1 != ERR ) {
 
       if( c1 >= ' ' && c1 < 0xff && c1 != 127 ) {
-        if ( len_flag == TRUE) beep();
+        if ( len_flag == true) beep();
         else {
           buf[0] = (char)c1;
 	  strcat(sbuf, buf);
@@ -171,9 +171,9 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
                                 beep();
                               break;
 	case KEY_UP         :
-	                      nodelay(stdscr, FALSE);
+	                      nodelay(stdscr, false);
 			      pp = GetHistory();
-			      nodelay(stdscr, TRUE);
+			      nodelay(stdscr, true);
                              if (pp == NULL) break;
                              if(*pp)
                              {
@@ -228,7 +228,7 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
 			      free(ls);
                               break;
 	case KEY_EIC        :
-        case KEY_IC         : insert_flag ^= TRUE;
+        case KEY_IC         : insert_flag ^= true;
                               break;
 	case '\t'           : if(( pp = GetMatches(s)) == NULL) {
 			       break;
@@ -309,15 +309,15 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
 	p++;
       }
 
-      if (StrVisualLength(s) >= length) len_flag = TRUE;
-      else len_flag = FALSE;
+      if (StrVisualLength(s) >= length) len_flag = true;
+      else len_flag = false;
 
       MvAddStr( y, x, s );
       wmove(stdscr, y, x + p);
     }
   } while( c1 !=  27 && c1 != CR );
 
-  nodelay( stdscr, FALSE );
+  nodelay( stdscr, false );
 
   p = strlen( s );
   move( y, x + p );
@@ -326,9 +326,9 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
    addch( ' ' );
 
   move( y, x );
-  leaveok( stdscr, TRUE);
+  leaveok( stdscr, true);
   curs_set(0);
-  print_time = TRUE;
+  print_time = true;
   InsHistory( s );
 #ifdef READLINE_SUPPORT
   pp = tilde_expand(s);
@@ -353,7 +353,7 @@ int InputChoise(char *msg, char *term)
   ClearHelp();
 
   curs_set(1);
-  leaveok(stdscr, FALSE);
+  leaveok(stdscr, false);
   mvprintw( LINES - 2, 1, msg );
   RefreshWindow( stdscr );
   doupdate();
@@ -368,7 +368,7 @@ int InputChoise(char *msg, char *term)
     echochar( c );
 
   move( LINES - 2, 1 ); clrtoeol();
-  leaveok(stdscr, TRUE);
+  leaveok(stdscr, true);
   curs_set(0);
 
   return( c );
@@ -418,32 +418,32 @@ void HitReturnToContinue(void)
 
 
 
-BOOL KeyPressed()
+bool KeyPressed()
 {
-  BOOL pressed = FALSE;
+  bool pressed = false;
 
 #if !defined( linux )
-  nodelay( stdscr, TRUE );
-  if( wgetch( stdscr ) != ERR ) pressed = TRUE;
-  nodelay( stdscr, FALSE );
+  nodelay( stdscr, true );
+  if( wgetch( stdscr ) != ERR ) pressed = true;
+  nodelay( stdscr, false );
 #endif /* linux */
 
   return( pressed );
 }
 
 
-BOOL EscapeKeyPressed()
+bool EscapeKeyPressed()
 {
-  BOOL pressed = FALSE;
+  bool pressed = false;
   int  c;
 
 #if !defined( linux )
-  nodelay( stdscr, TRUE );
-  if( ( c = wgetch( stdscr ) ) != ERR ) pressed = TRUE;
-  nodelay( stdscr, FALSE );
+  nodelay( stdscr, true );
+  if( ( c = wgetch( stdscr ) ) != ERR ) pressed = true;
+  nodelay( stdscr, false );
 #endif /* linux */
 
-  return( ( pressed && c == ESC ) ? TRUE : FALSE );
+  return( ( pressed && c == ESC ) ? true : false );
 }
 
 
@@ -491,7 +491,7 @@ int Getch()
 
 #ifdef KEY_RESIZE
   if(c == KEY_RESIZE) {
-    resize_request = TRUE;
+    resize_request = true;
     c = -1;
   }
 #endif

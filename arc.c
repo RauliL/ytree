@@ -18,11 +18,11 @@ static int GetStatFromARC(char *arc_line, char *name, struct stat *stat);
 /*---------------------------------*/
 
 int ReadTreeFromARC(DirEntry *dir_entry, FILE *f)
-{ 
+{
   char arc_line[ARC_LINE_LENGTH + 1];
   char path_name[PATH_LENGTH +1];
   struct stat stat;
-  BOOL   dir_flag = FALSE;
+  bool dir_flag = false;
 
   *dir_entry->name = '\0';
 
@@ -47,17 +47,17 @@ int ReadTreeFromARC(DirEntry *dir_entry, FILE *f)
       {
         /* File */
         /*------*/
-    
+
 #ifdef DEBUG
   fprintf( stderr, "FILE: \"%s\"\n", path_name );
 #endif
         (void) InsertArchiveFileEntry( dir_entry, path_name, &stat );
       }
     }
-  } 
+  }
 
 
-  if( dir_flag == FALSE )
+  if( dir_flag == false )
   {
     statistic.disk_total_directories++;
     (void) memset( (char *) &dir_entry->stat_struct, 0, sizeof( struct stat ) );
@@ -135,18 +135,18 @@ static int GetStatFromARC(char *arc_line, char *name, struct stat *stat)
     tm_struct.tm_year += 100;
 
   t = Strtok_r( NULL, " \t:", &old ); if( t == NULL ) return( -1 );
-  
+
   tm_struct.tm_hour = atoi( t );
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
 
   if( t[strlen(t)-1] == 'p' ) tm_struct.tm_hour += 12;
   t[strlen(t)-1] ='\0';
-  
+
   tm_struct.tm_min = atoi( t );
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
-  
+
   tm_struct.tm_sec = 0;
-  
+
   tm_struct.tm_isdst = -1;
 
   stat->st_atime = 0;
@@ -171,7 +171,7 @@ static int GetStatFromARC(char *arc_line, char *name, struct stat *stat)
 
   id = getgid();
   stat->st_gid = (unsigned) id;
-  
+
   return( 0 );
 }
 

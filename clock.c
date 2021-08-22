@@ -17,7 +17,7 @@ void InitClock()
 #ifdef CLOCK_SUPPORT
 
   struct itimerval value, ovalue;
-  print_time = TRUE;
+  print_time = true;
 
   if (getitimer(ITIMER_REAL, &value)!= 0) {
       sprintf(message,"getitimer() failed: %s", strerror(errno));

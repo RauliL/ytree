@@ -18,11 +18,11 @@ static int GetStatFromRAR(char *rar_line, char *name, struct stat *stat);
 /*---------------------------------*/
 
 int ReadTreeFromRAR(DirEntry *dir_entry, FILE *f)
-{ 
+{
   char rar_line[RAR_LINE_LENGTH + 1];
   char path_name[PATH_LENGTH +1];
   struct stat stat;
-  BOOL   dir_flag = FALSE;
+  bool dir_flag = false;
 
   *dir_entry->name = '\0';
 
@@ -47,17 +47,17 @@ int ReadTreeFromRAR(DirEntry *dir_entry, FILE *f)
       {
         /* File */
         /*------*/
-    
+
 #ifdef DEBUG
   fprintf( stderr, "FILE: \"%s\"\n", path_name );
 #endif
         (void) InsertArchiveFileEntry( dir_entry, path_name, &stat );
       }
     }
-  } 
+  }
 
 
-  if( dir_flag == FALSE )
+  if( dir_flag == false )
   {
     statistic.disk_total_directories++;
     (void) memset( (char *) &dir_entry->stat_struct, 0, sizeof( struct stat ) );
@@ -111,7 +111,7 @@ static int GetStatFromRAR(char *rar_line, char *name, struct stat *stat)
   /*---------*/
 
   if(strlen(t) == 8) {
-    t[2] = t[5] = '\0';    
+    t[2] = t[5] = '\0';
     tm_struct.tm_mday = atoi( &t[0] );
     tm_struct.tm_mon  = atoi( &t[3] );
     tm_struct.tm_year = atoi( &t[6] );
@@ -158,7 +158,7 @@ static int GetStatFromRAR(char *rar_line, char *name, struct stat *stat)
 
   id = getgid();
   stat->st_gid = (unsigned) id;
-  
+
   return( 0 );
 }
 

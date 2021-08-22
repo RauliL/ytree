@@ -21,7 +21,7 @@ static void UnReadSubTree(DirEntry *dir_entry);
 
 
 int ReadTree(DirEntry *dir_entry, char *path, int depth)
-{ 
+{
   DIR           *dir;
   struct stat   stat_struct;
   struct dirent *dirent;
@@ -50,22 +50,22 @@ int ReadTree(DirEntry *dir_entry, char *path, int depth)
   dir_entry->total_files    = 0;
   dir_entry->matching_files = 0;
   dir_entry->tagged_files   = 0;
-  dir_entry->access_denied  = FALSE;
+  dir_entry->access_denied  = false;
   dir_entry->start_file     = 0;
   dir_entry->cursor_pos     = 0;
-  dir_entry->global_flag    = FALSE;
-  dir_entry->login_flag     = FALSE;
-  dir_entry->big_window     = FALSE;
-  dir_entry->not_scanned    = FALSE;
+  dir_entry->global_flag    = false;
+  dir_entry->login_flag     = false;
+  dir_entry->big_window     = false;
+  dir_entry->not_scanned    = false;
 
   if( S_ISBLK( dir_entry->stat_struct.st_mode ) )
     return( 0 ); /* Block-Device */
 
-  if( depth < 0 ) 
+  if( depth < 0 )
   {
-    if( dir_entry->up_tree ) 
+    if( dir_entry->up_tree )
     {
-      dir_entry->up_tree->not_scanned = TRUE;
+      dir_entry->up_tree->not_scanned = true;
       return( 1 );
     }
   }
@@ -74,22 +74,22 @@ int ReadTree(DirEntry *dir_entry, char *path, int depth)
 
   if( ( dir = opendir( path ) ) == NULL )
   {
-    dir_entry->access_denied = TRUE;
+    dir_entry->access_denied = true;
     return( 1 );
   }
-  
+
   first_dir_entry.prev  = NULL;
   first_dir_entry.next  = NULL;
   *first_dir_entry.name = '\0';
   first_file_entry.next = NULL;
   fes_ptr               = &first_file_entry;
-  
+
   file_count = 0;
   while( ( dirent = readdir( dir ) ) != NULL )
   {
     if( !strcmp( dirent->d_name, "." ) || !strcmp( dirent->d_name, ".." ) )
       continue;
-    
+
     if( EscapeKeyPressed() )
     {
       Quit();  /* Abfrage ob ytree verlassen werden soll */
@@ -102,10 +102,10 @@ int ReadTree(DirEntry *dir_entry, char *path, int depth)
 
 
     (void) strcpy( new_path, path );
-    if( strcmp( new_path, FILE_SEPARATOR_STRING ) ) 
+    if( strcmp( new_path, FILE_SEPARATOR_STRING ) )
       (void) strcat( new_path, FILE_SEPARATOR_STRING );
     (void) strcat( new_path, dirent->d_name );
-   
+
     if( STAT_( new_path, &stat_struct ) )
     {
       if( errno == EACCES ) continue;
@@ -119,48 +119,48 @@ int ReadTree(DirEntry *dir_entry, char *path, int depth)
       /* Directory-Entry */
       /*-----------------*/
 
-      if( ( den_ptr = (DirEntry *) 
-		       malloc( sizeof( DirEntry ) + strlen( dirent->d_name ) ) 
+      if( ( den_ptr = (DirEntry *)
+		       malloc( sizeof( DirEntry ) + strlen( dirent->d_name ) )
    	   ) == NULL )
       {
         ERROR_MSG( "Malloc Failed*ABORT" );
         exit( 1 );
       }
-    
+
       den_ptr->up_tree = dir_entry;
-    
+
       (void) strcpy( den_ptr->name, dirent->d_name );
-    
-      (void) memcpy( &den_ptr->stat_struct, 
+
+      (void) memcpy( &den_ptr->stat_struct,
 		     &stat_struct,
 		     sizeof( stat_struct )
 		    );
       den_ptr->prev = den_ptr->next = NULL;
-  
-      (void) ReadTree( den_ptr, new_path, depth - 1); 
-    
+
+      (void) ReadTree( den_ptr, new_path, depth - 1);
+
       /* Sortieren durch direktes Einfuegen */
       /*------------------------------------*/
-    
+
       for( des_ptr = &first_dir_entry; des_ptr; des_ptr = des_ptr->next )
       {
-        if( strcmp( des_ptr->name, den_ptr->name ) > 0 ) 
+        if( strcmp( des_ptr->name, den_ptr->name ) > 0 )
         {
 	  /* des-Element ist groesser */
 	  /*--------------------------*/
-    
+
 	  den_ptr->next = des_ptr;
 	  den_ptr->prev = des_ptr->prev;
 	  des_ptr->prev->next = den_ptr;
 	  des_ptr->prev = den_ptr;
 	  break;
 	}
-    	
+
 	if( des_ptr->next == NULL )
 	{
 	  /* Ende der Liste erreicht; ==> einfuegen */
 	  /*----------------------------------------*/
-    
+
           den_ptr->prev = des_ptr;
 	  den_ptr->next = des_ptr->next;
           des_ptr->next = den_ptr;
@@ -172,7 +172,7 @@ int ReadTree(DirEntry *dir_entry, char *path, int depth)
     {
       /* File-Entry */
       /*------------*/
-     
+
       int n;
       char link_path[PATH_LENGTH + 1];
 
@@ -193,38 +193,38 @@ int ReadTree(DirEntry *dir_entry, char *path, int depth)
 	}
 	link_path[n] = '\0';
 
-        if( ( fen_ptr = (FileEntry *) 
-		        malloc( sizeof( FileEntry ) + 
+        if( ( fen_ptr = (FileEntry *)
+		        malloc( sizeof( FileEntry ) +
 			strlen( dirent->d_name )    +
-			n + 1 ) 
+			n + 1 )
 	    ) == NULL )
         {
           ERROR_MSG( "Malloc Failed*ABORT" );
           exit( 1 );
         }
-  	
+
         (void) strcpy( fen_ptr->name, dirent->d_name );
-        (void) strcpy( &fen_ptr->name[strlen(fen_ptr->name) + 1], 
+        (void) strcpy( &fen_ptr->name[strlen(fen_ptr->name) + 1],
 		       link_path );
       }
       else
       {
-        if( ( fen_ptr = (FileEntry *) 
-		        malloc( sizeof( FileEntry ) + strlen( dirent->d_name ) ) 
+        if( ( fen_ptr = (FileEntry *)
+		        malloc( sizeof( FileEntry ) + strlen( dirent->d_name ) )
 	    ) == NULL )
         {
           ERROR_MSG( "Malloc Failed*ABORT" );
           exit( 1 );
         }
-  	
+
         (void) strcpy( fen_ptr->name, dirent->d_name );
       }
 
       fen_ptr->next = NULL;
       fen_ptr->prev = NULL;
-      fen_ptr->tagged = FALSE;
-      
-      (void) memcpy( &fen_ptr->stat_struct, 
+      fen_ptr->tagged = false;
+
+      (void) memcpy( &fen_ptr->stat_struct,
 		     &stat_struct,
 		     sizeof( stat_struct )
 		    );
@@ -239,7 +239,7 @@ int ReadTree(DirEntry *dir_entry, char *path, int depth)
       statistic.disk_total_bytes += stat_struct.st_size;
     }
   }
-  
+
   (void) closedir( dir );
 
   if( first_file_entry.next ) first_file_entry.next->prev = NULL;
@@ -266,12 +266,12 @@ void UnReadTree(DirEntry *dir_entry)
   }
   else
   {
-    for( fe_ptr=dir_entry->file; fe_ptr; fe_ptr=next_fe_ptr ) 
+    for( fe_ptr=dir_entry->file; fe_ptr; fe_ptr=next_fe_ptr )
     {
       next_fe_ptr = fe_ptr->next;
       RemoveFile( fe_ptr );
     }
-    if( dir_entry->sub_tree ) 
+    if( dir_entry->sub_tree )
     {
       UnReadSubTree( dir_entry->sub_tree );
     }
@@ -288,17 +288,17 @@ static void UnReadSubTree(DirEntry *dir_entry)
   DirEntry *de_ptr, *next_de_ptr;
   FileEntry *fe_ptr, *next_fe_ptr;
 
-  for( de_ptr = dir_entry; de_ptr; de_ptr = next_de_ptr ) 
+  for( de_ptr = dir_entry; de_ptr; de_ptr = next_de_ptr )
   {
     next_de_ptr = de_ptr->next;
 
-    for( fe_ptr=de_ptr->file; fe_ptr; fe_ptr=next_fe_ptr ) 
+    for( fe_ptr=de_ptr->file; fe_ptr; fe_ptr=next_fe_ptr )
     {
       next_fe_ptr = fe_ptr->next;
       RemoveFile( fe_ptr );
     }
 
-    if( de_ptr->sub_tree ) 
+    if( de_ptr->sub_tree )
     {
       UnReadSubTree( de_ptr->sub_tree );
     }
@@ -309,7 +309,7 @@ static void UnReadSubTree(DirEntry *dir_entry)
     if( de_ptr->prev ) de_ptr->prev->next = de_ptr->next;
     else de_ptr->up_tree->sub_tree = de_ptr->next;
     if( de_ptr->next ) de_ptr->next->prev = de_ptr->prev;
-    
+
     free( de_ptr );
   }
 }

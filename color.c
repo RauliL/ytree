@@ -12,7 +12,7 @@
 
 #ifdef COLOR_SUPPORT
 
-static BOOL color_enabled = FALSE;
+static bool color_enabled = false;
 
 
 void StartColors()
@@ -40,7 +40,7 @@ void StartColors()
   init_pair(HIGLOBAL_COLOR,COLOR_BLUE,    COLOR_WHITE);
   init_pair(GLOBAL_COLOR,  COLOR_YELLOW,  COLOR_CYAN);
 
-  color_enabled = TRUE;
+  color_enabled = true;
 FNC_XIT: ;
 
 }
@@ -58,7 +58,7 @@ void WbkgdSet(WINDOW *w, chtype c)
        c == COLOR_PAIR(HISTATS_COLOR) ||
        c == COLOR_PAIR(HIMENUS_COLOR) ||
        c == COLOR_PAIR(HIHST_COLOR)) {
-    
+
       wattrset(w, A_REVERSE);
     } else {
       wattrset(w, 0);
@@ -67,4 +67,4 @@ void WbkgdSet(WINDOW *w, chtype c)
 }
 
 
-#endif /* COLOR_SUPPORT */ 
+#endif /* COLOR_SUPPORT */

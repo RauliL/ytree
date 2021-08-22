@@ -13,6 +13,7 @@
 #include <memory.h>
 #include <setjmp.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -406,7 +407,6 @@
 #define ERR_TO_NULL           " 2> /dev/null"
 #define ERR_TO_STDOUT         " 2>&1 "
 
-#define BOOL       unsigned char
 #define LF         10
 #define ESC        27
 #define LOGIN_ESC  '.'
@@ -497,8 +497,8 @@ typedef struct _file_entry
   struct _file_entry *prev;
   struct _dir_entry  *dir_entry;
   struct stat        stat_struct;
-  BOOL               tagged;
-  BOOL               matching;
+  bool               tagged;
+  bool               matching;
   char               name[1];
 /*char               symlink_name[]; */ /* Folgt direkt dem Namen, falls */
 					/* Eintrag == symbolischer Link  */
@@ -522,13 +522,13 @@ typedef struct _dir_entry
   int                cursor_pos;
   int                start_file;
   struct   stat      stat_struct;
-  BOOL               access_denied;
-  BOOL               global_flag;
-  BOOL               tagged_flag;
-  BOOL               only_tagged;
-  BOOL               not_scanned;
-  BOOL               big_window;
-  BOOL               login_flag;
+  bool               access_denied;
+  bool               global_flag;
+  bool               tagged_flag;
+  bool               only_tagged;
+  bool               not_scanned;
+  bool               big_window;
+  bool               login_flag;
   char               name[1];
 } DirEntry;
 
@@ -599,14 +599,14 @@ typedef union
     DirEntry  *dest_dir_entry;
     char      *to_file;
     char      *to_path;
-    BOOL      path_copy;
-    BOOL      confirm;
+    bool      path_copy;
+    bool      confirm;
   } copy;
 
   struct
   {
     char      *new_name;
-    BOOL      confirm;
+    bool      confirm;
   } rename;
 
   struct
@@ -614,7 +614,7 @@ typedef union
     DirEntry  *dest_dir_entry;
     char      *to_file;
     char      *to_path;
-    BOOL      confirm;
+    bool      confirm;
   } mv;
 
   struct
@@ -660,10 +660,10 @@ extern Statistic disk_statistic;
 extern int       mode;
 extern int       user_umask;
 extern char      message[];
-extern BOOL	 print_time;
-extern BOOL      resize_request;
+extern bool	 print_time;
+extern bool      resize_request;
 extern char      number_seperator;
-extern BOOL      bypass_small_window;
+extern bool      bypass_small_window;
 extern char      *initial_directory;
 extern char 	 builtin_hexdump_cmd[];
 
@@ -699,7 +699,7 @@ extern int  HandleDirWindow(DirEntry *start_dir_entry);
 extern void DisplayFileWindow(DirEntry *dir_entry);
 extern int Init(char *configuration_file, char *history_file);
 extern char *GetPath(DirEntry *dir_entry, char *buffer);
-extern BOOL Match(char *file_name);
+extern bool Match(char *file_name);
 extern int  SetMatchSpec(char *new_spec);
 extern int  SetFileSpec(char *file_spec);
 extern void SetMatchingParam(DirEntry *dir_entry);
@@ -725,7 +725,7 @@ extern char *GetRealFileNamePath(FileEntry *file_entry, char *buffer);
 extern int  SystemCall(char *command_line);
 extern int  QuerySystemCall(char *command_line);
 extern int  SilentSystemCall(char *command_line);
-extern int  SilentSystemCallEx(char *command_line, BOOL enable_clock);
+extern int  SilentSystemCallEx(char *command_line, bool enable_clock);
 extern int  View(DirEntry * dir_entry, char *file_path);
 extern int  ViewHex(char *file_path);
 extern int  InternalView(char *file_path);
@@ -749,14 +749,14 @@ extern int  GetNewFileModus(int y, int x, char *modus, char *term);
 extern int  GetModus(char *modus);
 extern int  SetFileModus(FileEntry *fe_ptr, WalkingPackage *walking_package);
 extern int  CopyTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
-extern int  CopyFile(Statistic *statistic_ptr, FileEntry *fe_ptr, unsigned char confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, BOOL path_copy);
+extern int  CopyFile(Statistic *statistic_ptr, FileEntry *fe_ptr, unsigned char confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, bool path_copy);
 extern int  MoveTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
 extern int  MoveFile(FileEntry *fe_ptr, unsigned char confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, FileEntry **new_fe_ptr);
 extern int  InputChoise(char *msg, char *term);
 extern void Message(char *msg);
 extern int  GetDirEntry(DirEntry *tree, DirEntry *current_dir_entry, char *dir_path, DirEntry **dir_entry, char *to_path);
 extern int  GetFileEntry(DirEntry *de_ptr, char *file_name, FileEntry **file_entry);
-extern int  GetCopyParameter(char *from_file, BOOL path_copy, char *to_file, char *to_dir);
+extern int  GetCopyParameter(char *from_file, bool path_copy, char *to_file, char *to_dir);
 extern int  GetMoveParameter(char *from_file, char *to_file, char *to_dir);
 extern int  ChangeFileOwner(FileEntry *fe_ptr);
 extern int  GetNewOwner(int st_uid);
@@ -806,8 +806,8 @@ extern int  BuildFilename( char *in_filename, char *pattern, char *out_filename)
 extern int  ViKey( int ch );
 extern int  GetFileMethod( char *filename );
 extern int  AixWgetch( WINDOW *w );
-extern BOOL KeyPressed(void);
-extern BOOL EscapeKeyPressed(void);
+extern bool KeyPressed(void);
+extern bool EscapeKeyPressed(void);
 extern int  GetTapeDeviceName(void);
 extern int  MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry );
 extern int  MakeDirEntry( DirEntry *father_dir_entry, char *dir_name );
@@ -857,7 +857,7 @@ extern int  DirUserMode(DirEntry *dir_entry, int ch);
 extern int  FileUserMode(FileEntryList *file_entry_list, int ch);
 extern char *GetUserFileAction(int chkey, int *pchremap);
 extern char *GetUserDirAction(int chkey, int *pchremap);
-extern BOOL IsUserActionDefined(void);
+extern bool IsUserActionDefined(void);
 extern char *Getcwd(char *buffer, unsigned int len);
 extern int  RefreshDirWindow();
 extern char *StrLeft(const char *str, size_t count);

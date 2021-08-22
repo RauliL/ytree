@@ -46,7 +46,7 @@ static char *file_spec_cmp = NULL;
 #if defined( HAS_REGCOMP )
 #include <regex.h>
 static regex_t	re;
-static BOOL	re_flag = FALSE;
+static bool	re_flag = false;
 #endif
 
 
@@ -58,7 +58,7 @@ int SetMatchSpec(char *new_spec)
   char *result;
   char *buffer;
   char *b_ptr;
-  BOOL meta_flag = FALSE;
+  bool meta_flag = false;
 
   if( ( buffer = (char *)malloc( strlen( new_spec ) * 2 + 4 ) ) == NULL )
   {
@@ -74,9 +74,9 @@ int SetMatchSpec(char *new_spec)
     if( meta_flag )
     {
       *b_ptr++ = *new_spec;
-      meta_flag = FALSE;
+      meta_flag = false;
     }
-    else if( *new_spec == '\\' ) meta_flag = TRUE;
+    else if( *new_spec == '\\' ) meta_flag = true;
     else if( *new_spec == '?' ) *b_ptr++ = '.';
     else if( *new_spec == '.' )
     {
@@ -110,7 +110,7 @@ int SetMatchSpec(char *new_spec)
   if(re_flag)
   {
     regfree(&re);
-    re_flag = FALSE;
+    re_flag = false;
   }
 
   if( regcomp(&re, buffer, REG_NOSUB) )
@@ -119,7 +119,7 @@ int SetMatchSpec(char *new_spec)
     return( 1 );
   }
   free( buffer );
-  re_flag = TRUE;
+  re_flag = true;
 
 #else
 
@@ -155,26 +155,26 @@ int SetMatchSpec(char *new_spec)
 
 
 
-BOOL Match(char *file_name)
+bool Match(char *file_name)
 {
 #if defined ( HAS_REGEX )
 
-  if( re_exec( file_name ) ) return( TRUE );
-  else                       return( FALSE );
+  if( re_exec( file_name ) ) return( true );
+  else                       return( false );
 
 #else
 #if defined( HAS_REGCOMP )
 
-  if(re_flag == FALSE)
-    return( TRUE );
+  if(re_flag == false)
+    return( true );
 
   if( ( regexec(&re, file_name, (size_t) 0, NULL, 0 ) ) == 0 )
   {
-    return( TRUE );
+    return( true );
   }
   else
   {
-    return( FALSE );
+    return( false );
   }
 
 #else
@@ -185,12 +185,12 @@ BOOL Match(char *file_name)
   char match_part[PATH_LENGTH + 1];
 
   if( !file_spec_cmp )
-    return( TRUE );
+    return( true );
 
   if( regex( file_spec_cmp, file_name, match_part ) == NULL )
-    return( FALSE );
+    return( false );
 
-  return( TRUE );
+  return( true );
 
 #else
 
@@ -198,7 +198,7 @@ BOOL Match(char *file_name)
 
   /* z.Z. nicht unterstuetzt */
 
-  return( TRUE );
+  return( true );
 
 #endif /* WIN32 */
 #endif /* HAS_REGCOMP */

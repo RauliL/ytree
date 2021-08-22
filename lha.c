@@ -20,11 +20,11 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat);
 /*---------------------------------*/
 
 int ReadTreeFromLHA(DirEntry *dir_entry, FILE *f)
-{ 
+{
   char lha_line[LHA_LINE_LENGTH + 1];
   char path_name[PATH_LENGTH +1];
   struct stat stat;
-  BOOL   dir_flag = FALSE;
+  bool   dir_flag = false;
 
   *dir_entry->name = '\0';
 
@@ -35,7 +35,7 @@ int ReadTreeFromLHA(DirEntry *dir_entry, FILE *f)
 
     lha_line[ strlen( lha_line ) - 1 ] = '\0';
 
-    if( ( (strlen( lha_line ) > (unsigned) 55 && lha_line[55] == ':' ) || 
+    if( ( (strlen( lha_line ) > (unsigned) 55 && lha_line[55] == ':' ) ||
           (strlen( lha_line ) > (unsigned) 61 && lha_line[61] == ':' ) ) &&
   	  lha_line[34] != '*' && strncmp( &lha_line[1], "Total", 5 ) )
     {
@@ -51,17 +51,17 @@ int ReadTreeFromLHA(DirEntry *dir_entry, FILE *f)
       {
         /* File */
         /*------*/
-    
+
 #ifdef DEBUG
   fprintf( stderr, "FILE: \"%s\"\n", path_name );
 #endif
         (void) InsertArchiveFileEntry( dir_entry, path_name, &stat );
       }
     }
-  } 
+  }
 
 
-  if( dir_flag == FALSE )
+  if( dir_flag == false )
   {
     statistic.disk_total_directories++;
     (void) memset( (char *) &dir_entry->stat_struct, 0, sizeof( struct stat ) );
@@ -77,8 +77,8 @@ int ReadTreeFromLHA(DirEntry *dir_entry, FILE *f)
 static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
 {
   char *t, *old;
-  char modus[11]; 
-  BOOL dos_mode = FALSE;
+  char modus[11];
+  bool dos_mode = false;
   int  i, id;
   struct tm tm_struct;
   static char *month[] = { "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
@@ -94,7 +94,7 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
   /* Attributes */
   /*------------*/
 
-  if( strlen( t ) == 9 && *t != '[' ) 
+  if( strlen( t ) == 9 && *t != '[' )
   {
     *modus = '-';
     (void) strcpy( &modus[1], t );
@@ -103,7 +103,7 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
   else if( *t == '[' )
   {
     stat->st_mode = GetModus( "-rw-r--r--" );
-    dos_mode = TRUE;
+    dos_mode = true;
   }
   else return( -1 );
 
@@ -118,14 +118,14 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
   {
     /* Owner */
     /*-------*/
-  
+
     id = atoi( t );
     stat->st_uid = (unsigned) id;
     t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
-  
+
     /* Group */
     /*-------*/
-  
+
     id = atoi( t );
     stat->st_gid = (unsigned) id;
     t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
@@ -182,7 +182,7 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
 
   tm_struct.tm_min = atoi( t );
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
-  
+
   if( lha_line[41] == '-' )
   {
     /* ??? */
@@ -195,7 +195,7 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
   }
 
   tm_struct.tm_sec = 0;
-  
+
   tm_struct.tm_isdst = -1;
 
   stat->st_atime = 0;

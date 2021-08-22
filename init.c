@@ -28,17 +28,17 @@ int Init(char *configuration_file, char *history_file)
   initscr();
   StartColors(); /* even on b/w terminals... */
 
-  cbreak();  
-  noecho();  
-  nonl();  
-  raw(); 
-  keypad( stdscr, TRUE );  
-  clearok(stdscr, TRUE);  
-  leaveok(stdscr,FALSE);
+  cbreak();
+  noecho();
+  nonl();
+  raw();
+  keypad( stdscr, true );
+  clearok(stdscr, true);
+  leaveok(stdscr,false);
   curs_set(0);
 
 
-  WbkgdSet( stdscr, COLOR_PAIR(WINDIR_COLOR)|A_BOLD); 
+  WbkgdSet( stdscr, COLOR_PAIR(WINDIR_COLOR)|A_BOLD);
 
   ReCreateWindows();
 
@@ -51,7 +51,7 @@ int Init(char *configuration_file, char *history_file)
     ERROR_MSG( "ReadGroupEntries failed*ABORT" );
     exit( 1 );
   }
-  
+
   if( ReadPasswdEntries() )
   {
     ERROR_MSG( "ReadPasswdEntries failed*ABORT" );
@@ -76,7 +76,7 @@ int Init(char *configuration_file, char *history_file)
   SetFileMode( strtod(FILEMODE, NULL) );
   SetKindOfSort( SORT_BY_NAME );
   number_seperator = *(NUMBERSEP);
-  bypass_small_window = (BOOL)strtod(NOSMALLWINDOW, NULL );
+  bypass_small_window = (bool)strtod(NOSMALLWINDOW, NULL );
   initial_directory = INITIALDIR;
 
   InitClock();
@@ -88,74 +88,74 @@ int Init(char *configuration_file, char *history_file)
 
 void ReCreateWindows()
 {
-  BOOL is_small;
+  bool is_small;
 
-  is_small = (file_window == small_file_window) ? TRUE : FALSE;
+  is_small = (file_window == small_file_window) ? true : false;
 
 
   if(dir_window)
     delwin(dir_window);
 
-  dir_window = Subwin( stdscr, 
-		       DIR_WINDOW_HEIGHT, 
-		       DIR_WINDOW_WIDTH, 
-		       DIR_WINDOW_Y, 
+  dir_window = Subwin( stdscr,
+		       DIR_WINDOW_HEIGHT,
+		       DIR_WINDOW_WIDTH,
+		       DIR_WINDOW_Y,
 		       DIR_WINDOW_X
 		      );
-  
-  keypad( dir_window, TRUE );  
-  scrollok( dir_window, TRUE );
-  clearok( dir_window, TRUE);  
-  leaveok(dir_window, TRUE); 
+
+  keypad( dir_window, true );
+  scrollok( dir_window, true );
+  clearok( dir_window, true);
+  leaveok(dir_window, true);
   WbkgdSet( dir_window, COLOR_PAIR(WINDIR_COLOR) );
-  
+
   if(small_file_window)
     delwin(small_file_window);
 
-  small_file_window = Subwin( stdscr, 
-			      FILE_WINDOW_1_HEIGHT, 
-			      FILE_WINDOW_1_WIDTH, 
-			      FILE_WINDOW_1_Y, 
+  small_file_window = Subwin( stdscr,
+			      FILE_WINDOW_1_HEIGHT,
+			      FILE_WINDOW_1_WIDTH,
+			      FILE_WINDOW_1_Y,
 		              FILE_WINDOW_1_X
 		           );
-  
+
   if(!small_file_window)
     beep();
 
-  keypad( small_file_window, TRUE );
-  clearok(small_file_window, TRUE);  
-  leaveok(small_file_window, TRUE);
+  keypad( small_file_window, true );
+  clearok(small_file_window, true);
+  leaveok(small_file_window, true);
 
   WbkgdSet(small_file_window, COLOR_PAIR(WINFILE_COLOR));
-  
+
   if(big_file_window)
     delwin(big_file_window);
 
-  big_file_window = Subwin( stdscr, 
-			    FILE_WINDOW_2_HEIGHT, 
-			    FILE_WINDOW_2_WIDTH, 
-			    FILE_WINDOW_2_Y, 
+  big_file_window = Subwin( stdscr,
+			    FILE_WINDOW_2_HEIGHT,
+			    FILE_WINDOW_2_WIDTH,
+			    FILE_WINDOW_2_Y,
 		            FILE_WINDOW_2_X
 		          );
-  
-  keypad( big_file_window, TRUE );
-  clearok(big_file_window, TRUE);    
-  leaveok(big_file_window, TRUE);
+
+  keypad( big_file_window, true );
+  clearok(big_file_window, true);
+  leaveok(big_file_window, true);
   WbkgdSet(big_file_window, COLOR_PAIR(WINFILE_COLOR));
 
   if(error_window)
     delwin(error_window);
 
-  error_window = Newwin( 
-		       ERROR_WINDOW_HEIGHT, 
-		       ERROR_WINDOW_WIDTH, 
-		       ERROR_WINDOW_Y, 
+  error_window = Newwin(
+		       ERROR_WINDOW_HEIGHT,
+		       ERROR_WINDOW_WIDTH,
+		       ERROR_WINDOW_Y,
 		       ERROR_WINDOW_X
 		      );
   WbkgdSet(error_window, COLOR_PAIR(WINERR_COLOR));
-  clearok(error_window, TRUE);       
-  leaveok(error_window, TRUE);
- 
+  clearok(error_window, true);
+  leaveok(error_window, true);
+
 
 #ifdef CLOCK_SUPPORT
 
@@ -168,11 +168,11 @@ void ReCreateWindows()
                       TIME_WINDOW_Y,
                       TIME_WINDOW_X
                     );
-  clearok( time_window, TRUE );  
-  scrollok( time_window, FALSE );
-  leaveok( time_window, TRUE );
+  clearok( time_window, true );
+  scrollok( time_window, false );
+  leaveok( time_window, true );
   WbkgdSet( time_window, COLOR_PAIR(WINDIR_COLOR|A_BOLD) );
-  immedok(time_window, TRUE);
+  immedok(time_window, true);
 #endif
 
 
@@ -185,11 +185,11 @@ void ReCreateWindows()
                        HISTORY_WINDOW_Y,
                        HISTORY_WINDOW_X
                       );
-  scrollok(history_window, TRUE);
-  clearok(history_window, TRUE );  
-  leaveok(history_window, TRUE);
+  scrollok(history_window, true);
+  clearok(history_window, true );
+  leaveok(history_window, true);
   WbkgdSet(history_window, COLOR_PAIR(WINHST_COLOR));
-  
+
   matches_window = history_window;
 
   if(f2_window)
@@ -201,10 +201,10 @@ void ReCreateWindows()
                       F2_WINDOW_X
                     );
 
-  keypad( f2_window, TRUE );  
-  scrollok( f2_window, FALSE );
-  clearok( f2_window, TRUE);  
-  leaveok( f2_window, TRUE );
+  keypad( f2_window, true );
+  scrollok( f2_window, false );
+  clearok( f2_window, true);
+  leaveok( f2_window, true );
   WbkgdSet( f2_window, COLOR_PAIR(WINHST_COLOR) );
 
   file_window = (is_small) ? small_file_window : big_file_window;

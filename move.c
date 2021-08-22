@@ -173,7 +173,7 @@ int MoveFile(FileEntry *fe_ptr,
 		   );
 
       fen_ptr->dir_entry   = dest_dir_entry;
-      fen_ptr->tagged      = FALSE;
+      fen_ptr->tagged      = false;
       fen_ptr->matching    = Match( fen_ptr->name );
       fen_ptr->next        = dest_dir_entry->file;
       fen_ptr->prev        = NULL;
