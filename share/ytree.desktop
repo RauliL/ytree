@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=YTree
+GenericName=YTree
+Comment=XTree like file manager
+Exec=ytree
+Icon=system-file-manager
+Terminal=true
+Type=Application
+Categories=System;Utility;Core
