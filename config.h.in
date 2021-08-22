@@ -1,10 +1,9 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/config.h,v 1.26 2014/12/26 09:53:11 werner Exp $
- *
- * Header-Datei fuer YTREE
- *
- ***************************************************************************/
+#pragma once
+
+#cmakedefine CURSES_HAVE_CURSES_H
+#cmakedefine CURSES_HAVE_NCURSES_H
+#cmakedefine CURSES_HAVE_NCURSES_NCURSES_H
+#cmakedefine CURSES_HAVE_NCURSES_CURSES_H
 
 /* Default (max) TreeDepth on startup */
 #define DEFAULT_TREEDEPTH     "1"

@@ -1,14 +1,9 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/ytree.h,v 1.47 2016/09/04 14:41:12 werner Exp $
- *
- * Header-Datei fuer YTREE
- *
- ***************************************************************************/
-
+#pragma once
 
 #define _LARGEFILE64_SOURCE 1
 #define _FILE_OFFSET_BITS 64
+
+#include "./config.h"
 
 #include <ctype.h>
 #include <errno.h>
@@ -36,27 +31,14 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#ifdef XCURSES
-#include <xcurses.h>
-#define HAVE_CURSES 1
-#endif
-
-#ifdef _IBMR2
-#define NLS
-#endif /* _IBMR2 */
-
-#ifdef __FreeBSD__
-#ifndef HAVE_CURSES
-#include <ncurses.h>
-#endif
+#if defined(CURSES_HAVE_NCURSES_NCURSES_H)
+# include <ncurses/ncurses.h>
+#elif defined(CURSES_HAVE_NCURSES_H)
+# include <ncurses.h>
+#elif defined(CURSES_HAVE_NCURSES_CURSES_H)
+# include <ncurses/curses.h>
 #else
-#ifndef HAVE_CURSES
-#include <curses.h>
-#endif
-#endif /* __FreeBSD__ */
-
-#if defined( TERMCAP )
-#include <termcap.h>
+# include <curses.h>
 #endif
 
 /* Some handy macros... */
@@ -107,66 +89,6 @@
 #define  typeahead( file )
 
 #endif /* __DJGPP__*/
-
-
-
-
-#ifdef TERMCAP
-
-#define  KEY_BTAB         5000
-#define  KEY_DOWN         5001
-#define  KEY_UP           5002
-#define  KEY_LEFT         5003
-#define  KEY_RIGHT        5004
-#define  KEY_END          5005
-#define  KEY_HOME         5006
-#define  KEY_NPAGE        5007
-#define  KEY_PPAGE        5008
-#define  KEY_DC           5009
-#define  KEY_BACKSPACE    5010
-#define  KEY_EIC          5011
-#define  KEY_IC           5012
-#define  KEY_DL           5013
-
-#define  NO_HIGHLIGHT
-
-#define  A_REVERSE        1
-#define  A_BLINK          2
-
-#define  BELL             0x07
-
-
-
-/* Diese Funktionen koennen direkt umgesetzt werden */
-/*--------------------------------------------------*/
-
-#undef   cbreak
-#define  cbreak()                    raw()
-#define  beep()                      putchar( BELL )
-#define  echochar( ch )              { addch( ch ); refresh(); }
-#define  putp( str )                 tputs( str, 1, putchar )
-#define  wnoutrefresh( win )         wrefresh( win )
-
-
-/* ... hier ist ein wenig mehr Arbeit noetig ... */
-/*-----------------------------------------------*/
-
-#define  wgetch( win )               TermcapWgetch( win )
-#define  vidattr( attr )             TermcapVidattr( attr )
-#define  initscr()                   TermcapInitscr()
-#define  endwin()                    TermcapEndwin()
-
-
-/* ... und hier gibt's keine entsprechende Funktion. */
-/*---------------------------------------------------*/
-
-#define  doupdate()
-#define  wattrset( win, attr )
-#define  typeahead( file )
-#define  keypad( win, flag )
-
-#endif /* TERMCAP */
-
 
 #ifndef KEY_BTAB
 #define KEY_BTAB  0x1d
@@ -309,12 +231,6 @@
 
 #define PROFILE_FILENAME	".ytree"
 #define HISTORY_FILENAME	".ytree-hst"
-
-
-/* User-Defines */
-/*--------------*/
-
-#include "config.h"
 
 
 /* Auswahl der benutzten UNIX-Kommandos */

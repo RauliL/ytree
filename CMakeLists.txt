@@ -8,6 +8,11 @@ LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 INCLUDE(FindCurses)
 INCLUDE(FindReadline)
 
+CONFIGURE_FILE(
+  ${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/config.h
+)
+
 ADD_DEFINITIONS(
   -DCOLOR_SUPPORT
 #  -DCLOCK_SUPPORT # Experimental!
@@ -62,7 +67,6 @@ ADD_EXECUTABLE(
   stat.c
   system.c
   tar.c
-  termcap.c
   tilde.c
   usermode.c
   util.c

@@ -422,11 +422,11 @@ BOOL KeyPressed()
 {
   BOOL pressed = FALSE;
 
-#if !defined( linux ) || !defined( TERMCAP )
+#if !defined( linux )
   nodelay( stdscr, TRUE );
   if( wgetch( stdscr ) != ERR ) pressed = TRUE;
   nodelay( stdscr, FALSE );
-#endif /* linux/TERMCAP */
+#endif /* linux */
 
   return( pressed );
 }
@@ -437,11 +437,11 @@ BOOL EscapeKeyPressed()
   BOOL pressed = FALSE;
   int  c;
 
-#if !defined( linux ) || !defined( TERMCAP )
+#if !defined( linux )
   nodelay( stdscr, TRUE );
   if( ( c = wgetch( stdscr ) ) != ERR ) pressed = TRUE;
   nodelay( stdscr, FALSE );
-#endif /* linux/TERMCAP */
+#endif /* linux */
 
   return( ( pressed && c == ESC ) ? TRUE : FALSE );
 }
