@@ -20,7 +20,7 @@ int SystemCall(char *command_line)
   endwin();
 #endif
   result = SilentSystemCall( command_line );
-  
+
   (void) GetAvailBytes( &statistic.disk_space );
   refresh();
   return( result );
@@ -60,10 +60,6 @@ int SilentSystemCallEx(char *command_line, BOOL enable_clock)
 
   /* Hier ist die einzige Stelle, in der Kommandos aufgerufen werden! */
 
-#if defined( __NeXT__ )
-  nl();
-#endif /* linux */
-
     SuspendClock();
 
 #ifdef XCURSES
@@ -81,17 +77,11 @@ int SilentSystemCallEx(char *command_line, BOOL enable_clock)
 #ifndef XCURSES
   leaveok(stdscr, TRUE);
   curs_set(0);
-#if defined( __NeXT__ )
-  cbreak();
-  nonl();
-  noecho();
-  clearok( stdscr, TRUE );
-#endif /* linux */ 
 #endif /* XCURSES */
   if(enable_clock)
     InitClock();
   (void) GetAvailBytes( &statistic.disk_space );
-  return( result ); 
+  return( result );
 }
 
 

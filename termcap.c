@@ -15,15 +15,8 @@
 
 
 
-#ifdef __NeXT__
-
-char	tcdummy[256], tcbuf[1024];
-char	*tcdptr = tcdummy;
-
-#else
 # define tcbuf		NULL
 # define tcdummy	NULL
-#endif /* __NeXT__ */
 
 
 #undef wgetch
@@ -90,9 +83,9 @@ int TermcapWgetch( WINDOW *win )
 
   ch = wgetch( stdscr );
 
-  for( i=0, sk_ptr = special_key; 
-       sk_ptr->key_code > 0; 
-       sk_ptr = &special_key[++i] 
+  for( i=0, sk_ptr = special_key;
+       sk_ptr->key_code > 0;
+       sk_ptr = &special_key[++i]
      )
   {
     /* Ein-Byte Codes ausblenden */
@@ -104,7 +97,7 @@ int TermcapWgetch( WINDOW *win )
       /*------------------------*/
 
       if( sk_ptr->key_sequence[1] == '\0' )
-      { 
+      {
         /* 1 Byte-Code */
         /*-------------*/
 
@@ -154,9 +147,9 @@ static int TermcapMultiByte( WINDOW *win, int ch )
   {
     buffer[j] = wgetch( win );
 
-    for( i=0, sk_ptr = special_key; 
-	 sk_ptr->key_code > 0; 
-	 sk_ptr = &special_key[++i] 
+    for( i=0, sk_ptr = special_key;
+	 sk_ptr->key_code > 0;
+	 sk_ptr = &special_key[++i]
        )
     {
       if( sk_ptr->key_sequence && !strcmp( sk_ptr->key_sequence, buffer ) )
@@ -167,7 +160,7 @@ static int TermcapMultiByte( WINDOW *win, int ch )
       }
     }
   }
-  
+
   alarm( 0 );
 
   return( ch );
@@ -191,20 +184,10 @@ void TermcapInitscr()
 
   for( i=0; special_key[i].key_code > 0; i++ )
   {
-#ifdef __NeXT__
-    tcdptr = tcdummy;
-    special_key[i].key_sequence = Strdup(tgetstr( special_key[i].termcap_name, &tcdptr ));
-#else
     special_key[i].key_sequence = tgetstr( special_key[i].termcap_name, NULL );
-#endif
   }
-#ifdef __NeXT__
-  reverse = Strdup(tgetstr( "so", &tcdptr ));
-  normal  = Strdup(tgetstr( "se", &tcdptr ));
-#else
   reverse = tgetstr( "so", tcdummy );
   normal  = tgetstr( "se", tcdummy );
-#endif
 }
 
 

@@ -9,7 +9,7 @@
 
 #include "ytree.h"
 
-#if ( defined( linux ) || defined( sun ) || defined( __NeXT__ )  || defined(hpux) || defined( __DJGPP__ ) || defined ( __GNU__ ) ) && !defined( SVR4 )
+#if ( defined( linux ) || defined( sun ) || defined(hpux) || defined( __DJGPP__ ) || defined ( __GNU__ ) ) && !defined( SVR4 )
 
 #include <sys/vfs.h>
 #else
@@ -33,7 +33,7 @@
 #endif
 #endif /* SVR4 */
 #endif /* WIN32 */
-#endif /* sun / linux / __NeXT__  hpux */
+#endif /* sun / linux / hpux */
 
 #ifdef __GNU__
 #include <hurd/hurd_types.h>
@@ -185,7 +185,7 @@ int GetDiskParameter( char *path,
               fname = "HURD";
        }
 #else
-#if defined( sun56 ) || defined( sun ) || defined( hpux ) || defined( __NeXT__ ) || defined ( __FreeBSD__ ) || defined (__APPLE__)
+#if defined( sun56 ) || defined( sun ) || defined( hpux ) || defined ( __FreeBSD__ ) || defined (__APPLE__)
         fname = "UNIX";
 #else
 #ifdef WIN32
@@ -209,7 +209,7 @@ int GetDiskParameter( char *path,
 #endif /* __DJGPP__ */
 #endif /* QNX */
 #endif /* WIN32 */
-#endif /* sun / hpux / __NeXT__ */
+#endif /* sun / hpux / */
 #endif /* __GNU__ */
 #endif /* linux */
 
@@ -246,7 +246,7 @@ int GetDiskParameter( char *path,
     *avail_bytes = bfree * statfs_struct.f_frsize;
     this_disk_space   = statfs_struct.f_blocks * statfs_struct.f_frsize;
 #else
-#if defined( _IBMR2 ) || defined( linux ) || defined( sun ) || defined( __NeXT__ ) || defined( __GNU__ )
+#if defined( _IBMR2 ) || defined( linux ) || defined( sun ) || defined( __GNU__ )
     bfree = getuid() ? statfs_struct.f_bavail : statfs_struct.f_bfree;
     if( bfree < 0L ) bfree = 0L;
     *avail_bytes = bfree * statfs_struct.f_bsize;
@@ -269,7 +269,7 @@ int GetDiskParameter( char *path,
 #endif /* QNX */
 #endif /* SVR3 */
 #endif /* SVR4/!__DGUX__ */
-#endif /* _IBMR2/linux/sun/__NeXT__/__GNU__ */
+#endif /* _IBMR2/linux/sun/__GNU__ */
 #endif /* WIN32 */
 
     if( total_disk_space )

@@ -52,14 +52,8 @@
 #include <stdlib.h>
 #endif /* __STDC__ || _IBMR2 */
 
-#ifdef __NeXT__
-extern char *getcwd();
-#include <sys/dir.h>
-#define dirent direct
-#else
 #include <unistd.h>
 #include <dirent.h>
-#endif /* __NeXT__ */
 
 #include <errno.h>
 #include <fcntl.h>
@@ -72,7 +66,7 @@ extern char *getcwd();
 #include <signal.h>
 #include <string.h>
 
-#if defined( TERMCAP ) && !defined( __NeXT__ )
+#if defined( TERMCAP )
 #include <termcap.h>
 #endif
 
@@ -177,22 +171,6 @@ extern char *getcwd();
 
 #endif /* WIN32 */
 
-#ifdef __NeXT__
-
-#define  S_IRUSR        S_IREAD
-#define  S_IWUSR        S_IWRITE
-#define  S_IXUSR        S_IEXEC
-#define  S_IRGRP        (S_IREAD >> 3)
-#define  S_IWGRP        (S_IWRITE >> 3)
-#define  S_IXGRP        (S_IEXEC >> 3)
-#define  S_IROTH        (S_IREAD >> 6)
-#define  S_IWOTH        (S_IWRITE >> 6)
-#define  S_IXOTH        (S_IEXEC >> 6)
-#define  S_IRWXO        (S_IROTH|S_IWOTH|S_IXOTH)
-#define  S_IRWXG        (S_IRGRP|S_IWGRP|S_IXGRP)
-#define  S_IRWXU        (S_IRUSR|S_IWUSR|S_IXUSR)
-
-#endif /* __NeXT__ */
 
 
 #if defined(linux) || defined (__GNU__)
@@ -690,12 +668,7 @@ extern char *getcwd();
 #define MODE_5                 4
 
 
-#ifdef __NeXT__
-#include <sys/ttydev.h>
-#define QUICK_BAUD_RATE      B9600
-#else
 #define QUICK_BAUD_RATE      9600
-#endif /* __NeXT__ */
 
 #define ESCAPE               goto FNC_XIT
 

@@ -653,44 +653,6 @@ int GetFileMethod( char *filename )
 
 
 
-#ifdef __NeXT__
-
-char *getcwd(char *dest, int len)
-{
-  static char  buffer[MAXNAMLEN];
-  DIR    *dirp;
-  struct direct  *dp;
-  long   inode;
-  char   *cp = buffer + MAXNAMLEN - 1;
-
-  *cp = 0;
-
-  do {
-    dirp = opendir(".");
-    for (dp=readdir(dirp); dp; dp=readdir(dirp)) {
-      if(dp->d_namlen && !strcmp(dp->d_name,".")) {
-        break;
-      }
-    }
-    if (inode == dp->d_ino) break;
-    inode = dp->d_ino;
-    (void) closedir(dirp);
-    dirp = opendir("..");
-    for (dp=readdir(dirp); dp && (dp->d_ino != inode); dp=readdir(dirp));
-    cp -= dp->d_namlen;
-    (void) strncpy(cp,dp->d_name,dp->d_namlen);
-    *--cp = FILE_SEPARATOR_CHAR;
-    (void) closedir(dirp);
-  } while(!chdir(".."));
-
-  (void) chdir(cp+2);
-  (void) strncpy(dest,cp+2,len);
-}
-
-
-#endif
-
-
 void NormPath( char *in_path, char *out_path )
 {
   char *s, *d;

@@ -115,18 +115,6 @@
 #endif /* __GNU__ */
 
 
-#ifdef __NeXT__
-/* fifi's NeXT! */
-# undef DEFAULT_TARLIST
-# undef DEFAULT_TAREXPAND
-# undef DEFAULT_HEXDUMP
-# undef DEFAULT_PAGER
-# define DEFAULT_TARLIST    "gtar tvf -"
-# define DEFAULT_TAREXPAND  "gtar xOPf -"
-# define DEFAULT_HEXDUMP    "hd"
-# define DEFAULT_PAGER      "less"
-#endif /* __NeXT__ */
-
 #if defined(__OpenBSD__) || defined(__NetBSD__) ||  defined( __FreeBSD__) || defined(__NetBSD__)
 #undef DEFAULT_TARLIST
 #undef DEFAULT_TAREXPAND

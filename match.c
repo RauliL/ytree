@@ -9,7 +9,7 @@
 
 #include "ytree.h"
 
-#if defined( sun ) || defined( linux ) || defined( __NeXT__ ) || defined( OSF1 ) ||  defined( __OpenBSD__ ) || defined(__NetBSD__) || defined( __FreeBSD__ ) || defined( __GNU__ )
+#if defined( sun ) || defined( linux ) || defined( OSF1 ) ||  defined( __OpenBSD__ ) || defined(__NetBSD__) || defined( __FreeBSD__ ) || defined( __GNU__ )
 #define HAS_REGEX
 #endif
 
@@ -31,7 +31,7 @@
 #define PEEKC()     	(*sp)
 #define UNGETC(c)   	(--sp)
 #define RETURN(c)   	return;
-#define ERROR(c)    	
+#define ERROR(c)
 #include <regexp.h>
 #else
 #include <regex.h>
@@ -71,7 +71,7 @@ int SetMatchSpec(char *new_spec)
 
   for(; *new_spec; new_spec++)
   {
-    if( meta_flag ) 
+    if( meta_flag )
     {
       *b_ptr++ = *new_spec;
       meta_flag = FALSE;
@@ -107,7 +107,7 @@ int SetMatchSpec(char *new_spec)
 
 #if defined( HAS_REGCOMP )
 
-  if(re_flag) 
+  if(re_flag)
   {
     regfree(&re);
     re_flag = FALSE;
@@ -158,7 +158,7 @@ int SetMatchSpec(char *new_spec)
 BOOL Match(char *file_name)
 {
 #if defined ( HAS_REGEX )
-  
+
   if( re_exec( file_name ) ) return( TRUE );
   else                       return( FALSE );
 
@@ -172,7 +172,7 @@ BOOL Match(char *file_name)
   {
     return( TRUE );
   }
-  else 
+  else
   {
     return( FALSE );
   }
@@ -205,5 +205,5 @@ BOOL Match(char *file_name)
 #endif /* HAS_REGEX */
 }
 
-  
-  
+
+

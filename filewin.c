@@ -13,9 +13,7 @@
 #define MAX( a, b ) ( ( (a) > (b) ) ? (a) : (b) )
 
 
-#if !defined(__NeXT__)
 extern void qsort(void *, size_t, size_t, int (*) (const void *, const void *));
-#endif /* __NeXT__ */
 
 
 
