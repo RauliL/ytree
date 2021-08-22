@@ -15,10 +15,6 @@ static WINDOW *Subwin(WINDOW *orig, int nlines, int ncols,
 static WINDOW *Newwin(int nlines, int ncols,
                       int begin_y, int begin_x);
 
-#ifdef XCURSES
-char *XCursesProgramName = "ytree";
-#endif
-
 int Init(char *configuration_file, char *history_file)
 {
   char buffer[PATH_LENGTH + 1];

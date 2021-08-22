@@ -16,9 +16,7 @@ int SystemCall(char *command_line)
 {
   int result;
 
-#ifndef XCURSES
   endwin();
-#endif
   result = SilentSystemCall( command_line );
 
   (void) GetAvailBytes( &statistic.disk_space );
@@ -31,9 +29,7 @@ int QuerySystemCall(char *command_line)
 {
   int result;
 
-#ifndef XCURSES
   endwin();
-#endif
   result = SilentSystemCall( command_line );
   HitReturnToContinue();
   (void) GetAvailBytes( &statistic.disk_space );
@@ -54,30 +50,15 @@ int SilentSystemCall(char *command_line)
 int SilentSystemCallEx(char *command_line, bool enable_clock)
 {
   int result;
-#ifdef XCURSES
-  char *xterm=NULL;
-#endif
 
   /* Hier ist die einzige Stelle, in der Kommandos aufgerufen werden! */
 
     SuspendClock();
 
-#ifdef XCURSES
-  if( ( xterm = malloc( strlen( command_line ) + 10 ) ) == NULL ) {
-    ERROR_MSG( "Malloc Failed*ABORT" );
-    exit( 1 );
-  }
-  sprintf(xterm, "xterm -e %s &", command_line);
-  result = system( xterm );
-  free(xterm);
-#else
   result = system( command_line );
-#endif
 
-#ifndef XCURSES
   leaveok(stdscr, true);
   curs_set(0);
-#endif /* XCURSES */
   if(enable_clock)
     InitClock();
   (void) GetAvailBytes( &statistic.disk_space );

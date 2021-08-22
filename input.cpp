@@ -404,14 +404,12 @@ int GetTapeDeviceName( void )
 
 void HitReturnToContinue(void)
 {
-#ifndef XCURSES
   curs_set(1);
   vidattr( A_REVERSE );
   putp( "[Hit return to continue]" );
   vidattr( 0 );
   (void) fflush( stdout );
   (void) Getch();
-#endif /* XCURSES */
   curs_set(0);
   doupdate();
 }

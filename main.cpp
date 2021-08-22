@@ -96,9 +96,6 @@ int main(int argc, char **argv)
   if( LoginDisk( path ) == -1 )
   {
     endwin();
-#ifdef XCURSES
-    XCursesExit();
-#endif
     exit( 1 );
   }
 

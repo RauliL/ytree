@@ -4,7 +4,7 @@
  *
  * Verlassen von ytree
  *
- * 
+ *
  ***************************************************************************/
 
 
@@ -15,7 +15,7 @@ quit-to-directory (xtree: alt-Q)(ytree: shift-Q, ^Q)
 this uses the Ztree method.
 for this to work, a ytree is called via a function in ~/.bashrc
 instead of directly. that function generates a pid-unique
-file containing a "cd cwd" line before calling ytree, and 
+file containing a "cd cwd" line before calling ytree, and
 sources-in the pid-unique file afterward, thus jumping to the
 directory specified.
 if ytree rewrites that file to the quit-to dir, the eventual
@@ -28,22 +28,22 @@ QuitTo:
 - get parent's pid
 - get owning uid's homedir
 - compose shell stub name
-- test: 
+- test:
   - exists?
   - regular file?
   - non-zero length?
 - write dir_entry to it, thus replacing the starting-cwd line
 - chain to Quit
 
-if user elects not to quit, no harm done: 
+if user elects not to quit, no harm done:
 
 - rewrite that file to starting-cwd if it passes those checks again
   (avoiding race opening vuln)
-- return to main program loop 
+- return to main program loop
 
 a user can have a bunch of ytrees open, but they'll be run one-per-
-shell (i.e. each xterm singletasking) unless the user's ASKING for 
-trouble, so a given shell-pid will be unique for the xterm that 
+shell (i.e. each xterm singletasking) unless the user's ASKING for
+trouble, so a given shell-pid will be unique for the xterm that
 owns it, even though they're all clustered in the user's homedir.
 
 changes:
@@ -62,7 +62,7 @@ in .bashrc:
 # than the starting one (Alt-Q rather than Q, in XTG terms).
 # the pid-numbered chdir "bat" will get rewritten to the selected
 # dir if ytree is Quit or ^Quit rather than quit, if ytree-1.75b
-# (or later version, assuming Werner incorporates my changes) is used. 
+# (or later version, assuming Werner incorporates my changes) is used.
 # This method is based on Kim Henkel's alt-Q batfile method for ZtreeWin.
 #  --crb3 14jan00/12mar03
 #
@@ -89,7 +89,7 @@ void QuitTo(DirEntry * dir_entry)
   FILE *qfile;
   char nbuf[MAXPATH],qfilename[MAXPATH];
   struct passwd *pwp;
-  
+
     GetPath(dir_entry,nbuf);
 	parpid=getppid();
 	pwp=getpwuid(getuid());
@@ -102,7 +102,7 @@ void QuitTo(DirEntry * dir_entry)
 			fclose(qfile);
 		}
 	}
-	
+
 	Quit();		/* never come back from a successful quit */
 
 	if(!QuitFileCheck(qfilename)){
@@ -117,8 +117,8 @@ void QuitTo(DirEntry * dir_entry)
 /*
  * QuitFileCheck.
  * quick safety-check of the shell stub we want to write to.
- * if any of these tests fail, somebody's trying to use us for a 
- * security breach. 
+ * if any of these tests fail, somebody's trying to use us for a
+ * security breach.
  */
 
 static int QuitFileCheck(char *fname)
@@ -153,9 +153,6 @@ void Quit(void)
       SaveHistory(path);
     }
     endwin();
-#ifdef XCURSES
-    XCursesExit();
-#endif
     exit( 0 );
   }
 }
