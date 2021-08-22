@@ -936,11 +936,7 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
       } else if(!strncmp(sptr, LINKCOUNT_VIEWNAME, 3)) {
         n = sprintf(dptr, "%3d", (int)fe_ptr->stat_struct.st_nlink);
       } else if(!strncmp(sptr, FILESIZE_VIEWNAME, 3)) {
-#ifdef HAS_LONGLONG
-        n = sprintf(dptr, "%7lld", (LONGLONG) fe_ptr->stat_struct.st_size);
-#else
-        n = sprintf(dptr, "%7d", fe_ptr->stat_struct.st_size);
-#endif
+        n = sprintf(dptr, "%7lld", (long long) fe_ptr->stat_struct.st_size);
       } else if(!strncmp(sptr, MODTIME_VIEWNAME, 3)) {
         n = sprintf(dptr, "%12s", modify_time);
       } else if(!strncmp(sptr, SYMLINK_VIEWNAME, 3)) {
@@ -950,11 +946,7 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
       } else if(!strncmp(sptr, GID_VIEWNAME, 3)) {
         n = sprintf(dptr, "%-8s", group_name_ptr);
       } else if(!strncmp(sptr, INODE_VIEWNAME, 3)) {
-#ifdef HAS_LONGLONG
-        n = sprintf(dptr, "%7lld", (LONGLONG)fe_ptr->stat_struct.st_ino);
-#else
-        n = sprintf(dptr, "%7ld", (int)fe_ptr->stat_struct.st_ino);
-#endif
+        n = sprintf(dptr, "%7lld", (long long)fe_ptr->stat_struct.st_ino);
       } else if(!strncmp(sptr, ACCTIME_VIEWNAME, 3)) {
         n = sprintf(dptr, "%12s", access_time);
       } else if(!strncmp(sptr, CHGTIME_VIEWNAME, 3)) {
@@ -1037,21 +1029,11 @@ int GetUserFileEntryLength( int max_filename_len, int max_linkname_len, char *te
 }
 
 
-LONGLONG AtoLL(char *cptr)
+long long AtoLL(char *cptr)
 {
-  LONGLONG ll;
-
-#ifdef HAS_LONGLONG
+  long long ll;
 
   sscanf(cptr, "%lld", &ll);
-
-#else
-#ifdef __QNX__
-  sscanf(cptr, "%ld", &ll);
-#else
-  sscanf(ll, "%ld", cptr);
-#endif
-#endif
 
   return(ll);
 }

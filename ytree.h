@@ -62,70 +62,20 @@
 #include <termcap.h>
 #endif
 
-#ifdef __OpenBSD__
-#define LONGLONG		long long
-#define HAS_LONGLONG		1
-#else
 #ifdef __NetBSD__
-#define LONGLONG		long long
-#define HAS_LONGLONG		1
 #define typeahead( file )
 #define vidattr( attr )
 #define putp( str )             tputs( str, 1, putchar )
 #else
-#ifdef __APPLE__
-#define LONGLONG		long long
-#define HAS_LONGLONG		1
-#else
-#ifdef __FreeBSD__
-#define LONGLONG		long long
-#define HAS_LONGLONG		1
-#else
 #ifdef OSF1
 #define echochar( ch )          { addch( ch ); refresh(); }
-#define LONGLONG		unsigned long
-#else
-#ifdef SVR4
-#define LONGLONG		unsigned long
-#else
-#ifdef SVR3
-#define LONGLONG		unsigned long
-#define LONGLONG		unsigned long
-#else
-#ifdef _IBMR2
-#define LONGLONG		long long
-#define HAS_LONGLONG		1
-#else
-#if defined(linux)
-#define LONGLONG               long long
-#define HAS_LONGLONG           1
-#else
-#if defined(__GNU__)
-#define LONGLONG		long long
-#define HAS_LONGLONG		1
 #else
 #ifdef hpux
 #define echochar( ch )          { addch( ch ); refresh(); }
-#define LONGLONG		long long
-#define HAS_LONGLONG		1
 #else
-#ifdef __QNX__
-#define LONGLONG		unsigned long
-#else
-#define LONGLONG		long long
-#define HAS_LONGLONG		1
-#endif /* __QNX__ */
 #endif /* hpux */
-#endif /* __GNU__ */
-#endif /* linux */
-#endif /* _IBMR2 */
-#endif /* SVR4 */
-#endif /* SVR3 */
 #endif /* OSF1 */
-#endif /* __APPLE__ */
-#endif /* __FreeBSD__ */
 #endif /* __NetBSD__ */
-#endif /* __OpenBSD__ */
 
 
 /* Some handy macros... */
@@ -678,9 +628,9 @@ typedef struct _dir_entry
   struct _dir_entry  *prev;
   struct _dir_entry  *sub_tree;
   struct _dir_entry  *up_tree;
-  LONGLONG           total_bytes;
-  LONGLONG           matching_bytes;
-  LONGLONG           tagged_bytes;
+  long long total_bytes;
+  long long matching_bytes;
+  long long tagged_bytes;
   unsigned int       total_files;
   unsigned int       matching_files;
   unsigned int       tagged_files;
@@ -716,14 +666,14 @@ typedef struct
 typedef struct
 {
   DirEntry      *tree;
-  LONGLONG	disk_space;
-  LONGLONG	disk_capacity;
-  LONGLONG	disk_total_files;
-  LONGLONG	disk_total_bytes;
-  LONGLONG	disk_matching_files;
-  LONGLONG	disk_matching_bytes;
-  LONGLONG	disk_tagged_files;
-  LONGLONG 	disk_tagged_bytes;
+  long long disk_space;
+  long long disk_capacity;
+  long long disk_total_files;
+  long long disk_total_bytes;
+  long long disk_matching_files;
+  long long disk_matching_bytes;
+  long long disk_tagged_files;
+  long long disk_tagged_bytes;
   unsigned int  disk_total_directories;
   int           disp_begin_pos;
   int           cursor_pos;
@@ -857,8 +807,8 @@ extern int  ReadTreeFromARC(DirEntry *dir_entry, FILE *f);
 extern int  ReadTreeFromRAR(DirEntry *dir_entry, FILE *f);
 extern int  GetDiskParameter(char *path,
 			     char *volume_name,
-			     LONGLONG *avail_bytes,
-			     LONGLONG *capacity
+			     long long *avail_bytes,
+			     long long *capacity
 			    );
 extern int  HandleDirWindow(DirEntry *start_dir_entry);
 extern void DisplayFileWindow(DirEntry *dir_entry);
@@ -934,7 +884,7 @@ extern int  ChangeDirGroup(DirEntry *de_ptr);
 extern void DisplayDirHelp(void);
 extern void DisplayFileHelp(void);
 extern void ClearHelp(void);
-extern int  GetAvailBytes(LONGLONG *avail_bytes);
+extern int  GetAvailBytes(long long *avail_bytes);
 extern int  DeleteDirectory(DirEntry *dir_entry);
 extern int  ExecuteCommand(FileEntry *fe_ptr, WalkingPackage *walking_package);
 extern int  GetCommandLine(char *command_line);
@@ -1014,7 +964,7 @@ extern int  BuildUserFileEntry(FileEntry *fe_ptr,
             char *template, int linelen, char *line);
 extern int  GetUserFileEntryLength(int max_filename_len,
 				   int max_linkname_len, char *template);
-extern LONGLONG AtoLL(char* cptr);
+extern long long AtoLL(char* cptr);
 extern void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no);
 extern void ReCreateWindows(void);
 extern int  Getch(void);

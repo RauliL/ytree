@@ -611,7 +611,6 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
                     if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
 		    {
-#ifdef HAS_LONGLONG
 		      (void) sprintf( format, "%%c%%c%%-%ds %%10s %%3d %%11lld %%12s -> %%-%ds",
 				      max_filename_len,
 				      max_linkname_len
@@ -623,31 +622,13 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      fe_ptr->name,
 				      attributes,
 				      fe_ptr->stat_struct.st_nlink,
-                                      (LONGLONG) fe_ptr->stat_struct.st_size,
+                                      (long long) fe_ptr->stat_struct.st_size,
 				      modify_time,
 				      sym_link_name
 				    );
-#else
-		      (void) sprintf( format, "%%c%%c%%-%ds %%10s %%3d %%7d %%12s -> %%-%ds",
-				      max_filename_len,
-				      max_linkname_len
-				    );
-
-		      (void) sprintf( line_buffer, format,
-				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
-				      type_of_file,
-				      fe_ptr->name,
-				      attributes,
-				      fe_ptr->stat_struct.st_nlink,
-                                      fe_ptr->stat_struct.st_size,
-				      modify_time,
-				      sym_link_name
-				    );
-#endif
                     }
 		    else
 		    {
-#ifdef HAS_LONGLONG
 		      (void) sprintf( format, "%%c%%c%%%c%ds %%10s %%3d %%11lld %%12s",
                                       justify,
 				      max_filename_len
@@ -659,25 +640,9 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      fe_ptr->name,
 				      attributes,
 				      fe_ptr->stat_struct.st_nlink,
-                                      (LONGLONG) fe_ptr->stat_struct.st_size,
+                                      (long long) fe_ptr->stat_struct.st_size,
 				      modify_time
 				    );
-#else
-		      (void) sprintf( format, "%%c%%c%%%c%ds %%10s %%3d %%7d %%12s",
-                                      justify,
-				      max_filename_len
-				    );
-
-		      (void) sprintf( line_buffer, format,
-				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
-				      type_of_file,
-				      fe_ptr->name,
-				      attributes,
-				      fe_ptr->stat_struct.st_nlink,
-                                      fe_ptr->stat_struct.st_size,
-				      modify_time
-				    );
-#endif
                     }
 		  }
 		  else
@@ -717,7 +682,6 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
                     if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
 		    {
-#ifdef HAS_LONGLONG
                       (void) sprintf( format, "%%c%%c%%%c%ds %%10lld %%-12s %%-12s -> %%-%ds",
                                       justify,
 			              max_filename_len,
@@ -727,31 +691,14 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
 				      fe_ptr->name,
-				      (LONGLONG)fe_ptr->stat_struct.st_ino,
+				      (long long)fe_ptr->stat_struct.st_ino,
 				      owner_name_ptr,
 				      group_name_ptr,
 				      sym_link_name
 				    );
-#else
-                      (void) sprintf( format, "%%c%%c%%%c%ds %%8u  %%-12s  %%-12s -> %%-%ds",
-                                      justify,
-			              max_filename_len,
-			              max_linkname_len
-				      );
-		      (void) sprintf( line_buffer, format,
-				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
-				      type_of_file,
-				      fe_ptr->name,
-				      (int)fe_ptr->stat_struct.st_ino,
-				      owner_name_ptr,
-				      group_name_ptr,
-				      sym_link_name
-				    );
-#endif
                     }
 		    else
 		    {
-#ifdef HAS_LONGLONG
                       (void) sprintf( format, "%%c%%c%%%c%ds %%10lld %%-12s %%-12s",
                                       justify,
 			              max_filename_len
@@ -760,24 +707,10 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
 				      fe_ptr->name,
-				      (LONGLONG)fe_ptr->stat_struct.st_ino,
+				      (long long)fe_ptr->stat_struct.st_ino,
 				      owner_name_ptr,
 				      group_name_ptr
 				    );
-#else
-                      (void) sprintf( format, "%%c%%c%%%c%ds %%8u  %%-12s  %%-12s",
-                                      justify,
-			              max_filename_len
-				      );
-		      (void) sprintf( line_buffer, format,
-				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
-				      type_of_file,
-				      fe_ptr->name,
-				      (int)fe_ptr->stat_struct.st_ino,
-				      owner_name_ptr,
-				      group_name_ptr
-				    );
-#endif
 
                     }
 	          }
@@ -1341,7 +1274,7 @@ int HandleFileWindow(DirEntry *dir_entry)
   int tmp2;
   int unput_char;
   int list_pos;
-  LONGLONG file_size;
+  long long file_size;
   int i;
   int owner_id;
   int group_id;

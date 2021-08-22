@@ -159,22 +159,13 @@ static void PrintDirEntry(WINDOW *win,
                     ERROR_MSG("malloc() Failed*Abort");
                     exit(1);
                  }
-#ifdef HAS_LONGLONG
                  (void) strcpy( format, "%10s %3d %8lld %12s");
 
 		 (void) sprintf( line_buffer, format, attributes,
                                  de_ptr->stat_struct.st_nlink,
-                                 (LONGLONG) de_ptr->stat_struct.st_size,
+                                 (long long) de_ptr->stat_struct.st_size,
                                  modify_time
                                  );
-#else
-                 (void) strcpy( format, "%10s %3d %8d %12s");
-                 (void) sprintf( line_buffer, format, attributes,
-                                 de_ptr->stat_struct.st_nlink,
-                                 de_ptr->stat_struct.st_size,
-                                 modify_time
-                                 );
-#endif
 		 break;
     case MODE_2 :
                  (void)GetAttributes(de_ptr->stat_struct.st_mode, attributes);

@@ -11,7 +11,7 @@
 
 
 
-static void PrettyPrintNumber(int y, int x, LONGLONG number);
+static void PrettyPrintNumber(int y, int x, long long number);
 
 
 void DisplayDiskStatistic(void)
@@ -22,7 +22,7 @@ void DisplayDiskStatistic(void)
 
   sprintf( buff, fmt, statistic.file_spec);
   PrintMenuOptions( stdscr, 2, COLS - 18, buff, MENU_COLOR, HIMENUS_COLOR);
-  PrettyPrintNumber( 5,  COLS - 17, statistic.disk_space / (LONGLONG)1024 );
+  PrettyPrintNumber( 5,  COLS - 17, statistic.disk_space / (long long)1024 );
   PrintOptions( stdscr, 7,  COLS - 24, "[DISK Statistics   ]" );
   PrettyPrintNumber( 9, COLS - 17, statistic.disk_total_files );
   PrettyPrintNumber( 10, COLS - 17, statistic.disk_total_bytes );
@@ -39,7 +39,7 @@ void DisplayDiskStatistic(void)
 
 void DisplayAvailBytes(void)
 {
-  PrettyPrintNumber( 5,  COLS - 17, statistic.disk_space / (LONGLONG)1024 );
+  PrettyPrintNumber( 5,  COLS - 17, statistic.disk_space / (long long)1024 );
   RefreshWindow( stdscr );
 }
 
@@ -140,7 +140,7 @@ void DisplayDirParameter(DirEntry *dir_entry)
   *auxbuff = '\0';
   sprintf(auxbuff, "[%-20s]", CutFilename(buffer, f, 20));
   PrintMenuOptions( stdscr, 18, COLS - 22, auxbuff, MENU_COLOR, HIMENUS_COLOR);
-  PrettyPrintNumber( 19, COLS - 17, (LONGLONG) dir_entry->total_bytes );
+  PrettyPrintNumber( 19, COLS - 17, (long long) dir_entry->total_bytes );
   RefreshWindow( stdscr );
 }
 
@@ -166,7 +166,7 @@ void DisplayGlobalFileParameter(FileEntry *file_entry)
   if (snprintf( buffer2, PATH_LENGTH, "[%-20s]", buffer1 ))
     ;
   PrintMenuOptions( stdscr, 18, COLS - 22, buffer2, GLOBAL_COLOR, HIGLOBAL_COLOR);
-  PrettyPrintNumber( 19, COLS - 17, (LONGLONG) file_entry->stat_struct.st_size );
+  PrettyPrintNumber( 19, COLS - 17, (long long) file_entry->stat_struct.st_size );
   RefreshWindow( stdscr );
 }
 
@@ -179,23 +179,23 @@ void DisplayFileParameter(FileEntry *file_entry)
   char auxbuff[23*6];
   sprintf( auxbuff, "[%-20s]", CutFilename( buffer, file_entry->name, 20 ) );
   PrintMenuOptions( stdscr, 18, COLS - 22, auxbuff, MENU_COLOR, HIMENUS_COLOR);
-  PrettyPrintNumber( 19, COLS - 17, (LONGLONG)file_entry->stat_struct.st_size );
+  PrettyPrintNumber( 19, COLS - 17, (long long)file_entry->stat_struct.st_size );
   RefreshWindow( stdscr );
 }
 
 
 
-void PrettyPrintNumber(int y, int x, LONGLONG number)
+void PrettyPrintNumber(int y, int x, long long number)
 {
   char buffer[20];
   long terra, giga, mega, kilo, one;
 
   *buffer = 0;
-  terra    = (long)   ( number / (LONGLONG) 1000000000000 );
-  giga     = (long) ( ( number % (LONGLONG) 1000000000000 ) / (LONGLONG) 1000000000 );
-  mega     = (long) ( ( number % (LONGLONG) 1000000000 ) / (LONGLONG) 1000000 );
-  kilo     = (long) ( ( number % (LONGLONG) 1000000 ) / (LONGLONG) 1000 );
-  one      = (long)   ( number % (LONGLONG) 1000 );
+  terra    = (long)   ( number / (long long) 1000000000000 );
+  giga     = (long) ( ( number % (long long) 1000000000000 ) / (long long) 1000000000 );
+  mega     = (long) ( ( number % (long long) 1000000000 ) / (long long) 1000000 );
+  kilo     = (long) ( ( number % (long long) 1000000 ) / (long long) 1000 );
+  one      = (long)   ( number % (long long) 1000 );
 
   if( terra ){
      /* "123123123123123" */

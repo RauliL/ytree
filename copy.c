@@ -25,7 +25,7 @@ int CopyFile(Statistic *statistic_ptr,
              BOOL path_copy
 	    )
 {
-  LONGLONG    file_size;
+  long long file_size;
   char        from_path[PATH_LENGTH+1];
   char        from_dir[PATH_LENGTH+1];
   char        to_path[PATH_LENGTH+1];

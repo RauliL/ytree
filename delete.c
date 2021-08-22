@@ -37,17 +37,17 @@ int DeleteFile(FileEntry *fe_ptr)
         goto UNLINK_DONE;
       }
 
-      sprintf( buffer, "overriding mode %04o for \"%s\" (Y/N) ? ", 
+      sprintf( buffer, "overriding mode %04o for \"%s\" (Y/N) ? ",
                fe_ptr->stat_struct.st_mode & 0777, fe_ptr->name);
 
       term = InputChoise( buffer, "YN\033" );
 
       if( term != 'Y' )
       {
-        (void) sprintf( message, 
-		        "Can't delete file*\"%s\"*%s", 
-		        filepath, 
-		        strerror(errno) 
+        (void) sprintf( message,
+		        "Can't delete file*\"%s\"*%s",
+		        filepath,
+		        strerror(errno)
    		      );
         MESSAGE( message );
         ESCAPE;
@@ -57,10 +57,10 @@ int DeleteFile(FileEntry *fe_ptr)
 
   if( unlink( filepath ) )
   {
-    (void) sprintf( message, 
-		    "Can't delete file*\"%s\"*%s", 
-		    filepath, 
-		    strerror(errno) 
+    (void) sprintf( message,
+		    "Can't delete file*\"%s\"*%s",
+		    filepath,
+		    strerror(errno)
 		  );
     MESSAGE( message );
     ESCAPE;
@@ -75,7 +75,7 @@ UNLINK_DONE:
   (void) GetAvailBytes( &statistic.disk_space );
 
 FNC_XIT:
-  
+
   return( result );
 }
 
@@ -86,7 +86,7 @@ FNC_XIT:
 int RemoveFile(FileEntry *fe_ptr)
 {
   DirEntry *de_ptr;
-  LONGLONG file_size;
+  long long file_size;
 
   de_ptr = fe_ptr->dir_entry;
 

@@ -46,8 +46,8 @@
 
 int GetDiskParameter( char *path,
 		      char *volume_name,
-		      LONGLONG *avail_bytes,
-		      LONGLONG *total_disk_space
+		      long long *avail_bytes,
+		      long long *total_disk_space
 		    )
 {
 
@@ -69,8 +69,8 @@ int GetDiskParameter( char *path,
   char *p;
   char *fname;
   int  result;
-  LONGLONG bfree;
-  LONGLONG this_disk_space;
+  long long bfree;
+  long long this_disk_space;
 
 
 #ifdef WIN32
@@ -286,7 +286,7 @@ int GetDiskParameter( char *path,
 
 
 
-int GetAvailBytes(LONGLONG *avail_bytes)
+int GetAvailBytes(long long *avail_bytes)
 {
   return( GetDiskParameter( statistic.tree->name,
 			    NULL,
