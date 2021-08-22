@@ -17,7 +17,7 @@ static char path[PATH_LENGTH+1];
 
 int main(int argc, char **argv)
 {
-  char *p;
+  const char *p;
   int argi;
   char *hist;
   char *conf;
@@ -47,7 +47,7 @@ int main(int argc, char **argv)
       break;
 /*    case 'e':
     case 'E':
-       Hex dump (builtin) 
+       Hex dump (builtin)
       if(argi == argc) {
         return(BuiltinHexDump(NULL));
       }
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
     default:
       printf("Usage: %s [-p profile_file] [-h hist_file] [initial_dir]\n",
           argv[0]);
-      exit(1); 
+      exit(1);
     }
   }
 

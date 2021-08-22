@@ -1,8 +1,8 @@
 /***************************************************************************
  *
- * $Header: /usr/local/cvsroot/utils/ytree/zip.c,v 1.11 2000/05/20 20:41:11 werner Exp $
+ * $Header: /usr/local/cvsroot/utils/ytree/zoo.c,v 1.11 2000/05/20 20:41:11 werner Exp $
  *
- * Funktionen zum Lesen des Dateibaumes aus ZIP-Dateien
+ * Funktionen zum Lesen des Dateibaumes aus ZOO-Dateien
  *
  ***************************************************************************/
 
@@ -10,40 +10,37 @@
 #include "ytree.h"
 
 
-
-static int GetStatFromZIP(char *zip_line, char *name, struct stat *stat);
-
+static int GetStatFromZOO(char *zoo_line, char *name, struct stat *stat);
 
 
-/* Dateibaum aus ZIP-Listing lesen */
+
+/* Dateibaum aus ZOO-Listing lesen */
 /*---------------------------------*/
 
-int ReadTreeFromZIP(DirEntry *dir_entry, FILE *f)
+int ReadTreeFromZOO(DirEntry *dir_entry, FILE *f)
 {
-  char zip_line[ZIP_LINE_LENGTH + 1];
+  char zoo_line[ZOO_LINE_LENGTH + 1];
   char path_name[PATH_LENGTH +1];
   struct stat stat;
-  bool dir_flag = false;
+  bool   dir_flag = false;
 
   *dir_entry->name = '\0';
 
-  while( fgets( zip_line, ZIP_LINE_LENGTH, f ) != NULL )
+  while( fgets( zoo_line, ZOO_LINE_LENGTH, f ) != NULL )
   {
     /* \n loeschen */
     /*-------------*/
 
-    zip_line[ strlen( zip_line ) - 1 ] = '\0';
+    zoo_line[ strlen( zoo_line ) - 1 ] = '\0';
 
-    if( strlen( zip_line ) > (unsigned) 58 &&
-        (zip_line[56] == ':' ||
-	(zip_line[57] != 'd' && zip_line[58] == ':')))
+    if( strlen( zoo_line ) > (unsigned) 50 )
     {
       /* gueltiger Eintrag */
       /*-------------------*/
 
-      if( GetStatFromZIP( zip_line, path_name, &stat ) )
+      if( GetStatFromZOO( zoo_line, path_name, &stat ) )
       {
-        (void) sprintf( message, "unknown zipinfo*%s", zip_line );
+        (void) sprintf( message, "unknown zooinfo*%s", zoo_line );
         MESSAGE( message );
       }
       else
@@ -73,12 +70,13 @@ int ReadTreeFromZIP(DirEntry *dir_entry, FILE *f)
 
 
 
-static int GetStatFromZIP(char *zip_line, char *name, struct stat *stat)
+
+static int GetStatFromZOO(char *zoo_line, char *name, struct stat *stat)
 {
   char *t, *old;
   int  i, id;
   struct tm tm_struct;
-  static char *month[] = { "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
+  static const char *month[] = { "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
 	 	           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
 
@@ -86,34 +84,7 @@ static int GetStatFromZIP(char *zip_line, char *name, struct stat *stat)
 
   stat->st_nlink = 1;
 
-  t = Strtok_r( zip_line, " \t", &old ); if( t == NULL ) return( -1 );
-
-  /* Attributes */
-  /*------------*/
-
-  if( strlen( t ) == 10 )
-  {
-    stat->st_mode = GetModus( t );
-  }
-  else
-  {
-    /* DOS-Zip-File ? */
-    /*----------------*/
-
-    stat->st_mode = GetModus( "-rw-rw-rw-" );
-  }
-
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
-
-  /* Version */
-  /*---------*/
-
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
-
-  /* BS */
-  /*----*/
-
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( zoo_line, " \t", &old ); if( t == NULL ) return( -1 );
 
   /* Dateilaenge */
   /*-------------*/
@@ -122,26 +93,23 @@ static int GetStatFromZIP(char *zip_line, char *name, struct stat *stat)
   stat->st_size = AtoLL( t );
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
 
-  /* ?? */
+  /* CF */
   /*----*/
 
+  if( !isdigit( *t ) ) return( -1 );
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
 
-  /* Compressed-Laenge */
-  /*-------------------*/
+  /* Size Now */
+  /*----------*/
 
+  if( !isdigit( *t ) ) return( -1 );
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
-
-  /* Methode */
-  /*---------*/
-
-  t = Strtok_r( NULL, " \t-", &old ); if( t == NULL ) return( -1 );
 
   /* M-Datum */
   /*---------*/
 
   tm_struct.tm_mday = atoi( t );
-  t = Strtok_r( NULL, " \t-", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( NULL, " \t:", &old ); if( t == NULL ) return( -1 );
 
   for( i=0; i < 12; i++ )
   {
@@ -154,7 +122,7 @@ static int GetStatFromZIP(char *zip_line, char *name, struct stat *stat)
 
   tm_struct.tm_year = atoi( t );
   if(tm_struct.tm_year < 70)
-    tm_struct.tm_year += 100;
+     tm_struct.tm_year += 100;
 
   t = Strtok_r( NULL, " \t:", &old ); if( t == NULL ) return( -1 );
 
@@ -164,7 +132,8 @@ static int GetStatFromZIP(char *zip_line, char *name, struct stat *stat)
   tm_struct.tm_min = atoi( t );
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
 
-  tm_struct.tm_sec = 0;
+  tm_struct.tm_sec = atoi( t );
+  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
 
   tm_struct.tm_isdst = -1;
 
@@ -172,6 +141,13 @@ static int GetStatFromZIP(char *zip_line, char *name, struct stat *stat)
   stat->st_ctime = 0;
 
   stat->st_mtime = Mktime( &tm_struct );
+
+  /* Attributes */
+  /*------------*/
+
+  (void) sscanf( t, "%o", (unsigned int *) &stat->st_mode );
+  stat->st_mode |= S_IFREG;
+  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
 
   /* Owner */
   /*-------*/

@@ -1,8 +1,8 @@
 /***************************************************************************
  *
- * $Header: /usr/local/cvsroot/utils/ytree/zoo.c,v 1.11 2000/05/20 20:41:11 werner Exp $
+ * $Header: /usr/local/cvsroot/utils/ytree/arc.c,v 1.11 2000/05/20 20:41:11 werner Exp $
  *
- * Funktionen zum Lesen des Dateibaumes aus ZOO-Dateien
+ * Funktionen zum Lesen des Dateibaumes aus ARC-Dateien
  *
  ***************************************************************************/
 
@@ -10,37 +10,37 @@
 #include "ytree.h"
 
 
-static int GetStatFromZOO(char *zoo_line, char *name, struct stat *stat);
+static int GetStatFromARC(char *arc_line, char *name, struct stat *stat);
 
 
 
-/* Dateibaum aus ZOO-Listing lesen */
+/* Dateibaum aus ARC-Listing lesen */
 /*---------------------------------*/
 
-int ReadTreeFromZOO(DirEntry *dir_entry, FILE *f)
+int ReadTreeFromARC(DirEntry *dir_entry, FILE *f)
 {
-  char zoo_line[ZOO_LINE_LENGTH + 1];
+  char arc_line[ARC_LINE_LENGTH + 1];
   char path_name[PATH_LENGTH +1];
   struct stat stat;
-  bool   dir_flag = false;
+  bool dir_flag = false;
 
   *dir_entry->name = '\0';
 
-  while( fgets( zoo_line, ZOO_LINE_LENGTH, f ) != NULL )
+  while( fgets( arc_line, ARC_LINE_LENGTH, f ) != NULL )
   {
     /* \n loeschen */
     /*-------------*/
 
-    zoo_line[ strlen( zoo_line ) - 1 ] = '\0';
+    arc_line[ strlen( arc_line ) - 1 ] = '\0';
 
-    if( strlen( zoo_line ) > (unsigned) 50 )
+    if( strlen( arc_line ) > (unsigned) 63 && arc_line[63] == ':' )
     {
       /* gueltiger Eintrag */
       /*-------------------*/
 
-      if( GetStatFromZOO( zoo_line, path_name, &stat ) )
+      if( GetStatFromARC( arc_line, path_name, &stat ) )
       {
-        (void) sprintf( message, "unknown zooinfo*%s", zoo_line );
+        (void) sprintf( message, "unknown arcinfo*%s", arc_line );
         MESSAGE( message );
       }
       else
@@ -71,12 +71,12 @@ int ReadTreeFromZOO(DirEntry *dir_entry, FILE *f)
 
 
 
-static int GetStatFromZOO(char *zoo_line, char *name, struct stat *stat)
+static int GetStatFromARC(char *arc_line, char *name, struct stat *stat)
 {
   char *t, *old;
   int  i, id;
   struct tm tm_struct;
-  static char *month[] = { "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
+  static const char *month[] = { "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
 	 	           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
 
@@ -84,7 +84,13 @@ static int GetStatFromZOO(char *zoo_line, char *name, struct stat *stat)
 
   stat->st_nlink = 1;
 
-  t = Strtok_r( zoo_line, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( arc_line, " \t", &old ); if( t == NULL ) return( -1 );
+
+  /* Dateiname */
+  /*-----------*/
+
+  (void) strcpy( name, t );
+  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
 
   /* Dateilaenge */
   /*-------------*/
@@ -93,10 +99,14 @@ static int GetStatFromZOO(char *zoo_line, char *name, struct stat *stat)
   stat->st_size = AtoLL( t );
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
 
-  /* CF */
+  /* Stowage */
+  /*---------*/
+
+  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+
+  /* SF */
   /*----*/
 
-  if( !isdigit( *t ) ) return( -1 );
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
 
   /* Size Now */
@@ -109,7 +119,7 @@ static int GetStatFromZOO(char *zoo_line, char *name, struct stat *stat)
   /*---------*/
 
   tm_struct.tm_mday = atoi( t );
-  t = Strtok_r( NULL, " \t:", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
 
   for( i=0; i < 12; i++ )
   {
@@ -122,18 +132,20 @@ static int GetStatFromZOO(char *zoo_line, char *name, struct stat *stat)
 
   tm_struct.tm_year = atoi( t );
   if(tm_struct.tm_year < 70)
-     tm_struct.tm_year += 100;
+    tm_struct.tm_year += 100;
 
   t = Strtok_r( NULL, " \t:", &old ); if( t == NULL ) return( -1 );
 
   tm_struct.tm_hour = atoi( t );
-  t = Strtok_r( NULL, " \t:", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+
+  if( t[strlen(t)-1] == 'p' ) tm_struct.tm_hour += 12;
+  t[strlen(t)-1] ='\0';
 
   tm_struct.tm_min = atoi( t );
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
 
-  tm_struct.tm_sec = atoi( t );
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  tm_struct.tm_sec = 0;
 
   tm_struct.tm_isdst = -1;
 
@@ -145,9 +157,7 @@ static int GetStatFromZOO(char *zoo_line, char *name, struct stat *stat)
   /* Attributes */
   /*------------*/
 
-  (void) sscanf( t, "%o", (unsigned int *) &stat->st_mode );
-  stat->st_mode |= S_IFREG;
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  stat->st_mode = S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 
   /* Owner */
   /*-------*/
@@ -161,11 +171,6 @@ static int GetStatFromZOO(char *zoo_line, char *name, struct stat *stat)
 
   id = getgid();
   stat->st_gid = (unsigned) id;
-
-  /* Dateiname */
-  /*-----------*/
-
-  (void) strcpy( name, t );
 
   return( 0 );
 }

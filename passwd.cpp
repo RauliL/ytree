@@ -41,14 +41,14 @@ int ReadPasswdEntries(void)
 
   int i;
   struct passwd *pwd_ptr;
-  
+
 
   for( passwd_count=0; getpwent(); passwd_count++ )
     ;
 
   setpwent();
 
-  if( passwd_array ) 
+  if( passwd_array )
   {
     free( passwd_array );
     passwd_array = NULL;
@@ -60,7 +60,7 @@ int ReadPasswdEntries(void)
   }
   else
   {
-    if( ( passwd_array = (PasswdEntry *) calloc( passwd_count, 
+    if( ( passwd_array = (PasswdEntry *) calloc( passwd_count,
 					         sizeof( PasswdEntry )
 					       ) ) == NULL )
     {
@@ -102,96 +102,23 @@ int ReadPasswdEntries(void)
   return( 0 );
 }
 
-
-
-
-char *GetPasswdName(unsigned int uid)
+const char* GetPasswdName(uid_t uid)
 {
+  auto pwd = getpwuid(uid);
 
-#ifdef WIN32
-
-  struct passwd *pwd_ptr;
-
-  pwd_ptr = getpwuid( uid );
-
-  if( pwd_ptr ) return( pwd_ptr->pw_name );
-  else          return( NULL );
-
-#else
-
-  int i;
-
-  for( i=0; i < (int)passwd_count; i++ )
-  {
-    if( passwd_array[i].uid == (int)uid )
-      return( passwd_array[i].name );
-  }
-
-  return( NULL );
-
-#endif /* WIN32 */
-
+  return pwd ? pwd->pw_name : nullptr;
 }
 
-char *GetDisplayPasswdName(unsigned int uid)
+const char* GetDisplayPasswdName(uid_t uid)
 {
+  auto pwd = getpwuid(uid);
 
-#ifdef WIN32
-
-  struct passwd *pwd_ptr;
-
-  pwd_ptr = getpwuid( uid );
-
-  if( pwd_ptr ) return( pwd_ptr->pw_name );
-  else          return( NULL );
-
-#else
-
-  int i;
-
-  for( i=0; i < (int)passwd_count; i++ )
-  {
-    if( passwd_array[i].uid == (int)uid )
-      return( passwd_array[i].display_name );
-  }
-
-  return( NULL );
-
-#endif /* WIN32 */
-
+  return pwd ? pwd->pw_name : nullptr;
 }
 
-
-
-
-int GetPasswdUid(char *name)
+int GetPasswdUid(const char* name)
 {
-#ifdef WIN32
+  auto pwd = getpwnam(name);
 
-  struct passwd *pwd_ptr;
-
-  pwd_ptr = getpwnam( name );
-
-  if( pwd_ptr ) return( pwd_ptr->pw_uid );
-  else          return( -1 );
-
-#else
-
-  int i;
-
-  for( i=0; i < (int)passwd_count; i++ )
-  {
-    if( !strcmp( name, passwd_array[i].name ) )
-      return( (int) passwd_array[i].uid );
-  }
-
-  return( -1 );
-
-#endif /* WIN32 */
-
+  return pwd ? pwd->pw_uid : -1;
 }
-
-
-
-
-

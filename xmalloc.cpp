@@ -32,7 +32,7 @@
 /* **************************************************************** */
 
 static void
-memory_error_and_abort (char *fname)
+memory_error_and_abort (const char *fname)
 {
   ERROR_MSG("malloc() Failed*Abort");
   /* fprintf (stderr, "%s: out of virtual memory\n", fname); */

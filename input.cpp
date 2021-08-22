@@ -72,7 +72,7 @@ char *StrRight(const char *str, size_t count)
   p = tmp;
   i = 0;
   rez = NULL;
-  while ( (p - tmp) < byte_len ) {
+  while ( (p - tmp) < static_cast<long>(byte_len) ) {
     if (i == (char_len - count) ) {
       rez = Strdup(p);
     }
@@ -109,7 +109,7 @@ int StrVisualLength(const char *str)
 }
 
 
-int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
+int InputString(char *s, int y, int x, int cursor_pos, int length, const char *term)
                                /* Ein- und Ausgabestring              */
                                /* Position auf Bildschirm             */
                                /* max. Laenge                         */
@@ -346,7 +346,7 @@ int InputString(char *s, int y, int x, int cursor_pos, int length, char *term)
 
 
 
-int InputChoise(char *msg, char *term)
+int InputChoise(const char *msg, const char *term)
 {
   int  c;
 
@@ -435,7 +435,7 @@ bool KeyPressed()
 bool EscapeKeyPressed()
 {
   bool pressed = false;
-  int  c;
+  int  c = 0;
 
 #if !defined( linux )
   nodelay( stdscr, true );

@@ -141,7 +141,7 @@ char *GetMatches( char *base)
 
 
   if (!(strcmp(tmpval,Mtchs[0])==0)){
-    TMP=malloc(strlen(Mtchs[0])+1);
+    TMP=static_cast<char*>(malloc(strlen(Mtchs[0])+1));
     if (TMP != NULL){
       strcpy(TMP, Mtchs[0]);
       RetVal = TMP;
@@ -334,7 +334,7 @@ char *GetMatches( char *base)
                      break;
       case LF :
       case CR :
-                     TMP=malloc(strlen(Mtchs[ disp_begin_pos + cursor_pos])+1);
+                     TMP=static_cast<char*>(malloc(strlen(Mtchs[ disp_begin_pos + cursor_pos])+1));
 		     if (TMP != NULL){
 		        strcpy(TMP, Mtchs[disp_begin_pos + cursor_pos]);
                         RetVal = TMP;

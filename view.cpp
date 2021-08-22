@@ -95,7 +95,7 @@ static int ViewFile(DirEntry * dir_entry, char *file_path)
     ESCAPE;
   }
 
-  if( ( command_line = malloc( COMMAND_LINE_LENGTH + 1 ) ) == NULL )
+  if( ( command_line = static_cast<char*>(malloc( COMMAND_LINE_LENGTH + 1 ) )) == NULL )
   {
     ERROR_MSG( "Malloc failed*ABORT" );
     exit( 1 );
@@ -223,7 +223,7 @@ static int ViewArchiveFile(char *file_path)
   char *archive;
   int  result = -1;
 
-  if( ( command_line = malloc( COMMAND_LINE_LENGTH + 1 ) ) == NULL )
+  if( ( command_line = static_cast<char*>(malloc( COMMAND_LINE_LENGTH + 1 ) )) == NULL )
   {
     ERROR_MSG( "Malloc failed*ABORT" );
     exit( 1 );
@@ -474,7 +474,7 @@ void change_char(int ch)
     char pp=0;
     char mensaje[50];
 
-    cambio = malloc(sizeof(struct MODIF));
+    cambio = static_cast<CHANGES*>(malloc(sizeof(struct MODIF)));
     cambio -> pos = ( (cursor_pos_y + current_line - 1) * BYTES) + CURSOR_POSX;
     if (lseek(fd, cambio -> pos, SEEK_SET)== -1 )
     {

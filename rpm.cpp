@@ -91,7 +91,8 @@ int ReadTreeFromRPM(DirEntry *dir_entry, FILE *f)
 
 static int GetStatFromRPM(char *rpm_line, char *name, struct stat *stat)
 {
-  char *t, *old;
+  const char* t;
+  char* old;
   int  id;
 
 

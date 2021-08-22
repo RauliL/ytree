@@ -5,22 +5,21 @@
 
 #include "./config.h"
 
-#include <ctype.h>
-#include <errno.h>
-#include <limits.h>
-#include <locale.h>
-#include <math.h>
-#include <memory.h>
-#include <setjmp.h>
-#include <signal.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
+#include <cctype>
+#include <cerrno>
+#include <climits>
+#include <clocale>
+#include <cmath>
+#include <csetjmp>
+#include <csignal>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <ctime>
 #if defined(WITH_UTF8)
-# include <wchar.h>
+# include <cwchar>
 #endif
+#include <memory>
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -664,7 +663,7 @@ extern bool	 print_time;
 extern bool      resize_request;
 extern char      number_seperator;
 extern bool      bypass_small_window;
-extern char      *initial_directory;
+extern const char* initial_directory;
 extern char 	 builtin_hexdump_cmd[];
 
 
@@ -703,9 +702,9 @@ extern bool Match(char *file_name);
 extern int  SetMatchSpec(char *new_spec);
 extern int  SetFileSpec(char *file_spec);
 extern void SetMatchingParam(DirEntry *dir_entry);
-extern void Error(char *msg, char *module, int line);
-extern void Warning(char *msg);
-extern void Notice(char *msg);
+extern void Error(const char *msg, const char *module, int line);
+extern void Warning(const char *msg);
+extern void Notice(const char *msg);
 extern void UnmapNoticeWindow(void);
 extern void SetFileMode(int new_file_mode);
 extern int  HandleFileWindow(DirEntry *dir_entry);
@@ -713,13 +712,13 @@ extern char *GetAttributes(unsigned short modus, char *buffer);
 extern void SwitchToSmallFileWindow(void);
 extern void SwitchToBigFileWindow(void);
 extern int  ReadGroupEntries(void);
-extern char *GetGroupName(unsigned int gid);
-extern char *GetDisplayGroupName(unsigned int gid);
-extern int  GetGroupId(char *name);
+extern const char* GetGroupName(gid_t gid);
+extern const char* GetDisplayGroupName(gid_t gid);
+extern int  GetGroupId(const char *name);
 extern int  ReadPasswdEntries(void);
-extern char *GetPasswdName(unsigned int uid);
-extern char *GetDisplayPasswdName(unsigned int uid);
-extern int  GetPasswdUid(char *name);
+extern const char* GetPasswdName(uid_t uid);
+extern const char* GetDisplayPasswdName(uid_t uid);
+extern int GetPasswdUid(const char* name);
 extern char *GetFileNamePath(FileEntry *file_entry, char *buffer);
 extern char *GetRealFileNamePath(FileEntry *file_entry, char *buffer);
 extern int  SystemCall(char *command_line);
@@ -735,7 +734,7 @@ extern void DisplayFileSpec(void);
 extern void QuitTo(DirEntry * dir_entry);
 extern void Quit(void);
 extern int  ReadFileSpec(void);
-extern int  InputString(char *s, int y, int x, int cursor_pos, int length, char *term);
+extern int  InputString(char *s, int y, int x, int cursor_pos, int length, const char *term);
 extern void RotateFileMode(void);
 extern int  Execute(DirEntry *dir_entry, FileEntry *file_entry);
 extern int  Pipe(DirEntry *dir_entry, FileEntry *file_entry);
@@ -745,19 +744,19 @@ extern void GetKindOfSort(void);
 extern void SetKindOfSort(int new_kind_of_sort);
 extern int  ChangeFileModus(FileEntry *fe_ptr);
 extern int  ChangeDirModus(DirEntry *de_ptr);
-extern int  GetNewFileModus(int y, int x, char *modus, char *term);
-extern int  GetModus(char *modus);
+extern int  GetNewFileModus(int y, int x, char *modus, const char *term);
+extern int  GetModus(const char *modus);
 extern int  SetFileModus(FileEntry *fe_ptr, WalkingPackage *walking_package);
 extern int  CopyTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
 extern int  CopyFile(Statistic *statistic_ptr, FileEntry *fe_ptr, unsigned char confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, bool path_copy);
 extern int  MoveTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
 extern int  MoveFile(FileEntry *fe_ptr, unsigned char confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, FileEntry **new_fe_ptr);
-extern int  InputChoise(char *msg, char *term);
-extern void Message(char *msg);
+extern int  InputChoise(const char *msg, const char *term);
+extern void Message(const char *msg);
 extern int  GetDirEntry(DirEntry *tree, DirEntry *current_dir_entry, char *dir_path, DirEntry **dir_entry, char *to_path);
 extern int  GetFileEntry(DirEntry *de_ptr, char *file_name, FileEntry **file_entry);
-extern int  GetCopyParameter(char *from_file, bool path_copy, char *to_file, char *to_dir);
-extern int  GetMoveParameter(char *from_file, char *to_file, char *to_dir);
+extern int  GetCopyParameter(const char *from_file, bool path_copy, char *to_file, char *to_dir);
+extern int  GetMoveParameter(const char *from_file, char *to_file, char *to_dir);
 extern int  ChangeFileOwner(FileEntry *fe_ptr);
 extern int  GetNewOwner(int st_uid);
 extern int  SetFileOwner(FileEntry *fe_ptr, WalkingPackage *walking_package);
@@ -783,9 +782,9 @@ extern int  GetRenameParameter(char *old_name, char *new_name);
 extern char *CTime(time_t f_time, char *buffer);
 extern int  LoginDisk(char *path);
 extern int  GetNewLoginPath(char *path);
-extern void PrintSpecialString(WINDOW *win, int y, int x, char *str, int color);
-extern void Print(WINDOW *, int, int, char *, int);
-extern void PrintOptions(WINDOW *,int, int, char *);
+extern void PrintSpecialString(WINDOW *win, int y, int x, const char *str, int color);
+extern void Print(WINDOW *, int, int, const char *, int);
+extern void PrintOptions(WINDOW *,int, int, const char *);
 extern void PrintMenuOptions(WINDOW *,int, int, char *, int, int);
 extern char *FormFilename(char *dest, char *src, unsigned int max_len);
 extern char *CutFilename(char *dest, char *src, unsigned int max_len);
@@ -811,10 +810,10 @@ extern bool EscapeKeyPressed(void);
 extern int  GetTapeDeviceName(void);
 extern int  MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry );
 extern int  MakeDirEntry( DirEntry *father_dir_entry, char *dir_name );
-extern void NormPath( char *in_path, char *out_path );
-extern char *Strtok_r( char *str, char *delim, char **old );
+extern void NormPath( const char *in_path, char *out_path );
+extern char *Strtok_r( char *str, const char *delim, char **old );
 extern int  ReadProfile( char *filename );
-extern char *GetProfileValue( char *key );
+extern const char *GetProfileValue( const char *key );
 extern int  ScanSubTree( DirEntry *dir_entry );
 extern void GetMaxYX(WINDOW *win, int *height, int *width);
 
@@ -832,24 +831,24 @@ extern void MapF2Window(void);
 extern void UnmapF2Window(void);
 extern void ReadExtFile(char *);
 extern char *GetExtCmd(char *);
-extern int  MvAddStr(int y, int x, char *str);
-extern int  MvWAddStr(WINDOW *win, int y, int x, char *str);
-extern int  WAddStr(WINDOW *win, char *str);
-extern int  AddStr(char *str);
+extern int  MvAddStr(int y, int x, const char *str);
+extern int  MvWAddStr(WINDOW *win, int y, int x, const char *str);
+extern int  WAddStr(WINDOW *win, const char *str);
+extern int  AddStr(const char *str);
 extern void ClockHandler(int);
 extern int Strrcmp(char *s1, char* s2);
 extern char *Strdup(const char *s);
 extern char *GetExtViewer(char *filename);
 extern void InitClock(void);
 extern void SuspendClock(void);
-extern char *GetExtension(char *filename);
+extern const char *GetExtension(const char *filename);
 extern void StrCp(char *dest, const char *src);
 extern int  BuildUserFileEntry(FileEntry *fe_ptr,
             int max_filename_len, int max_linkname_len,
-            char *template, int linelen, char *line);
+            const char *tmpl, int linelen, char *line);
 extern int  GetUserFileEntryLength(int max_filename_len,
-				   int max_linkname_len, char *template);
-extern long long AtoLL(char* cptr);
+				   int max_linkname_len, const char *tmpl);
+extern long long AtoLL(const char* cptr);
 extern void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no);
 extern void ReCreateWindows(void);
 extern int  Getch(void);
@@ -863,5 +862,5 @@ extern int  RefreshDirWindow();
 extern char *StrLeft(const char *str, size_t count);
 extern int  StrVisualLength(const char *str);
 extern int  WAttrAddStr(WINDOW *win, int attr, char *str);
-extern char *Strndup(const char *s, int len);
+extern char *Strndup(const char *s, std::size_t len);
 extern char *CutName(char *dest, char *src, unsigned int max_len);

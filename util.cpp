@@ -13,7 +13,7 @@
 
 typedef struct
 {
-  char *extension;
+  const char *extension;
   int  method;
 } Extension2Method;
 
@@ -292,7 +292,7 @@ char *CTime(time_t f_time, char *buffer)
 
 
 
-void PrintSpecialString(WINDOW *win, int y, int x, char *str, int color)
+void PrintSpecialString(WINDOW *win, int y, int x, const char *str, int color)
 {
   int ch;
 
@@ -335,7 +335,7 @@ void PrintSpecialString(WINDOW *win, int y, int x, char *str, int color)
 }
 
 
-void Print(WINDOW *win, int y, int x, char *str, int color)
+void Print(WINDOW *win, int y, int x, const char *str, int color)
 {
  int ch;
 
@@ -359,7 +359,7 @@ void Print(WINDOW *win, int y, int x, char *str, int color)
 }
 
 
-void PrintOptions(WINDOW *win, int y, int x, char *str)
+void PrintOptions(WINDOW *win, int y, int x, const char *str)
 {
   int ch;
   int color, hi_color, lo_color;
@@ -653,9 +653,10 @@ int GetFileMethod( char *filename )
 
 
 
-void NormPath( char *in_path, char *out_path )
+void NormPath( const char *in_path, char *out_path )
 {
-  char *s, *d;
+  const char* s;
+  char* d;
   char *old, *opath;
   int  level;
   char *in_path_dup;
@@ -663,7 +664,7 @@ void NormPath( char *in_path, char *out_path )
   level = 0;
   opath = out_path;
 
-  if( ( in_path_dup = malloc( strlen( in_path ) + 1 ) ) == NULL ) {
+  if( ( in_path_dup = static_cast<char*>(malloc( strlen( in_path ) + 1 ) )) == NULL ) {
     ERROR_MSG( "Malloc Failed*ABORT" );
     exit( 1 );
   }
@@ -723,7 +724,7 @@ void NormPath( char *in_path, char *out_path )
 
 
 /* reentrantes strtok */
-char *Strtok_r( char *str, char *delim, char **old )
+char *Strtok_r( char *str, const char *delim, char **old )
 {
   char *result;
   int  l, m;
@@ -812,7 +813,7 @@ char *Strdup(const char *s)
   char *cp = NULL;
 
   if (s) {
-    cp = malloc(strlen(s)+1);
+    cp = static_cast<char*>(malloc(strlen(s)+1));
     if (cp) {
       strcpy(cp,s);
     }
@@ -821,14 +822,14 @@ char *Strdup(const char *s)
 }
 
 /* Solaris does not define this */
-char *Strndup(const char *s, int len)
+char *Strndup(const char *s, std::size_t len)
 {
   char *cp = NULL;
   int l;
 
   if (s) {
     l = MINIMUM(strlen(s), len);
-    cp = malloc(l+1);
+    cp = static_cast<char*>(malloc(l+1));
     if (cp) {
       memcpy(cp, s, l);
       cp[l] = '\0';
@@ -838,9 +839,9 @@ char *Strndup(const char *s, int len)
 }
 
 
-char *GetExtension(char *filename)
+const char *GetExtension(const char *filename)
 {
-  char *cptr;
+  const char* cptr;
 
   cptr = strrchr(filename, '.');
 
@@ -873,7 +874,7 @@ void StrCp(char *dest, const char *src)
 
 int BuildUserFileEntry(FileEntry *fe_ptr,
 			int max_filename_len, int max_linkname_len,
-			char *template, int linelen, char *line)
+			const char *tmpl, int linelen, char *line)
 {
   char attributes[11];
   char modify_time[13];
@@ -884,10 +885,11 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
   int  n;
   char owner[OWNER_NAME_MAX + 1];
   char group[GROUP_NAME_MAX + 1];
-  char *owner_name_ptr;
-  char *group_name_ptr;
-  char *sym_link_name = NULL;
-  char *sptr, *dptr;
+  const char* owner_name_ptr;
+  const char* group_name_ptr;
+  const char* sym_link_name = nullptr;
+  const char* sptr;
+  char* dptr;
   char tag;
   char buffer[4096]; /* enough??? */
 
@@ -923,7 +925,7 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
   sprintf(format1, "%%-%ds", max_filename_len);
   sprintf(format2, "%%-%ds", max_linkname_len);
 
-  for(sptr=template, dptr=buffer; *sptr; ) {
+  for(sptr=tmpl, dptr=buffer; *sptr; ) {
 
     if(*sptr == '%') {
       sptr++;
@@ -974,13 +976,13 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
 
 
 
-int GetUserFileEntryLength( int max_filename_len, int max_linkname_len, char *template)
+int GetUserFileEntryLength( int max_filename_len, int max_linkname_len, const char *tmpl)
 {
   int  len, n;
-  char *sptr;
+  const char *sptr;
 
 
-  for(len=0, sptr=template; *sptr; ) {
+  for(len=0, sptr=tmpl; *sptr; ) {
 
     if(*sptr == '%') {
       sptr++;
@@ -1029,7 +1031,7 @@ int GetUserFileEntryLength( int max_filename_len, int max_linkname_len, char *te
 }
 
 
-long long AtoLL(char *cptr)
+long long AtoLL(const char *cptr)
 {
   long long ll;
 

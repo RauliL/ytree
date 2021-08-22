@@ -30,4 +30,4 @@ bool	  print_time;
 bool	  resize_request;
 bool	  bypass_small_window;
 char   number_seperator;
-char	  *initial_directory;
+const char* initial_directory;

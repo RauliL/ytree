@@ -121,8 +121,8 @@ static void PrintDirEntry(WINDOW *win,
   char access_time[13];
   char owner[OWNER_NAME_MAX + 1];
   char group[GROUP_NAME_MAX + 1];
-  char *owner_name_ptr;
-  char *group_name_ptr;
+  const char* owner_name_ptr;
+  const char* group_name_ptr;
   DirEntry *de_ptr;
   bool suppress_output = false;
 

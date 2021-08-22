@@ -12,7 +12,7 @@
 
 
 static int SetDirModus(DirEntry *de_ptr, WalkingPackage *walking_package);
-static int GetNewModus(int old_modus, char *new_modus );
+static int GetNewModus(int old_modus, const char *new_modus );
 
 
 
@@ -77,7 +77,7 @@ int ChangeDirModus(DirEntry *de_ptr)
 
 
 
-int GetNewFileModus(int y, int x, char *modus, char *term)
+int GetNewFileModus(int y, int x, char *modus, const char *term)
 {
   int c, p;
   static char rwx[] = "rwx";
@@ -239,7 +239,7 @@ static int SetDirModus(DirEntry *de_ptr, WalkingPackage *walking_package)
 
 
 
-static int GetNewModus(int old_modus, char *modus )
+static int GetNewModus(int old_modus, const char *modus )
 {
   int new_modus;
 
@@ -282,7 +282,7 @@ static int GetNewModus(int old_modus, char *modus )
 
 
 
-int GetModus(char *modus)
+int GetModus(const char *modus)
 {
   return( GetNewModus( 0, modus ) );
 }

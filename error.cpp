@@ -12,23 +12,23 @@
 
 
 
-static void MapErrorWindow(char *header);
-static void MapNoticeWindow(char *header);
+static void MapErrorWindow(const char *header);
+static void MapNoticeWindow(const char *header);
 static void UnmapErrorWindow(void);
-static void PrintErrorLine(int y, char *str);
-static void DisplayErrorMessage(char *msg);
-static int  PrintErrorMessage(char *msg);
+static void PrintErrorLine(int y, const char *str);
+static void DisplayErrorMessage(const char *msg);
+static int  PrintErrorMessage(const char *msg);
 
 
 
-void Message(char *msg)
+void Message(const char *msg)
 {
   MapErrorWindow( "E R R O R" );
   (void) PrintErrorMessage( msg );
 }
 
 
-void Notice(char *msg)
+void Notice(const char *msg)
 {
   MapNoticeWindow( "N O T I C E" );
   DisplayErrorMessage( msg );
@@ -37,19 +37,19 @@ void Notice(char *msg)
 }
 
 
-void Warning(char *msg)
+void Warning(const char *msg)
 {
   MapErrorWindow( "W A R N I N G" );
   (void) PrintErrorMessage( msg );
 }
 
 
-void Error(char *msg, char *module, int line)
+void Error(const char *msg, const char *module, int line)
 {
   char buffer[MESSAGE_LENGTH + 1];
 
   MapErrorWindow( "INTERNAL ERROR" );
-  (void) sprintf( buffer, "%s*In Module \"%s\"*Line %d", 
+  (void) sprintf( buffer, "%s*In Module \"%s\"*Line %d",
 		  msg, module, line
 		);
   (void) PrintErrorMessage( buffer );
@@ -59,18 +59,18 @@ void Error(char *msg, char *module, int line)
 
 
 
-static void MapErrorWindow(char *header)
+static void MapErrorWindow(const char *header)
 {
    werase( error_window );
    box( error_window, 0, 0 );
 
-   PrintSpecialString( error_window, 
-		       ERROR_WINDOW_HEIGHT - 3, 
+   PrintSpecialString( error_window,
+		       ERROR_WINDOW_HEIGHT - 3,
 		       0,
 		       "6--------------------------------------7",
 		       WINERR_COLOR
 		     );
-   wattrset( error_window, A_REVERSE | A_BLINK ); 
+   wattrset( error_window, A_REVERSE | A_BLINK );
    MvWAddStr( error_window,
 	      ERROR_WINDOW_HEIGHT - 2,
 	      1,
@@ -81,18 +81,18 @@ static void MapErrorWindow(char *header)
 }
 
 
-static void MapNoticeWindow(char *header)
+static void MapNoticeWindow(const char *header)
 {
    werase( error_window );
    box( error_window, 0, 0 );
 
-   PrintSpecialString( error_window, 
-		       ERROR_WINDOW_HEIGHT - 3, 
+   PrintSpecialString( error_window,
+		       ERROR_WINDOW_HEIGHT - 3,
 		       0,
 		       "6--------------------------------------7",
 		       WINERR_COLOR
 		     );
-   wattrset( error_window, A_REVERSE | A_BLINK ); 
+   wattrset( error_window, A_REVERSE | A_BLINK );
    MvWAddStr( error_window,
 	      ERROR_WINDOW_HEIGHT - 2,
 	      1,
@@ -120,7 +120,7 @@ void UnmapNoticeWindow(void)
 
 
 
-static void PrintErrorLine(int y, char *str)
+static void PrintErrorLine(int y, const char *str)
 {
   int l;
 
@@ -132,7 +132,7 @@ static void PrintErrorLine(int y, char *str)
 
 
 
-static void DisplayErrorMessage(char *msg)
+static void DisplayErrorMessage(const char *msg)
 {
   int  y, i, j, count;
   char buffer[ERROR_WINDOW_WIDTH - 2 + 1];
@@ -157,17 +157,17 @@ static void DisplayErrorMessage(char *msg)
     {
       if( j < (int)((sizeof( buffer) - 1)) ) buffer[j++] = msg[i];
     }
-  } 
+  }
   buffer[j] = '\0';
   PrintErrorLine( y, buffer );
 }
 
 
 
-static int PrintErrorMessage(char *msg)
+static int PrintErrorMessage(const char *msg)
 {
   int c;
-  
+
   DisplayErrorMessage( msg );
   beep();
   RefreshWindow( error_window );
