@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
 
-PROJECT(YTree LANGUAGES C)
+PROJECT(YTree LANGUAGES C CXX)
 
 SET(CURSES_NEED_NCURSES TRUE)
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -22,58 +22,58 @@ ADD_DEFINITIONS(
 
 ADD_EXECUTABLE(
   ytree
-  arc.c
-  archive.c
-  chgrp.c
-  chmod.c
-  chown.c
-  clock.c
-  color.c
-  copy.c
-  delete.c
-  dirwin.c
-  disp.c
-  edit.c
-  error.c
-  execute.c
-  filespec.c
-  filewin.c
-  freesp.c
-  global.c
-  group.c
-  hex.c
-  history.c
-  init.c
-  input.c
-  keyhtab.c
-  lha.c
-  login.c
-  main.c
-  match.c
-  mkdir.c
-  mktime.c
-  move.c
-  passwd.c
-  pipe.c
-  print.c
-  profile.c
-  quit.c
-  rar.c
-  readtree.c
-  rename.c
-  rmdir.c
-  rpm.c
-  sort.c
-  stat.c
-  system.c
-  tar.c
-  tilde.c
-  usermode.c
-  util.c
-  view.c
-  xmalloc.c
-  zip.c
-  zoo.c
+  arc.cpp
+  archive.cpp
+  chgrp.cpp
+  chmod.cpp
+  chown.cpp
+  clock.cpp
+  color.cpp
+  copy.cpp
+  delete.cpp
+  dirwin.cpp
+  disp.cpp
+  edit.cpp
+  error.cpp
+  execute.cpp
+  filespec.cpp
+  filewin.cpp
+  freesp.cpp
+  global.cpp
+  group.cpp
+  hex.cpp
+  history.cpp
+  init.cpp
+  input.cpp
+  keyhtab.cpp
+  lha.cpp
+  login.cpp
+  main.cpp
+  match.cpp
+  mkdir.cpp
+  mktime.cpp
+  move.cpp
+  passwd.cpp
+  pipe.cpp
+  print.cpp
+  profile.cpp
+  quit.cpp
+  rar.cpp
+  readtree.cpp
+  rename.cpp
+  rmdir.cpp
+  rpm.cpp
+  sort.cpp
+  stat.cpp
+  system.cpp
+  tar.cpp
+  tilde.cpp
+  usermode.cpp
+  util.cpp
+  view.cpp
+  xmalloc.cpp
+  zip.cpp
+  zoo.cpp
 )
 
 TARGET_INCLUDE_DIRECTORIES(

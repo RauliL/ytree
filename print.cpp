@@ -12,18 +12,20 @@
 
 
 
-int MvAddStr(int y, int x, char *str)
+int MvAddStr(int y, int x, const char *str)
 {
 #ifdef WITH_UTF8
   mvaddstr(y, x, str);
 #else
-  for(;*str != '\0';str++)
-      mvaddch(y, x++, PRINT(*str));
+  for (const char* p = str; *p; ++p)
+  {
+    mvaddch(y, x++, PRINT(*p));
+  }
 #endif
   return 0;
 }
 
-int MvWAddStr(WINDOW *win, int y, int x, char *str)
+int MvWAddStr(WINDOW *win, int y, int x, const char *str)
 {
 #ifdef WITH_UTF8
   mvwaddstr(win, y, x, str);
@@ -35,7 +37,7 @@ int MvWAddStr(WINDOW *win, int y, int x, char *str)
 }
 
 
-int WAddStr(WINDOW *win, char *str)
+int WAddStr(WINDOW *win, const char *str)
 {
 #ifdef WITH_UTF8
   waddstr(win, str);
@@ -46,7 +48,7 @@ int WAddStr(WINDOW *win, char *str)
   return 0;
 }
 
-int AddStr(char *str)
+int AddStr(const char *str)
 {
 #ifdef WITH_UTF8
   addstr(str);
@@ -59,7 +61,7 @@ int AddStr(char *str)
 
 int WAttrAddStr(WINDOW *win, int attr, char *str)
 {
-  int rc; 
+  int rc;
 
   wattrset( win, attr );
   rc = WAddStr(win, str);

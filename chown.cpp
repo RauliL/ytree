@@ -43,10 +43,10 @@ int ChangeFileOwner(FileEntry *fe_ptr)
 int GetNewOwner(int st_uid)
 {
   char owner[OWNER_NAME_MAX * 2 +1];
-  char *owner_name_ptr;
+  const char* owner_name_ptr;
   int  owner_id;
   int  id;
-  
+
   owner_id = -1;
 
   id = (st_uid == -1) ? (int) getuid() : st_uid;
@@ -73,9 +73,9 @@ int GetNewOwner(int st_uid)
       MESSAGE( message );
     }
   }
-  
+
   move( LINES - 2, 1 ); clrtoeol();
-  
+
   return( owner_id );
 }
 
@@ -92,12 +92,12 @@ int SetFileOwner(FileEntry *fe_ptr, WalkingPackage *walking_package)
   result = -1;
 
   walking_package->new_fe_ptr = fe_ptr; /* unchanged */
-  
+
   new_owner_id = walking_package->function_data.change_owner.new_owner_id;
 
-  if( !chown( GetFileNamePath( fe_ptr, buffer ), 
+  if( !chown( GetFileNamePath( fe_ptr, buffer ),
 	      new_owner_id,
-	      fe_ptr->stat_struct.st_gid 
+	      fe_ptr->stat_struct.st_gid
 	    ) )
   {
     /* Erfolgreich modifiziert */
@@ -118,7 +118,7 @@ int SetFileOwner(FileEntry *fe_ptr, WalkingPackage *walking_package)
     (void) sprintf( message, "Can't change Owner:*%s", strerror(errno) );
     MESSAGE( message );
   }
- 
+
   return( result );
 }
 
@@ -160,9 +160,9 @@ static int SetDirOwner(DirEntry *de_ptr, int new_owner_id)
   result = -1;
 
 
-  if( !chown( GetPath( de_ptr, buffer ), 
+  if( !chown( GetPath( de_ptr, buffer ),
 	      new_owner_id,
-	      de_ptr->stat_struct.st_gid 
+	      de_ptr->stat_struct.st_gid
 	    ) )
   {
     /* Erfolgreich modifiziert */
@@ -183,7 +183,7 @@ static int SetDirOwner(DirEntry *de_ptr, int new_owner_id)
     (void) sprintf( message, "Can't change Owner:*%s", strerror(errno) );
     MESSAGE( message );
   }
- 
+
   return( result );
 }
 

@@ -67,7 +67,7 @@ int GetDiskParameter( char *path,
 #endif /* WIN32 */
 
   char *p;
-  char *fname;
+  const char* fname;
   int  result;
   long long bfree;
   long long this_disk_space;

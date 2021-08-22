@@ -42,14 +42,14 @@ int ReadGroupEntries(void)
 
   int i;
   struct group *grp_ptr;
-  
+
 
   for( group_count=0; getgrent(); group_count++ )
     ;
 
   setgrent();
 
-  if( group_array ) 
+  if( group_array )
   {
     free( group_array );
     group_array = NULL;
@@ -61,7 +61,7 @@ int ReadGroupEntries(void)
   }
   else
   {
-    if( ( group_array = (GroupEntry *) calloc( group_count, 
+    if( ( group_array = (GroupEntry *) calloc( group_count,
 					       sizeof( GroupEntry )
 					     ) ) == NULL )
     {
@@ -84,10 +84,10 @@ int ReadGroupEntries(void)
     }
     else
     {
-      if(errno == 0) 
+      if(errno == 0)
       {
 	group_count = i;  /* Not sure why this can happen, but continue... */
-        break; 
+        break;
       }
 
       ERROR_MSG( "Getgrent Failed" );
@@ -103,91 +103,23 @@ int ReadGroupEntries(void)
   return( 0 );
 }
 
-
-
-
-char *GetGroupName(unsigned int gid)
+const char* GetGroupName(gid_t gid)
 {
-#ifdef WIN32
+  auto group = getgrgid(gid);
 
-  struct group *group_ptr;
-
-  group_ptr = getgrgid( gid );
-
-  if( group_ptr ) return( group_ptr->gr_name );
-  else            return( NULL );
-
-#else
-
-  int i;
-
-  for( i=0; i < (int)group_count; i++ )
-  {
-    if( group_array[i].gid == (int)gid )
-      return( group_array[i].name );
-  }
-
-  return( NULL );
-
-#endif /* WIN32 */
-
+  return group ? group->gr_name : nullptr;
 }
 
-
-
-char *GetDisplayGroupName(unsigned int gid)
+const char* GetDisplayGroupName(gid_t gid)
 {
-#ifdef WIN32
+  auto group = getgrgid(gid);
 
-  struct group *group_ptr;
-
-  group_ptr = getgrgid( gid );
-
-  if( group_ptr ) return( group_ptr->gr_name );
-  else            return( NULL );
-
-#else
-
-  int i;
-
-  for( i=0; i < (int)group_count; i++ )
-  {
-    if( group_array[i].gid == (int)gid )
-      return( group_array[i].display_name );
-  }
-
-  return( NULL );
-
-#endif /* WIN32 */
-
+  return group ? group->gr_name : nullptr;
 }
 
-
-
-int GetGroupId(char *name)
+int GetGroupId(const char* name)
 {
-#ifdef WIN32
+  auto group = getgrnam(name);
 
-  struct group *group_ptr;
-
-  group_ptr = getgrnam( name );
-
-  if( group_ptr ) return( group_ptr->gr_gid );
-  else            return( -1 );
-
-#else
-
-  int i;
-
-  for( i=0; i < (int)group_count; i++ )
-  {
-    if( !strcmp( name, group_array[i].name ) )
-      return( (int) group_array[i].gid );
-  }
-  return( -1 );
-
-#endif /* WIN32 */
-
+  return group ? group->gr_gid : -1;
 }
-
-

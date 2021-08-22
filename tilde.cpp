@@ -50,8 +50,7 @@ extern char *strcpy ();
 /* If being compiled as part of bash, these will be satisfied from
    variables.o.  If being compiled as part of readline, they will
    be satisfied from shell.o. */
-extern char *sh_get_home_dir(void);
-extern char *sh_get_env_value(const char *);
+static char* sh_get_home_dir();
 
 /* The default value of tilde_additional_prefixes.  This is set to
    whitespace preceding a tilde so that simple programs which do not
@@ -81,9 +80,7 @@ char **tilde_additional_suffixes = (char **)default_suffixes;
    the tilde which starts the expansion.  Place the length of the text
    which identified this tilde starter in LEN, excluding the tilde itself. */
 static int
-tilde_find_prefix (string, len)
-     const char *string;
-     int *len;
+tilde_find_prefix (const char* string, int* len)
 {
   register int i, j, string_len;
   register char **prefixes;
@@ -116,8 +113,7 @@ tilde_find_prefix (string, len)
 /* Find the end of a tilde expansion in STRING, and return the index of
    the character which ends the tilde definition.  */
 static int
-tilde_find_suffix (string)
-     const char *string;
+tilde_find_suffix (const char* string)
 {
   register int i, j, string_len;
   register char **suffixes;
@@ -148,9 +144,7 @@ tilde_find_suffix (string)
    non-null, the index of the end of the prefix into FNAME is returned in
    the location it points to. */
 static char *
-isolate_tilde_prefix (fname, lenp)
-     const char *fname;
-     int *lenp;
+isolate_tilde_prefix (const char* fname, int* lenp)
 {
   char *ret;
   int i;
@@ -171,10 +165,7 @@ isolate_tilde_prefix (fname, lenp)
 /* Return a string that is PREFIX concatenated with SUFFIX starting at
    SUFFIND. */
 static char *
-glue_prefix_and_suffix (prefix, suffix, suffind)
-     char *prefix;
-     const char *suffix;
-     int suffind;
+glue_prefix_and_suffix (char* prefix, const char* suffix, int suffind)
 {
   char *ret;
   int plen, slen;
@@ -188,12 +179,25 @@ glue_prefix_and_suffix (prefix, suffix, suffind)
   return ret;
 }
 
+static char*
+sh_get_home_dir()
+{
+  uid_t uid = getuid();
+  struct passwd* pw = getpwuid(uid);
+
+  if (!pw)
+  {
+    std::abort();
+  }
+
+  return pw->pw_dir;
+}
+
 /* Do the work of tilde expansion on FILENAME.  FILENAME starts with a
    tilde.  If there is no expansion, call tilde_expansion_failure_hook.
    This always returns a newly-allocated string, never static storage. */
 char *
-tilde_expand_word (filename)
-     const char *filename;
+tilde_expand_word (const char* filename)
 {
   char *dirname, *expansion, *username;
   int user_len;
@@ -207,7 +211,7 @@ tilde_expand_word (filename)
      preexpansion hook. */
   if (filename[1] == '\0' || filename[1] == '/') {
       /* Prefix $HOME to the rest of the string. */
-      expansion = sh_get_env_value("HOME");
+      expansion = std::getenv("HOME");
       /* If there is no HOME variable, look up the directory in
 	 the password database. */
       if (expansion == 0) expansion = sh_get_home_dir();
@@ -235,14 +239,13 @@ tilde_expand_word (filename)
 
 /* Return a new string which is the result of tilde expanding STRING. */
 char *
-tilde_expand (string)
-     const char *string;
+tilde_expand (const char* string)
 {
   char *result;
   int result_size, result_index;
 
   result_index = result_size = 0;
-  if ((result = strchr (string, '~')))
+  if ((result = strchr (const_cast<char*>(string), '~')))
     result = (char *)xmalloc (result_size = (strlen (string) + 16));
   else
     result = (char *)xmalloc (result_size = (strlen (string) + 1));
@@ -337,6 +340,6 @@ main (argc, argv)
 #endif
 
 
-#endif 
+#endif
 /* READLINE_SUPPORT */
 

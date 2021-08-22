@@ -23,9 +23,9 @@
 
 typedef struct
 {
-  char *name;
-  char *def;
-  char *envvar;
+  const char *name;
+  const char *def;
+  const char *envvar;
   char *value;
 } Profile;
 
@@ -168,7 +168,7 @@ int ReadProfile( char *filename )
         if( *name && value ) {
           *value++ = '\0';
           key.name = (char *) name;
-          if(( p = bsearch(&key, profile, PROFILE_ENTRIES, sizeof(*p), Compare))) {
+          if(( p = static_cast<Profile*>(bsearch(&key, profile, PROFILE_ENTRIES, sizeof(*p), Compare)))) {
 	    p->value = Strdup( (const char *) value );
           }
         }
@@ -181,7 +181,7 @@ int ReadProfile( char *filename )
               !strcmp((const char *) name, "FILE1") ||
               !strcmp((const char *) name, "FILE2") ) {
             key.name = (char *) name;
-            if(( p = bsearch(&key, profile, PROFILE_ENTRIES, sizeof(*p), Compare))) {
+            if(( p = static_cast<Profile*>(bsearch(&key, profile, PROFILE_ENTRIES, sizeof(*p), Compare)))) {
               /* Space pad menu strings to length COLS, ignoring '(' and ')' characters */
               l = 0;
               for (cptr = value; *cptr; ++cptr) {
@@ -215,7 +215,7 @@ int ReadProfile( char *filename )
                 break;
               }
             }
-	    if( new_m == NULL && ( new_m = malloc( sizeof(*new_m) ) ) ) {
+	    if( new_m == NULL && ( new_m = static_cast<Filemenu*>(malloc( sizeof(*new_m) )) ) ) {
 	      new_m->chkey = ChCode( n );
               new_m->chremap = ChCode( (const char *) value );
 	      new_m->cmd = NULL;
@@ -243,7 +243,7 @@ int ReadProfile( char *filename )
               break;
             }
           }
-	  if( new_m == NULL && ( new_m = malloc( sizeof(*new_m) ) ) ) {
+	  if( new_m == NULL && ( new_m = static_cast<Filemenu*>(malloc( sizeof(*new_m) )) ) ) {
             new_m->chkey = ChCode( (const char *) name );
 	    new_m->chremap = new_m->chkey;
 	    new_m->cmd = Strdup( (const char *) value );
@@ -271,7 +271,7 @@ int ReadProfile( char *filename )
                 break;
               }
             }
-	    if( new_d == NULL && ( new_d = malloc( sizeof(*new_d) ) ) ) {
+	    if( new_d == NULL && ( new_d = static_cast<Dirmenu*>(malloc( sizeof(*new_d) )) ) ) {
 	      new_d->chkey = ChCode( n );
               new_d->chremap = ChCode( (const char *) value );
 	      new_d->cmd = NULL;
@@ -299,7 +299,7 @@ int ReadProfile( char *filename )
               break;
             }
           }
-	  if ( new_d == NULL && ( new_d = malloc( sizeof(*new_d) ) ) ) {
+	  if ( new_d == NULL && ( new_d = static_cast<Dirmenu*>(malloc( sizeof(*new_d) )) ) ) {
             new_d->chkey = ChCode( (const char *) name );
 	    new_d->chremap = new_d->chkey;
 	    new_d->cmd = Strdup( (const char *) value );
@@ -317,7 +317,7 @@ int ReadProfile( char *filename )
 	  n = Strtok_r((char *) name, ",", &old);
 	  /* maybe comma-separated list, eg.: .jpeg,.gif=xv */
 	  while(n) {
-	    if(( new_v = malloc( sizeof(*new_v) ) ) ) {
+	    if(( new_v = static_cast<Viewer*>(malloc( sizeof(*new_v) )) ) ) {
 	      new_v->ext = Strdup( n );
 	      new_v->cmd = Strdup( (const char *) value );
 	      new_v->next = NULL;
@@ -351,14 +351,14 @@ FNC_XIT:
 
 
 
-char *GetProfileValue( char *name )
+const char *GetProfileValue( const char *name )
 {
   Profile *p, key;
   char    *cptr;
 
-  key.name = name;
+  key.name = const_cast<char*>(name);
 
-  p = bsearch(&key, profile, PROFILE_ENTRIES, sizeof(*p), Compare);
+  p = static_cast<Profile*>(bsearch(&key, profile, PROFILE_ENTRIES, sizeof(*p), Compare));
 
   if(!p)
     return( "" );

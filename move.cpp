@@ -200,7 +200,7 @@ FNC_XIT:
 
 
 
-int GetMoveParameter(char *from_file, char *to_file, char *to_dir)
+int GetMoveParameter(const char *from_file, char *to_file, char *to_dir)
 {
   char buffer[PATH_LENGTH * 2 +1];
 

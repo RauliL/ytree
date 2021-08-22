@@ -1,13 +1,6 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/filewin.c,v 1.36 2016/09/04 14:41:12 werner Exp $
- *
- * Funktionen zur Handhabung des FILE-Windows
- *
- ***************************************************************************/
-
-
 #include "ytree.h"
+
+#include <functional>
 
 
 #define MAX( a, b ) ( ( (a) > (b) ) ? (a) : (b) )
@@ -51,19 +44,26 @@ static int  SortByGroup(FileEntryList *e1, FileEntryList *e2);
 static int  SortByExtension(FileEntryList *e1, FileEntryList *e2);
 static void DisplayFiles(DirEntry *de_ptr, int start_file_no, int hilight_no, int start_x);
 static void ReadGlobalFileList(DirEntry *dir_entry);
-static void WalkTaggedFiles(int start_file, int cursor_pos, int (*fkt) (/* ??? */), WalkingPackage *walking_package);
+static void WalkTaggedFiles(
+  int,
+  int,
+  const std::function<int(FileEntry*, WalkingPackage*)>&,
+  WalkingPackage*
+);
 static bool IsMatchingTaggedFiles(void);
 static void RemoveFileEntry(int entry_no);
 static void ChangeFileEntry(void);
 static int  DeleteTaggedFiles(int max_dispfiles);
-static void SilentWalkTaggedFiles( int (*fkt) (/* ??? */),
-			           WalkingPackage *walking_package
-			          );
-static void SilentTagWalkTaggedFiles( int (*fkt) (/* ??? */),
-			           WalkingPackage *walking_package
-			          );
+static void SilentWalkTaggedFiles(
+  const std::function<int(FileEntry*, WalkingPackage*)>&,
+  WalkingPackage*
+);
+static void SilentTagWalkTaggedFiles(
+  const std::function<int(FileEntry*, WalkingPackage*)>&,
+  WalkingPackage*
+);
 static void RereadWindowSize(DirEntry *dir_entry);
-static void ListJump( DirEntry * dir_entry, char *str );
+static void ListJump( DirEntry * dir_entry, const char *str );
 
 
 
@@ -287,7 +287,7 @@ static void ReadGlobalFileList(DirEntry *dir_entry)
 static void SortFileEntryList(void)
 {
   int aux;
-  int (*compare)();
+  int (*compare)(FileEntryList*, FileEntryList*);
 
   reverse_sort = false;
   if ((aux = statistic.kind_of_sort) > SORT_DSC)
@@ -316,7 +316,7 @@ static void SortFileEntryList(void)
   qsort( (char *) file_entry_list,
 	 file_count,
 	 sizeof( file_entry_list[0] ),
-	 compare
+	 reinterpret_cast<int(*)(const void*, const void*)>(compare)
 	);
 }
 
@@ -340,7 +340,8 @@ static int SortByName(FileEntryList *e1, FileEntryList *e2)
 
 static int SortByExtension(FileEntryList *e1, FileEntryList *e2)
 {
-  char *ext1, *ext2;
+  const char* ext1;
+  const char* ext2;
   int cmp, casecmp;
 
   /* Ok, this isn't optimized */
@@ -404,7 +405,8 @@ static int SortBySize(FileEntryList *e1, FileEntryList *e2)
 
 static int SortByOwner(FileEntryList *e1, FileEntryList *e2)
 {
-  char *o1, *o2;
+  const char* o1;
+  const char* o2;
   char n1[10], n2[10];
 
   o1 = GetPasswdName( e1->file->stat_struct.st_uid );
@@ -437,7 +439,8 @@ static int SortByOwner(FileEntryList *e1, FileEntryList *e2)
 
 static int SortByGroup(FileEntryList *e1, FileEntryList *e2)
 {
-  char *g1, *g2;
+  const char* g1;
+  const char* g2;
   char n1[10], n2[10];
 
   g1 = GetGroupName( e1->file->stat_struct.st_gid );
@@ -560,14 +563,14 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   char *line_ptr;
   int  n, pos_x = 0;
   FileEntry *fe_ptr;
-  static char *line_buffer = NULL;
+  static char* line_buffer = nullptr;
   static int  old_cols = -1;
   char owner[OWNER_NAME_MAX + 1];
   char group[GROUP_NAME_MAX + 1];
-  char *owner_name_ptr;
-  char *group_name_ptr;
+  const char* owner_name_ptr;
+  const char* group_name_ptr;
   int  ef_window_width;
-  char *sym_link_name = NULL;
+  const char* sym_link_name = nullptr;
   char type_of_file = ' ';
 
 
@@ -2690,11 +2693,12 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 
 
-static void WalkTaggedFiles(int start_file,
-			    int cursor_pos,
-			    int (*fkt) (/* ??? */),
-			    WalkingPackage *walking_package
-			   )
+static void WalkTaggedFiles(
+  int start_file,
+  int cursor_pos,
+  const std::function<int(FileEntry*, WalkingPackage*)>& fkt,
+  WalkingPackage *walking_package
+)
 {
   FileEntry *fe_ptr;
   int       i;
@@ -2782,9 +2786,10 @@ static void WalkTaggedFiles(int start_file,
  --crb3 12mar04
 */
 
-static void SilentWalkTaggedFiles( int (*fkt) (/* ??? */),
-			           WalkingPackage *walking_package
-			          )
+static void SilentWalkTaggedFiles(
+  const std::function<int(FileEntry*, WalkingPackage*)>& fkt,
+  WalkingPackage* walking_package
+)
 {
   FileEntry *fe_ptr;
   int       i;
@@ -2817,9 +2822,10 @@ ExecuteCommand must have its retval unzeroed.
 
 */
 
-static void SilentTagWalkTaggedFiles( int (*fkt) (/* ??? */),
-			           WalkingPackage *walking_package
-			          )
+static void SilentTagWalkTaggedFiles(
+  const std::function<int(FileEntry*, WalkingPackage*)>& fkt,
+  WalkingPackage* walking_package
+)
 {
   FileEntry *fe_ptr;
   int       i;
@@ -2974,7 +2980,7 @@ static void RereadWindowSize(DirEntry *dir_entry)
 
 
 
-static void ListJump( DirEntry * dir_entry, char *str )
+static void ListJump( DirEntry * dir_entry, const char *str )
 {
    int incremental = (!strcmp(LISTJUMPSEARCH, "1")) ? 1 : 0; /* from ~/.ytree */
 
@@ -2983,7 +2989,7 @@ static void ListJump( DirEntry * dir_entry, char *str )
     char *newStr = NULL;
     FileEntry * fe_ptr = NULL;
     int i=0, j=0, n=0, start_x=0, ic=0, tmp2=0;
-    char * jumpmsg = "Press initial of file to jump to... ";
+    const char * jumpmsg = "Press initial of file to jump to... ";
 
     ClearHelp();
     MvAddStr( LINES - 2, 1, jumpmsg );
@@ -3004,7 +3010,7 @@ static void ListJump( DirEntry * dir_entry, char *str )
     }
 
     n = strlen(str);
-    if((newStr = malloc(n+2)) == NULL) {
+    if((newStr = static_cast<char*>(malloc(n+2))) == NULL) {
       ERROR_MSG( "Malloc failed*ABORT" );
       exit( 1 );
     }
@@ -3015,7 +3021,7 @@ static void ListJump( DirEntry * dir_entry, char *str )
     /* index of current entry in list */
     tmp2 = (incremental && n == 0) ? 0 : dir_entry->start_file + dir_entry->cursor_pos;
 
-    if( tmp2 == file_count - 1 )
+    if( tmp2 == static_cast<int>(file_count - 1))
     {
         ClearHelp();
         MvAddStr( LINES - 2, 1, "Last entry!");
@@ -3028,14 +3034,14 @@ static void ListJump( DirEntry * dir_entry, char *str )
         return;
     }
 
-    for( i=tmp2; i < file_count; i++ )
+    for( i=tmp2; i < static_cast<int>(file_count); i++ )
     {
         fe_ptr = file_entry_list[i].file;
 	if(!strncasecmp(newStr, fe_ptr->name, n+1))
           break;
     }
 
-    if ( i == file_count )
+    if ( i == static_cast<int>(file_count) )
     {
         ClearHelp();
         MvAddStr( LINES - 2, 1, "No match!");

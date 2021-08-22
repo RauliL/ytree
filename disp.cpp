@@ -1,23 +1,14 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/disp.c,v 1.21 2016/09/04 14:41:12 werner Exp $
- *
- * Menue-Geruest anzeigen
- *
- ***************************************************************************/
-
-
 #include "ytree.h"
 #include "patchlev.h"
 
 
-static void PrintMenuLine(WINDOW *win, int y, int x, char *line);
-static void PrintLine(WINDOW *win, int y, int x, char *line, int len);
+static void PrintMenuLine(WINDOW *win, int y, int x, const char *line);
+static void PrintLine(WINDOW *win, int y, int x, const char *line, int len);
 static void DisplayVersion(void);
 
 
 
-static char *mask[] = {
+static const char *mask[] = {
 "5-----------------------2",
 "|FILE:                  |",
 "6-----------------------7",
@@ -40,7 +31,7 @@ static char *mask[] = {
 };
 
 
-static char *logo[] = {
+static const char *logo[] = {
                         "                  #                       ",
                         "                ##                        ",
                         "     ##  ##   #####  ## ###   ####    ####",
@@ -51,16 +42,16 @@ static char *logo[] = {
                         "#####                                     "
 		      };
 
-static char *extended_line = "| |                       |";
+static const char *extended_line = "| |                       |";
 
 
-static char *last_line = "3-8-----------------------4";
-static char *first_line ="1-5";
+static const char *last_line = "3-8-----------------------4";
+static const char *first_line ="1-5";
 
 
-static char dir_help_disk_mode_0[] = "DIR       (A)ttribute (D)elete  (F)ilespec  (G)roup (L)og (M)akedir                 (Q)uit";
-static char dir_help_disk_mode_1[] = "COMMANDS  (O)wner (R)ename (S)howall (^S)how-tagged (T)ag (U)ntag e(X)ecute   (^F) dirmode"; 
-static char *dir_help[MAX_MODES][2] = 
+static const char dir_help_disk_mode_0[] = "DIR       (A)ttribute (D)elete  (F)ilespec  (G)roup (L)og (M)akedir                 (Q)uit";
+static const char dir_help_disk_mode_1[] = "COMMANDS  (O)wner (R)ename (S)howall (^S)how-tagged (T)ag (U)ntag e(X)ecute   (^F) dirmode";
+static const char* dir_help[MAX_MODES][2] =
   {
     { /* DISK_MODE */
       dir_help_disk_mode_0,
@@ -109,9 +100,9 @@ static char *dir_help[MAX_MODES][2] =
   };
 
 
-static char file_help_disk_mode_0[] = "FILE      (A)ttribute (C)opy (D)elete (E)dit (F)ilespec (G)roup (H)ex (L)ogin (M)ove    (Q)uit ";
-static char file_help_disk_mode_1[] = "COMMANDS  (O)wner (P)ipe (R)ename (S)ort (T)ag (U)ntag (V)iew e(X)ecute pathcop(Y) (^F)ilemode ";
-static char *file_help[MAX_MODES][2] = 
+static const char file_help_disk_mode_0[] = "FILE      (A)ttribute (C)opy (D)elete (E)dit (F)ilespec (G)roup (H)ex (L)ogin (M)ove    (Q)uit ";
+static const char file_help_disk_mode_1[] = "COMMANDS  (O)wner (P)ipe (R)ename (S)ort (T)ag (U)ntag (V)iew e(X)ecute pathcop(Y) (^F)ilemode ";
+static const char* file_help[MAX_MODES][2] =
   {
     { /* DISK_MODE */
       file_help_disk_mode_0,
@@ -166,24 +157,24 @@ static char *file_help[MAX_MODES][2] =
 static void DisplayVersion(void)
 {
   static char version[80];
-  
+
   ClearHelp();
-  (void) sprintf( version, 
-		  "ytree Version %sPL%d %s (Werner Bregulla)", 
-		  VERSION, 
-		  PATCHLEVEL, 
-		  VERSIONDATE 
+  (void) sprintf( version,
+		  "ytree Version %sPL%d %s (Werner Bregulla)",
+		  VERSION,
+		  PATCHLEVEL,
+		  VERSIONDATE
 		);
   MvAddStr( LINES - 2, (unsigned) (COLS - strlen( version )) >> 1, version );
 }
-   
-   
+
+
 
 
 void DisplayDirHelp(void)
 {
   int i;
-  char *cptr;
+  const char *cptr;
 
   if (mode == USER_MODE) {
     if (dir_help[mode][0] == dir_help_disk_mode_0 && (cptr = DIR1) != NULL)
@@ -196,13 +187,13 @@ void DisplayDirHelp(void)
     clrtoeol();
   }
 }
-   
+
 
 
 void DisplayFileHelp(void)
 {
   int i;
-  char *cptr;
+  const char *cptr;
 
   if (mode == USER_MODE) {
     if (file_help[mode][0] == file_help_disk_mode_0 && (cptr = FILE1) != NULL)
@@ -215,7 +206,7 @@ void DisplayFileHelp(void)
     clrtoeol();
   }
 }
-   
+
 
 
 void ClearHelp(void)
@@ -227,15 +218,15 @@ void ClearHelp(void)
     wmove( stdscr, LINES - 3 + i, 0 ); clrtoeol();
   }
 }
-   
+
 
 
 void DisplayMenu(void)
 {
   int    y;
   int    l, c;
-  
-  
+
+
   PrintSpecialString( stdscr, 0, 0, "Path: ", MENU_COLOR );
 #ifdef COLOR_SUPPORT
   clrtoeol();
@@ -252,7 +243,7 @@ void DisplayMenu(void)
   for( ; y < LINES - 4; y++ )
     PrintMenuLine( stdscr, y, 0, extended_line );
   PrintLine( stdscr, DIR_WINDOW_HEIGHT + 2, 0, "6-7", COLS - 25 );
-  PrintLine( stdscr, 1, 0, first_line, COLS - 25);    
+  PrintLine( stdscr, 1, 0, first_line, COLS - 25);
   PrintMenuLine( stdscr, y, 0, last_line );
 
   l = sizeof(logo) / sizeof(logo[0]);
@@ -260,8 +251,8 @@ void DisplayMenu(void)
 
   for( y=0; y < l; y++ )
   {
-    MvWAddStr( dir_window, 
-	       y + ((DIR_WINDOW_HEIGHT - l) >> 1), 
+    MvWAddStr( dir_window,
+	       y + ((DIR_WINDOW_HEIGHT - l) >> 1),
 	       (DIR_WINDOW_WIDTH - c) >> 1,
 	       logo[y]
 	     );
@@ -275,7 +266,7 @@ void DisplayMenu(void)
 
 
 void SwitchToSmallFileWindow(void)
-{ 
+{
   werase( file_window );
   PrintLine( stdscr, DIR_WINDOW_HEIGHT + 2, 0, "6-7", COLS - 25 );
   file_window = small_file_window;
@@ -288,17 +279,17 @@ void SwitchToBigFileWindow(void)
   werase( file_window );
   RefreshWindow( file_window );
 #ifdef COLOR_SUPPORT
-  mvaddch(DIR_WINDOW_Y + DIR_WINDOW_HEIGHT, DIR_WINDOW_X - 1, 
+  mvaddch(DIR_WINDOW_Y + DIR_WINDOW_HEIGHT, DIR_WINDOW_X - 1,
         ACS_VLINE | COLOR_PAIR(MENU_COLOR)| A_BOLD);
-  mvaddch(DIR_WINDOW_Y + DIR_WINDOW_HEIGHT, DIR_WINDOW_X + DIR_WINDOW_WIDTH, 
+  mvaddch(DIR_WINDOW_Y + DIR_WINDOW_HEIGHT, DIR_WINDOW_X + DIR_WINDOW_WIDTH,
            ACS_VLINE | COLOR_PAIR(MENU_COLOR)| A_BOLD);
 
 #else
-  mvwaddch( stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT,  
-	   DIR_WINDOW_X - 1, 
+  mvwaddch( stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT,
+	   DIR_WINDOW_X - 1,
 	   ACS_VLINE
 	 );
-  mvwaddch( stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT, 
+  mvwaddch( stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT,
 	   DIR_WINDOW_X + DIR_WINDOW_WIDTH,
 	   ACS_VLINE
 	 );
@@ -309,7 +300,7 @@ void SwitchToBigFileWindow(void)
 
 
 void MapF2Window(void)
-{ 
+{
   char *buffer;
 
   if( ( buffer = (char *)malloc( F2_WINDOW_WIDTH + 1 ) ) == NULL )
@@ -328,9 +319,9 @@ void MapF2Window(void)
 
 
 void UnmapF2Window(void)
-{ 
+{
   werase( f2_window );
-  if(file_window == big_file_window) 
+  if(file_window == big_file_window)
   {
 #ifdef COLOR_SUPPORT
   mvaddch(DIR_WINDOW_Y + DIR_WINDOW_HEIGHT, DIR_WINDOW_X - 1,
@@ -339,12 +330,12 @@ void UnmapF2Window(void)
           ACS_VLINE | COLOR_PAIR(MENU_COLOR)| A_BOLD);
 
 #else
-    mvwaddch( stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT,  
-	     DIR_WINDOW_X - 1, 
+    mvwaddch( stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT,
+	     DIR_WINDOW_X - 1,
 	     ACS_VLINE
 	   );
 
-    mvwaddch( stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT, 
+    mvwaddch( stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT,
 	     DIR_WINDOW_X + DIR_WINDOW_WIDTH,
 	     ACS_VLINE
 	   );
@@ -355,7 +346,7 @@ void UnmapF2Window(void)
 
 
 
-static void PrintMenuLine(WINDOW *win, int y, int x, char *line)
+static void PrintMenuLine(WINDOW *win, int y, int x, const char *line)
 {
   int  i;
   int p, l;
@@ -385,7 +376,7 @@ static void PrintMenuLine(WINDOW *win, int y, int x, char *line)
 
 
 
-static void PrintLine(WINDOW *win, int y, int x, char *line, int len)
+static void PrintLine(WINDOW *win, int y, int x, const char *line, int len)
 {
   int  i;
   char *buffer;
@@ -409,4 +400,4 @@ void RefreshWindow(WINDOW *win)
 {
 	wnoutrefresh(win);
 }
-	
+

@@ -1,8 +1,8 @@
 /***************************************************************************
  *
- * $Header: /usr/local/cvsroot/utils/ytree/arc.c,v 1.11 2000/05/20 20:41:11 werner Exp $
+ * $Header: /usr/local/cvsroot/utils/ytree/zip.c,v 1.11 2000/05/20 20:41:11 werner Exp $
  *
- * Funktionen zum Lesen des Dateibaumes aus ARC-Dateien
+ * Funktionen zum Lesen des Dateibaumes aus ZIP-Dateien
  *
  ***************************************************************************/
 
@@ -10,37 +10,40 @@
 #include "ytree.h"
 
 
-static int GetStatFromARC(char *arc_line, char *name, struct stat *stat);
+
+static int GetStatFromZIP(char *zip_line, char *name, struct stat *stat);
 
 
 
-/* Dateibaum aus ARC-Listing lesen */
+/* Dateibaum aus ZIP-Listing lesen */
 /*---------------------------------*/
 
-int ReadTreeFromARC(DirEntry *dir_entry, FILE *f)
+int ReadTreeFromZIP(DirEntry *dir_entry, FILE *f)
 {
-  char arc_line[ARC_LINE_LENGTH + 1];
+  char zip_line[ZIP_LINE_LENGTH + 1];
   char path_name[PATH_LENGTH +1];
   struct stat stat;
   bool dir_flag = false;
 
   *dir_entry->name = '\0';
 
-  while( fgets( arc_line, ARC_LINE_LENGTH, f ) != NULL )
+  while( fgets( zip_line, ZIP_LINE_LENGTH, f ) != NULL )
   {
     /* \n loeschen */
     /*-------------*/
 
-    arc_line[ strlen( arc_line ) - 1 ] = '\0';
+    zip_line[ strlen( zip_line ) - 1 ] = '\0';
 
-    if( strlen( arc_line ) > (unsigned) 63 && arc_line[63] == ':' )
+    if( strlen( zip_line ) > (unsigned) 58 &&
+        (zip_line[56] == ':' ||
+	(zip_line[57] != 'd' && zip_line[58] == ':')))
     {
       /* gueltiger Eintrag */
       /*-------------------*/
 
-      if( GetStatFromARC( arc_line, path_name, &stat ) )
+      if( GetStatFromZIP( zip_line, path_name, &stat ) )
       {
-        (void) sprintf( message, "unknown arcinfo*%s", arc_line );
+        (void) sprintf( message, "unknown zipinfo*%s", zip_line );
         MESSAGE( message );
       }
       else
@@ -70,13 +73,12 @@ int ReadTreeFromARC(DirEntry *dir_entry, FILE *f)
 
 
 
-
-static int GetStatFromARC(char *arc_line, char *name, struct stat *stat)
+static int GetStatFromZIP(char *zip_line, char *name, struct stat *stat)
 {
   char *t, *old;
   int  i, id;
   struct tm tm_struct;
-  static char *month[] = { "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
+  static const char *month[] = { "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
 	 	           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
 
@@ -84,12 +86,33 @@ static int GetStatFromARC(char *arc_line, char *name, struct stat *stat)
 
   stat->st_nlink = 1;
 
-  t = Strtok_r( arc_line, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( zip_line, " \t", &old ); if( t == NULL ) return( -1 );
 
-  /* Dateiname */
-  /*-----------*/
+  /* Attributes */
+  /*------------*/
 
-  (void) strcpy( name, t );
+  if( strlen( t ) == 10 )
+  {
+    stat->st_mode = GetModus( t );
+  }
+  else
+  {
+    /* DOS-Zip-File ? */
+    /*----------------*/
+
+    stat->st_mode = GetModus( "-rw-rw-rw-" );
+  }
+
+  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+
+  /* Version */
+  /*---------*/
+
+  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+
+  /* BS */
+  /*----*/
+
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
 
   /* Dateilaenge */
@@ -99,27 +122,26 @@ static int GetStatFromARC(char *arc_line, char *name, struct stat *stat)
   stat->st_size = AtoLL( t );
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
 
-  /* Stowage */
-  /*---------*/
-
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
-
-  /* SF */
+  /* ?? */
   /*----*/
 
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
 
-  /* Size Now */
-  /*----------*/
+  /* Compressed-Laenge */
+  /*-------------------*/
 
-  if( !isdigit( *t ) ) return( -1 );
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+
+  /* Methode */
+  /*---------*/
+
+  t = Strtok_r( NULL, " \t-", &old ); if( t == NULL ) return( -1 );
 
   /* M-Datum */
   /*---------*/
 
   tm_struct.tm_mday = atoi( t );
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( NULL, " \t-", &old ); if( t == NULL ) return( -1 );
 
   for( i=0; i < 12; i++ )
   {
@@ -137,10 +159,7 @@ static int GetStatFromARC(char *arc_line, char *name, struct stat *stat)
   t = Strtok_r( NULL, " \t:", &old ); if( t == NULL ) return( -1 );
 
   tm_struct.tm_hour = atoi( t );
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
-
-  if( t[strlen(t)-1] == 'p' ) tm_struct.tm_hour += 12;
-  t[strlen(t)-1] ='\0';
+  t = Strtok_r( NULL, " \t:", &old ); if( t == NULL ) return( -1 );
 
   tm_struct.tm_min = atoi( t );
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
@@ -154,11 +173,6 @@ static int GetStatFromARC(char *arc_line, char *name, struct stat *stat)
 
   stat->st_mtime = Mktime( &tm_struct );
 
-  /* Attributes */
-  /*------------*/
-
-  stat->st_mode = S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-
   /* Owner */
   /*-------*/
 
@@ -171,6 +185,11 @@ static int GetStatFromARC(char *arc_line, char *name, struct stat *stat)
 
   id = getgid();
   stat->st_gid = (unsigned) id;
+
+  /* Dateiname */
+  /*-----------*/
+
+  (void) strcpy( name, t );
 
   return( 0 );
 }
