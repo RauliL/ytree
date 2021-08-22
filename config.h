@@ -69,13 +69,6 @@
 #endif
 
 
-#ifdef sgi
-#undef  DEFAULT_HEXDUMP
-#undef  DEFAULT_PAGER
-#define DEFAULT_HEXDUMP     "od -h"
-#define DEFAULT_PAGER       "pg"
-#endif /* sgi */
-
 #ifdef linux
 #undef  DEFAULT_TARLIST
 #undef  DEFAULT_TAREXPAND

@@ -601,10 +601,6 @@
 #define ESC        27
 #define LOGIN_ESC  '.'
 
-#ifdef  sgi
-#define SGI_CR     0x157    /* Irix 3.2.2 special ? */
-#endif
-
 #define CR                     13
 
 #define DIR_WINDOW_X         1
