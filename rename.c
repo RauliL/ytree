@@ -49,56 +49,56 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
   }
 
   (void) strcpy( cptr + 1, new_name );
-  
+
 
   if( access( from_path, W_OK ) )
   {
-    (void) sprintf( message, 
-		    "Rename not possible!*\"%s\"*%s", 
-		    from_path, 
-		    strerror(errno) 
+    (void) sprintf( message,
+		    "Rename not possible!*\"%s\"*%s",
+		    from_path,
+		    strerror(errno)
 		  );
     MESSAGE( message );
     ESCAPE;
   }
-  
-    
+
+
 
   if( !RenameDirEntry( to_path, from_path ) )
   {
     /* Rename erfolgreich */
     /*--------------------*/
 
-    
+
     if( STAT_( to_path, &stat_struct ) )
     {
       ERROR_MSG( "Stat Failed*ABORT" );
       exit( 1 );
     }
 
-    if( ( den_ptr = (DirEntry *) malloc( sizeof( DirEntry ) + 
-					 strlen( new_name )  
+    if( ( den_ptr = (DirEntry *) malloc( sizeof( DirEntry ) +
+					 strlen( new_name )
 				       ) ) == NULL )
     {
       ERROR_MSG( "Malloc Failed*ABORT" );
       exit( 1 );
     }
-   
+
     (void) memcpy( den_ptr, de_ptr, sizeof( DirEntry ) );
 
     (void) strcpy( den_ptr->name, new_name );
-        
-    (void) memcpy( &den_ptr->stat_struct, 
+
+    (void) memcpy( &den_ptr->stat_struct,
 		   &stat_struct,
 		   sizeof( stat_struct )
 		 );
- 
+
     /* Struktur einklinken */
     /*---------------------*/
 
     if( den_ptr->prev ) den_ptr->prev->next = den_ptr;
     if( den_ptr->next ) den_ptr->next->prev = den_ptr;
-    
+
     /* Subtree */
     /*---------*/
 
@@ -129,7 +129,7 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
   }
 
 FNC_XIT:
- 
+
   move( LINES - 2, 1 ); clrtoeol();
 
   return( result );
@@ -159,20 +159,20 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
   (void) GetPath( de_ptr, to_path );
   (void) strcat( to_path, FILE_SEPARATOR_STRING );
   (void) strcat( to_path, new_name );
-  
+
 
   if( access( from_path, W_OK ) )
   {
-    (void) sprintf( message, 
-		    "Rename not possible!*\"%s\"*%s", 
-		    from_path, 
-		    strerror(errno) 
+    (void) sprintf( message,
+		    "Rename not possible!*\"%s\"*%s",
+		    from_path,
+		    strerror(errno)
 		  );
     MESSAGE( message );
     ESCAPE;
   }
-  
-    
+
+
 
   if( !RenameFileEntry( to_path, from_path ) )
   {
@@ -185,22 +185,22 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
       exit( 1 );
     }
 
-    
+
     if( ( fen_ptr = (FileEntry *) malloc( sizeof( FileEntry ) + strlen( new_name )  ) ) == NULL )
     {
       ERROR_MSG( "Malloc Failed*ABORT" );
       exit( 1 );
     }
-   
+
     (void) memcpy( fen_ptr, fe_ptr, sizeof( FileEntry ) );
 
     (void) strcpy( fen_ptr->name, new_name );
-        
-    (void) memcpy( &fen_ptr->stat_struct, 
+
+    (void) memcpy( &fen_ptr->stat_struct,
 		   &stat_struct,
 		   sizeof( stat_struct )
 		 );
- 
+
     /* Struktur einklinken */
     /*---------------------*/
 
@@ -222,7 +222,7 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
   }
 
 FNC_XIT:
- 
+
   move( LINES - 2, 1 ); clrtoeol();
 
   return( result );
@@ -299,42 +299,17 @@ static int RenameDirEntry(char *to_path, char *from_path)
     return( -1 );
   }
 
-#ifdef HAVE_RENAME
   if( rename( from_path, to_path ) )
   {
-    (void) sprintf( message, 
-		    "Can't rename \"%s\"*to \"%s\"*%s", 
-		    from_path, 
-		    to_path, 
-		    strerror(errno) 
+    (void) sprintf( message,
+		    "Can't rename \"%s\"*to \"%s\"*%s",
+		    from_path,
+		    to_path,
+		    strerror(errno)
 		  );
     MESSAGE( message );
     return( -1 );
   }
-#else
-  if( link( from_path, to_path ) )
-  {
-    (void) sprintf( message, 
-		    "Can't link \"%s\"*to \"%s\"*%s", 
-		    from_path, 
-		    to_path, 
-		    strerror(errno) 
-		  );
-    MESSAGE( message );
-    return( -1 );
-  }
-
-  if( unlink( from_path ) )
-  {
-    (void) sprintf( message, 
-		    "Can't unlink*\"%s\"*%s", 
-		    from_path, 
-		    strerror(errno) 
-		  );
-    MESSAGE( message );
-    return( -1 );
-  }
-#endif
 
   return( 0 );
 }
@@ -353,11 +328,11 @@ static int RenameFileEntry(char *to_path, char *from_path)
 
   if( link( from_path, to_path ) )
   {
-    (void) sprintf( message, 
-		    "Can't link \"%s\"*to \"%s\"*%s", 
-		    from_path, 
-		    to_path, 
-		    strerror(errno) 
+    (void) sprintf( message,
+		    "Can't link \"%s\"*to \"%s\"*%s",
+		    from_path,
+		    to_path,
+		    strerror(errno)
 		  );
     MESSAGE( message );
     return( -1 );
@@ -365,10 +340,10 @@ static int RenameFileEntry(char *to_path, char *from_path)
 
   if( unlink( from_path ) )
   {
-    (void) sprintf( message, 
-		    "Can't unlink*\"%s\"*%s", 
-		    from_path, 
-		    strerror(errno) 
+    (void) sprintf( message,
+		    "Can't unlink*\"%s\"*%s",
+		    from_path,
+		    strerror(errno)
 		  );
     MESSAGE( message );
     return( -1 );
@@ -380,7 +355,7 @@ static int RenameFileEntry(char *to_path, char *from_path)
 
 
 
-  
+
 int RenameTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
 {
   int  result = -1;

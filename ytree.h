@@ -31,7 +31,9 @@
 #include <grp.h>
 #include <pwd.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #ifdef XCURSES
@@ -53,30 +55,9 @@
 #endif
 #endif /* __FreeBSD__ */
 
-#if defined(linux) || defined(__GNU__)
-#include <sys/wait.h>
-#include <sys/time.h>	/* needed vor RedHed5 (thanks to Robert Spier) */
-#endif
-
 #if defined( TERMCAP )
 #include <termcap.h>
 #endif
-
-#ifdef __NetBSD__
-#define typeahead( file )
-#define vidattr( attr )
-#define putp( str )             tputs( str, 1, putchar )
-#else
-#ifdef OSF1
-#define echochar( ch )          { addch( ch ); refresh(); }
-#else
-#ifdef hpux
-#define echochar( ch )          { addch( ch ); refresh(); }
-#else
-#endif /* hpux */
-#endif /* OSF1 */
-#endif /* __NetBSD__ */
-
 
 /* Some handy macros... */
 
@@ -93,18 +74,6 @@
 #define  popen           _popen
 #define  pclose          _pclose
 #define  sys_errlist     _sys_errlist
-
-#endif /* WIN32 */
-
-
-
-#if defined(linux) || defined (__GNU__)
-#define HAVE_RENAME
-#endif /* linux || __GNU__ */
-
-
-
-#ifdef WIN32
 
 /* Diese Funktionen koennen direkt umgesetzt werden */
 /*--------------------------------------------------*/
