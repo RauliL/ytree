@@ -19,7 +19,7 @@
 #if defined( SVR4 ) || defined( OSF1 ) || defined( sun56 ) || defined( __NetBSD__ )
 #include <sys/statvfs.h>
 #else
-#if ( defined( ultrix ) || defined( __OpenBSD__ ) || defined ( __FreeBSD__ ) || defined (__APPLE__) )
+#if ( defined( __OpenBSD__ ) || defined ( __FreeBSD__ ) || defined (__APPLE__) )
 #include <sys/param.h>
 #include <sys/mount.h>
 #else
@@ -30,7 +30,7 @@
 /* z.B. SVR3 */
 #include <sys/statfs.h>
 #endif /* QNX */
-#endif /* ultrix */
+#endif
 #endif /* SVR4 */
 #endif /* WIN32 */
 #endif /* sun / linux / __NeXT__  hpux */
@@ -44,8 +44,8 @@
 /* Volume-Name und freien Plattenplatz ermitteln */
 /*-----------------------------------------------*/
 
-int GetDiskParameter( char *path, 
-		      char *volume_name, 
+int GetDiskParameter( char *path,
+		      char *volume_name,
 		      LONGLONG *avail_bytes,
 		      LONGLONG *total_disk_space
 		    )
@@ -57,16 +57,12 @@ int GetDiskParameter( char *path,
 #if defined( SVR4 ) || defined( OSF1 ) || defined( __NetBSD__ )
   struct statvfs statfs_struct;
 #else
-#ifdef ultrix
-  struct fs_data statfs_struct;
-#else
 #ifdef QNX
   long total_blocks, free_blocks;
   int fd;
 #else
   struct statfs statfs_struct;
 #endif /* QNX */
-#endif /* ultrix */
 #endif /* SVR4 */
 #endif /* WIN32 */
 
@@ -100,7 +96,7 @@ int GetDiskParameter( char *path,
 
       if( mode == DISK_MODE || mode == USER_MODE )
       {
-  
+
 #ifdef linux
 	switch( statfs_struct.f_type ) {
 	  case 0xEF51:
@@ -189,7 +185,7 @@ int GetDiskParameter( char *path,
               fname = "HURD";
        }
 #else
-#if defined( sun56 ) || defined( sun ) || defined( hpux ) || defined( __NeXT__ ) || defined( ultrix ) || defined ( __FreeBSD__ ) || defined (__APPLE__)
+#if defined( sun56 ) || defined( sun ) || defined( hpux ) || defined( __NeXT__ ) || defined ( __FreeBSD__ ) || defined (__APPLE__)
         fname = "UNIX";
 #else
 #ifdef WIN32
@@ -213,25 +209,25 @@ int GetDiskParameter( char *path,
 #endif /* __DJGPP__ */
 #endif /* QNX */
 #endif /* WIN32 */
-#endif /* sun / hpux / __NeXT__ ultrix */
+#endif /* sun / hpux / __NeXT__ */
 #endif /* __GNU__ */
 #endif /* linux */
 
-        (void) strncpy( volume_name, 
+        (void) strncpy( volume_name,
 	                fname,
 		        MINIMUM( DISK_NAME_LENGTH, strlen( fname ) )
 		      );
         volume_name[ MINIMUM( DISK_NAME_LENGTH, strlen( fname ))] = '\0';
       }
       else
-      {  
+      {
         /* TAR/ZOO/ZIP-FILE_MODE */
         /*-----------------------*/
-        
-        if( ( p = strrchr( statistic.login_path, FILE_SEPARATOR_CHAR ) ) == NULL ) 
+
+        if( ( p = strrchr( statistic.login_path, FILE_SEPARATOR_CHAR ) ) == NULL )
           p = statistic.login_path;
         else p++;
-  
+
         (void) strncpy( volume_name, p, sizeof( statistic.disk_name ) );
         volume_name[sizeof( statistic.disk_name )] = '\0';
       }
@@ -261,11 +257,7 @@ int GetDiskParameter( char *path,
     if( bfree < 0L ) bfree = 0L;
     *avail_bytes = bfree * BLKSIZ;  /* SYSV */
     this_disk_space   = statfs_struct.f_blocks * BLKSIZ;
-#else 
-#if defined( ultrix )
-    bfree = statfs_struct.fd_req.bfree;
-    if( bfree < 0L ) bfree = 0L;
-#else 
+#else
 #if defined( QNX )
     *avail_bytes = free_blocks * 512;
     this_disk_space = total_blocks * 512;
@@ -275,12 +267,11 @@ int GetDiskParameter( char *path,
     *avail_bytes = bfree * statfs_struct.f_bsize;
     this_disk_space   = statfs_struct.f_blocks * statfs_struct.f_bsize;
 #endif /* QNX */
-#endif /* ultrix */
 #endif /* SVR3 */
 #endif /* SVR4/!__DGUX__ */
 #endif /* _IBMR2/linux/sun/__NeXT__/__GNU__ */
 #endif /* WIN32 */
-    
+
     if( total_disk_space )
     {
       *total_disk_space = this_disk_space;
@@ -297,11 +288,11 @@ int GetDiskParameter( char *path,
 
 int GetAvailBytes(LONGLONG *avail_bytes)
 {
-  return( GetDiskParameter( statistic.tree->name, 
-			    NULL, 
-			    avail_bytes, 
-			    NULL 
-			  ) 
+  return( GetDiskParameter( statistic.tree->name,
+			    NULL,
+			    avail_bytes,
+			    NULL
+			  )
         );
 }
 

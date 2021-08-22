@@ -17,8 +17,8 @@ Author
 	Werner Bregulla eMail: werner@frolix.han.de
 
 Platforms
-	- SYSV R3.2/R4 
-	- Interactive 
+	- SYSV R3.2/R4
+	- Interactive
 	- Linux
 	- The Hurd
 	- NeXTstep 2.1
@@ -26,9 +26,8 @@ Platforms
 	- AIX 3.2
 	- HPUX
 	- SUNOS 4.1 / Solaris 2
-	- ULTRIX 4.3
 	- DEC-UNIX / OSF1
-	- WIN32 with DJGPP 
+	- WIN32 with DJGPP
 	  (see http://www.lightlink.com/hessling/
 	   and http://www.delorie.com/djgpp)
 	- FreeBSD
@@ -40,7 +39,7 @@ Platforms
 Building
 	In most instances, it should be sufficient to
 		modify the Makefile (Default is linux)
-		type 
+		type
 			make
                 	su
 			...enter password...
@@ -53,7 +52,7 @@ Building
 	your ~/.bashrc. See the man page for details.
 
 Copyright
-	This program is free software; you can redistribute it and/or modify it 
-        under the terms of the GNU General Public License as published by the 
-        Free Software Foundation; either version 2 of the License, 
+	This program is free software; you can redistribute it and/or modify it
+        under the terms of the GNU General Public License as published by the
+        Free Software Foundation; either version 2 of the License,
         or (at your option) any later version.

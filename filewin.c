@@ -13,9 +13,9 @@
 #define MAX( a, b ) ( ( (a) > (b) ) ? (a) : (b) )
 
 
-#if !defined(__NeXT__) && !defined(ultrix)
+#if !defined(__NeXT__)
 extern void qsort(void *, size_t, size_t, int (*) (const void *, const void *));
-#endif /* __NeXT__ ultrix */
+#endif /* __NeXT__ */
 
 
 

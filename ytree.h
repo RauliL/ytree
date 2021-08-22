@@ -8,7 +8,7 @@
 
 
 #define _LARGEFILE64_SOURCE 1
-#define _FILE_OFFSET_BITS 64                                                                   
+#define _FILE_OFFSET_BITS 64
 
 #include <stdio.h>
 #include <ctype.h>
@@ -27,11 +27,6 @@
 #define NLS
 #endif /* _IBMR2 */
 
-#ifdef ultrix
-#ifndef HAVE_CURSES
-#include <cursesX.h>
-#endif
-#else
 #ifdef __FreeBSD__
 #ifndef HAVE_CURSES
 #include <ncurses.h>
@@ -41,7 +36,6 @@
 #include <curses.h>
 #endif
 #endif /* __FreeBSD__ */
-#endif /* ultrix */
 
 #include <limits.h>
 #include <sys/types.h>
@@ -144,11 +138,6 @@ extern char *getcwd();
 #define LONGLONG		long long
 #define HAS_LONGLONG		1
 #else
-#ifdef ultrix
-#define STATFS(a, b, c, d )	statfs( a, b )
-#define echochar( ch )          { addch( ch ); refresh(); }
-#define LONGLONG		unsigned long
-#else
 #ifdef __QNX__
 #define STATFS(a, b, c, d )	statfs( a, b )
 #define LONGLONG		unsigned long
@@ -157,7 +146,6 @@ extern char *getcwd();
 #define LONGLONG		long long
 #define HAS_LONGLONG		1
 #endif /* __QNX__ */
-#endif /* ultrix */
 #endif /* hpux */
 #endif /* __GNU__ */
 #endif /* linux */
@@ -270,7 +258,7 @@ extern char *getcwd();
 
 #define  NO_HIGHLIGHT
 
-#define  A_REVERSE        1 
+#define  A_REVERSE        1
 #define  A_BLINK          2
 
 #define  BELL             0x07
@@ -280,7 +268,7 @@ extern char *getcwd();
 /* Diese Funktionen koennen direkt umgesetzt werden */
 /*--------------------------------------------------*/
 
-#undef   cbreak  
+#undef   cbreak
 #define  cbreak()                    raw()
 #define  beep()                      putchar( BELL )
 #define  echochar( ch )              { addch( ch ); refresh(); }
@@ -300,8 +288,8 @@ extern char *getcwd();
 /* ... und hier gibt's keine entsprechende Funktion. */
 /*---------------------------------------------------*/
 
-#define  doupdate() 
-#define  wattrset( win, attr ) 
+#define  doupdate()
+#define  wattrset( win, attr )
 #define  typeahead( file )
 #define  keypad( win, flag )
 
@@ -395,10 +383,10 @@ extern char *getcwd();
 #ifndef ACS_LRCORNER
 #define ACS_LRCORNER '+'
 #endif
-#ifndef ACS_VLINE   
+#ifndef ACS_VLINE
 #define ACS_VLINE    '|'
 #endif
-#ifndef ACS_HLINE   
+#ifndef ACS_HLINE
 #define ACS_HLINE    '-'
 #endif
 #ifndef ACS_RTEE
@@ -496,15 +484,15 @@ extern char *getcwd();
 #define SEARCHCOMMAND   GetProfileValue( "SEARCHCOMMAND" )
 #define HEXEDITOFFSET   GetProfileValue( "HEXEDITOFFSET" )
 #define LISTJUMPSEARCH  GetProfileValue( "LISTJUMPSEARCH" )
- 
+
 
 #define DEFAULT_TREE       "."
 
 
-#define ERROR_MSG( msg )   Error( msg, __FILE__, __LINE__ ) 
-#define WARNING( msg )     Warning( msg ) 
-#define MESSAGE( msg )     Message( msg ) 
-#define NOTICE( msg )      Notice( msg ) 
+#define ERROR_MSG( msg )   Error( msg, __FILE__, __LINE__ )
+#define WARNING( msg )     Warning( msg )
+#define MESSAGE( msg )     Message( msg )
+#define NOTICE( msg )      Notice( msg )
 
 #define TAGGED_SYMBOL '*'
 #define MAX_MODES      11
@@ -517,8 +505,8 @@ extern char *getcwd();
 #define ARC_FILE_MODE  6
 #define RPM_FILE_MODE  7
 #define RAR_FILE_MODE  8
-#define TAPE_MODE      9 
-#define USER_MODE      10 
+#define TAPE_MODE      9
+#define USER_MODE      10
 
 #define NO_COMPRESS                 0
 #define FREEZE_COMPRESS             1
@@ -641,8 +629,8 @@ extern char *getcwd();
 
 #define CR                     13
 
-#define DIR_WINDOW_X         1  
-#define DIR_WINDOW_Y         2 
+#define DIR_WINDOW_X         1
+#define DIR_WINDOW_Y         2
 #define DIR_WINDOW_WIDTH     (COLS - 26)
 #define DIR_WINDOW_HEIGHT    ((LINES * 8 / 14)-1)
 
@@ -659,11 +647,11 @@ extern char *getcwd();
 #define FILE_WINDOW_2_X      1
 #define FILE_WINDOW_2_Y      2
 #define FILE_WINDOW_2_WIDTH  (COLS - 26)
-#define FILE_WINDOW_2_HEIGHT (LINES - 6) 
+#define FILE_WINDOW_2_HEIGHT (LINES - 6)
 
 #define ERROR_WINDOW_WIDTH   40
 #define ERROR_WINDOW_HEIGHT  10
-#define ERROR_WINDOW_X       ((COLS - ERROR_WINDOW_WIDTH) >> 1)  
+#define ERROR_WINDOW_X       ((COLS - ERROR_WINDOW_WIDTH) >> 1)
 #define ERROR_WINDOW_Y       ((LINES - ERROR_WINDOW_HEIGHT) >> 1)
 
 #define HISTORY_WINDOW_X       1
@@ -711,7 +699,7 @@ extern char *getcwd();
 
 #define ESCAPE               goto FNC_XIT
 
-#define PRINT(ch) (iscntrl(ch) && (((unsigned char)(ch)) < ' ')) ? (ACS_BLOCK) : ((unsigned char)(ch)) 
+#define PRINT(ch) (iscntrl(ch) && (((unsigned char)(ch)) < ' ')) ? (ACS_BLOCK) : ((unsigned char)(ch))
 /* #define PRINT(ch) (ch) */
 
 #ifdef COLOR_SUPPORT
@@ -781,7 +769,7 @@ typedef struct
 } FileEntryList;
 
 
-typedef struct 
+typedef struct
 {
   DirEntry      *tree;
   LONGLONG	disk_space;
@@ -901,11 +889,7 @@ extern char      *initial_directory;
 extern char 	 builtin_hexdump_cmd[];
 
 
-#if defined(ultrix)
-extern char *getenv(char *);
-#else
 extern char *getenv(const char *);
-#endif
 
 extern int  ytree(int argc, char *argv[]);
 extern void DisplayMenu(void);
@@ -927,8 +911,8 @@ extern int  ReadTreeFromZIP(DirEntry *dir_entry, FILE *f);
 extern int  ReadTreeFromLHA(DirEntry *dir_entry, FILE *f);
 extern int  ReadTreeFromARC(DirEntry *dir_entry, FILE *f);
 extern int  ReadTreeFromRAR(DirEntry *dir_entry, FILE *f);
-extern int  GetDiskParameter(char *path, 
-			     char *volume_name, 
+extern int  GetDiskParameter(char *path,
+			     char *volume_name,
 			     LONGLONG *avail_bytes,
 			     LONGLONG *capacity
 			    );
@@ -1081,10 +1065,10 @@ extern void InitClock(void);
 extern void SuspendClock(void);
 extern char *GetExtension(char *filename);
 extern void StrCp(char *dest, const char *src);
-extern int  BuildUserFileEntry(FileEntry *fe_ptr, 
-            int max_filename_len, int max_linkname_len, 
+extern int  BuildUserFileEntry(FileEntry *fe_ptr,
+            int max_filename_len, int max_linkname_len,
             char *template, int linelen, char *line);
-extern int  GetUserFileEntryLength(int max_filename_len, 
+extern int  GetUserFileEntryLength(int max_filename_len,
 				   int max_linkname_len, char *template);
 extern LONGLONG AtoLL(char* cptr);
 extern void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no);
