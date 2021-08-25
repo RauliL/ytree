@@ -73,6 +73,12 @@ ADD_EXECUTABLE(
   zoo.cpp
 )
 
+TARGET_COMPILE_FEATURES(
+  ytree
+  PRIVATE
+    cxx_std_17
+)
+
 TARGET_INCLUDE_DIRECTORIES(
   ytree
   PRIVATE
