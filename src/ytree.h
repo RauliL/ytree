@@ -488,30 +488,27 @@ extern void WbkgdSet(WINDOW *w, chtype c);
 #define WbkgdSet(a, b)  ;
 #endif /* COLOR_SUPPORT */
 
+struct DirEntry;
 
-
-typedef struct _file_entry
+struct FileEntry
 {
-  struct _file_entry *next;
-  struct _file_entry *prev;
-  struct _dir_entry  *dir_entry;
-  struct stat        stat_struct;
-  bool               tagged;
-  bool               matching;
-  char               name[1];
-/*char               symlink_name[]; */ /* Folgt direkt dem Namen, falls */
-					/* Eintrag == symbolischer Link  */
-} FileEntry;
+  FileEntry* next;
+  FileEntry* prev;
+  DirEntry* dir_entry;
+  struct stat stat_struct;
+  bool tagged;
+  bool matching;
+  // Symlink name is std::strlen(name) + 1
+  char name[1];
+};
 
-
-
-typedef struct _dir_entry
+struct DirEntry
 {
-  struct _file_entry *file;
-  struct _dir_entry  *next;
-  struct _dir_entry  *prev;
-  struct _dir_entry  *sub_tree;
-  struct _dir_entry  *up_tree;
+  FileEntry* file;
+  DirEntry* next;
+  DirEntry* prev;
+  DirEntry* sub_tree;
+  DirEntry* up_tree;
   long long total_bytes;
   long long matching_bytes;
   long long tagged_bytes;
@@ -529,25 +526,21 @@ typedef struct _dir_entry
   bool               big_window;
   bool               login_flag;
   char               name[1];
-} DirEntry;
+};
 
-
-
-typedef struct
+struct DirEntryList
 {
   unsigned long      indent;
   DirEntry           *dir_entry;
   unsigned short     level;
-} DirEntryList;
+};
 
-
-typedef struct
+struct FileEntryList
 {
   FileEntry          *file;
-} FileEntryList;
+};
 
-
-typedef struct
+struct Statistic
 {
   DirEntry      *tree;
   long long disk_space;
@@ -567,10 +560,9 @@ typedef struct
   char          tape_name[PATH_LENGTH + 1];
   char          file_spec[FILE_SPEC_LENGTH + 1];
   char          disk_name[DISK_NAME_LENGTH + 1];
-} Statistic;
+};
 
-
-typedef union
+union FunctionData
 {
   struct
   {
@@ -626,23 +618,13 @@ typedef union
    FILE       *zipfile;
    int        method;
    } compress_cmd;
+};
 
-} FunctionData;
-
-
-typedef struct
+struct WalkingPackage
 {
   FileEntry     *new_fe_ptr;
   FunctionData  function_data;
-} WalkingPackage;
-
-/* strerror() is POSIX, and all modern operating systems provide it.  */
-#define HAVE_STRERROR 1
-
-#ifndef HAVE_STRERROR
-extern const char *StrError(int);
-#endif /* HAVE_STRERROR */
-
+};
 
 extern WINDOW *dir_window;
 extern WINDOW *small_file_window;

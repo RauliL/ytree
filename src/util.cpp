@@ -1040,25 +1040,6 @@ long long AtoLL(const char *cptr)
   return(ll);
 }
 
-
-
-
-#ifndef HAVE_STRERROR
-const char *StrError(int errnum)
-{
-
-#if !defined(__FreeBSD__) && !(defined(__GLIBC__) && __GLIBC__ >= 2)
-  extern char *sys_errlist[];
-  extern int sys_nerr;
-#endif
-
-  if (errnum > 0 && errnum <= sys_nerr)
-    return(sys_errlist[errnum]);
-  return ("Unknown system error");
-}
-#endif /* HAVE_STRERROR */
-
-
 /*****************************************************************************
  *                              Getcwd                                       *
  *****************************************************************************/
