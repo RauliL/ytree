@@ -42,18 +42,6 @@ int Init(char *configuration_file, char *history_file)
 
   file_window = small_file_window;
 
-  if( ReadGroupEntries() )
-  {
-    ERROR_MSG( "ReadGroupEntries failed*ABORT" );
-    exit( 1 );
-  }
-
-  if( ReadPasswdEntries() )
-  {
-    ERROR_MSG( "ReadPasswdEntries failed*ABORT" );
-    exit( 1 );
-  }
-
   if (configuration_file != NULL) {
     ReadProfile(configuration_file);
   }
