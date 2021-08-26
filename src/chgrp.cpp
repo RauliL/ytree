@@ -43,7 +43,6 @@ int ChangeFileGroup(FileEntry *fe_ptr)
 int GetNewGroup(int st_gid)
 {
   char group[GROUP_NAME_MAX * 2 +1];
-  const char* group_name_ptr;
   int  id;
   int  group_id;
 
@@ -51,14 +50,11 @@ int GetNewGroup(int st_gid)
 
   id = ( st_gid == -1 ) ? (int) getgid() : st_gid;
 
-  group_name_ptr = GetGroupName( id );
-  if( group_name_ptr == NULL )
+  if (const auto group_name_ptr = GetGroupName(id))
   {
-    (void) sprintf( group, "%d", id );
-  }
-  else
-  {
-    (void) strcpy( group, group_name_ptr );
+    std::strncpy(group, group_name_ptr->c_str(), sizeof(group));
+  } else {
+    std::snprintf(group, sizeof(group), "%d", id);
   }
 
   ClearHelp();
@@ -67,10 +63,17 @@ int GetNewGroup(int st_gid)
 
   if( InputString( group, LINES - 2, 12, 0, GROUP_NAME_MAX, "\r\033" ) == CR )
   {
-    if( (group_id = GetGroupId( group )) == -1 )
+    if (const auto group_id_ptr = GetGroupId(group))
     {
-      (void) sprintf( message, "Can't read Group-ID:*\"%s\"", group );
-      MESSAGE( message );
+      group_id = *group_id_ptr;
+    } else {
+      std::snprintf(
+        message,
+        MESSAGE_LENGTH,
+        "Can't read Group-ID:*\"%s\"",
+        group
+      );
+      MESSAGE(message);
     }
   }
 

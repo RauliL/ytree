@@ -4,23 +4,16 @@
 # include <grp.h>
 #endif
 
-const char* GetGroupName(gid_t gid)
+std::optional<std::string> GetGroupName(gid_t gid)
 {
-  auto group = getgrgid(gid);
+  const auto group = getgrgid(gid);
 
-  return group ? group->gr_name : nullptr;
+  return group ? std::make_optional<std::string>(group->gr_name) : std::nullopt;
 }
 
-const char* GetDisplayGroupName(gid_t gid)
+std::optional<int> GetGroupId(const std::string& name)
 {
-  auto group = getgrgid(gid);
+  const auto group = getgrnam(name.c_str());
 
-  return group ? group->gr_name : nullptr;
-}
-
-int GetGroupId(const char* name)
-{
-  auto group = getgrnam(name);
-
-  return group ? group->gr_gid : -1;
+  return group ? std::make_optional(group->gr_gid) : std::nullopt;
 }

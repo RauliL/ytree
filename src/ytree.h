@@ -20,6 +20,8 @@
 # include <cwchar>
 #endif
 #include <memory>
+#include <optional>
+#include <string>
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -693,12 +695,10 @@ extern int  HandleFileWindow(DirEntry *dir_entry);
 extern char *GetAttributes(unsigned short modus, char *buffer);
 extern void SwitchToSmallFileWindow(void);
 extern void SwitchToBigFileWindow(void);
-extern const char* GetGroupName(gid_t gid);
-extern const char* GetDisplayGroupName(gid_t gid);
-extern int  GetGroupId(const char *name);
-extern const char* GetPasswdName(uid_t uid);
-extern const char* GetDisplayPasswdName(uid_t uid);
-extern int GetPasswdUid(const char* name);
+std::optional<std::string> GetGroupName(gid_t gid);
+std::optional<int> GetGroupId(const std::string& name);
+std::optional<std::string> GetPasswdName(uid_t uid);
+std::optional<int> GetPasswdUid(const std::string& name);
 extern char *GetFileNamePath(FileEntry *file_entry, char *buffer);
 extern char *GetRealFileNamePath(FileEntry *file_entry, char *buffer);
 extern int  SystemCall(char *command_line);

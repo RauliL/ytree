@@ -34,14 +34,14 @@ static unsigned      global_max_linkname_len;
 
 static void ReadFileList(DirEntry *dir_entry);
 static void SortFileEntryList(void);
-static int  SortByName(FileEntryList *e1, FileEntryList *e2);
-static int  SortByChgTime(FileEntryList *e1, FileEntryList *e2);
-static int  SortByAccTime(FileEntryList *e1, FileEntryList *e2);
-static int  SortByModTime(FileEntryList *e1, FileEntryList *e2);
-static int  SortBySize(FileEntryList *e1, FileEntryList *e2);
-static int  SortByOwner(FileEntryList *e1, FileEntryList *e2);
-static int  SortByGroup(FileEntryList *e1, FileEntryList *e2);
-static int  SortByExtension(FileEntryList *e1, FileEntryList *e2);
+static int  SortByName(const FileEntryList *e1, const FileEntryList *e2);
+static int  SortByChgTime(const FileEntryList *e1, const FileEntryList *e2);
+static int  SortByAccTime(const FileEntryList *e1, const FileEntryList *e2);
+static int  SortByModTime(const FileEntryList *e1, const FileEntryList *e2);
+static int  SortBySize(const FileEntryList *e1, const FileEntryList *e2);
+static int  SortByOwner(const FileEntryList *e1, const FileEntryList *e2);
+static int  SortByGroup(const FileEntryList *e1, const FileEntryList *e2);
+static int  SortByExtension(const FileEntryList *e1, const FileEntryList *e2);
 static void DisplayFiles(DirEntry *de_ptr, int start_file_no, int hilight_no, int start_x);
 static void ReadGlobalFileList(DirEntry *dir_entry);
 static void WalkTaggedFiles(
@@ -287,7 +287,7 @@ static void ReadGlobalFileList(DirEntry *dir_entry)
 static void SortFileEntryList(void)
 {
   int aux;
-  int (*compare)(FileEntryList*, FileEntryList*);
+  int (*compare)(const FileEntryList*, const FileEntryList*);
 
   reverse_sort = false;
   if ((aux = statistic.kind_of_sort) > SORT_DSC)
@@ -320,10 +320,7 @@ static void SortFileEntryList(void)
 	);
 }
 
-
-
-
-static int SortByName(FileEntryList *e1, FileEntryList *e2)
+static int SortByName(const FileEntryList *e1, const FileEntryList *e2)
 {
   if (do_case)
      if (order)
@@ -337,8 +334,7 @@ static int SortByName(FileEntryList *e1, FileEntryList *e2)
         return( - (strcasecmp( e1->file->name, e2->file->name ) ) );
 }
 
-
-static int SortByExtension(FileEntryList *e1, FileEntryList *e2)
+static int SortByExtension(const FileEntryList *e1, const FileEntryList *e2)
 {
   const char* ext1;
   const char* ext2;
@@ -370,7 +366,7 @@ static int SortByExtension(FileEntryList *e1, FileEntryList *e2)
 }
 
 
-static int SortByModTime(FileEntryList *e1, FileEntryList *e2)
+static int SortByModTime(const FileEntryList *e1, const FileEntryList *e2)
 {
   if (order)
      return( e1->file->stat_struct.st_mtime - e2->file->stat_struct.st_mtime );
@@ -378,7 +374,7 @@ static int SortByModTime(FileEntryList *e1, FileEntryList *e2)
      return( - (e1->file->stat_struct.st_mtime - e2->file->stat_struct.st_mtime ) );
 }
 
-static int SortByChgTime(FileEntryList *e1, FileEntryList *e2)
+static int SortByChgTime(const FileEntryList *e1, const FileEntryList *e2)
 {
   if (order)
      return( e1->file->stat_struct.st_ctime - e2->file->stat_struct.st_ctime );
@@ -386,7 +382,7 @@ static int SortByChgTime(FileEntryList *e1, FileEntryList *e2)
      return( - (e1->file->stat_struct.st_ctime - e2->file->stat_struct.st_ctime ) );
 }
 
-static int SortByAccTime(FileEntryList *e1, FileEntryList *e2)
+static int SortByAccTime(const FileEntryList *e1, const FileEntryList *e2)
 {
   if (order)
      return( e1->file->stat_struct.st_atime - e2->file->stat_struct.st_atime );
@@ -394,7 +390,7 @@ static int SortByAccTime(FileEntryList *e1, FileEntryList *e2)
      return( - (e1->file->stat_struct.st_atime - e2->file->stat_struct.st_atime ) );
 }
 
-static int SortBySize(FileEntryList *e1, FileEntryList *e2)
+static int SortBySize(const FileEntryList *e1, const FileEntryList *e2)
 {
   if (order)
      return( e1->file->stat_struct.st_size - e2->file->stat_struct.st_size );
@@ -402,74 +398,73 @@ static int SortBySize(FileEntryList *e1, FileEntryList *e2)
      return( - (e1->file->stat_struct.st_size - e2->file->stat_struct.st_size) );
 }
 
-
-static int SortByOwner(FileEntryList *e1, FileEntryList *e2)
+static int SortByOwner(const FileEntryList* e1, const FileEntryList* e2)
 {
-  const char* o1;
-  const char* o2;
-  char n1[10], n2[10];
+  std::string n1;
+  std::string n2;
 
-  o1 = GetPasswdName( e1->file->stat_struct.st_uid );
-  o2 = GetPasswdName( e2->file->stat_struct.st_uid );
-
-  if( o1 == NULL )
+  if (const auto o1 = GetPasswdName(e1->file->stat_struct.st_uid))
   {
-    (void) sprintf( n1, "%d", (int) e1->file->stat_struct.st_uid );
-    o1 = n1;
+    n1 = *o1;
+  } else {
+    n1 = std::to_string(e1->file->stat_struct.st_uid);
   }
-
-  if( o2 == NULL )
+  if (const auto o2 = GetPasswdName(e2->file->stat_struct.st_uid))
   {
-    (void) sprintf( n2, "%d", (int) e2->file->stat_struct.st_uid );
-    o2 = n2;
+    n2 = *o2;
+  } else {
+    n2 = std::to_string(e2->file->stat_struct.st_uid);
   }
   if (do_case)
-     if (order)
-        return( strcmp( o1, o2 ) );
-     else
-        return( - (strcmp( o1, o2 ) ) );
-  else
-     if (order)
-        return( strcasecmp( o1, o2 ) );
-     else
-        return( - (strcasecmp( o1, o2 ) ) );
+  {
+    if (order)
+    {
+      return n1.compare(n2);
+    } else {
+      return -n1.compare(n2);
+    }
+  }
+  else if (order)
+  {
+    return strcasecmp(n1.c_str(), n2.c_str());
+  } else {
+    return -strcasecmp(n1.c_str(), n2.c_str());
+  }
 }
 
-
-
-static int SortByGroup(FileEntryList *e1, FileEntryList *e2)
+static int SortByGroup(const FileEntryList* e1, const FileEntryList* e2)
 {
-  const char* g1;
-  const char* g2;
-  char n1[10], n2[10];
+  std::string n1;
+  std::string n2;
 
-  g1 = GetGroupName( e1->file->stat_struct.st_gid );
-  g2 = GetGroupName( e2->file->stat_struct.st_gid );
-
-  if( g1 == NULL )
+  if (const auto g1 = GetGroupName(e1->file->stat_struct.st_gid))
   {
-    (void) sprintf( n1, "%d", (int) e1->file->stat_struct.st_uid );
-    g1 = n1;
+    n1 = *g1;
+  } else {
+    n1 = std::to_string(e1->file->stat_struct.st_gid);
   }
-
-  if( g2 == NULL )
+  if (const auto g2 = GetGroupName(e2->file->stat_struct.st_gid))
   {
-    (void) sprintf( n2, "%d", (int) e2->file->stat_struct.st_uid );
-    g2 = n2;
+    n2 = *g2;
+  } else {
+    n2 = std::to_string(e2->file->stat_struct.st_gid);
   }
   if (do_case)
-     if (order)
-        return( strcmp( g1, g2 ) );
-     else
-        return( - (strcmp( g1, g2 ) ) );
-  else
-     if (order)
-        return( strcasecmp( g1, g2 ) );
-     else
-        return( - (strcasecmp( g1, g2 ) ) );
+  {
+    if (order)
+    {
+      return n1.compare(n2);
+    } else {
+      return -n1.compare(n2);
+    }
+  }
+  else if (order)
+  {
+    return strcasecmp(n1.c_str(), n2.c_str());
+  } else {
+    return -strcasecmp(n1.c_str(), n2.c_str());
+  }
 }
-
-
 
 void SetKindOfSort(int new_kind_of_sort)
 {
@@ -567,8 +562,6 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   static int  old_cols = -1;
   char owner[OWNER_NAME_MAX + 1];
   char group[GROUP_NAME_MAX + 1];
-  const char* owner_name_ptr;
-  const char* group_name_ptr;
   int  ef_window_width;
   const char* sym_link_name = nullptr;
   char type_of_file = ' ';
@@ -669,19 +662,18 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		                          attributes
 				        );
 
-                    owner_name_ptr = GetDisplayPasswdName(fe_ptr->stat_struct.st_uid);
-                    group_name_ptr = GetDisplayGroupName(fe_ptr->stat_struct.st_gid);
-
-		    if( owner_name_ptr == NULL )
-		    {
-		      (void) sprintf( owner, "%d", (int) fe_ptr->stat_struct.st_uid );
-		      owner_name_ptr = owner;
-		    }
-		    if( group_name_ptr == NULL )
-		    {
-		      (void) sprintf( group, "%d", (int) fe_ptr->stat_struct.st_gid );
-		      group_name_ptr = group;
-		    }
+        if (const auto owner_name_ptr = GetPasswdName(fe_ptr->stat_struct.st_uid))
+        {
+          std::strncpy(owner, owner_name_ptr->c_str(), sizeof(owner));
+        } else {
+          std::snprintf(owner, sizeof(owner), "%d", fe_ptr->stat_struct.st_uid);
+        }
+        if (const auto group_name_ptr = GetGroupName(fe_ptr->stat_struct.st_gid))
+        {
+          std::strncpy(group, group_name_ptr->c_str(), sizeof(group));
+        } else {
+          std::snprintf(group, sizeof(group), "%d", fe_ptr->stat_struct.st_gid);
+        }
 
                     if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
 		    {
@@ -695,8 +687,8 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      type_of_file,
 				      fe_ptr->name,
 				      (long long)fe_ptr->stat_struct.st_ino,
-				      owner_name_ptr,
-				      group_name_ptr,
+              owner,
+              group,
 				      sym_link_name
 				    );
                     }
@@ -711,8 +703,8 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      type_of_file,
 				      fe_ptr->name,
 				      (long long)fe_ptr->stat_struct.st_ino,
-				      owner_name_ptr,
-				      group_name_ptr
+              owner,
+              group
 				    );
 
                     }

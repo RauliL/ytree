@@ -885,8 +885,6 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
   int  n;
   char owner[OWNER_NAME_MAX + 1];
   char group[GROUP_NAME_MAX + 1];
-  const char* owner_name_ptr;
-  const char* group_name_ptr;
   const char* sym_link_name = nullptr;
   const char* sptr;
   char* dptr;
@@ -907,20 +905,18 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
   (void) CTime( fe_ptr->stat_struct.st_ctime, change_time );
   (void) CTime( fe_ptr->stat_struct.st_atime, access_time );
 
-  owner_name_ptr = GetPasswdName(fe_ptr->stat_struct.st_uid);
-  group_name_ptr = GetGroupName(fe_ptr->stat_struct.st_gid);
-
-  if( owner_name_ptr == NULL )
+  if (const auto owner_name_ptr = GetPasswdName(fe_ptr->stat_struct.st_uid))
   {
-    (void) sprintf( owner, "%d", (int) fe_ptr->stat_struct.st_uid );
-    owner_name_ptr = owner;
+    std::strncpy(owner, owner_name_ptr->c_str(), sizeof(owner));
+  } else {
+    std::snprintf(owner, sizeof(owner), "%d", fe_ptr->stat_struct.st_uid);
   }
-  if( group_name_ptr == NULL )
+  if (const auto group_name_ptr = GetPasswdName(fe_ptr->stat_struct.st_gid))
   {
-    (void) sprintf( group, "%d", (int) fe_ptr->stat_struct.st_gid );
-    group_name_ptr = group;
+    std::strncpy(group, group_name_ptr->c_str(), sizeof(group));
+  } else {
+    std::snprintf(group, sizeof(group), "%d", fe_ptr->stat_struct.st_gid);
   }
-
 
   sprintf(format1, "%%-%ds", max_filename_len);
   sprintf(format2, "%%-%ds", max_linkname_len);
@@ -944,9 +940,9 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
       } else if(!strncmp(sptr, SYMLINK_VIEWNAME, 3)) {
         n = sprintf(dptr, format2, sym_link_name);
       } else if(!strncmp(sptr, UID_VIEWNAME, 3)) {
-        n = sprintf(dptr, "%-8s", owner_name_ptr);
+        n = sprintf(dptr, "%-8s", owner);
       } else if(!strncmp(sptr, GID_VIEWNAME, 3)) {
-        n = sprintf(dptr, "%-8s", group_name_ptr);
+        n = sprintf(dptr, "%-8s", group);
       } else if(!strncmp(sptr, INODE_VIEWNAME, 3)) {
         n = sprintf(dptr, "%7lld", (long long)fe_ptr->stat_struct.st_ino);
       } else if(!strncmp(sptr, ACCTIME_VIEWNAME, 3)) {

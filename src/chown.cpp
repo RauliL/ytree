@@ -43,7 +43,6 @@ int ChangeFileOwner(FileEntry *fe_ptr)
 int GetNewOwner(int st_uid)
 {
   char owner[OWNER_NAME_MAX * 2 +1];
-  const char* owner_name_ptr;
   int  owner_id;
   int  id;
 
@@ -51,14 +50,11 @@ int GetNewOwner(int st_uid)
 
   id = (st_uid == -1) ? (int) getuid() : st_uid;
 
-  owner_name_ptr = GetPasswdName( id );
-  if( owner_name_ptr == NULL )
+  if (const auto owner_name_ptr = GetPasswdName(id))
   {
-    (void) sprintf( owner, "%d", id );
-  }
-  else
-  {
-    (void) strcpy( owner, owner_name_ptr );
+    std::strncpy(owner, owner_name_ptr->c_str(), sizeof(owner));
+  } else {
+    std::snprintf(owner, sizeof(owner), "%d", id);
   }
 
   ClearHelp();
@@ -67,10 +63,17 @@ int GetNewOwner(int st_uid)
 
   if( InputString( owner, LINES - 2, 12, 0, OWNER_NAME_MAX, "\r\033" ) == CR )
   {
-    if( (owner_id = GetPasswdUid( owner )) == -1 )
+    if (const auto owner_id_ptr = GetPasswdUid(owner))
     {
-      (void) sprintf( message, "Can't read Owner-ID:*%s", owner );
-      MESSAGE( message );
+      owner_id = *owner_id_ptr;
+    } else {
+      std::snprintf(
+        message,
+        MESSAGE_LENGTH,
+        "Can't read Owner-ID:*%s",
+        owner
+      );
+      MESSAGE(message);
     }
   }
 

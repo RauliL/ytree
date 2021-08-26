@@ -4,23 +4,16 @@
 # include <pwd.h>
 #endif
 
-const char* GetPasswdName(uid_t uid)
+std::optional<std::string> GetPasswdName(uid_t uid)
 {
   auto pwd = getpwuid(uid);
 
-  return pwd ? pwd->pw_name : nullptr;
+  return pwd ? std::make_optional<std::string>(pwd->pw_name) : std::nullopt;
 }
 
-const char* GetDisplayPasswdName(uid_t uid)
+std::optional<int> GetPasswdUid(const std::string& name)
 {
-  auto pwd = getpwuid(uid);
+  auto pwd = getpwnam(name.c_str());
 
-  return pwd ? pwd->pw_name : nullptr;
-}
-
-int GetPasswdUid(const char* name)
-{
-  auto pwd = getpwnam(name);
-
-  return pwd ? pwd->pw_uid : -1;
+  return pwd ? std::make_optional(pwd->pw_uid) : std::nullopt;
 }

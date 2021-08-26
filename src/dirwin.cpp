@@ -121,8 +121,6 @@ static void PrintDirEntry(WINDOW *win,
   char access_time[13];
   char owner[OWNER_NAME_MAX + 1];
   char group[GROUP_NAME_MAX + 1];
-  const char* owner_name_ptr;
-  const char* group_name_ptr;
   DirEntry *de_ptr;
   bool suppress_output = false;
 
@@ -169,17 +167,17 @@ static void PrintDirEntry(WINDOW *win,
 		 break;
     case MODE_2 :
                  (void)GetAttributes(de_ptr->stat_struct.st_mode, attributes);
-                 owner_name_ptr = GetDisplayPasswdName(de_ptr->stat_struct.st_uid);
-                 group_name_ptr = GetDisplayGroupName(de_ptr->stat_struct.st_gid);
-                 if( owner_name_ptr == NULL )
+                 if (const auto owner_name_ptr = GetPasswdName(de_ptr->stat_struct.st_uid))
                  {
-                    (void)sprintf(owner,"%d",(int)de_ptr->stat_struct.st_uid);
-                    owner_name_ptr = owner;
+                   std::strncpy(owner, owner_name_ptr->c_str(), sizeof(owner));
+                 } else {
+                   std::snprintf(owner, sizeof(owner), "%d", de_ptr->stat_struct.st_uid);
                  }
-                 if( group_name_ptr == NULL )
+                 if (const auto group_name_ptr = GetGroupName(de_ptr->stat_struct.st_gid))
                  {
-                     (void) sprintf( group, "%d", (int) de_ptr->stat_struct.st_gid );
-                     group_name_ptr = group;
+                   std::strncpy(group, group_name_ptr->c_str(), sizeof(group));
+                 } else {
+                   std::snprintf(group, sizeof(group), "%d", de_ptr->stat_struct.st_gid);
                  }
                  if ((line_buffer = (char *) malloc(40)) == NULL)
                  {
@@ -190,8 +188,8 @@ static void PrintDirEntry(WINDOW *win,
                  (void) sprintf( line_buffer, format,
                                  /*attributes, */
                                  de_ptr->stat_struct.st_ino,
-                                 owner_name_ptr,
-                                 group_name_ptr);
+                                 owner,
+                                 group);
                  break;
     case MODE_3 : break;
     case MODE_4 :

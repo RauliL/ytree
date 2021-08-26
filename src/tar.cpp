@@ -114,18 +114,24 @@ static int GetStatFromTAR(char *tar_line, char *name, struct stat *stat)
 
   /* Owner */
   /*-------*/
-
-  id = GetPasswdUid( t );
-  if( id == -1 ) id = atoi( t );
+  if (const auto owner_id_ptr = GetPasswdUid(t))
+  {
+    id = *owner_id_ptr;
+  } else {
+    id = std::atoi(t);
+  }
   stat->st_uid = (unsigned) id;
 
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
 
   /* Group */
   /*-------*/
-
-  id = GetGroupId( t );
-  if( id == -1 ) id = atoi( t );
+  if (const auto group_id_ptr = GetGroupId(t))
+  {
+    id = *group_id_ptr;
+  } else {
+    id = std::atoi(t);
+  }
   stat->st_gid = (unsigned) id;
 
   t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
