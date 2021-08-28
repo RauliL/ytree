@@ -437,15 +437,13 @@ int MinimizeArchiveTree(DirEntry *tree)
 
 void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cmd)
 {
+  const auto compress_method = GetFileMethod(path);
   int  l;
   char cat_path[PATH_LENGTH+1];
-  int  compress_method;
-
-  compress_method = GetFileMethod( path );
 
   l = strlen( path );
 
-  if( compress_method == ZOO_COMPRESS )
+  if (compress_method && *compress_method == CompressMethod::ZOO_COMPRESS)
   {
     /* zoo xp FILE ?? */
     /*----------------*/
@@ -457,7 +455,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
 		    cmd
 		  );
   }
-  else if( compress_method == LHA_COMPRESS )
+  else if (compress_method && *compress_method == CompressMethod::LHA_COMPRESS)
   {
     /* xlharc p FILE ?? */
     /*------------------*/
@@ -469,7 +467,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
 		    cmd
 		  );
   }
-  else if( compress_method == ZIP_COMPRESS )
+  else if (compress_method && *compress_method == CompressMethod::ZIP_COMPRESS)
   {
     /* unzip -c FILE ?? */
     /*------------------*/
@@ -481,7 +479,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
 		    cmd
 		  );
   }
-  else if( compress_method == ARC_COMPRESS )
+  else if (compress_method && *compress_method == CompressMethod::ARC_COMPRESS)
   {
     /* arc p FILE ?? */
     /*---------------*/
@@ -493,7 +491,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
 		    cmd
 		  );
   }
-  else if( compress_method == RPM_COMPRESS )
+  else if (compress_method && *compress_method == CompressMethod::RPM_COMPRESS)
   {
     /* TF=/tmp/ytree.$$; mkdir $TF; cd $TF; rpm2cpio RPM_FILE | cpio -id FILE;
      * cat $TF/$2; cd /tmp; rm -rf $TF; exit 0
@@ -517,7 +515,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
 		  );
     }
   }
-  else if( compress_method == RAR_COMPRESS )
+  else if (compress_method && *compress_method == CompressMethod::RAR_COMPRESS)
   {
     /* rar p FILE ?? */
     /*---------------*/
@@ -529,7 +527,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
 		    cmd
 		  );
   }
-  else if( compress_method == FREEZE_COMPRESS )
+  else if (compress_method && *compress_method == CompressMethod::FREEZE_COMPRESS)
   {
     /* melt < TAR_FILE | gtar xOf - FILE ?? */
     /*--------------------------------------*/
@@ -542,7 +540,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
 		    cmd
 		  );
   }
-  else if( compress_method == MULTIPLE_FREEZE_COMPRESS )
+  else if (compress_method && *compress_method == CompressMethod::MULTIPLE_FREEZE_COMPRESS)
   {
     /* CAT TAR_FILEs | melt | gtar xOf - FILE ?? */
     /*-------------------------------------------*/
@@ -559,7 +557,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
 		    cmd
 		  );
   }
-  else if( compress_method == COMPRESS_COMPRESS )
+  else if (compress_method && *compress_method == CompressMethod::COMPRESS_COMPRESS)
   {
     /* uncompress < TAR_FILE | gtar xOf - FILE ?? */
     /*--------------------------------------------*/
@@ -572,7 +570,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
 		    cmd
 		  );
   }
-  else if( compress_method == MULTIPLE_COMPRESS_COMPRESS )
+  else if (compress_method && *compress_method == CompressMethod::MULTIPLE_COMPRESS_COMPRESS)
   {
     /* CAT TAR_FILEs | uncompress | gtar xOf - FILE ?? */
     /*-------------------------------------------------*/
@@ -589,7 +587,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
 		    cmd
 		  );
   }
-  else if( compress_method == GZIP_COMPRESS )
+  else if (compress_method && *compress_method == CompressMethod::GZIP_COMPRESS)
   {
     /* gunzip < TAR_FILE | gtar xOf - FILE ?? */
     /*----------------------------------------*/
@@ -602,7 +600,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
 		    cmd
 		  );
   }
-  else if( compress_method == MULTIPLE_GZIP_COMPRESS )
+  else if (compress_method && *compress_method == CompressMethod::MULTIPLE_GZIP_COMPRESS)
   {
     /* CAT TAR_FILEs | gunzip | gtar xOf - FILE ?? */
     /*---------------------------------------------*/
@@ -619,7 +617,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
 		    cmd
 		  );
   }
-  else if( compress_method == BZIP_COMPRESS )
+  else if (compress_method && *compress_method == CompressMethod::BZIP_COMPRESS)
   {
     /* bunzip2 < TAR_FILE | gtar xOf - FILE ?? */
     /*----------------------------------------*/
@@ -631,9 +629,7 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
 		    file,
 		    cmd
 		  );
-  }
-  else
-  {
+  } else {
     /* gtar xOf - FILE < TAR_FILE ?? */
     /*-------------------------------*/
 
@@ -648,6 +644,4 @@ void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cm
 #ifdef DEBUG
   fprintf( stderr, "system( \"%s\" )\n", command_line );
 #endif
-
 }
-

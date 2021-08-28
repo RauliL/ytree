@@ -22,9 +22,9 @@ int ViewHex(char *file_path)
   {
     case DISK_MODE :
     case USER_MODE :     return( ViewHexFile( file_path ) );
-    case TAPE_MODE : 
-    case RPM_FILE_MODE : 
-    case TAR_FILE_MODE : 
+    case TAPE_MODE :
+    case RPM_FILE_MODE :
+    case TAR_FILE_MODE :
     case ZOO_FILE_MODE :
     case ZIP_FILE_MODE :
     case LHA_FILE_MODE :
@@ -38,24 +38,26 @@ int ViewHex(char *file_path)
 
 static int ViewHexFile(char *file_path)
 {
-  char *command_line;
-  int  compress_method;
+  char* command_line;
   int result = -1;
 
   if( access( file_path, R_OK ) )
   {
-    (void) sprintf( message, 
-		    "HexView not possible!*\"%s\"*%s", 
-		    file_path, 
-		    strerror(errno) 
-		  );
-    MESSAGE( message );
-    ESCAPE;
+    std::snprintf(
+      message,
+      MESSAGE_LENGTH,
+      "HexView not possible!*\"%s\"*%s",
+      file_path,
+      std::strerror(errno)
+    );
+    Message(message);
+
+    return -1;
   }
 
   InternalView(file_path);
   return(0);
-  
+
   if( ( command_line = (char *)malloc( COMMAND_LINE_LENGTH + 1 ) ) == NULL )
   {
     ERROR_MSG( "Malloc failed*ABORT" );
@@ -63,62 +65,57 @@ static int ViewHexFile(char *file_path)
   }
 
 
-  compress_method = GetFileMethod( file_path );
+  const auto compress_method = GetFileMethod(file_path);
+
+  if (compress_method && *compress_method == CompressMethod::FREEZE_COMPRESS)
+  {
+    (void) sprintf( command_line,
+		    "%s < '%s' %s | %s | %s",
+		    MELT,
+		    file_path,
+		    ERR_TO_STDOUT,
+		    HEXDUMP,
+		    PAGER
+		  );
+  }
+  else if (compress_method && *compress_method == CompressMethod::COMPRESS_COMPRESS)
+  {
+    (void) sprintf( command_line,
+		    "%s < '%s' %s | %s | %s",
+		    UNCOMPRESS,
+		    file_path,
+		    ERR_TO_STDOUT,
+		    HEXDUMP,
+		    PAGER
+		  );
+  }
+  else if (compress_method && *compress_method == CompressMethod::GZIP_COMPRESS)
+  {
+    (void) sprintf( command_line,
+		    "%s < '%s' %s | %s | %s",
+		    GNUUNZIP,
+		    file_path,
+		    ERR_TO_STDOUT,
+		    HEXDUMP,
+		    PAGER
+		  );
+  } else {
+    (void) sprintf( command_line,
+		    "%s '%s' | %s",
+		    HEXDUMP,
+		    file_path,
+		    PAGER
+		  );
+  }
 
 
-  if( compress_method == FREEZE_COMPRESS )
-  {
-    (void) sprintf( command_line, 
-		    "%s < '%s' %s | %s | %s", 
-		    MELT, 
-		    file_path, 
-		    ERR_TO_STDOUT,
-		    HEXDUMP, 
-		    PAGER 
-		  );
-  }
-  else if( compress_method == COMPRESS_COMPRESS )
-  {
-    (void) sprintf( command_line, 
-		    "%s < '%s' %s | %s | %s", 
-		    UNCOMPRESS, 
-		    file_path, 
-		    ERR_TO_STDOUT,
-		    HEXDUMP, 
-		    PAGER 
-		  );
-  }
-  else if( compress_method == GZIP_COMPRESS )
-  {
-    (void) sprintf( command_line, 
-		    "%s < '%s' %s | %s | %s", 
-		    GNUUNZIP, 
-		    file_path, 
-		    ERR_TO_STDOUT,
-		    HEXDUMP, 
-		    PAGER 
-		  );
-  }
-  else
-  {
-    (void) sprintf( command_line, 
-		    "%s '%s' | %s", 
-		    HEXDUMP, 
-		    file_path, 
-		    PAGER 
-		  );
-  }
-    
-  
   if((result = SilentSystemCall( command_line )))
   {
     (void) sprintf( message, "can't execute*%s", command_line );
     MESSAGE( message );
   }
 
-  free( command_line );
-
-FNC_XIT:
+  std::free( command_line );
 
   return( result );
 }
@@ -142,9 +139,9 @@ static int ViewHexArchiveFile(char *file_path)
 
   archive = (mode == TAPE_MODE) ? statistic.tape_name : statistic.login_path;
 
-  MakeExtractCommandLine( command_line, 
+  MakeExtractCommandLine( command_line,
 			  archive,
-			  file_path, 
+			  file_path,
 			  buffer
 			);
 

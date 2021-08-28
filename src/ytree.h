@@ -298,76 +298,27 @@
 #define TAPE_MODE      9
 #define USER_MODE      10
 
-#define NO_COMPRESS                 0
-#define FREEZE_COMPRESS             1
-#define MULTIPLE_FREEZE_COMPRESS    2
-#define COMPRESS_COMPRESS           3
-#define MULTIPLE_COMPRESS_COMPRESS  4
-#define GZIP_COMPRESS               5
-#define BZIP_COMPRESS               6
-#define MULTIPLE_GZIP_COMPRESS      7
-#define ZOO_COMPRESS                8
-#define LHA_COMPRESS                9
-#define ARC_COMPRESS                10
-#define ZIP_COMPRESS                11
-#define RPM_COMPRESS                12
-#define TAPE_DIR_NO_COMPRESS        13
-#define TAPE_DIR_FREEZE_COMPRESS    14
-#define TAPE_DIR_COMPRESS_COMPRESS  15
-#define TAPE_DIR_GZIP_COMPRESS      16
-#define TAPE_DIR_BZIP_COMPRESS	    17
-#define RAR_COMPRESS                18
-
-#define FILE_EXTENSIONS  {                                           \
-			   { ".TAP", TAPE_DIR_NO_COMPRESS },         \
-			   { ".tap", TAPE_DIR_NO_COMPRESS },         \
-			   { ".TAP.F", TAPE_DIR_FREEZE_COMPRESS },   \
-			   { ".tap.F", TAPE_DIR_FREEZE_COMPRESS },   \
-			   { ".TAP.Z", TAPE_DIR_COMPRESS_COMPRESS }, \
-			   { ".tap.Z", TAPE_DIR_COMPRESS_COMPRESS }, \
-			   { ".TAP.z", TAPE_DIR_GZIP_COMPRESS },     \
-			   { ".tap.z", TAPE_DIR_GZIP_COMPRESS },     \
-			   { ".tap.gz", TAPE_DIR_GZIP_COMPRESS },    \
-			   { ".tap.bz2", TAPE_DIR_BZIP_COMPRESS },   \
-			   { ".TAP.BZ2", TAPE_DIR_BZIP_COMPRESS },   \
-			   { ".F",   FREEZE_COMPRESS },              \
-			   { ".TFR", FREEZE_COMPRESS },              \
-			   { ".Faa", MULTIPLE_FREEZE_COMPRESS },     \
-			   { ".Z",   COMPRESS_COMPRESS },            \
-			   { ".TZ",  COMPRESS_COMPRESS },            \
-			   { ".TZR", COMPRESS_COMPRESS },            \
-			   { ".Xaa", MULTIPLE_COMPRESS_COMPRESS },   \
-			   { ".bz2", BZIP_COMPRESS },                \
-			   { ".z",   GZIP_COMPRESS },                \
-			   { ".gz",  GZIP_COMPRESS },                \
-			   { ".tz",  GZIP_COMPRESS },                \
-			   { ".tzr", GZIP_COMPRESS },                \
-			   { ".tgz", GZIP_COMPRESS },                \
-			   { ".TGZ", GZIP_COMPRESS },                \
-			   { ".taz", GZIP_COMPRESS },                \
-			   { ".TAZ", GZIP_COMPRESS },                \
-			   { ".tpz", GZIP_COMPRESS },                \
-			   { ".TPZ", GZIP_COMPRESS },                \
-			   { ".xaa", MULTIPLE_GZIP_COMPRESS },       \
-			   { ".zoo", ZOO_COMPRESS },                 \
-			   { ".ZOO", ZOO_COMPRESS },                 \
-			   { ".lzh", LHA_COMPRESS },                 \
-			   { ".LZH", LHA_COMPRESS },                 \
-			   { ".arc", ARC_COMPRESS },                 \
-			   { ".ARC", ARC_COMPRESS },                 \
-			   { ".rar", RAR_COMPRESS },                 \
-			   { ".RAR", RAR_COMPRESS },                 \
-			   { ".jar", ZIP_COMPRESS },                 \
-			   { ".zip", ZIP_COMPRESS },                 \
-			   { ".ZIP", ZIP_COMPRESS },                 \
-			   { ".JAR", ZIP_COMPRESS },                 \
-			   { ".rpm", RPM_COMPRESS },                 \
-			   { ".RPM", RPM_COMPRESS },                 \
-			   { ".spm", RPM_COMPRESS },                 \
-			   { ".SPM", RPM_COMPRESS }                  \
-			 }
-
-
+enum class CompressMethod
+{
+  FREEZE_COMPRESS = 1,
+  MULTIPLE_FREEZE_COMPRESS = 2,
+  COMPRESS_COMPRESS = 3,
+  MULTIPLE_COMPRESS_COMPRESS = 4,
+  GZIP_COMPRESS = 5,
+  BZIP_COMPRESS = 6,
+  MULTIPLE_GZIP_COMPRESS = 7,
+  ZOO_COMPRESS = 8,
+  LHA_COMPRESS = 9,
+  ARC_COMPRESS = 10,
+  ZIP_COMPRESS = 11,
+  RPM_COMPRESS = 12,
+  TAPE_DIR_NO_COMPRESS = 13,
+  TAPE_DIR_FREEZE_COMPRESS = 14,
+  TAPE_DIR_COMPRESS_COMPRESS = 15,
+  TAPE_DIR_GZIP_COMPRESS = 16,
+  TAPE_DIR_BZIP_COMPRESS = 17,
+  RAR_COMPRESS = 18,
+};
 
 #define SORT_BY_NAME       1
 #define SORT_BY_MOD_TIME   2
@@ -783,7 +734,7 @@ extern void TermcapInitscr(void);
 extern void TermcapEndwin(void);
 extern int  BuildFilename( char *in_filename, char *pattern, char *out_filename);
 extern int  ViKey( int ch );
-extern int  GetFileMethod( char *filename );
+std::optional<CompressMethod> GetFileMethod(const std::string& filename);
 extern int  AixWgetch( WINDOW *w );
 extern bool KeyPressed(void);
 extern bool EscapeKeyPressed(void);

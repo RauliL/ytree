@@ -68,7 +68,6 @@ int View(DirEntry * dir_entry, char *file_path)
 static int ViewFile(DirEntry * dir_entry, char *file_path)
 {
   char *command_line, *aux;
-  int  compress_method;
   int  result = -1;
   char *file_p_aux;
   bool notice_mapped = false;
@@ -112,8 +111,9 @@ static int ViewFile(DirEntry * dir_entry, char *file_path)
   }
   else
   {
-    compress_method = GetFileMethod( file_path );
-    if( compress_method == FREEZE_COMPRESS )
+    const auto compress_method = GetFileMethod(file_path);
+
+    if (compress_method && *compress_method == CompressMethod::FREEZE_COMPRESS)
     {
       (void) sprintf( command_line,
 		      "%s < %s %s | %s",
@@ -122,45 +122,43 @@ static int ViewFile(DirEntry * dir_entry, char *file_path)
 		      ERR_TO_STDOUT,
 		      PAGER
 		    );
-  }
-  else if( compress_method == COMPRESS_COMPRESS )
-  {
-    (void) sprintf( command_line,
-		    "%s < %s %s | %s",
-		    UNCOMPRESS,
-		    file_p_aux,
-		    ERR_TO_STDOUT,
-		    PAGER
-		  );
-  }
-  else if( compress_method == GZIP_COMPRESS )
-  {
-    (void) sprintf( command_line,
-                    "%s < %s %s | %s",
+    }
+    else if (compress_method && *compress_method == CompressMethod::COMPRESS_COMPRESS)
+    {
+      (void) sprintf( command_line,
+		      "%s < %s %s | %s",
+		      UNCOMPRESS,
+		      file_p_aux,
+		      ERR_TO_STDOUT,
+		      PAGER
+		    );
+    }
+    else if (compress_method && *compress_method == CompressMethod::GZIP_COMPRESS)
+    {
+      (void) sprintf( command_line,
+        "%s < %s %s | %s",
 		    GNUUNZIP,
 		    file_p_aux,
 		    ERR_TO_STDOUT,
 		    PAGER
 		  );
-  }
-  else if( compress_method == BZIP_COMPRESS )
-  {
-    (void) sprintf( command_line,
-                    "%s < %s %s | %s",
+    }
+    else if (compress_method && *compress_method == CompressMethod::BZIP_COMPRESS)
+    {
+      (void) sprintf( command_line,
+        "%s < %s %s | %s",
 		    BUNZIP,
 		    file_p_aux,
 		    ERR_TO_STDOUT,
 		    PAGER
 		  );
-  }
-  else
-  {
-    (void) sprintf( command_line,
+    } else {
+      (void) sprintf( command_line,
 		    "%s %s",
 		    PAGER,
 		    file_p_aux
 		  );
-  }
+    }
   }
 
 /* --crb3 01oct02: replicating what I did to <e>dit, eliminate

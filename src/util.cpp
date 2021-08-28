@@ -1,25 +1,58 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/util.c,v 1.38 2019/09/29 10:37:49 werner Exp $
- *
- * Diverse Hilfsfunktionen
- *
- ***************************************************************************/
-
-
 #include "ytree.h"
 #include "xmalloc.h"
 
+#include <unordered_map>
 
-typedef struct
+static const std::unordered_map<std::string, CompressMethod> file_extensions =
 {
-  const char *extension;
-  int  method;
-} Extension2Method;
+  { ".TAP", CompressMethod::TAPE_DIR_NO_COMPRESS },
+  { ".tap", CompressMethod::TAPE_DIR_NO_COMPRESS },
+  { ".TAP.F", CompressMethod::TAPE_DIR_FREEZE_COMPRESS },
+  { ".tap.F", CompressMethod::TAPE_DIR_FREEZE_COMPRESS },
+  { ".TAP.Z", CompressMethod::TAPE_DIR_COMPRESS_COMPRESS },
+  { ".tap.Z", CompressMethod::TAPE_DIR_COMPRESS_COMPRESS },
+  { ".TAP.z", CompressMethod::TAPE_DIR_GZIP_COMPRESS },
+  { ".tap.z", CompressMethod::TAPE_DIR_GZIP_COMPRESS },
+  { ".tap.gz", CompressMethod::TAPE_DIR_GZIP_COMPRESS },
+  { ".tap.bz2", CompressMethod::TAPE_DIR_BZIP_COMPRESS },
+  { ".TAP.BZ2", CompressMethod::TAPE_DIR_BZIP_COMPRESS },
+  { ".F", CompressMethod::  FREEZE_COMPRESS },
+  { ".TFR", CompressMethod::FREEZE_COMPRESS },
+  { ".Faa", CompressMethod::MULTIPLE_FREEZE_COMPRESS },
+  { ".Z", CompressMethod::  COMPRESS_COMPRESS },
+  { ".TZ", CompressMethod:: COMPRESS_COMPRESS },
+  { ".TZR", CompressMethod::COMPRESS_COMPRESS },
+  { ".Xaa", CompressMethod::MULTIPLE_COMPRESS_COMPRESS },
+  { ".bz2", CompressMethod::BZIP_COMPRESS },
+  { ".z", CompressMethod::  GZIP_COMPRESS },
+  { ".gz", CompressMethod:: GZIP_COMPRESS },
+  { ".tz", CompressMethod:: GZIP_COMPRESS },
+  { ".tzr", CompressMethod::GZIP_COMPRESS },
+  { ".tgz", CompressMethod::GZIP_COMPRESS },
+  { ".TGZ", CompressMethod::GZIP_COMPRESS },
+  { ".taz", CompressMethod::GZIP_COMPRESS },
+  { ".TAZ", CompressMethod::GZIP_COMPRESS },
+  { ".tpz", CompressMethod::GZIP_COMPRESS },
+  { ".TPZ", CompressMethod::GZIP_COMPRESS },
+  { ".xaa", CompressMethod::MULTIPLE_GZIP_COMPRESS },
+  { ".zoo", CompressMethod::ZOO_COMPRESS },
+  { ".ZOO", CompressMethod::ZOO_COMPRESS },
+  { ".lzh", CompressMethod::LHA_COMPRESS },
+  { ".LZH", CompressMethod::LHA_COMPRESS },
+  { ".arc", CompressMethod::ARC_COMPRESS },
+  { ".ARC", CompressMethod::ARC_COMPRESS },
+  { ".rar", CompressMethod::RAR_COMPRESS },
+  { ".RAR", CompressMethod::RAR_COMPRESS },
+  { ".jar", CompressMethod::ZIP_COMPRESS },
+  { ".zip", CompressMethod::ZIP_COMPRESS },
+  { ".ZIP", CompressMethod::ZIP_COMPRESS },
+  { ".JAR", CompressMethod::ZIP_COMPRESS },
+  { ".rpm", CompressMethod::RPM_COMPRESS },
+  { ".RPM", CompressMethod::RPM_COMPRESS },
+  { ".spm", CompressMethod::RPM_COMPRESS },
+  { ".SPM", CompressMethod::RPM_COMPRESS }
+};
 
-
-
-static Extension2Method file_extensions[] = FILE_EXTENSIONS;
 static char *GNU_getcwd(void);
 
 
@@ -630,28 +663,24 @@ int BuildFilename( char *in_filename,
   return( result );
 }
 
-
-
-int GetFileMethod( char *filename )
+std::optional<CompressMethod> GetFileMethod(const std::string& filename)
 {
-  int i, k, l;
+  const auto length = filename.length();
 
-  l = strlen( filename );
-
-  for( i=0;
-       i < (int)(sizeof( file_extensions ) / sizeof( file_extensions[0] ));
-       i++
-     )
+  for (const auto& entry : file_extensions)
   {
-    k = strlen( file_extensions[i].extension );
-    if( l >= k && !strcmp( &filename[l-k], file_extensions[i].extension ) )
-      return( file_extensions[i].method );
+    const auto& extension = entry.first;
+    const auto extension_length = extension.length();
+
+    if (length >= extension_length &&
+        !filename.substr(length - extension_length).compare(extension))
+    {
+      return entry.second;
+    }
   }
 
-  return( NO_COMPRESS );
+  return std::nullopt;
 }
-
-
 
 void NormPath( const char *in_path, char *out_path )
 {
