@@ -29,12 +29,12 @@ typedef struct
   char *value;
 } Profile;
 
-
-typedef struct _viewer {
-  char *ext;
-  char *cmd;
-  struct _viewer *next;
-} Viewer;
+struct Viewer
+{
+  char* ext;
+  char* cmd;
+  Viewer* next;
+};
 
 typedef struct _dirmenu {
   int chkey;
@@ -422,25 +422,19 @@ bool IsUserActionDefined(void)
   return((bool)(dirmenu.next != NULL || filemenu.next != NULL));
 }
 
-
-char *GetExtViewer(char *filename)
+std::optional<std::string> GetExtViewer(const std::string& filename)
 {
-  Viewer *v;
-  int l, x;
+  const auto length = filename.length();
 
-  l = strlen(filename);
+  for (auto v = viewer.next; v; v = v->next)
+  {
+    const auto x = std::strlen(v->ext);
 
-  for(v=viewer.next; v; v=v->next) {
-    x = strlen(v->ext);
-
-    if(l > x) {
-      if(!strcmp(&filename[l - x], v->ext)) {
-        return(v->cmd);
-      }
+    if (length > x && !filename.substr(length - x).compare(v->ext))
+    {
+      return v->cmd;
     }
   }
-  return(NULL);
+
+  return std::nullopt;
 }
-
-
-

@@ -580,23 +580,19 @@ char *CutFilename(char *dest, char *src, unsigned int max_len)
 /*****************************************************************************
  *                              CutPathname                                  *
  *****************************************************************************/
-
-char *CutPathname(char *dest, char *src, unsigned int max_len)
+char* CutPathname(char* dest, const std::string& src, std::size_t max_len)
 {
-  unsigned int l;
+  const auto l = src.length();
 
-  l = strlen(src);
-
-  if( l <= max_len )
-    return( strcpy( dest, src ) );
-  else
+  if (l <= max_len)
   {
-    (void) strcpy( dest, "..." );
-    (void) strncat( dest, &src[l - max_len + 3], max_len - 3 );
-    return( dest );
+    return std::strcpy(dest, src.c_str());
   }
-}
+  std::strcpy(dest, "...");
+  std::strncat(dest, src.substr(l - max_len + 3).c_str(), max_len - 3);
 
+  return dest;
+}
 
 /*****************************************************************************
  *                                  Fnsplit                                  *
@@ -882,24 +878,20 @@ const char *GetExtension(const char *filename)
   return(cptr + 1);
 }
 
-
-
-
-void StrCp(char *dest, const char *src)
+void StrCp(char* dest, const std::string& src)
 {
-   static char esc_chars[] ="#*|&;()<> \t\n\r\"!$?'`~";
+  static const std::string esc_chars ="#*|&;()<> \t\n\r\"!$?'`~";
 
-   while(*src)
-   {
-     if(strchr(esc_chars, *src))
-       *dest++ = '\\';
-     *dest++ = *src++;
-   }
-   *dest = '\0';
+  for (const auto& c : src)
+  {
+    if (esc_chars.find(c) != std::string::npos)
+    {
+      *dest++ = '\\';
+    }
+    *dest++ = c;
+  }
+  *dest = 0;
 }
-
-
-
 
 int BuildUserFileEntry(FileEntry *fe_ptr,
 			int max_filename_len, int max_linkname_len,

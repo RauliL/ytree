@@ -418,11 +418,13 @@ static int CopyArchiveFile(char *to_path, char *from_path)
   archive = (mode == TAPE_MODE) ? statistic.tape_name : statistic.login_path;
 
   (void) StrCp( from_p_aux, from_path);
-  MakeExtractCommandLine( command_line,
-			  archive,
-                          from_p_aux,
-			  buffer
-			);
+  MakeExtractCommandLine(
+    command_line,
+    COMMAND_LINE_LENGTH,
+		archive,
+    from_p_aux,
+    buffer
+  );
 
   result = SilentSystemCall( command_line );
 

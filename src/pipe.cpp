@@ -36,14 +36,14 @@ int Pipe(DirEntry *dir_entry, FileEntry *file_entry)
 
   (void) GetRealFileNamePath( file_entry, file_name_path );
   (void) StrCp( file_name_p_aux, file_name_path);
-  
+
   ClearHelp();
 
   MvAddStr( LINES - 2, 1, "Pipe-Command:" );
   if( GetPipeCommand( &input_buffer[2] ) == 0 )
   {
     move( LINES - 2, 1 ); clrtoeol();
-    
+
     if( Getcwd( cwd, PATH_LENGTH ) == NULL )
     {
       WARNING( "Getcwd failed*\".\"assumed" );
@@ -51,32 +51,31 @@ int Pipe(DirEntry *dir_entry, FileEntry *file_entry)
     }
 
     (void) GetPath( dir_entry, path );
-      
+
 
     if( mode == DISK_MODE || mode == USER_MODE )
     {
       /* Kommandozeile zusammenbasteln */
       /*-------------------------------*/
-  
-      (void) sprintf( command_line, "%s %s %s", 
-				    CAT, 
-				    file_name_p_aux, 
-				    input_buffer 
+
+      (void) sprintf( command_line, "%s %s %s",
+				    CAT,
+				    file_name_p_aux,
+				    input_buffer
 		    );
     }
     else
     {
       /* TAR/ZOO/ZIP_FILE_MODE */
       /*-----------------------*/
-
       archive = (mode == TAPE_MODE) ? statistic.tape_name : statistic.login_path;
-
-      MakeExtractCommandLine( command_line,
-			      archive,
-                              file_name_p_aux,
-			      input_buffer
-			    );
-
+      MakeExtractCommandLine(
+        command_line,
+        COMMAND_LINE_LENGTH,
+			  archive,
+        file_name_p_aux,
+			  input_buffer
+			);
     }
     refresh();
     result = QuerySystemCall( command_line );
@@ -117,7 +116,7 @@ int GetPipeCommand(char *pipe_command)
 
 
 
-  
+
 int PipeTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
 {
   int  i, n;
@@ -130,10 +129,10 @@ int PipeTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
   (void) GetRealFileNamePath( fe_ptr, from_path );
   if( ( i = open( from_path, O_RDONLY ) ) == -1 )
   {
-    (void) sprintf( message, 
-		    "Can't open file*\"%s\"*%s", 
-		    from_path, 
-		    strerror(errno) 
+    (void) sprintf( message,
+		    "Can't open file*\"%s\"*%s",
+		    from_path,
+		    strerror(errno)
 		  );
     MESSAGE( message );
     return( -1 );
@@ -141,15 +140,15 @@ int PipeTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
 
   while( ( n = read( i, buffer, sizeof( buffer ) ) ) > 0 )
   {
-    if( fwrite( buffer, 
-		n, 
-		1, 
-		walking_package->function_data.pipe_cmd.pipe_file ) != 1 
+    if( fwrite( buffer,
+		n,
+		1,
+		walking_package->function_data.pipe_cmd.pipe_file ) != 1
       )
     {
       (void) sprintf( message, "Write-Error!*%s", strerror(errno) );
       MESSAGE( message );
-      (void) close( i ); 
+      (void) close( i );
       return( -1 );
     }
   }

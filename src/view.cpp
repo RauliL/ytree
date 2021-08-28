@@ -40,77 +40,91 @@ bool hexoffset=true;
 #define CANTX(x) ((inhex)? (x*2):x)
 #define THECOLOR ((inedit)? COLOR_PAIR(STATS_COLOR):COLOR_PAIR(DIR_COLOR))
 
-static int ViewFile(DirEntry * dir_entry, char *file_path);
-static int ViewArchiveFile(char *file_path);
+static int ViewFile(DirEntry* dir_entry, const std::string& file_path);
+static int ViewArchiveFile(const std::string& file_path);
 
-
-
-int View(DirEntry * dir_entry, char *file_path)
+int View(DirEntry* dir_entry, const std::string& file_path)
 {
-  switch( mode )
+  switch (mode)
   {
-    case DISK_MODE :
-    case USER_MODE :     return( ViewFile(dir_entry, file_path ) );
+    case DISK_MODE:
+    case USER_MODE:
+      return ViewFile(dir_entry, file_path);
+
     case TAPE_MODE:
     case RAR_FILE_MODE:
     case RPM_FILE_MODE:
-    case TAR_FILE_MODE :
-    case ZOO_FILE_MODE :
-    case ZIP_FILE_MODE :
-    case LHA_FILE_MODE :
-    case ARC_FILE_MODE : return( ViewArchiveFile( file_path ) );
-    default:             beep(); return( -1 );
+    case TAR_FILE_MODE:
+    case ZOO_FILE_MODE:
+    case ZIP_FILE_MODE:
+    case LHA_FILE_MODE:
+    case ARC_FILE_MODE:
+      return ViewArchiveFile(file_path);
+
+    default:
+      beep();
   }
+
+  return -1;
 }
 
-
-
-static int ViewFile(DirEntry * dir_entry, char *file_path)
+static int ViewFile(DirEntry* dir_entry, const std::string& file_path)
 {
-  char *command_line, *aux;
+  char* command_line = nullptr;
+  char* file_p_aux = nullptr;
   int  result = -1;
-  char *file_p_aux;
   bool notice_mapped = false;
   char cwd[PATH_LENGTH+1];
   char path[PATH_LENGTH+1];
 
-  command_line = file_p_aux = NULL;
-
-  if( ( file_p_aux = (char *) malloc( COMMAND_LINE_LENGTH + 1 ) ) == NULL )
+  file_p_aux = static_cast<char*>(std::malloc(COMMAND_LINE_LENGTH));
+  if (!file_p_aux)
   {
-    ERROR_MSG( "Malloc failed*ABORT" );
-    exit( 1 );
+    ERROR_MSG("Malloc failed*ABORT");
+    std::exit(EXIT_FAILURE);
   }
   StrCp(file_p_aux, file_path);
 
-  if( access( file_path, R_OK ) )
+  if (access(file_path.c_str(), R_OK))
   {
-    (void) sprintf( message,
-		    "View not possible!*\"%s\"*%s",
-		    file_path,
-		    strerror(errno)
-		  );
-    MESSAGE( message );
-    ESCAPE;
+    std::snprintf(
+      message,
+      MESSAGE_LENGTH,
+      "View not possible!*\"%s\"*%s",
+      file_path.c_str(),
+      std::strerror(errno)
+    );
+    Message(message);
+    goto FNC_XIT;
   }
 
-  if( ( command_line = static_cast<char*>(malloc( COMMAND_LINE_LENGTH + 1 ) )) == NULL )
+  command_line = static_cast<char*>(std::malloc(COMMAND_LINE_LENGTH + 1));
+  if (!command_line)
   {
-    ERROR_MSG( "Malloc failed*ABORT" );
-    exit( 1 );
+    ERROR_MSG("Malloc failed*ABORT");
+    std::exit(EXIT_FAILURE);
   }
 
-  if (( aux = GetExtViewer(file_path))!= NULL)
+  if (const auto aux = GetExtViewer(file_path))
   {
-     if (strstr(aux,"%s") != NULL)
-     {
-        (void) sprintf(command_line, aux, file_p_aux);
-     }
-     else
-          (void) sprintf(command_line, "%s %s", aux, file_p_aux);
-  }
-  else
-  {
+    if (aux->find("%s") != std::string::npos)
+    {
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        aux->c_str(),
+        file_p_aux
+      );
+    } else {
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s %s",
+        aux->c_str(),
+        file_p_aux
+      );
+    }
+  } else {
     const auto compress_method = GetFileMethod(file_path);
 
     if (compress_method && *compress_method == CompressMethod::FREEZE_COMPRESS)
@@ -203,59 +217,83 @@ the ytree starting cwd. new code grabbed from execute.c.
   }
 
 FNC_XIT:
+  if (file_p_aux)
+  {
+    std::free(file_p_aux);
+  }
+  if (command_line)
+  {
+    std::free(command_line);
+  }
 
-  if(file_p_aux)
-    free(file_p_aux);
-  if(command_line)
-    free(command_line);
-
-  return( result );
+  return result;
 }
 
-
-
-static int ViewArchiveFile(char *file_path)
+static int ViewArchiveFile(const std::string& file_path)
 {
-  char *command_line, *aux;
+  char* command_line = static_cast<char*>(std::malloc(COMMAND_LINE_LENGTH + 1));
   char buffer[100];
-  char *archive;
-  int  result = -1;
+  char* archive;
+  int result = -1;
 
-  if( ( command_line = static_cast<char*>(malloc( COMMAND_LINE_LENGTH + 1 ) )) == NULL )
+  if (!command_line)
   {
-    ERROR_MSG( "Malloc failed*ABORT" );
-    exit( 1 );
+    ERROR_MSG("Malloc failed*ABORT");
+    std::exit(EXIT_FAILURE);
   }
 
-  if (( aux = GetExtViewer(file_path)) != NULL) {
-     if (strstr(aux,"%s") != NULL) {
-  	(void) sprintf( buffer, "| %s", PAGER );
-     } else {
-  	(void) sprintf( buffer, "| %s", aux ); /* maybe pipe-able */
-     }
+  if (const auto aux = GetExtViewer(file_path))
+  {
+    if (aux->find("%s") != std::string::npos)
+    {
+      std::snprintf(
+        buffer,
+        sizeof(buffer),
+        "| %s",
+        PAGER
+      );
+    } else {
+      // Maybe pipe-able
+      std::snprintf(
+        buffer,
+        sizeof(buffer),
+        "| %s",
+        aux->c_str()
+      );
+    }
   } else {
-    (void) sprintf( buffer, "| %s", PAGER );
+    std::snprintf(
+      buffer,
+      sizeof(buffer),
+      "| %s",
+      PAGER
+    );
   }
 
-  archive = (mode == TAPE_MODE) ? statistic.tape_name : statistic.login_path;
+  archive = mode == TAPE_MODE ? statistic.tape_name : statistic.login_path;
 
-  MakeExtractCommandLine( command_line,
-			  archive,
-			  file_path,
-			  buffer
-			);
-  if((result = SystemCall( command_line )))
+  MakeExtractCommandLine(
+    command_line,
+    COMMAND_LINE_LENGTH,
+    archive,
+    file_path,
+    buffer
+  );
+  if ((result = SystemCall(command_line)))
   {
-    (void) sprintf( message, "can't execute*%s", command_line );
-    MESSAGE( message );
+    std::snprintf(
+      message,
+      MESSAGE_LENGTH,
+      "can't execute*%s",
+      command_line
+    );
+    Message(message);
   }
 
-  free( command_line );
+  std::free(command_line);
 
-  return( result );
+  return result;
 }
-
-
 
 char *strn2print(char *dest, char *src, int c)
 {
@@ -369,8 +407,7 @@ void update_all_lines(WINDOW *win, char l)
     doupdate();
 }
 
-
-void Change2Edit(char *file_path)
+void Change2Edit(const std::string& file_path)
 {
     int i;
     char *str;
@@ -394,7 +431,7 @@ void Change2Edit(char *file_path)
     return;
 }
 
-void Change2View(char *file_path)
+void Change2View(const std::string& file_path)
 {
     int i;
     char *str;
@@ -408,7 +445,7 @@ void Change2View(char *file_path)
     doupdate();
 
     Print( stdscr, 0, 0, "File: ", MENU_COLOR );
-    Print( stdscr, 0, 6, CutPathname(str,file_path,WCOLS-5), HIMENUS_COLOR );
+    Print( stdscr, 0, 6, CutPathname(str, file_path, WCOLS - 5), HIMENUS_COLOR );
     PrintOptions( stdscr, LINES - 3, 0, "View file in hexadecimal mode");
     PrintOptions( stdscr, LINES - 2, 0, "(Q)uit   (^L) redraw  (E)dit hex");
     PrintOptions( stdscr, LINES - 1, 0,
@@ -417,7 +454,7 @@ void Change2View(char *file_path)
     return;
 }
 
-void SetupViewWindow(char *file_path)
+void SetupViewWindow(const std::string& file_path)
 {
     int i;
     char *str;
@@ -568,7 +605,7 @@ void move_right(WINDOW *win)
     return;
 }
 
-void hex_edit(char *file_path)
+void hex_edit(const std::string& file_path)
 {
     int ch;
     char mensaje[50];
@@ -577,7 +614,7 @@ void hex_edit(char *file_path)
 
     cursor_pos_x = cursor_pos_y = 0;
     fd2 = fd;
-    fd=open(file_path,O_RDWR);
+    fd=open(file_path.c_str(),O_RDWR);
     if (fd == -1){
         sprintf(mensaje,"Error %s ", strerror(errno));
 	ERROR_MSG(mensaje);
@@ -775,7 +812,7 @@ void hex_edit(char *file_path)
 }
 
 
-int InternalView(char *file_path)
+int InternalView(const std::string& file_path)
 {
     long oldpos;
     int ch;
@@ -783,11 +820,11 @@ int InternalView(char *file_path)
 
     hexoffset = (!strcmp(HEXEDITOFFSET, "HEX")) ? true : false;
 
-    if (stat(file_path, &fdstat)!=0)
+    if (stat(file_path.c_str(), &fdstat)!=0)
 	return -1;
     if (!(S_ISREG(fdstat.st_mode)) || S_ISBLK(fdstat.st_mode))
 	return -1;
-    fd=open(file_path,O_RDONLY);
+    fd=open(file_path.c_str(),O_RDONLY);
     if (fd == -1)
 	return -1;
     SetupViewWindow(file_path);

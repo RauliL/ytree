@@ -656,9 +656,9 @@ int SystemCall(const std::string& command_line);
 int QuerySystemCall(const std::string& command_line);
 int SilentSystemCall(const std::string& command_line);
 int SilentSystemCallEx(const std::string& command_line, bool enable_clock);
-extern int  View(DirEntry * dir_entry, char *file_path);
-extern int  ViewHex(char *file_path);
-extern int  InternalView(char *file_path);
+int View(DirEntry* dir_entry, const std::string& file_path);
+int ViewHex(const std::string& file_path);
+int InternalView(const std::string& file_path);
 extern int  Edit(DirEntry * dir_entry, char *file_path);
 extern void DisplayAvailBytes(void);
 extern void DisplayFileSpec(void);
@@ -719,9 +719,15 @@ extern void PrintOptions(WINDOW *,int, int, const char *);
 extern void PrintMenuOptions(WINDOW *,int, int, char *, int, int);
 extern char *FormFilename(char *dest, char *src, unsigned int max_len);
 extern char *CutFilename(char *dest, char *src, unsigned int max_len);
-extern char *CutPathname(char *dest, char *src, unsigned int max_len);
+char* CutPathname(char* dest, const std::string& src, std::size_t max_len);
 extern void   Fnsplit(char *path, char *dir, char *name);
-extern void MakeExtractCommandLine(char *command_line, char *path, char *file, char *cmd);
+void MakeExtractCommandLine(
+  char* command_line,
+  const std::size_t size,
+  const std::string& path,
+  const std::string& file,
+  const std::string& cmd
+);
 extern int MakeDirectory(DirEntry *father_dir_entry);
 extern time_t Mktime(struct tm *tm);
 extern int TryInsertArchiveDirEntry(DirEntry *tree, char *dir, struct stat *stat);
@@ -769,11 +775,11 @@ void AddStr(const std::string& str);
 extern void ClockHandler(int);
 extern int Strrcmp(char *s1, char* s2);
 extern char *Strdup(const char *s);
-extern char *GetExtViewer(char *filename);
+std::optional<std::string> GetExtViewer(const std::string& filename);
 extern void InitClock(void);
 extern void SuspendClock(void);
 extern const char *GetExtension(const char *filename);
-extern void StrCp(char *dest, const char *src);
+void StrCp(char* dest, const std::string& src);
 extern int  BuildUserFileEntry(FileEntry *fe_ptr,
             int max_filename_len, int max_linkname_len,
             const char *tmpl, int linelen, char *line);
