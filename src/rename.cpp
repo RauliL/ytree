@@ -68,14 +68,7 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
   {
     /* Rename erfolgreich */
     /*--------------------*/
-
-
-    if( STAT_( to_path, &stat_struct ) )
-    {
-      ERROR_MSG( "Stat Failed*ABORT" );
-      exit( 1 );
-    }
-
+    StatOrAbort(to_path, stat_struct);
     den_ptr = MallocOrAbort<DirEntry>(sizeof(DirEntry) + std::strlen(new_name));
 
     (void) memcpy( den_ptr, de_ptr, sizeof( DirEntry ) );
@@ -172,13 +165,7 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
   {
     /* Rename erfolgreich */
     /*--------------------*/
-
-    if( STAT_( to_path, &stat_struct ) )
-    {
-      ERROR_MSG( "Stat Failed*ABORT" );
-      exit( 1 );
-    }
-
+    StatOrAbort(to_path, stat_struct);
     fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + std::strlen(new_name));
 
     (void) memcpy( fen_ptr, fe_ptr, sizeof( FileEntry ) );

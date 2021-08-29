@@ -81,10 +81,10 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
      * ==> einklinken im Baum
      */
     den_ptr = MallocOrAbort<DirEntry>(sizeof(DirEntry) + std::strlen(dir_name));
-    den_ptr->file      = NULL;
-    den_ptr->next      = NULL;
-    den_ptr->prev      = NULL;
-    den_ptr->sub_tree  = NULL;
+    den_ptr->file = nullptr;
+    den_ptr->next = nullptr;
+    den_ptr->prev = nullptr;
+    den_ptr->sub_tree = nullptr;
     den_ptr->total_bytes    = 0L;
     den_ptr->matching_bytes = 0L;
     den_ptr->tagged_bytes   = 0L;
@@ -102,19 +102,15 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
 
     statistic.disk_total_directories++;
 
-    (void) strcpy( den_ptr->name, dir_name );
+    std::strcpy(den_ptr->name, dir_name);
 
-    if( STAT_( buffer, &stat_struct ) )
-    {
-      ERROR_MSG( "Stat Failed*ABORT" );
-      exit( 1 );
-    }
+    StatOrAbort(buffer, stat_struct);
 
-    (void) memcpy( &den_ptr->stat_struct,
-		   &stat_struct,
-		   sizeof( stat_struct )
-		 );
-
+    std::memcpy(
+      static_cast<void*>(&den_ptr->stat_struct),
+      static_cast<const void*>(&stat_struct),
+      sizeof(stat_struct)
+    );
 
     /* Sortieren durch direktes Einfuegen */
     /*------------------------------------*/

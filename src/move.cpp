@@ -137,11 +137,7 @@ int MoveFile(FileEntry *fe_ptr,
 
     if( dest_dir_entry )
     {
-      if( STAT_( to_path, &stat_struct ) )
-      {
-        ERROR_MSG( "Stat Failed*ABORT" );
-        exit( 1 );
-      }
+      StatOrAbort(to_path, stat_struct);
 
       file_size = stat_struct.st_size;
 

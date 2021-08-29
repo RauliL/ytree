@@ -1069,3 +1069,21 @@ static char *GNU_getcwd()
       size *= 2;
     }
 }
+
+static inline bool Stat(const std::string& path, struct stat& st)
+{
+#if defined(S_IFLNK) && !defined(isc386)
+  return !lstat(path.c_str(), &st);
+#else
+  return !stat(path.c_str(), &st);
+#endif
+}
+
+void StatOrAbort(const std::string& path, struct stat& st)
+{
+  if (!Stat(path, st))
+  {
+    ERROR_MSG("stat() failed*ABORT");
+    std::exit(EXIT_FAILURE);
+  }
+}
