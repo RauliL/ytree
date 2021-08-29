@@ -1074,25 +1074,3 @@ static char *GNU_getcwd()
       size *= 2;
     }
 }
-
-/*****************************************************************************
- *                              CutName                                      *
- *****************************************************************************/
-
-char *CutName(char *dest, char *src, unsigned int max_len)
-{
-  unsigned int l;
-
-  l = strlen(src);
-
-  if( l <= max_len )
-    return( strcpy( dest, src ) );
-  else
-  {
-    (void) strncpy( dest, src, max_len - 3 );
-    return strcpy( &dest[max_len - 3], "..." );
-  }
-}
-
-
-

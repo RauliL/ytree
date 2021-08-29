@@ -800,4 +800,3 @@ extern int  StrVisualLength(const char *str);
 void WAttrAddStr(WINDOW* win, int attr, const std::string& str);
 char* Strdup(const std::string& src);
 char* Strndup(const std::string& src, const std::size_t len);
-extern char *CutName(char *dest, char *src, unsigned int max_len);
