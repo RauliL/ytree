@@ -301,13 +301,8 @@ void SwitchToBigFileWindow(void)
 
 void MapF2Window(void)
 {
-  char *buffer;
+  auto buffer = MallocOrAbort<char>(F2_WINDOW_WIDTH + 1);
 
-  if( ( buffer = (char *)malloc( F2_WINDOW_WIDTH + 1 ) ) == NULL )
-  {
-     ERROR_MSG( "Malloc failed*ABORT" );
-     exit( 1 );
-  }
   werase( f2_window );
   memset(buffer, '=', F2_WINDOW_WIDTH);
   buffer[F2_WINDOW_WIDTH] = '\0';
@@ -349,18 +344,10 @@ void UnmapF2Window(void)
 static void PrintMenuLine(WINDOW *win, int y, int x, const char *line)
 {
   int  i;
-  int p, l;
-  char *buffer;
-  if (strchr(line,'('))
-     p = 2;
-  else
-     p = 0;
-  l = COLS + 2 + p;
-  if( ( buffer = (char *)malloc( l ) ) == NULL )
-  {
-     ERROR_MSG( "Malloc failed*ABORT" );
-     exit( 1 );
-  }
+  std::size_t p = std::strchr(line, '(') ? 2 : 0;
+  const std::size_t l = COLS + 2 + (std::strchr(line, '(') ? 2 : 0);
+  auto buffer = MallocOrAbort<char>(l);
+
   buffer[0] = line[0];
   if (p == 0)
      p = COLS - 25;
@@ -379,14 +366,11 @@ static void PrintMenuLine(WINDOW *win, int y, int x, const char *line)
 static void PrintLine(WINDOW *win, int y, int x, const char *line, int len)
 {
   int  i;
-  char *buffer;
 
-  if(len > 0) {
-    if( ( buffer = (char *)malloc( len + 2 ) ) == NULL )
-    {
-       ERROR_MSG( "Malloc failed*ABORT" );
-       exit( 1 );
-    }
+  if(len > 0)
+  {
+    auto buffer = MallocOrAbort<char>(len + 2);
+
     buffer[0] = line[0];
     for(i=1; i < (len); i++)
         buffer[i] = line[1];

@@ -118,15 +118,7 @@ int ReadTree(DirEntry *dir_entry, char *path, int depth)
     {
       /* Directory-Entry */
       /*-----------------*/
-
-      if( ( den_ptr = (DirEntry *)
-		       malloc( sizeof( DirEntry ) + strlen( dirent->d_name ) )
-   	   ) == NULL )
-      {
-        ERROR_MSG( "Malloc Failed*ABORT" );
-        exit( 1 );
-      }
-
+      den_ptr = MallocOrAbort<DirEntry>(sizeof(DirEntry) + std::strlen(dirent->d_name));
       den_ptr->up_tree = dir_entry;
 
       (void) strcpy( den_ptr->name, dirent->d_name );
@@ -193,31 +185,14 @@ int ReadTree(DirEntry *dir_entry, char *path, int depth)
 	}
 	link_path[n] = '\0';
 
-        if( ( fen_ptr = (FileEntry *)
-		        malloc( sizeof( FileEntry ) +
-			strlen( dirent->d_name )    +
-			n + 1 )
-	    ) == NULL )
-        {
-          ERROR_MSG( "Malloc Failed*ABORT" );
-          exit( 1 );
-        }
-
-        (void) strcpy( fen_ptr->name, dirent->d_name );
-        (void) strcpy( &fen_ptr->name[strlen(fen_ptr->name) + 1],
-		       link_path );
+        fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + std::strlen(dirent->d_name) + n + 1);
+        std::strcpy(fen_ptr->name, dirent->d_name);
+        std::strcpy(&fen_ptr->name[strlen(fen_ptr->name) + 1], link_path);
       }
       else
       {
-        if( ( fen_ptr = (FileEntry *)
-		        malloc( sizeof( FileEntry ) + strlen( dirent->d_name ) )
-	    ) == NULL )
-        {
-          ERROR_MSG( "Malloc Failed*ABORT" );
-          exit( 1 );
-        }
-
-        (void) strcpy( fen_ptr->name, dirent->d_name );
+        fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + std::strlen(dirent->d_name));
+        std::strcpy(fen_ptr->name, dirent->d_name);
       }
 
       fen_ptr->next = NULL;

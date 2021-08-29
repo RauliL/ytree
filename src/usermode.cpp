@@ -21,13 +21,12 @@ int DirUserMode(DirEntry *dir_entry, int ch)
   GetPath( dir_entry, filepath );
   command_line = NULL;
 
-  while (( aux = GetUserDirAction(ch, &chremap)) != NULL) {
-     if( command_line == NULL &&
-          ( command_line = static_cast<char*>(malloc( COMMAND_LINE_LENGTH + 1 ) )) == NULL )
-     {
-        ERROR_MSG( "Malloc failed*ABORT" );
-        exit( 1 );
-     }
+  while (( aux = GetUserDirAction(ch, &chremap)) != NULL)
+  {
+    if (!command_line)
+    {
+      command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
+    }
      if (strstr(aux,"%s") != NULL) {
   	(void) sprintf( command_line, aux, filepath );
      } else {
@@ -60,12 +59,10 @@ int FileUserMode(FileEntryList *file_entry_list, int ch)
 
   command_line = NULL;
   while (( aux = GetUserFileAction(ch, &chremap)) != NULL) {
-     if( command_line == NULL &&
-          ( command_line = static_cast<char*>(malloc( COMMAND_LINE_LENGTH + 1 ) )) == NULL )
-     {
-        ERROR_MSG( "Malloc failed*ABORT" );
-        exit( 1 );
-     }
+    if (!command_line)
+    {
+      command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
+    }
 
      if (strstr(aux,"%s") != NULL) {
   	(void) sprintf( command_line, aux, filepath );

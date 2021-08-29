@@ -800,3 +800,17 @@ extern int  StrVisualLength(const char *str);
 void WAttrAddStr(WINDOW* win, int attr, const std::string& str);
 char* Strdup(const std::string& src);
 char* Strndup(const std::string& src, const std::size_t len);
+
+template<class T>
+inline T* MallocOrAbort(const std::size_t size)
+{
+  const auto ptr = static_cast<T*>(std::malloc(size));
+
+  if (!ptr)
+  {
+    ERROR_MSG("malloc() failed*ABORT");
+    std::exit(EXIT_FAILURE);
+  }
+
+  return ptr;
+}

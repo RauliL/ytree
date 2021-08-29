@@ -80,13 +80,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
     /* Directory erstellt
      * ==> einklinken im Baum
      */
-
-    if( ( den_ptr = (DirEntry *) malloc( sizeof( DirEntry ) + strlen( dir_name )  ) ) == NULL )
-    {
-      ERROR_MSG( "Malloc Failed*ABORT" );
-      exit( 1 );
-    }
-
+    den_ptr = MallocOrAbort<DirEntry>(sizeof(DirEntry) + std::strlen(dir_name));
     den_ptr->file      = NULL;
     den_ptr->next      = NULL;
     den_ptr->prev      = NULL;

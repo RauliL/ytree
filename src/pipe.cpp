@@ -20,19 +20,13 @@ int Pipe(DirEntry *dir_entry, FileEntry *file_entry)
   static char input_buffer[COMMAND_LINE_LENGTH + 1] = "| ";
   char file_name_path[PATH_LENGTH+1];
   char file_name_p_aux[PATH_LENGTH+1];
-  char *command_line;
+  auto command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
   char *archive;
   char cwd[PATH_LENGTH+1];
   char path[PATH_LENGTH+1];
   int  result;
 
   result = -1;
-
-  if( ( command_line = (char *)malloc( COMMAND_LINE_LENGTH + 1 ) ) == NULL )
-  {
-    ERROR_MSG( "Malloc failed*ABORT" );
-    exit( 1 );
-  }
 
   (void) GetRealFileNamePath( file_entry, file_name_path );
   (void) StrCp( file_name_p_aux, file_name_path);

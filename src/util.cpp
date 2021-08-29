@@ -684,15 +684,10 @@ void NormPath( const char *in_path, char *out_path )
   char* d;
   char *old, *opath;
   int  level;
-  char *in_path_dup;
+  auto in_path_dup = MallocOrAbort<char>(std::strlen(in_path) + 1);
 
   level = 0;
   opath = out_path;
-
-  if( ( in_path_dup = static_cast<char*>(malloc( strlen( in_path ) + 1 ) )) == NULL ) {
-    ERROR_MSG( "Malloc Failed*ABORT" );
-    exit( 1 );
-  }
 
   if( *in_path == FILE_SEPARATOR_CHAR ) {
     s = in_path + 1;

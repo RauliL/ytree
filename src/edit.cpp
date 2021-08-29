@@ -28,38 +28,33 @@ int Edit(DirEntry * dir_entry, char *file_path)
 
   if( access( file_path, R_OK ) )
   {
-    (void) sprintf( message, 
-		    "Edit not possible!*\"%s\"*%s", 
-		    file_path, 
-		    strerror(errno) 
+    (void) sprintf( message,
+		    "Edit not possible!*\"%s\"*%s",
+		    file_path,
+		    strerror(errno)
 		  );
     MESSAGE( message );
     ESCAPE;
   }
 
-  if( ( file_p_aux = (char *)malloc( COMMAND_LINE_LENGTH ) ) == NULL )
-  {
-    ERROR_MSG( "Malloc failed*ABORT" );
-    exit( 1 );
-  }
+  file_p_aux = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
   StrCp(file_p_aux, file_path);
 
-  if( ( command_line = (char *)malloc( COMMAND_LINE_LENGTH ) ) == NULL )
-  {
-    ERROR_MSG( "Malloc failed*ABORT" );
-    exit( 1 );
-  }
-  (void) strcpy( command_line, EDITOR );
-  (void) strcat( command_line, " \"" );
-  (void) strcat( command_line, file_p_aux );
-  (void) strcat( command_line, "\"" );
-  free( file_p_aux);
+  command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
+  std::snprintf(
+    command_line,
+    COMMAND_LINE_LENGTH,
+    "%s \"%s\"",
+    EDITOR,
+    file_p_aux
+  );
+  std::free(static_cast<void*>(file_p_aux));
 
   /*  result = SystemCall(command_line);
     --crb3 29apr02: perhaps finally eliminate the problem with jstar writing new
     files to the ytree starting cwd. new code grabbed from execute.c.
     --crb3 01oct02: move Getcwd operation within the IF DISKMODE stuff.
-  */                                                                              
+  */
 
   if (mode == DISK_MODE)
   {
@@ -83,9 +78,9 @@ int Edit(DirEntry * dir_entry, char *file_path)
     }
   }else{
     result = SystemCall(command_line);
-  }                                                                         
+  }
   free( command_line );
- 
+
 FNC_XIT:
 
   return( result );

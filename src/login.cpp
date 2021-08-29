@@ -112,12 +112,7 @@ int LoginDisk(char *path)
 
   (void) memset( &statistic, 0, sizeof( statistic ) );
 
-  if( ( statistic.tree = (DirEntry *) malloc( sizeof( DirEntry ) +
-					      PATH_LENGTH )) == NULL )
-  {
-    ERROR_MSG( "Malloc failed*ABORT" );
-    exit( 1 );
-  }
+  statistic.tree = MallocOrAbort<DirEntry>(sizeof(DirEntry) + PATH_LENGTH);
 
   (void) memset( statistic.tree, 0, sizeof( DirEntry ) + PATH_LENGTH );
 

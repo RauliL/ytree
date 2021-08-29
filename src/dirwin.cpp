@@ -152,12 +152,8 @@ static void PrintDirEntry(WINDOW *win,
     case MODE_1 :
                  (void)GetAttributes(de_ptr->stat_struct.st_mode, attributes);
                  (void)CTime( de_ptr->stat_struct.st_mtime, modify_time );
-                 if ((line_buffer = (char *) malloc(38)) == NULL)
-                 {
-                    ERROR_MSG("malloc() Failed*Abort");
-                    exit(1);
-                 }
-                 (void) strcpy( format, "%10s %3d %8lld %12s");
+                 line_buffer = MallocOrAbort<char>(38);
+                 std::strcpy(format, "%10s %3d %8lld %12s");
 
 		 (void) sprintf( line_buffer, format, attributes,
                                  de_ptr->stat_struct.st_nlink,
@@ -179,29 +175,30 @@ static void PrintDirEntry(WINDOW *win,
                  } else {
                    std::snprintf(group, sizeof(group), "%d", de_ptr->stat_struct.st_gid);
                  }
-                 if ((line_buffer = (char *) malloc(40)) == NULL)
-                 {
-                    ERROR_MSG("malloc() Failed*Abort");
-                    exit(1);
-                 }
-                 (void) strcpy( format, "%12u  %-12s %-12s");
-                 (void) sprintf( line_buffer, format,
-                                 /*attributes, */
-                                 de_ptr->stat_struct.st_ino,
-                                 owner,
-                                 group);
+                 line_buffer = MallocOrAbort<char>(40);
+                 std::strcpy(format, "%12u  %-12s %-12s");
+                 std::snprintf(
+                   line_buffer,
+                   40,
+                   format,
+                   de_ptr->stat_struct.st_ino,
+                   owner,
+                   group
+                 );
                  break;
     case MODE_3 : break;
     case MODE_4 :
                  (void) CTime( de_ptr->stat_struct.st_ctime, change_time );
                  (void) CTime( de_ptr->stat_struct.st_atime, access_time );
-                 (void) strcpy( format, "Chg.: %12s  Acc.: %12s");
-                 if ((line_buffer = (char *) malloc(40)) == NULL)
-                 {
-                    ERROR_MSG("malloc() Failed*Abort");
-                    exit(1);
-                 }
-                 (void)sprintf(line_buffer, format, change_time, access_time);
+                 std::strcpy(format, "Chg.: %12s  Acc.: %12s");
+                 line_buffer = MallocOrAbort<char>(40);
+                 std::snprintf(
+                   line_buffer,
+                   40,
+                   format,
+                   change_time,
+                   access_time
+                 );
                  break;
   }
 

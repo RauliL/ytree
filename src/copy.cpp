@@ -211,12 +211,7 @@ int CopyFile(Statistic *statistic_ptr,
 
       /* File eintragen */
       /*----------------*/
-
-      if( ( fen_ptr = (FileEntry *) malloc( sizeof( FileEntry ) + strlen( to_file ) ) ) == NULL )
-      {
-        ERROR_MSG( "Malloc Failed*ABORT" );
-        exit( 1 );
-      }
+      fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + std::strlen(to_file));
 
       (void) strcpy( fen_ptr->name, to_file );
 
@@ -398,22 +393,16 @@ int CopyTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
 
 static int CopyArchiveFile(char *to_path, char *from_path)
 {
-  char *command_line;
+  auto command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
   char buffer[PATH_LENGTH + 3];
   char from_p_aux[PATH_LENGTH + 3];
   char to_p_aux[PATH_LENGTH + 3];
   char *archive;
   int result = -1;
 
-  if( ( command_line = (char *)malloc( COMMAND_LINE_LENGTH + 1 ) ) == NULL )
-  {
-    ERROR_MSG( "Malloc failed*ABORT" );
-    exit( 1 );
-  }
-
   (void) StrCp( to_p_aux, to_path );
-  if ( snprintf( buffer, PATH_LENGTH + 2, "> %s", to_p_aux ) < 0)
-    ;
+
+  std::snprintf(buffer, PATH_LENGTH + 2, "> %s", to_p_aux);
 
   archive = (mode == TAPE_MODE) ? statistic.tape_name : statistic.login_path;
 

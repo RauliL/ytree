@@ -156,14 +156,7 @@ int MoveFile(FileEntry *fe_ptr,
 
       /* File eintragen */
       /*----------------*/
-
-      if( ( fen_ptr = (FileEntry *) malloc( sizeof( FileEntry ) +
-					    strlen( to_file )
-					  ) ) == NULL )
-      {
-        ERROR_MSG( "Malloc Failed*ABORT" );
-        exit( 1 );
-      }
+      fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + std::strlen(to_file));
 
       (void) strcpy( fen_ptr->name, to_file );
 

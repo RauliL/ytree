@@ -55,18 +55,11 @@ static bool	re_flag = false;
 
 int SetMatchSpec(char *new_spec)
 {
+  auto buffer = MallocOrAbort<char>(std::strlen(new_spec) * 2 + 4);
+  auto b_ptr = buffer;
   char *result;
-  char *buffer;
-  char *b_ptr;
   bool meta_flag = false;
 
-  if( ( buffer = (char *)malloc( strlen( new_spec ) * 2 + 4 ) ) == NULL )
-  {
-    ERROR_MSG( "Malloc failed*ABORT" );
-    exit( 1 );
-  }
-
-  b_ptr = buffer;
   *b_ptr++ = '^';
 
   for(; *new_spec; new_spec++)

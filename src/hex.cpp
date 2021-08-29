@@ -50,12 +50,7 @@ static int ViewHexFile(const std::string& file_path)
 
   return 0;
 
-  command_line = static_cast<char*>(std::malloc(COMMAND_LINE_LENGTH + 1));
-  if (!command_line)
-  {
-    ERROR_MSG("Malloc failed*ABORT");
-    std::exit(EXIT_FAILURE);
-  }
+  command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
 
   const auto compress_method = GetFileMethod(file_path);
 
@@ -126,16 +121,10 @@ static int ViewHexFile(const std::string& file_path)
 
 static int ViewHexArchiveFile(const std::string& file_path)
 {
-  char* command_line = static_cast<char*>(std::malloc(COMMAND_LINE_LENGTH));
+  auto command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
   char* archive;
   char buffer[80];
   int result = -1;
-
-  if (!command_line)
-  {
-    ERROR_MSG("Malloc failed*ABORT");
-    std::exit(EXIT_FAILURE);
-  }
 
   std::snprintf(
     buffer,

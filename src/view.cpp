@@ -71,18 +71,12 @@ int View(DirEntry* dir_entry, const std::string& file_path)
 static int ViewFile(DirEntry* dir_entry, const std::string& file_path)
 {
   char* command_line = nullptr;
-  char* file_p_aux = nullptr;
+  auto file_p_aux = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
   int  result = -1;
   bool notice_mapped = false;
   char cwd[PATH_LENGTH+1];
   char path[PATH_LENGTH+1];
 
-  file_p_aux = static_cast<char*>(std::malloc(COMMAND_LINE_LENGTH));
-  if (!file_p_aux)
-  {
-    ERROR_MSG("Malloc failed*ABORT");
-    std::exit(EXIT_FAILURE);
-  }
   StrCp(file_p_aux, file_path);
 
   if (access(file_path.c_str(), R_OK))
@@ -98,12 +92,7 @@ static int ViewFile(DirEntry* dir_entry, const std::string& file_path)
     goto FNC_XIT;
   }
 
-  command_line = static_cast<char*>(std::malloc(COMMAND_LINE_LENGTH + 1));
-  if (!command_line)
-  {
-    ERROR_MSG("Malloc failed*ABORT");
-    std::exit(EXIT_FAILURE);
-  }
+  command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
 
   if (const auto aux = GetExtViewer(file_path))
   {
@@ -231,16 +220,10 @@ FNC_XIT:
 
 static int ViewArchiveFile(const std::string& file_path)
 {
-  char* command_line = static_cast<char*>(std::malloc(COMMAND_LINE_LENGTH + 1));
+  auto command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
   char buffer[100];
   char* archive;
   int result = -1;
-
-  if (!command_line)
-  {
-    ERROR_MSG("Malloc failed*ABORT");
-    std::exit(EXIT_FAILURE);
-  }
 
   if (const auto aux = GetExtViewer(file_path))
   {

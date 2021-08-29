@@ -76,13 +76,7 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
       exit( 1 );
     }
 
-    if( ( den_ptr = (DirEntry *) malloc( sizeof( DirEntry ) +
-					 strlen( new_name )
-				       ) ) == NULL )
-    {
-      ERROR_MSG( "Malloc Failed*ABORT" );
-      exit( 1 );
-    }
+    den_ptr = MallocOrAbort<DirEntry>(sizeof(DirEntry) + std::strlen(new_name));
 
     (void) memcpy( den_ptr, de_ptr, sizeof( DirEntry ) );
 
@@ -185,12 +179,7 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
       exit( 1 );
     }
 
-
-    if( ( fen_ptr = (FileEntry *) malloc( sizeof( FileEntry ) + strlen( new_name )  ) ) == NULL )
-    {
-      ERROR_MSG( "Malloc Failed*ABORT" );
-      exit( 1 );
-    }
+    fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + std::strlen(new_name));
 
     (void) memcpy( fen_ptr, fe_ptr, sizeof( FileEntry ) );
 

@@ -64,11 +64,7 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
     }
   }
 
-  if( ( de_ptr = (DirEntry *) malloc( sizeof( DirEntry ) + strlen( name ) ) ) == NULL )
-  {
-    ERROR_MSG( "Malloc failed*ABORT" );
-    exit( 1 );
-  }
+  de_ptr = MallocOrAbort<DirEntry>(sizeof(DirEntry) + std::strlen(name));
 
   (void) memset( (char *) de_ptr, 0, sizeof( DirEntry ) );
   (void) strcpy( de_ptr->name, name );
@@ -208,11 +204,7 @@ int InsertArchiveFileEntry(DirEntry *tree, char *path, struct stat *stat)
   else
     n = 0;
 
-  if( ( fe_ptr = (FileEntry *) malloc( sizeof( FileEntry ) + strlen( file ) + n ) ) == NULL )
-  {
-    ERROR_MSG( "Malloc failed*ABORT" );
-    exit( 1 );
-  }
+  fe_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + std::strlen(file) + n);
 
   (void) memset( fe_ptr, 0, sizeof( FileEntry ) );
   (void) memcpy( (char *) &fe_ptr->stat_struct, (char *) stat, sizeof( struct stat ) );

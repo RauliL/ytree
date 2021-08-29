@@ -568,12 +568,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   {
     old_cols = COLS;
     if( line_buffer ) free( line_buffer );
-
-    if( ( line_buffer = (char *) malloc( COLS + PATH_LENGTH ) ) == NULL )
-    {
-      ERROR_MSG( "Malloc failed*ABORT" );
-      exit( 1 );
-    }
+    line_buffer = MallocOrAbort<char>(COLS + PATH_LENGTH);
   }
 
   fe_ptr = file_entry_list[entry_no].file;
@@ -2554,13 +2549,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 		      else
 		      {
-			char *command_line;
-
-			if( ( command_line = (char *)malloc( COLS + 1 ) ) == NULL )
-			{
-			  ERROR_MSG( "Malloc failed*ABORT" );
-			  exit( 1 );
-			}
+            auto command_line = MallocOrAbort<char>(COLS + 1);
 
 			need_dsp_help = true;
 			*command_line = '\0';
@@ -2601,13 +2590,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 		      else
 		      {
-			char *command_line;
-
-			if( ( command_line = (char *)malloc( COLS + 1 ) ) == NULL )
-			{
-			  ERROR_MSG( "Malloc failed*ABORT" );
-			  exit( 1 );
-			}
+            auto command_line = MallocOrAbort<char>(COLS + 1);
 
 			need_dsp_help = true;
 			*command_line = '\0';
@@ -2994,14 +2977,11 @@ static void ListJump( DirEntry * dir_entry, const char *str )
         return;
     }
 
-    n = strlen(str);
-    if((newStr = static_cast<char*>(malloc(n+2))) == NULL) {
-      ERROR_MSG( "Malloc failed*ABORT" );
-      exit( 1 );
-    }
-    strcpy(newStr, str);
+    n = std::strlen(str);
+    newStr = MallocOrAbort<char>(n + 2);
+    std::strcpy(newStr, str);
     newStr[n] = ic;
-    newStr[n+1] = '\0';
+    newStr[n + 1] = 0;
 
     /* index of current entry in list */
     tmp2 = (incremental && n == 0) ? 0 : dir_entry->start_file + dir_entry->cursor_pos;
