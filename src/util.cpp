@@ -830,52 +830,40 @@ int Strrcmp(char *s1, char* s2)/*compares in reverse order 2 strings*/
    return(0);
 }
 
-
-
-/* NeXT does not define strdup */
-char *Strdup(const char *s)
+char* Strdup(const std::string& src)
 {
-  char *cp = NULL;
+  const auto result = static_cast<char*>(std::malloc(src.length() + 1));
 
-  if (s) {
-    cp = static_cast<char*>(malloc(strlen(s)+1));
-    if (cp) {
-      strcpy(cp,s);
-    }
-  }
-  return(cp);
+  std::strncpy(result, src.c_str(), src.length());
+
+  return result;
 }
 
-/* Solaris does not define this */
-char *Strndup(const char *s, std::size_t len)
+char* Strndup(const std::string& src, const std::size_t len)
 {
-  char *cp = NULL;
-  int l;
+  const auto l = std::min(src.length(), len);
+  const auto result = static_cast<char*>(std::malloc(l + 1));
 
-  if (s) {
-    l = MINIMUM(strlen(s), len);
-    cp = static_cast<char*>(malloc(l+1));
-    if (cp) {
-      memcpy(cp, s, l);
-      cp[l] = '\0';
-    }
-  }
-  return(cp);
+  std::memcpy(
+    static_cast<void*>(result),
+    static_cast<const void*>(src.c_str()),
+    l
+  );
+  result[l] = 0;
+
+  return result;
 }
 
-
-const char *GetExtension(const char *filename)
+std::optional<std::string> GetExtension(const std::string& filename)
 {
-  const char* cptr;
+  const auto pos = filename.rfind('.');
 
-  cptr = strrchr(filename, '.');
+  if (pos == std::string::npos || pos == 0)
+  {
+    return std::nullopt;
+  }
 
-  if(cptr == NULL) return "";
-
-  if(cptr == filename) return "";
-  // filenames beginning with a dot are not an extension
-
-  return(cptr + 1);
+  return filename.substr(pos + 1);
 }
 
 void StrCp(char* dest, const std::string& src)

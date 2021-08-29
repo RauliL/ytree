@@ -774,11 +774,10 @@ void WAddStr(WINDOW* win, const std::string& str);
 void AddStr(const std::string& str);
 extern void ClockHandler(int);
 extern int Strrcmp(char *s1, char* s2);
-extern char *Strdup(const char *s);
 std::optional<std::string> GetExtViewer(const std::string& filename);
 extern void InitClock(void);
 extern void SuspendClock(void);
-extern const char *GetExtension(const char *filename);
+std::optional<std::string> GetExtension(const std::string& filename);
 void StrCp(char* dest, const std::string& src);
 extern int  BuildUserFileEntry(FileEntry *fe_ptr,
             int max_filename_len, int max_linkname_len,
@@ -799,5 +798,6 @@ extern int  RefreshDirWindow();
 extern char *StrLeft(const char *str, size_t count);
 extern int  StrVisualLength(const char *str);
 void WAttrAddStr(WINDOW* win, int attr, const std::string& str);
-extern char *Strndup(const char *s, std::size_t len);
+char* Strdup(const std::string& src);
+char* Strndup(const std::string& src, const std::size_t len);
 extern char *CutName(char *dest, char *src, unsigned int max_len);

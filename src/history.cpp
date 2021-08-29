@@ -35,10 +35,10 @@ void ReadHistory(char *Filename)
   char buffer[BUFSIZ];
 
   if ( (HstFile = fopen( Filename, "r" ) ) != NULL) {
-    while( fgets( buffer, sizeof( buffer ), HstFile ) ) 
+    while( fgets( buffer, sizeof( buffer ), HstFile ) )
     {
         if (strlen(buffer) > 0)
-        { 
+        {
           buffer[strlen(buffer) -1] = '\0';
           InsHistory(buffer);
         }
@@ -55,7 +55,7 @@ void SaveHistory(char *Filename)
   FILE *HstFile;
   int j;
   History *hst, *last_hst;
-  
+
   hst = last_hst = NULL;
 
   if((hst = Hist)) {
@@ -90,7 +90,7 @@ void InsHistory( char *NewHst)
    {
        if (strcmp(TMP -> hst, NewHst) == 0)
        {
-         if (TMP2 != TMP) 
+         if (TMP2 != TMP)
          {
             TMP2 -> next = TMP -> next;
             TMP -> next = Hist;
@@ -101,20 +101,20 @@ void InsHistory( char *NewHst)
        };
        TMP2 = TMP;
    }
-   
+
    if (flag == 0)
    {
       if ((TMP=(History *) malloc(sizeof(struct _history))) != NULL)
       {
          TMP -> next = Hist;
-	 TMP -> prev = NULL;
-	 if(( TMP -> hst = Strdup(NewHst)) == NULL) 
+	 TMP->prev = nullptr;
+   if (!(TMP->hst = Strdup(NewHst)))
 	 {
-	    free(TMP);
+	    std::free(TMP);
 	    return;
 	 }
 
-         if (Hist != NULL) 
+         if (Hist != NULL)
 	     Hist -> prev = TMP;
          Hist = TMP;
          total_hist++;
@@ -125,7 +125,7 @@ void InsHistory( char *NewHst)
 
 
 
-void PrintHstEntry(int entry_no, int y, int color, 
+void PrintHstEntry(int entry_no, int y, int color,
                    int start_x, int *hide_left, int *hide_right)
 {
   int     n;
@@ -136,7 +136,7 @@ void PrintHstEntry(int entry_no, int y, int color,
   int     window_height;
   int     ef_window_width;
 
-  
+
   GetMaxYX( history_window, &window_height, &window_width );
   ef_window_width = window_width - 2; /* Effektive Window-Width */
 
@@ -150,7 +150,7 @@ void PrintHstEntry(int entry_no, int y, int color,
 
   for(n=0, pp=Hist; pp && (n < entry_no); pp = pp->next)
   {
-    n++; 
+    n++;
   }
 
   if(pp)
@@ -186,7 +186,7 @@ void PrintHstEntry(int entry_no, int y, int color,
     strcat(line_ptr, (color == HIHST_COLOR) ? " <" : "  ");
     WAddStr( history_window, line_ptr );
 #else
-#ifdef COLOR_SUPPORT 
+#ifdef COLOR_SUPPORT
     WbkgdSet(history_window, COLOR_PAIR(color)|A_BOLD);
 #else
     if(color == HIHST_COLOR)
@@ -219,7 +219,7 @@ int DisplayHistory()
   {
     if (disp_begin_pos + i >= total_hist ) break;
     if (disp_begin_pos + i != hilight_no )
-        PrintHstEntry(disp_begin_pos + i, i, HST_COLOR, 
+        PrintHstEntry(disp_begin_pos + i, i, HST_COLOR,
 	              0, &hide_left, &hide_right);
     else
       p_y = i;
@@ -258,7 +258,7 @@ char *GetHistory()
       if(start_x) {
         start_x = 0;
 	PrintHstEntry( disp_begin_pos + cursor_pos,
-		       cursor_pos, HIHST_COLOR, 
+		       cursor_pos, HIHST_COLOR,
 		       start_x, &hide_left, &hide_right);
       }
     }
@@ -274,17 +274,17 @@ char *GetHistory()
 		      PrintHstEntry( disp_begin_pos + cursor_pos,
 			             cursor_pos, HIHST_COLOR,
 		                     start_x, &hide_left, &hide_right);
-		      if(hide_right < 0) 
+		      if(hide_right < 0)
 		        start_x--;
 		      break;
-      
+
       case KEY_LEFT:  if(start_x > 0)
        		        start_x--;
 		      PrintHstEntry( disp_begin_pos + cursor_pos,
 			             cursor_pos, HIHST_COLOR,
 		                     start_x, &hide_left, &hide_right);
 		      break;
-      
+
       case '\t':
       case KEY_DOWN: if (disp_begin_pos + cursor_pos+1 >= total_hist)
       		     {
@@ -303,12 +303,12 @@ char *GetHistory()
                        }
 		       else
 		       {
-			 PrintHstEntry( disp_begin_pos + cursor_pos, 
+			 PrintHstEntry( disp_begin_pos + cursor_pos,
 					cursor_pos, HST_COLOR,
 		                        start_x, &hide_left, &hide_right);
 			 scroll( history_window );
 			 disp_begin_pos++;
-			 PrintHstEntry( disp_begin_pos + cursor_pos, 
+			 PrintHstEntry( disp_begin_pos + cursor_pos,
 					cursor_pos, HIHST_COLOR,
 		                        start_x, &hide_left, &hide_right);
                        }
@@ -321,7 +321,7 @@ char *GetHistory()
 		     {
 		       if( cursor_pos - 1 >= 0 )
 		       {
-			 PrintHstEntry( disp_begin_pos + cursor_pos, 
+			 PrintHstEntry( disp_begin_pos + cursor_pos,
 					cursor_pos, HST_COLOR,
 		                        start_x, &hide_left, &hide_right);
 			 cursor_pos--;
@@ -331,13 +331,13 @@ char *GetHistory()
                        }
 		       else
 		       {
-			 PrintHstEntry( disp_begin_pos + cursor_pos, 
+			 PrintHstEntry( disp_begin_pos + cursor_pos,
 					cursor_pos, HST_COLOR,
 		                        start_x, &hide_left, &hide_right);
 			 wmove( history_window, 0, 0 );
 			 winsertln( history_window );
 			 disp_begin_pos--;
-			 PrintHstEntry( disp_begin_pos + cursor_pos, 
+			 PrintHstEntry( disp_begin_pos + cursor_pos,
 					cursor_pos, HIHST_COLOR,
 		                        start_x, &hide_left, &hide_right);
                        }
@@ -350,14 +350,14 @@ char *GetHistory()
 		     {
 		       if( cursor_pos < HISTORY_WINDOW_HEIGHT - 1 )
 		       {
-			 PrintHstEntry( disp_begin_pos + cursor_pos, 
+			 PrintHstEntry( disp_begin_pos + cursor_pos,
 					cursor_pos, HST_COLOR,
 		                        start_x, &hide_left, &hide_right);
 		         if( disp_begin_pos + HISTORY_WINDOW_HEIGHT > total_hist  - 1 )
 			   cursor_pos = total_hist - disp_begin_pos - 1;
 			 else
 			   cursor_pos = HISTORY_WINDOW_HEIGHT - 1;
-			 PrintHstEntry( disp_begin_pos + cursor_pos, 
+			 PrintHstEntry( disp_begin_pos + cursor_pos,
 					cursor_pos, HIHST_COLOR,
 		                        start_x, &hide_left, &hide_right);
 		       }
@@ -375,7 +375,7 @@ char *GetHistory()
 			   cursor_pos = total_hist - disp_begin_pos - 1;
 			 }
                          DisplayHistory();
-		       } 
+		       }
 		     }
                      break;
       case KEY_PPAGE:
@@ -385,11 +385,11 @@ char *GetHistory()
 		     {
 		       if( cursor_pos > 0 )
 		       {
-			 PrintHstEntry( disp_begin_pos + cursor_pos, 
+			 PrintHstEntry( disp_begin_pos + cursor_pos,
 					cursor_pos, HST_COLOR,
 		                        start_x, &hide_left, &hide_right);
 			 cursor_pos = 0;
-			 PrintHstEntry( disp_begin_pos + cursor_pos, 
+			 PrintHstEntry( disp_begin_pos + cursor_pos,
 					cursor_pos, HIHST_COLOR,
 		                        start_x, &hide_left, &hide_right);
 		       }
@@ -401,7 +401,7 @@ char *GetHistory()
 			 }
                          cursor_pos = 0;
                          DisplayHistory();
-		       } 
+		       }
 		     }
                      break;
       case KEY_HOME: if( disp_begin_pos == 0 && cursor_pos == 0 )
@@ -413,13 +413,13 @@ char *GetHistory()
                        DisplayHistory();
 		     }
                      break;
-      case KEY_END : 
+      case KEY_END :
                      disp_begin_pos = MAX(0, total_hist - HISTORY_WINDOW_HEIGHT);
 		     cursor_pos     = total_hist - disp_begin_pos - 1;
                      DisplayHistory();
                      break;
       case LF :
-      case CR : 
+      case CR :
                      TMP = Hist;
                      for(tmp = 0; (tmp != disp_begin_pos + cursor_pos); tmp++)
                      {

@@ -334,37 +334,30 @@ static int SortByName(const FileEntryList *e1, const FileEntryList *e2)
         return( - (strcasecmp( e1->file->name, e2->file->name ) ) );
 }
 
-static int SortByExtension(const FileEntryList *e1, const FileEntryList *e2)
+static int SortByExtension(const FileEntryList* e1, const FileEntryList* e2)
 {
-  const char* ext1;
-  const char* ext2;
-  int cmp, casecmp;
+  const auto ext1 = GetExtension(e1->file->name).value_or("");
+  const auto ext2 = GetExtension(e2->file->name).value_or("");
+  int result;
 
   /* Ok, this isn't optimized */
-
-  ext1 = GetExtension(e1->file->name);
-  ext2 = GetExtension(e2->file->name);
-  cmp=strcmp( ext1, ext2 );
-  casecmp=strcasecmp( ext1, ext2 );
-
-  if (do_case && !cmp)
-      return SortByName( e1, e2 );
-  if (!do_case && !casecmp)
-      return SortByName( e1, e2 );
-
+  if (
+    (do_case && !ext1.compare(ext2)) ||
+    (!do_case && !strcasecmp(ext1.c_str(), ext2.c_str()))
+  )
+  {
+    return SortByName(e1, e2);
+  }
 
   if (do_case)
-     if (order)
-        return( strcmp( ext1, ext2 ) );
-     else
-        return( - (strcmp( ext1, ext2 ) ) );
-  else
-     if (order)
-        return( strcasecmp( ext1, ext2 ) );
-     else
-        return( - (strcasecmp( ext1, ext2 ) ) );
-}
+  {
+    result = ext1.compare(ext2);
+  } else {
+    result = strcasecmp(ext1.c_str(), ext2.c_str());
+  }
 
+  return do_case ? result : -result;
+}
 
 static int SortByModTime(const FileEntryList *e1, const FileEntryList *e2)
 {
