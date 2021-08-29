@@ -13,7 +13,7 @@
 
 int Edit(DirEntry * dir_entry, char *file_path)
 {
-  char *command_line;
+  std::string command_line;
   int  result = -1;
   char *file_p_aux=NULL;
   char cwd[PATH_LENGTH + 1];
@@ -28,26 +28,18 @@ int Edit(DirEntry * dir_entry, char *file_path)
 
   if( access( file_path, R_OK ) )
   {
-    (void) sprintf( message,
-		    "Edit not possible!*\"%s\"*%s",
-		    file_path,
-		    strerror(errno)
-		  );
-    MESSAGE( message );
+    MessagePrintf(
+		  "Edit not possible!*\"%s\"*%s",
+		  file_path,
+		  std::strerror(errno)
+		);
     ESCAPE;
   }
 
   file_p_aux = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
   StrCp(file_p_aux, file_path);
 
-  command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
-  std::snprintf(
-    command_line,
-    COMMAND_LINE_LENGTH,
-    "%s \"%s\"",
-    EDITOR,
-    file_p_aux
-  );
+  command_line = std::string(EDITOR) + " \"" + file_p_aux + "\"";
   std::free(static_cast<void*>(file_p_aux));
 
   /*  result = SystemCall(command_line);
@@ -66,25 +58,19 @@ int Edit(DirEntry * dir_entry, char *file_path)
 
     if (chdir(GetPath(dir_entry, path)))
     {
-            (void) sprintf(message, "Can't change directory to*\"%s\"", path);
-            MESSAGE(message);
-    }else{
-            result = SystemCall(command_line);
+      MessagePrintf("Can't change directory to*\"%s\"", path);
+    } else {
+      result = SystemCall(command_line);
     }
-    if(chdir(cwd))
+    if (chdir(cwd))
     {
-            (void) sprintf(message, "Can't change directory to*\"%s\"", cwd);
-            MESSAGE(message);
+      MessagePrintf("Can't change directory to*\"%s\"", cwd);
     }
-  }else{
+  } else {
     result = SystemCall(command_line);
   }
-  free( command_line );
 
 FNC_XIT:
 
   return( result );
 }
-
-
-

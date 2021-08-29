@@ -43,8 +43,7 @@ int ReadTreeFromZIP(DirEntry *dir_entry, FILE *f)
 
       if( GetStatFromZIP( zip_line, path_name, &stat ) )
       {
-        (void) sprintf( message, "unknown zipinfo*%s", zip_line );
-        MESSAGE( message );
+        MessagePrintf("unknown zipinfo*%s", zip_line);
       }
       else
       {

@@ -34,12 +34,13 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
   if( ( p = strrchr( father_path, FILE_SEPARATOR_CHAR ) ) ) *p = '\0';
   else
   {
-    (void) sprintf( message, "path mismatch*missing '%c' in*%s",
-	            FILE_SEPARATOR_CHAR,
-	            path
-	          );
-    ERROR_MSG( message );
-    return( -1 );
+    ErrorPrintf(
+      "patch mismatch*missing '%c' in*%s",
+      FILE_SEPARATOR_CHAR,
+      path
+    );
+
+    return -1;
   }
 
   p = strrchr( father_path, FILE_SEPARATOR_CHAR );
@@ -58,9 +59,9 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
     *p = '\0';
     if( GetArchiveDirEntry( tree, father_path, &df_ptr ) )
     {
-      (void) sprintf( message, "can't find subdir*%s", father_path );
-      ERROR_MSG( message );
-      return( -1 );
+      ErrorPrintf("can't find subdir*%s", father_path);
+
+      return -1;
     }
   }
 
@@ -193,9 +194,9 @@ int InsertArchiveFileEntry(DirEntry *tree, char *path, struct stat *stat)
     }
     if( GetArchiveDirEntry( tree, dir, &de_ptr ) )
     {
-      (void) sprintf( message, "again: can't get directory for file*%s*giving up", path );
-      ERROR_MSG( message );
-      return( -1 );
+      ErrorPrintf("again: can't get directory for file*%s*giving up", path);
+
+      return -1;
     }
   }
 

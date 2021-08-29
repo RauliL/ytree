@@ -67,13 +67,7 @@ int GetNewGroup(int st_gid)
     {
       group_id = *group_id_ptr;
     } else {
-      std::snprintf(
-        message,
-        MESSAGE_LENGTH,
-        "Can't read Group-ID:*\"%s\"",
-        group
-      );
-      MESSAGE(message);
+      MessagePrintf("Can't read Group-ID:*\"%s\"", group);
     }
   }
 
@@ -115,11 +109,8 @@ int SetFileGroup(FileEntry *fe_ptr, WalkingPackage *walking_package)
       fe_ptr->stat_struct = stat_struct;
     }
     result = 0;
-  }
-  else
-  {
-    (void) sprintf( message, "Can't change owner:*%s", strerror(errno) );
-    MESSAGE( message );
+  } else {
+    MessagePrintf("Can't change owner:*%s", std::strerror(errno));
   }
 
   return( result );
@@ -179,15 +170,9 @@ static int SetDirGroup(DirEntry *de_ptr, int new_group_id)
       de_ptr->stat_struct = stat_struct;
     }
     result = 0;
-  }
-  else
-  {
-    (void) sprintf( message, "Can't change owner:*%s", strerror(errno) );
-    MESSAGE( message );
+  } else {
+    MessagePrintf("Can't change owner:*%s", std::strerror(errno));
   }
 
   return( result );
 }
-
-
-

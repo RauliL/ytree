@@ -40,8 +40,7 @@ int ReadTreeFromRAR(DirEntry *dir_entry, FILE *f)
 
       if( GetStatFromRAR( rar_line, path_name, &stat ) )
       {
-        (void) sprintf( message, "unknown rarinfo*%s", rar_line );
-        MESSAGE( message );
+        MessagePrintf("unknown rarinfo*%s", rar_line);
       }
       else
       {

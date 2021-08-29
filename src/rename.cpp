@@ -35,10 +35,9 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
 
   cptr = strrchr( to_path, '/' );
 
-  if( !cptr )
+  if (!cptr)
   {
-    (void) sprintf( message, "Invalid Path!*\"%s\"", to_path );
-    WARNING( message );
+    WarningPrintf("Invalid Path!*\"%s\"", to_path);
     ESCAPE;
   }
 
@@ -51,14 +50,13 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
   (void) strcpy( cptr + 1, new_name );
 
 
-  if( access( from_path, W_OK ) )
+  if (access(from_path, W_OK))
   {
-    (void) sprintf( message,
-		    "Rename not possible!*\"%s\"*%s",
-		    from_path,
-		    strerror(errno)
-		  );
-    MESSAGE( message );
+    MessagePrintf(
+      "Rename not possible!*\"%s\"*%s",
+      from_path,
+      std::strerror(errno)
+    );
     ESCAPE;
   }
 
@@ -148,14 +146,13 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
   (void) strcat( to_path, new_name );
 
 
-  if( access( from_path, W_OK ) )
+  if (access(from_path, W_OK))
   {
-    (void) sprintf( message,
-		    "Rename not possible!*\"%s\"*%s",
-		    from_path,
-		    strerror(errno)
-		  );
-    MESSAGE( message );
+    MessagePrintf(
+      "Rename not possible!*\"%s\"*%s",
+      from_path,
+      std::strerror(errno)
+    );
     ESCAPE;
   }
 
@@ -277,14 +274,14 @@ static int RenameDirEntry(char *to_path, char *from_path)
 
   if( rename( from_path, to_path ) )
   {
-    (void) sprintf( message,
-		    "Can't rename \"%s\"*to \"%s\"*%s",
-		    from_path,
-		    to_path,
-		    strerror(errno)
-		  );
-    MESSAGE( message );
-    return( -1 );
+    MessagePrintf(
+      "Can't rename \"%s\"*to \"%s\"*%s",
+      from_path,
+      to_path,
+      std::strerror(errno)
+    );
+
+    return -1;
   }
 
   return( 0 );
@@ -302,27 +299,27 @@ static int RenameFileEntry(char *to_path, char *from_path)
     return( -1 );
   }
 
-  if( link( from_path, to_path ) )
+  if (link(from_path, to_path))
   {
-    (void) sprintf( message,
-		    "Can't link \"%s\"*to \"%s\"*%s",
-		    from_path,
-		    to_path,
-		    strerror(errno)
-		  );
-    MESSAGE( message );
-    return( -1 );
+    MessagePrintf(
+      "Can't link \"%s\"*to \"%s\"*%s",
+      from_path,
+      to_path,
+      std::strerror(errno)
+    );
+
+    return -1;
   }
 
-  if( unlink( from_path ) )
+  if (unlink(from_path))
   {
-    (void) sprintf( message,
-		    "Can't unlink*\"%s\"*%s",
-		    from_path,
-		    strerror(errno)
-		  );
-    MESSAGE( message );
-    return( -1 );
+    MessagePrintf(
+      "Can't unlink*\"%s\"*%s",
+      from_path,
+      std::strerror(errno)
+    );
+
+    return -1;
   }
 
   return( 0 );

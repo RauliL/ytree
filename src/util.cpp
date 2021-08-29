@@ -138,11 +138,11 @@ int GetDirEntry(DirEntry *tree,
   *to_path   = '\0';
 
    strcpy(to_path, dir_path);
-  if( Getcwd( current_path, sizeof( current_path ) - 2 ) == NULL )
+  if (!Getcwd( current_path, sizeof( current_path ) - 2 ))
   {
-    (void) sprintf( message, "Getcwd failed*%s", strerror(errno) );
-    ERROR_MSG( message );
-    return( -1 );
+    ErrorPrintf("Getcwd failed*%s", std::strerror(errno));
+
+    return -1;
   }
 
   if( *dir_path != FILE_SEPARATOR_CHAR )
@@ -621,12 +621,13 @@ void Fnsplit(char *path, char *dir, char *name)
 
   *name = '\0';
 
-  if( i == PATH_LENGTH && *path )
+  if (i == PATH_LENGTH && *path)
   {
-    (void) sprintf( message, "filename too long:*%s*truncating to*%s",
-		    name_begin, trunc_name
-		  );
-    WARNING( message );
+    WarningPrintf(
+      "filename too long:*%s*truncating to*%s",
+		  name_begin,
+      trunc_name
+    );
   }
 }
 

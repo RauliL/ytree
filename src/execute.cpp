@@ -47,8 +47,7 @@ int Execute(DirEntry *dir_entry, FileEntry *file_entry)
     {
       if( chdir( GetPath( dir_entry, path ) ) )
       {
-        (void) sprintf( message, "Can't change directory to*\"%s\"", path );
-        MESSAGE( message );
+        MessagePrintf("Can't change directory to*\"%s\"", path);
       }
       else
       {
@@ -57,8 +56,7 @@ int Execute(DirEntry *dir_entry, FileEntry *file_entry)
       }
       if( chdir( cwd ) )
       {
-        (void) sprintf( message, "Can't change directory to*\"%s\"", cwd );
-        MESSAGE( message );
+        MessagePrintf("Can't change directory to*\"%s\"", cwd);
       }
     }
     else

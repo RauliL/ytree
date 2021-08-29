@@ -2501,8 +2501,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			if( ( walking_package.function_data.pipe_cmd.pipe_file =
 			      popen( filepath, "w" ) ) == NULL )
 			{
-			  (void) sprintf( message, "execution of command*%s*failed", filepath );
-			  MESSAGE( message );
+			  MessagePrintf("execution of command*%s*failed", filepath);
 			  break;
 			}
 

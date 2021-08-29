@@ -70,10 +70,11 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
 		                 S_IXOTH) & ~user_umask
     ) ) )
   {
-    (void) sprintf( message, "Can't create Directory*\"%s\"*%s",
-		    buffer, strerror(errno)
-		  );
-    MESSAGE( message );
+    MessagePrintf(
+      "Can't create Directory*\"%s\"*%s",
+		  buffer,
+      std::strerror(errno)
+		);
   }
   else
   {

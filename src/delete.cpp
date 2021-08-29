@@ -44,12 +44,11 @@ int DeleteFile(FileEntry *fe_ptr)
 
       if( term != 'Y' )
       {
-        (void) sprintf( message,
-		        "Can't delete file*\"%s\"*%s",
-		        filepath,
-		        strerror(errno)
-   		      );
-        MESSAGE( message );
+        MessagePrintf(
+          "Can't delete file*\"%s\"*%s",
+          filepath,
+          std::strerror(errno)
+        );
         ESCAPE;
       }
     }
@@ -57,12 +56,11 @@ int DeleteFile(FileEntry *fe_ptr)
 
   if( unlink( filepath ) )
   {
-    (void) sprintf( message,
-		    "Can't delete file*\"%s\"*%s",
-		    filepath,
-		    strerror(errno)
-		  );
-    MESSAGE( message );
+    MessagePrintf(
+      "Can't delete file*\"%s\"*%s",
+      filepath,
+      std::strerror(errno)
+    );
     ESCAPE;
   }
 

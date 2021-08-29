@@ -36,8 +36,7 @@ int ReadTreeFromTAR(DirEntry *dir_entry, FILE *f)
 
     if( GetStatFromTAR( tar_line, path_name, &stat ) )
     {
-      (void) sprintf( message, "unknown tarinfo*%s", tar_line );
-      MESSAGE( message );
+      MessagePrintf("unknown tarinfo*%s", tar_line);
     }
     else
     {

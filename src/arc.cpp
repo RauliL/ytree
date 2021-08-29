@@ -40,8 +40,7 @@ int ReadTreeFromARC(DirEntry *dir_entry, FILE *f)
 
       if( GetStatFromARC( arc_line, path_name, &stat ) )
       {
-        (void) sprintf( message, "unknown arcinfo*%s", arc_line );
-        MESSAGE( message );
+        MessagePrintf("unknown arcinfo*%s", arc_line);
       }
       else
       {

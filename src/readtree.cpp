@@ -109,8 +109,7 @@ int ReadTree(DirEntry *dir_entry, char *path, int depth)
     if( STAT_( new_path, &stat_struct ) )
     {
       if( errno == EACCES ) continue;
-      (void) sprintf( message, "Stat failed on*%s*IGNORED", new_path );
-      ERROR_MSG( message );
+      ErrorPrintf("Stat failed on*%s*IGNORED", new_path);
       continue;
     }
 

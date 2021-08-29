@@ -81,14 +81,11 @@ static int ViewFile(DirEntry* dir_entry, const std::string& file_path)
 
   if (access(file_path.c_str(), R_OK))
   {
-    std::snprintf(
-      message,
-      MESSAGE_LENGTH,
+    MessagePrintf(
       "View not possible!*\"%s\"*%s",
       file_path.c_str(),
       std::strerror(errno)
     );
-    Message(message);
     goto FNC_XIT;
   }
 
@@ -179,15 +176,13 @@ the ytree starting cwd. new code grabbed from execute.c.
   	}
   	if (chdir(GetPath(dir_entry, path)))
   	{
-  		(void) sprintf(message, "Can't change directory to*\"%s\"", path);
-  		MESSAGE(message);
+  		MessagePrintf("Can't change directory to*\"%s\"", path);
   	}else{
   		result = SystemCall(command_line);
   	}
   	if( chdir(cwd) )
 	{
-  		(void) sprintf(message, "Can't change directory to*\"%s\"", cwd);
-  		MESSAGE(message);
+  		MessagePrintf("Can't change directory to*\"%s\"", cwd);
 	}
   }else{
   	result = SystemCall(command_line);
@@ -196,8 +191,7 @@ the ytree starting cwd. new code grabbed from execute.c.
   /*  if((result = SilentSystemCall( command_line )))   ..did systemcall just above */
   if(result)
   {
-    (void) sprintf( message, "can't execute*%s", command_line );
-    MESSAGE( message );
+    MessagePrintf("can't execute*%s", command_line );
   }
 
   if( notice_mapped )
@@ -264,13 +258,7 @@ static int ViewArchiveFile(const std::string& file_path)
   );
   if ((result = SystemCall(command_line)))
   {
-    std::snprintf(
-      message,
-      MESSAGE_LENGTH,
-      "can't execute*%s",
-      command_line
-    );
-    Message(message);
+    MessagePrintf("can't execute*%s", command_line);
   }
 
   std::free(command_line);

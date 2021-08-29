@@ -1,63 +1,96 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/error.c,v 1.12 2003/06/06 19:47:26 werner Exp $
- *
- * Ausgabe von Fehlermeldungen
- *
- ***************************************************************************/
-
-
 #include "ytree.h"
 
+#include <cstdarg>
 
+static void MapErrorWindow(const char* header);
+static void MapNoticeWindow(const char* header);
+static void UnmapErrorWindow();
+static void PrintErrorLine(int y, const char* str);
+static void DisplayErrorMessage(const char* msg);
+static int PrintErrorMessage(const char* msg);
 
+static char message[MESSAGE_LENGTH + 1];
 
-static void MapErrorWindow(const char *header);
-static void MapNoticeWindow(const char *header);
-static void UnmapErrorWindow(void);
-static void PrintErrorLine(int y, const char *str);
-static void DisplayErrorMessage(const char *msg);
-static int  PrintErrorMessage(const char *msg);
-
-
-
-void Message(const char *msg)
+void Message(const char* msg)
 {
-  MapErrorWindow( "E R R O R" );
-  (void) PrintErrorMessage( msg );
+  MapErrorWindow("E R R O R");
+  PrintErrorMessage(msg);
 }
 
-
-void Notice(const char *msg)
+void MessagePrintf(const char* format, ...)
 {
-  MapNoticeWindow( "N O T I C E" );
-  DisplayErrorMessage( msg );
-  RefreshWindow( error_window );
+  std::va_list args;
+
+  va_start(args, format);
+  std::vsnprintf(
+    message,
+    MESSAGE_LENGTH,
+    format,
+    args
+  );
+  va_end(args);
+  Message(message);
+}
+
+void Notice(const char* msg)
+{
+  MapNoticeWindow("N O T I C E");
+  DisplayErrorMessage(msg);
+  RefreshWindow(error_window);
   refresh();
 }
 
-
-void Warning(const char *msg)
+void Warning(const char* msg)
 {
-  MapErrorWindow( "W A R N I N G" );
-  (void) PrintErrorMessage( msg );
+  MapErrorWindow("W A R N I N G");
+  PrintErrorMessage(msg);
 }
 
+void WarningPrintf(const char* format, ...)
+{
+  std::va_list args;
 
-void Error(const char *msg, const char *module, int line)
+  va_start(args, format);
+  std::vsnprintf(
+    message,
+    MESSAGE_LENGTH,
+    format,
+    args
+  );
+  va_end(args);
+  Warning(message);
+}
+
+void Error(const char* msg, const char* module, int line)
 {
   char buffer[MESSAGE_LENGTH + 1];
 
-  MapErrorWindow( "INTERNAL ERROR" );
-  (void) sprintf( buffer, "%s*In Module \"%s\"*Line %d",
-		  msg, module, line
-		);
-  (void) PrintErrorMessage( buffer );
+  MapErrorWindow("INTERNAL ERROR");
+  std::snprintf(
+    buffer,
+    MESSAGE_LENGTH,
+    "%s*In Module \"%s\"*Line %d",
+    msg,
+    module,
+    line
+  );
+  PrintErrorMessage(buffer);
 }
 
+void ErrorPrintfEx(const char* format, const char* module, int line, ...)
+{
+  std::va_list args;
 
-
-
+  va_start(args, line);
+  std::vsnprintf(
+    message,
+    MESSAGE_LENGTH,
+    format,
+    args
+  );
+  va_end(args);
+  Error(message, module, line);
+}
 
 static void MapErrorWindow(const char *header)
 {

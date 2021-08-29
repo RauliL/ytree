@@ -67,13 +67,7 @@ int GetNewOwner(int st_uid)
     {
       owner_id = *owner_id_ptr;
     } else {
-      std::snprintf(
-        message,
-        MESSAGE_LENGTH,
-        "Can't read Owner-ID:*%s",
-        owner
-      );
-      MESSAGE(message);
+      MessagePrintf("Can't read Owner-ID:*%s", owner);
     }
   }
 
@@ -115,11 +109,8 @@ int SetFileOwner(FileEntry *fe_ptr, WalkingPackage *walking_package)
       fe_ptr->stat_struct = stat_struct;
     }
     result = 0;
-  }
-  else
-  {
-    (void) sprintf( message, "Can't change Owner:*%s", strerror(errno) );
-    MESSAGE( message );
+  } else {
+    MessagePrintf("Can't change Owner:*%s", std::strerror(errno));
   }
 
   return( result );
@@ -180,16 +171,9 @@ static int SetDirOwner(DirEntry *de_ptr, int new_owner_id)
       de_ptr->stat_struct = stat_struct;
     }
     result = 0;
-  }
-  else
-  {
-    (void) sprintf( message, "Can't change Owner:*%s", strerror(errno) );
-    MESSAGE( message );
+  } else {
+    MessagePrintf("Can't change Owner:*%s", std::strerror(errno));
   }
 
   return( result );
 }
-
-
-
-

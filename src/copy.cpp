@@ -70,13 +70,13 @@ int CopyFile(Statistic *statistic_ptr,
 
     if( MakePath( statistic_ptr->tree, to_path, &dest_dir_entry ) )
     {
-     	 (void) sprintf( message,
-                         "Can't create path*\"%s\"*%s",
-                         to_path,
-                         strerror(errno)
-                         );
-         MESSAGE( message );
-         return( result );
+      MessagePrintf(
+        "Can't create path*\"%s\"*%s",
+        to_path,
+        std::strerror(errno)
+      );
+
+      return result;
     }
   }
   (void) strcat( to_path, FILE_SEPARATOR_STRING );
@@ -92,14 +92,14 @@ int CopyFile(Statistic *statistic_ptr,
         }
         if (MakePath(statistic_ptr->tree, to_path, &dest_dir_entry ) )
         {
-                closedir(tmpdir);
-                (void) sprintf( message,
-                                "Can't create path*\"%s\"*%s",
-                                to_path,
-                                strerror(errno)
-                                );
-                MESSAGE( message );
-                return( result );
+          closedir(tmpdir);
+          MessagePrintf(
+            "Can't create path*\"%s\"*%s",
+            to_path,
+            std::strerror(errno)
+          );
+
+          return result;
         }
 	else
 	{
@@ -185,9 +185,11 @@ int CopyFile(Statistic *statistic_ptr,
 
     if( chmod( to_path, fe_ptr->stat_struct.st_mode ) == -1 )
     {
-      sprintf( message, "Can't chmod file*\"%s\"*to mode %s*IGNORED",
-               to_path, GetAttributes(fe_ptr->stat_struct.st_mode, buffer) );
-      WARNING( message );
+      WarningPrintf(
+        "Can't chmod file*\"%s\"*to mode %s*IGNORED",
+        to_path,
+        GetAttributes(fe_ptr->stat_struct.st_mode, buffer)
+      );
     }
 
     if( dest_dir_entry )
@@ -311,9 +313,9 @@ static int Copy(char *to_path, char *from_path)
 
   if( ( i = open( from_path, O_RDONLY ) ) == -1 )
   {
-    (void) sprintf( message, "Can't open file*\"%s\"*%s", from_path, strerror(errno) );
-    MESSAGE( message );
-    return( -1 );
+    MessagePrintf("Can't open file*\"%s\"*%s", from_path, std::strerror(errno));
+
+    return -1;
   }
 
   if( ( o = open( to_path,
@@ -321,25 +323,26 @@ static int Copy(char *to_path, char *from_path)
                   S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH
       ) ) == -1 )
   {
-    (void) sprintf( message,
-		    "Can't open file*\"%s\"*%s",
-		    to_path,
-		    strerror(errno)
-		  );
-    MESSAGE( message );
-    (void) close( i );
-    return( -1 );
+    MessagePrintf(
+		  "Can't open file*\"%s\"*%s",
+		  to_path,
+		  strerror(errno)
+		);
+    close(i);
+
+    return -1;
   }
 
   while( ( n = read( i, buffer, sizeof( buffer ) ) ) > 0 )
   {
     if( write( o, buffer, n ) != n )
     {
-      (void) sprintf( message, "Write-Error!*%s", strerror(errno) );
-      MESSAGE( message );
-      (void) close( i ); (void) close( o );
-      (void) unlink( to_path );
-      return( -1 );
+      MessagePrintf("Write-Error!*%s", std::strerror(errno));
+      close(i);
+      close(o);
+      unlink(to_path);
+
+      return -1;
     }
   }
 
@@ -415,11 +418,11 @@ static int CopyArchiveFile(char *to_path, char *from_path)
 
   free( command_line );
 
-  if( result )
+  if (result)
   {
-    (void) sprintf( message, "can't copy file*%s*to file*%s", from_p_aux, to_p_aux );
-    WARNING( message );
+    WarningPrintf("can't copy file*%s*to file*%s", from_p_aux, to_p_aux);
   }
+
   return( result );
 }
 

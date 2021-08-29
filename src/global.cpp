@@ -25,7 +25,6 @@ Statistic statistic;
 Statistic disk_statistic;
 int       mode;
 int	  user_umask;
-char      message[MESSAGE_LENGTH + 1];
 bool	  print_time;
 bool	  resize_request;
 bool	  bypass_small_window;

@@ -32,10 +32,9 @@ int DirUserMode(DirEntry *dir_entry, int ch)
      } else {
   	(void) sprintf( command_line, "%s%c%s", aux, ' ', filepath );
      }
-     if(SilentSystemCall( command_line ))
+     if (SilentSystemCall(command_line))
      {
-       (void) sprintf( message, "can't execute*%s", command_line );
-       MESSAGE( message );
+       MessagePrintf("can't execute*%s", command_line);
      }
      if (chremap == ch || chremap == 0)
        break;
@@ -69,10 +68,9 @@ int FileUserMode(FileEntryList *file_entry_list, int ch)
      } else {
   	(void) sprintf( command_line, "%s%c%s", aux, ' ', filepath );
      }
-     if(SilentSystemCall( command_line ))
+     if (SilentSystemCall(command_line))
      {
-       (void) sprintf( message, "can't execute*%s", command_line );
-       MESSAGE( message );
+       MessagePrintf("can't execute*%s", command_line);
      }
      if (chremap == ch || chremap == 0)
        break;

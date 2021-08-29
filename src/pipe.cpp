@@ -121,15 +121,15 @@ int PipeTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
   walking_package->new_fe_ptr = fe_ptr;  /* unchanged */
 
   (void) GetRealFileNamePath( fe_ptr, from_path );
-  if( ( i = open( from_path, O_RDONLY ) ) == -1 )
+  if ((i = open(from_path, O_RDONLY)) == -1)
   {
-    (void) sprintf( message,
-		    "Can't open file*\"%s\"*%s",
-		    from_path,
-		    strerror(errno)
-		  );
-    MESSAGE( message );
-    return( -1 );
+    MessagePrintf(
+      "Can't open file*\"%s\"*%s",
+      from_path,
+      std::strerror(errno)
+    );
+
+    return -1;
   }
 
   while( ( n = read( i, buffer, sizeof( buffer ) ) ) > 0 )
@@ -140,10 +140,10 @@ int PipeTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
 		walking_package->function_data.pipe_cmd.pipe_file ) != 1
       )
     {
-      (void) sprintf( message, "Write-Error!*%s", strerror(errno) );
-      MESSAGE( message );
-      (void) close( i );
-      return( -1 );
+      MessagePrintf("Write-Error!*%s", std::strerror(errno));
+      close(i);
+
+      return -1;
     }
   }
 

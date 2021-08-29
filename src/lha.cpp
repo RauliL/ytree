@@ -44,8 +44,7 @@ int ReadTreeFromLHA(DirEntry *dir_entry, FILE *f)
 
       if( GetStatFromLHA( lha_line, path_name, &stat ) )
       {
-        (void) sprintf( message, "unknown lhainfo*%s", lha_line );
-        MESSAGE( message );
+        MessagePrintf("unknown lhainfo*%s", lha_line);
       }
       else
       {

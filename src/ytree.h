@@ -280,6 +280,7 @@
 
 
 #define ERROR_MSG( msg )   Error( msg, __FILE__, __LINE__ )
+#define ErrorPrintf(format, ...) ErrorPrintfEx(format, __FILE__, __LINE__, __VA_ARGS__)
 #define WARNING( msg )     Warning( msg )
 #define MESSAGE( msg )     Message( msg )
 #define NOTICE( msg )      Notice( msg )
@@ -593,7 +594,6 @@ extern Statistic statistic;
 extern Statistic disk_statistic;
 extern int       mode;
 extern int       user_umask;
-extern char      message[];
 extern bool	 print_time;
 extern bool      resize_request;
 extern char      number_seperator;
@@ -638,7 +638,9 @@ extern int  SetMatchSpec(char *new_spec);
 extern int  SetFileSpec(char *file_spec);
 extern void SetMatchingParam(DirEntry *dir_entry);
 extern void Error(const char *msg, const char *module, int line);
+void ErrorPrintfEx(const char* format, const char* module, int line, ...);
 extern void Warning(const char *msg);
+void WarningPrintf(const char* format, ...);
 extern void Notice(const char *msg);
 extern void UnmapNoticeWindow(void);
 extern void SetFileMode(int new_file_mode);
@@ -684,6 +686,7 @@ extern int  MoveTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
 extern int  MoveFile(FileEntry *fe_ptr, unsigned char confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, FileEntry **new_fe_ptr);
 extern int  InputChoise(const char *msg, const char *term);
 extern void Message(const char *msg);
+void MessagePrintf(const char* format, ...);
 extern int  GetDirEntry(DirEntry *tree, DirEntry *current_dir_entry, char *dir_path, DirEntry **dir_entry, char *to_path);
 extern int  GetFileEntry(DirEntry *de_ptr, char *file_name, FileEntry **file_entry);
 extern int  GetCopyParameter(const char *from_file, bool path_copy, char *to_file, char *to_dir);

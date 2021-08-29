@@ -53,14 +53,13 @@ int MoveFile(FileEntry *fe_ptr,
   }
 
 
-  if( access( from_path, W_OK ) )
+  if (access(from_path, W_OK))
   {
-    (void) sprintf( message,
-		    "Unmoveable file*\"%s\"*%s",
-		    from_path,
-		    strerror(errno)
-		  );
-    MESSAGE( message );
+    MessagePrintf(
+      "Unmoveable file*\"%s\"*%s",
+      from_path,
+      std::strerror(errno)
+    );
     ESCAPE;
   }
 
@@ -110,14 +109,13 @@ int MoveFile(FileEntry *fe_ptr,
 	}
       }
 
-      if( unlink( to_path ) )
+      if (unlink(to_path))
       {
-        (void) sprintf( message,
-		        "Can't unlink*\"%s\"*%s",
-		        to_path,
-		        strerror(errno)
-		      );
-        MESSAGE( message );
+        MessagePrintf(
+          "Can't unlink*\"%s\"*%s",
+          to_path,
+          std::strerror(errno)
+        );
         ESCAPE;
       }
     }
@@ -230,27 +228,27 @@ static int Move(char *to_path, char *from_path)
     return( -1 );
   }
 
-  if( link( from_path, to_path ) )
+  if (link(from_path, to_path))
   {
-    (void) sprintf( message,
-		    "Can't link \"%s\"*to \"%s\"*%s",
-		    from_path,
-		    to_path,
-		    strerror(errno)
-		  );
-    MESSAGE( message );
-    return( -1 );
+    MessagePrintf(
+      "Can't link \"%s\"*to \"%s\"*%s",
+      from_path,
+      to_path,
+      std::strerror(errno)
+    );
+
+    return -1;
   }
 
-  if( unlink( from_path ) )
+  if (unlink(from_path))
   {
-    (void) sprintf( message,
-		    "Can't unlink*\"%s\"*%s",
-		    from_path,
-		    strerror(errno)
-		  );
-    MESSAGE( message );
-    return( -1 );
+    MessagePrintf(
+      "Can't unlink*\"%s\"*%s",
+      from_path,
+      std::strerror(errno)
+    );
+
+    return -1;
   }
 
   return( 0 );
