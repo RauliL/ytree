@@ -16,7 +16,6 @@ extern int chdir(const char *);
 int Execute(DirEntry *dir_entry, FileEntry *file_entry)
 {
   static char command_line[COMMAND_LINE_LENGTH + 1];
-  char cwd[PATH_LENGTH+1];
   char path[PATH_LENGTH+1];
   int  result;
 
@@ -37,11 +36,7 @@ int Execute(DirEntry *dir_entry, FileEntry *file_entry)
   MvAddStr( LINES - 2, 1, "Command:" );
   if( !GetCommandLine( command_line ) )
   {
-    if( Getcwd( cwd, PATH_LENGTH ) == NULL )
-    {
-      WARNING( "Getcwd failed*\".\"assumed" );
-      (void) strcpy( cwd, "." );
-    }
+    const auto cwd = GetcwdOrDot();
 
     if( mode == DISK_MODE || mode == USER_MODE )
     {
@@ -54,9 +49,9 @@ int Execute(DirEntry *dir_entry, FileEntry *file_entry)
         refresh();
         result = QuerySystemCall( command_line );
       }
-      if( chdir( cwd ) )
+      if (chdir(cwd.c_str()))
       {
-        MessagePrintf("Can't change directory to*\"%s\"", cwd);
+        MessagePrintf("Can't change directory to*\"%s\"", cwd.c_str());
       }
     }
     else

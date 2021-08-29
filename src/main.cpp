@@ -75,14 +75,16 @@ int main(int argc, char **argv)
   if (Init(conf, hist))
       exit(1);
 
-  if( *p != FILE_SEPARATOR_CHAR )
+  if (*p != FILE_SEPARATOR_CHAR)
   {
     /* rel. Pfad */
     /*-----------*/
-
-    (void) Getcwd( buffer, sizeof( buffer ) - 2 );
-    (void) strcat( buffer, FILE_SEPARATOR_STRING );
-    (void) strcat( buffer, p );
+    if (const auto cwd = Getcwd())
+    {
+      std::strcpy(buffer, cwd->c_str());
+    }
+    std::strcat(buffer, FILE_SEPARATOR_STRING);
+    std::strcat(buffer, p);
     p = buffer;
   }
 

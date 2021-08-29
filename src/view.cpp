@@ -74,7 +74,6 @@ static int ViewFile(DirEntry* dir_entry, const std::string& file_path)
   auto file_p_aux = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
   int  result = -1;
   bool notice_mapped = false;
-  char cwd[PATH_LENGTH+1];
   char path[PATH_LENGTH+1];
 
   StrCp(file_p_aux, file_path);
@@ -169,22 +168,19 @@ the ytree starting cwd. new code grabbed from execute.c.
 
   if (mode == DISK_MODE)
   {
-  	if (Getcwd(cwd, PATH_LENGTH) == NULL)
-  	{
-  		WARNING("Getcwd failed*\".\"assumed");
-  		(void) strcpy(cwd, ".");
-  	}
+    const auto cwd = GetcwdOrDot();
+
   	if (chdir(GetPath(dir_entry, path)))
   	{
   		MessagePrintf("Can't change directory to*\"%s\"", path);
-  	}else{
+  	} else {
   		result = SystemCall(command_line);
   	}
-  	if( chdir(cwd) )
-	{
-  		MessagePrintf("Can't change directory to*\"%s\"", cwd);
-	}
-  }else{
+  	if (chdir(cwd.c_str()))
+	  {
+      MessagePrintf("Can't change directory to*\"%s\"", cwd.c_str());
+	  }
+  } else {
   	result = SystemCall(command_line);
   }
 

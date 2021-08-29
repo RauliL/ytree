@@ -22,7 +22,6 @@ int Pipe(DirEntry *dir_entry, FileEntry *file_entry)
   char file_name_p_aux[PATH_LENGTH+1];
   auto command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
   char *archive;
-  char cwd[PATH_LENGTH+1];
   char path[PATH_LENGTH+1];
   int  result;
 
@@ -36,16 +35,10 @@ int Pipe(DirEntry *dir_entry, FileEntry *file_entry)
   MvAddStr( LINES - 2, 1, "Pipe-Command:" );
   if( GetPipeCommand( &input_buffer[2] ) == 0 )
   {
-    move( LINES - 2, 1 ); clrtoeol();
+    move(LINES - 2, 1);
+    clrtoeol();
 
-    if( Getcwd( cwd, PATH_LENGTH ) == NULL )
-    {
-      WARNING( "Getcwd failed*\".\"assumed" );
-      (void) strcpy( cwd, "." );
-    }
-
-    (void) GetPath( dir_entry, path );
-
+    GetPath(dir_entry, path);
 
     if( mode == DISK_MODE || mode == USER_MODE )
     {
@@ -57,9 +50,7 @@ int Pipe(DirEntry *dir_entry, FileEntry *file_entry)
 				    file_name_p_aux,
 				    input_buffer
 		    );
-    }
-    else
-    {
+    } else {
       /* TAR/ZOO/ZIP_FILE_MODE */
       /*-----------------------*/
       archive = (mode == TAPE_MODE) ? statistic.tape_name : statistic.login_path;
@@ -73,9 +64,7 @@ int Pipe(DirEntry *dir_entry, FileEntry *file_entry)
     }
     refresh();
     result = QuerySystemCall( command_line );
-  }
-  else
-  {
+  } else {
     move( LINES - 2, 1 ); clrtoeol();
   }
 

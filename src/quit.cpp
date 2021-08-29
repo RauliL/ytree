@@ -80,38 +80,46 @@ function yt
 
 static int QuitFileCheck(char *fname);
 
-
-
-
-void QuitTo(DirEntry * dir_entry)
+void QuitTo(DirEntry* dir_entry)
 {
-  int parpid;
-  FILE *qfile;
-  char nbuf[MAXPATH],qfilename[MAXPATH];
-  struct passwd *pwp;
+  char nbuf[MAXPATH];
+  char qfilename[MAXPATH];
+  const auto parpid = getppid();
+  const auto pwp = getpwuid(getuid());
 
-    GetPath(dir_entry,nbuf);
-	parpid=getppid();
-	pwp=getpwuid(getuid());
-	sprintf(qfilename,"%s/.ytree-%d.chdir",pwp->pw_dir,parpid);
+  GetPath(dir_entry, nbuf);
+  std::snprintf(
+    qfilename,
+    MAXPATH,
+    "%s%c.ytree-%d.chdir",
+    pwp->pw_dir,
+    FILE_SEPARATOR_CHAR,
+    static_cast<int>(parpid)
+  );
 
-	if(!QuitFileCheck(qfilename)){
-	  	if( (qfile=fopen(qfilename,"w"))!=NULL)
-  		{
-  			fprintf(qfile,"cd %s\n",nbuf);
-			fclose(qfile);
-		}
-	}
+  if (!QuitFileCheck(qfilename))
+  {
+    if (auto qfile = std::fopen(qfilename, "w"))
+    {
+      std::fprintf(qfile, "cd %s\n", nbuf);
+      std::fclose(qfile);
+    }
+  }
 
-	Quit();		/* never come back from a successful quit */
+  // Never come back from a successful quit.
+  Quit();
 
-	if(!QuitFileCheck(qfilename)){
-	  	if( (qfile=fopen(qfilename,"w"))!=NULL)
-  		{
-  			fprintf(qfile,"cd %s\n",Getcwd(NULL,0));
-			fclose(qfile);
-		}
-	}
+  if (!QuitFileCheck(qfilename))
+  {
+    if (auto qfile = std::fopen(qfilename, "w"))
+    {
+      if (const auto cwd = Getcwd())
+      {
+        std::fprintf(qfile, "cd %s\n", cwd->c_str());
+      }
+      std::fclose(qfile);
+    }
+  }
 }
 
 /*

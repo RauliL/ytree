@@ -16,9 +16,7 @@ int Edit(DirEntry * dir_entry, char *file_path)
   std::string command_line;
   int  result = -1;
   char *file_p_aux=NULL;
-  char cwd[PATH_LENGTH + 1];
   char path[PATH_LENGTH + 1];
-
 
   if( mode != DISK_MODE && mode != USER_MODE )
   {
@@ -50,11 +48,7 @@ int Edit(DirEntry * dir_entry, char *file_path)
 
   if (mode == DISK_MODE)
   {
-    if (Getcwd(cwd, PATH_LENGTH) == NULL)
-    {
-            WARNING("Getcwd failed*\".\"assumed");
-            (void) strcpy(cwd, ".");
-    }
+    const auto cwd = GetcwdOrDot();
 
     if (chdir(GetPath(dir_entry, path)))
     {
@@ -62,9 +56,9 @@ int Edit(DirEntry * dir_entry, char *file_path)
     } else {
       result = SystemCall(command_line);
     }
-    if (chdir(cwd))
+    if (chdir(cwd.c_str()))
     {
-      MessagePrintf("Can't change directory to*\"%s\"", cwd);
+      MessagePrintf("Can't change directory to*\"%s\"", cwd.c_str());
     }
   } else {
     result = SystemCall(command_line);

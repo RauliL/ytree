@@ -53,9 +53,6 @@ static const std::unordered_map<std::string, CompressMethod> file_extensions =
   { ".SPM", CompressMethod::RPM_COMPRESS }
 };
 
-static char *GNU_getcwd(void);
-
-
 char *GetPath(DirEntry *dir_entry, char *buffer)
 {
   DirEntry *de_ptr;
@@ -128,7 +125,7 @@ int GetDirEntry(DirEntry *tree,
 	       )
 {
   char dest_path[PATH_LENGTH+1];
-  char current_path[PATH_LENGTH+1];
+  std::string current_path;
   char help_path[PATH_LENGTH+1];
   char *token, *old;
   DirEntry *de_ptr, *sde_ptr;
@@ -138,8 +135,11 @@ int GetDirEntry(DirEntry *tree,
   *to_path   = '\0';
 
    strcpy(to_path, dir_path);
-  if (!Getcwd( current_path, sizeof( current_path ) - 2 ))
+
+  if (const auto cwd = Getcwd())
   {
+    current_path = *cwd;
+  } else {
     ErrorPrintf("Getcwd failed*%s", std::strerror(errno));
 
     return -1;
@@ -163,18 +163,22 @@ int GetDirEntry(DirEntry *tree,
     return( -3 );
   }
 
-  if( *dir_path != FILE_SEPARATOR_CHAR ) {
-    (void) Getcwd( dest_path, sizeof( dest_path ) - 2 );
-    (void) strcpy( to_path, dest_path );
+  if (*dir_path != FILE_SEPARATOR_CHAR)
+  {
+    if (const auto cwd = Getcwd())
+    {
+      std::strcpy(dest_path, cwd->c_str());
+    }
+    std::strcpy(to_path, dest_path);
   } else {
-    strcpy(dest_path, dir_path);
+    std::strcpy(dest_path, dir_path);
   }
 
-
-  if( chdir( current_path ) )
+  if (chdir(current_path.c_str()))
   {
-    ERROR_MSG( "Chdir failed; Can't resume" );
-    return( -1 );
+    ERROR_MSG("chdir() failed; Can't resume");
+
+    return -1;
   }
 
   n = strlen( tree->name );
@@ -1041,34 +1045,27 @@ long long AtoLL(const char *cptr)
   return(ll);
 }
 
-/*****************************************************************************
- *                              Getcwd                                       *
- *****************************************************************************/
-
-
-char *Getcwd(char *buffer, unsigned int size)
+std::optional<std::string> Getcwd()
 {
-  if(size == 0)
-    return(GNU_getcwd());
+  char buffer[PATH_MAX];
 
-  return(getcwd(buffer, size));
+  if (!getcwd(buffer, PATH_MAX))
+  {
+    return std::nullopt;
+  }
+
+  return buffer;
 }
 
-
-static char *GNU_getcwd()
+std::string GetcwdOrDot()
 {
-  unsigned int size = 100;
+  if (const auto cwd = Getcwd())
+  {
+    return *cwd;
+  }
+  Warning("Getcwd() failed*\".\" assumed");
 
-  while (1)
-    {
-      char *buffer = (char *) xmalloc (size);
-      if (getcwd (buffer, size) == buffer)
-        return buffer;
-      free (buffer);
-      if (errno != ERANGE)
-        return 0;
-      size *= 2;
-    }
+  return ".";
 }
 
 static inline bool Stat(const std::string& path, struct stat& st)
