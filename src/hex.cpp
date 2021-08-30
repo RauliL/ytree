@@ -112,35 +112,17 @@ static int ViewHexFile(const std::string& file_path)
 
 static int ViewHexArchiveFile(const std::string& file_path)
 {
-  auto command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
-  char* archive;
-  char buffer[80];
-  int result = -1;
-
-  std::snprintf(
-    buffer,
-    sizeof(buffer),
-    "| %s | %s",
-    HEXDUMP,
-    PAGER
-  );
-
-  archive = mode == TAPE_MODE ? statistic.tape_name : statistic.login_path;
-
-  MakeExtractCommandLine(
-    command_line,
-    COMMAND_LINE_LENGTH,
-    archive,
+  const auto command_line = MakeExtractCommandLine(
+    mode == TAPE_MODE ? statistic.tape_name : statistic.login_path,
 		file_path,
-    buffer
+    std::string("| ") + HEXDUMP + " | " + PAGER
   );
+  const auto result = SilentSystemCall(command_line);
 
-  if ((result = SilentSystemCall(command_line)))
+  if (result)
   {
     MessagePrintf("can't execute*%s", command_line);
   }
-
-  std::free(command_line);
 
   return result;
 }

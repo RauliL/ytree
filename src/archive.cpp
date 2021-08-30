@@ -427,14 +427,13 @@ int MinimizeArchiveTree(DirEntry *tree)
   return( 0 );
 }
 
-void MakeExtractCommandLine(
-  char* command_line,
-  const std::size_t size,
+std::string MakeExtractCommandLine(
   const std::string& path,
   const std::string& file,
   const std::string& cmd
 )
 {
+  char command_line[COMMAND_LINE_LENGTH + 1];
   const auto compress_method = GetFileMethod(path);
   const auto l = path.length();
   char cat_path[PATH_LENGTH + 1];
@@ -445,7 +444,7 @@ void MakeExtractCommandLine(
     /*----------------*/
     std::snprintf(
       command_line,
-      size,
+      COMMAND_LINE_LENGTH,
       "%s '%s' '%s' %s",
       ZOOEXPAND,
       path.c_str(),
@@ -459,7 +458,7 @@ void MakeExtractCommandLine(
     /*------------------*/
     std::snprintf(
       command_line,
-      size,
+      COMMAND_LINE_LENGTH,
       "%s '%s' '%s' %s",
       LHAEXPAND,
 		  path.c_str(),
@@ -473,7 +472,7 @@ void MakeExtractCommandLine(
     /*------------------*/
     std::snprintf(
       command_line,
-      size,
+      COMMAND_LINE_LENGTH,
       "%s '%s' '%s' %s",
 		  ZIPEXPAND,
 		  path.c_str(),
@@ -487,7 +486,7 @@ void MakeExtractCommandLine(
     /*---------------*/
     std::snprintf(
       command_line,
-      size,
+      COMMAND_LINE_LENGTH,
       "%s '%s' '%s' %s",
 		  ARCEXPAND,
 		  path.c_str(),
@@ -504,7 +503,7 @@ void MakeExtractCommandLine(
     {
       std::snprintf(
         command_line,
-        size,
+        COMMAND_LINE_LENGTH,
         "(TF=/tmp/ytree.$$; mkdir $TF; rpm2cpio '%s' | (cd $TF; cpio --no-absolute-filenames -i -d '%s'); cat \"$TF/%s\"; cd /tmp; rm -rf $TF; exit 0) %s",
 		    path.c_str(),
         !file.empty() && file[0] == FILE_SEPARATOR_CHAR ? file.substr(1).c_str() : file.c_str(),
@@ -514,7 +513,7 @@ void MakeExtractCommandLine(
     } else {
       std::snprintf(
         command_line,
-        size,
+        COMMAND_LINE_LENGTH,
         "%s '%s' '%s' %s",
 		    RPMEXPAND,
 		    path.c_str(),
@@ -529,7 +528,7 @@ void MakeExtractCommandLine(
     /*---------------*/
     std::snprintf(
       command_line,
-      size,
+      COMMAND_LINE_LENGTH,
       "%s '%s' '%s' %s",
 		  RAREXPAND,
 		  path.c_str(),
@@ -543,7 +542,7 @@ void MakeExtractCommandLine(
     /*--------------------------------------*/
     std::snprintf(
       command_line,
-      size,
+      COMMAND_LINE_LENGTH,
       "%s < '%s' | %s '%s' %s",
 		  MELT,
 		  path.c_str(),
@@ -560,7 +559,7 @@ void MakeExtractCommandLine(
     std::strcpy(&cat_path[l - 2], "*" );
     std::snprintf(
       command_line,
-      size,
+      COMMAND_LINE_LENGTH,
       "%s %s | %s | %s '%s' %s",
 		  CAT,
 		  cat_path,
@@ -576,7 +575,7 @@ void MakeExtractCommandLine(
     /*--------------------------------------------*/
     std::snprintf(
       command_line,
-      size,
+      COMMAND_LINE_LENGTH,
       "%s < %s | %s '%s' %s",
 		  UNCOMPRESS,
       path.c_str(),
@@ -593,7 +592,7 @@ void MakeExtractCommandLine(
     std::strcpy(&cat_path[l-2], "*");
     std::snprintf(
       command_line,
-      size,
+      COMMAND_LINE_LENGTH,
       "%s %s | %s | %s '%s' %s",
 		  CAT,
 		  cat_path,
@@ -609,7 +608,7 @@ void MakeExtractCommandLine(
     /*----------------------------------------*/
     std::snprintf(
       command_line,
-      size,
+      COMMAND_LINE_LENGTH,
       "%s < '%s' | %s '%s' %s",
 		  GNUUNZIP,
 		  path.c_str(),
@@ -626,7 +625,7 @@ void MakeExtractCommandLine(
     std::strcpy(&cat_path[l-2], "*");
     std::snprintf(
       command_line,
-      size,
+      COMMAND_LINE_LENGTH,
       "%s %s | %s | %s '%s' %s",
 		  CAT,
 		  cat_path,
@@ -642,7 +641,7 @@ void MakeExtractCommandLine(
     /*----------------------------------------*/
     std::snprintf(
       command_line,
-      size,
+      COMMAND_LINE_LENGTH,
       "%s < '%s' | %s '%s' %s",
 		  BUNZIP,
 		  path.c_str(),
@@ -655,7 +654,7 @@ void MakeExtractCommandLine(
     /*-------------------------------*/
     std::snprintf(
       command_line,
-      size,
+      COMMAND_LINE_LENGTH,
       "%s '%s' < '%s' %s",
 		  TAREXPAND,
 		  file.c_str(),
@@ -665,6 +664,8 @@ void MakeExtractCommandLine(
   }
 
 #ifdef DEBUG
-  fprintf( stderr, "system( \"%s\" )\n", command_line );
+  std::fprintf(stderr, "system(\"%s\");\n", command_line);
 #endif
+
+  return command_line;
 }

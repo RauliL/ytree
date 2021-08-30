@@ -191,9 +191,8 @@ FNC_XIT:
 
 static int ViewArchiveFile(const std::string& file_path)
 {
-  auto command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
+  std::string command_line;
   char buffer[100];
-  char* archive;
   int result = -1;
 
   if (const auto aux = GetExtViewer(file_path))
@@ -223,22 +222,16 @@ static int ViewArchiveFile(const std::string& file_path)
       PAGER
     );
   }
-
-  archive = mode == TAPE_MODE ? statistic.tape_name : statistic.login_path;
-
-  MakeExtractCommandLine(
-    command_line,
-    COMMAND_LINE_LENGTH,
-    archive,
+  command_line = MakeExtractCommandLine(
+    mode == TAPE_MODE ? statistic.tape_name : statistic.login_path,
     file_path,
     buffer
   );
-  if ((result = SystemCall(command_line)))
+  result = SystemCall(command_line);
+  if (result)
   {
     MessagePrintf("can't execute*%s", command_line);
   }
-
-  std::free(command_line);
 
   return result;
 }

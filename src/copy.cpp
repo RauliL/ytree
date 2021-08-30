@@ -375,25 +375,14 @@ static int CopyArchiveFile(
   const std::string& from_path
 )
 {
-  auto command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
-  char buffer[PATH_LENGTH + 3];
   const auto from_p_aux = ShellEscape(to_path);
   const auto to_p_aux = ShellEscape(from_path);
-  int result = -1;
-
-  std::snprintf(buffer, PATH_LENGTH + 2, "> \"%s\"", to_p_aux.c_str());
-
-  MakeExtractCommandLine(
-    command_line,
-    COMMAND_LINE_LENGTH,
+  const auto command_line = MakeExtractCommandLine(
     mode == TAPE_MODE ? statistic.tape_name : statistic.login_path,
     from_p_aux,
-    buffer
+    "> \"" + to_p_aux + "\""
   );
-
-  result = SilentSystemCall(command_line);
-
-  std::free(static_cast<void*>(command_line));
+  const auto result = SilentSystemCall(command_line);
 
   if (result)
   {

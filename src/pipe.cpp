@@ -5,7 +5,7 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
   static char input_buffer[COMMAND_LINE_LENGTH + 1] = "| ";
   const auto file_name_path = GetRealFileNamePath(file_entry);
   const auto file_name_p_aux = ShellEscape(file_name_path);
-  auto command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
+  std::string command_line;
   int result = -1;
 
   ClearHelp();
@@ -20,19 +20,11 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
     {
       /* Kommandozeile zusammenbasteln */
       /*-------------------------------*/
-      std::sprintf(
-        command_line,
-        "%s \"%s\" %s",
-        CAT,
-        file_name_p_aux.c_str(),
-        input_buffer
-      );
+      command_line = std::string(CAT) + " \"" + file_name_p_aux + "\" " + input_buffer;
     } else {
       /* TAR/ZOO/ZIP_FILE_MODE */
       /*-----------------------*/
-      MakeExtractCommandLine(
-        command_line,
-        COMMAND_LINE_LENGTH,
+      command_line = MakeExtractCommandLine(
         mode == TAPE_MODE ? statistic.tape_name : statistic.login_path,
         file_name_p_aux,
 			  input_buffer
@@ -44,8 +36,6 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
     move(LINES - 2, 1);
     clrtoeol();
   }
-
-  std::free(static_cast<void*>(command_line));
 
   return result;
 }

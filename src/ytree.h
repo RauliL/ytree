@@ -575,7 +575,6 @@ extern bool      bypass_small_window;
 extern const char* initial_directory;
 extern char 	 builtin_hexdump_cmd[];
 
-extern int  ytree(int argc, char *argv[]);
 extern void DisplayMenu(void);
 extern void DisplayDiskStatistic(void);
 extern void DisplayDirStatistic(DirEntry *dir_entry);
@@ -616,7 +615,7 @@ void ErrorPrintfEx(const char* format, const char* module, int line, ...);
 void Warning(const std::string& msg);
 void WarningPrintf(const char* format, ...);
 void Notice(const std::string& msg);
-extern void UnmapNoticeWindow(void);
+void UnmapNoticeWindow();
 extern void SetFileMode(int new_file_mode);
 extern int  HandleFileWindow(DirEntry *dir_entry);
 extern char *GetAttributes(unsigned short modus, char *buffer);
@@ -698,9 +697,7 @@ extern char *FormFilename(char *dest, char *src, unsigned int max_len);
 extern char *CutFilename(char *dest, char *src, unsigned int max_len);
 char* CutPathname(char* dest, const std::string& src, std::size_t max_len);
 extern void   Fnsplit(char *path, char *dir, char *name);
-void MakeExtractCommandLine(
-  char* command_line,
-  const std::size_t size,
+std::string MakeExtractCommandLine(
   const std::string& path,
   const std::string& file,
   const std::string& cmd
@@ -718,7 +715,6 @@ extern void TermcapEndwin(void);
 extern int  BuildFilename( char *in_filename, char *pattern, char *out_filename);
 extern int  ViKey( int ch );
 std::optional<CompressMethod> GetFileMethod(const std::string& filename);
-extern int  AixWgetch( WINDOW *w );
 extern bool KeyPressed(void);
 extern bool EscapeKeyPressed(void);
 extern int  GetTapeDeviceName(void);
@@ -743,8 +739,6 @@ extern int  KeyF2Get(DirEntry *start_dir_entry,
 extern void Switch2F2Window(void);
 extern void MapF2Window(void);
 extern void UnmapF2Window(void);
-extern void ReadExtFile(char *);
-extern char *GetExtCmd(char *);
 void MvAddStr(int y, int x, const std::string& str);
 void MvWAddStr(WINDOW* win, int y, int x, const std::string& str);
 void WAddStr(WINDOW* win, const std::string& str);
