@@ -19,16 +19,13 @@ int main(int argc, char **argv)
 {
   const char *p;
   int argi;
-  char *hist;
-  char *conf;
+  std::optional<std::string> config_file;
+  std::optional<std::string> history_file;
 
 #if (!defined(sun) && !defined(__DJGPP__))
   setlocale(LC_ALL, "");
 #endif
 
-
-  hist = NULL;
-  conf = NULL;
   p = DEFAULT_TREE;
   for (argi = 1; argi < argc; argi++)
   {
@@ -37,43 +34,42 @@ int main(int argc, char **argv)
       p = argv[argi];
       break;
     }
-    switch(*(argv[argi]+1)) {
-    case 'p':
-    case 'P':
-      if (*(argv[argi]+2) <= ' ')
-        conf = argv[++argi];
-      else
-        conf = argv[argi]+2;
-      break;
-/*    case 'e':
-    case 'E':
-       Hex dump (builtin)
-      if(argi == argc) {
-        return(BuiltinHexDump(NULL));
-      }
+    switch (*(argv[argi]+1))
+    {
+      case 'p':
+      case 'P':
+        if (*(argv[argi] + 2) <= ' ')
+        {
+          config_file = argv[++argi];
+        } else {
+          config_file = argv[argi] + 2;
+        }
+        break;
 
-      if (*(argv[argi]+2) <= ' ')
-        hex_file = argv[++argi];
-      else
-        hex_file = argv[argi]+2;
-        return(BuiltinHexDump(hex_file));
-      break;*/
-    case 'h':
-    case 'H':
-      if (*(argv[argi]+2) <= ' ')
-        hist = argv[++argi];
-      else
-        hist = argv[argi]+2;
-      break;
-    default:
-      printf("Usage: %s [-p profile_file] [-h hist_file] [initial_dir]\n",
-          argv[0]);
-      exit(1);
+      case 'h':
+      case 'H':
+        if (*(argv[argi] + 2) <= ' ')
+        {
+          history_file = argv[++argi];
+        } else {
+          history_file = argv[argi] + 2;
+        }
+        break;
+
+      default:
+        std::printf(
+          "Usage: %s [-p profile_file] [-h hist_file] [initial_dir]\n",
+          argv[0]
+        );
+        std::exit(EXIT_FAILURE);
+        break;
     }
   }
 
-  if (Init(conf, hist))
-      exit(1);
+  if (Init(config_file, history_file))
+  {
+    std::exit(EXIT_FAILURE);
+  }
 
   if (*p != FILE_SEPARATOR_CHAR)
   {

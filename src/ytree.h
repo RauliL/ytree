@@ -580,9 +580,6 @@ extern bool      bypass_small_window;
 extern const char* initial_directory;
 extern char 	 builtin_hexdump_cmd[];
 
-
-extern char *getenv(const char *);
-
 extern int  ytree(int argc, char *argv[]);
 extern void DisplayMenu(void);
 extern void DisplayDiskStatistic(void);
@@ -610,7 +607,10 @@ extern int  GetDiskParameter(char *path,
 			    );
 extern int  HandleDirWindow(DirEntry *start_dir_entry);
 extern void DisplayFileWindow(DirEntry *dir_entry);
-extern int Init(char *configuration_file, char *history_file);
+int Init(
+  const std::optional<std::string>& configuration_file,
+  const std::optional<std::string>& history_file
+);
 std::string GetPath(const DirEntry* dir_entry);
 bool Match(const std::string& file_name);
 int SetMatchSpec(const std::string& new_spec);
@@ -731,15 +731,15 @@ extern int  MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry 
 extern int  MakeDirEntry( DirEntry *father_dir_entry, char *dir_name );
 extern void NormPath( const char *in_path, char *out_path );
 extern char *Strtok_r( char *str, const char *delim, char **old );
-int ReadProfile(const std::string& filename);
+int ReadProfile(const std::optional<std::string>& custom_path);
 extern const char *GetProfileValue( const char *key );
 void ScanSubTree(DirEntry* dir_entry);
 extern void GetMaxYX(WINDOW *win, int *height, int *width);
 
 extern char *GetHistory(void);
 extern void InsHistory(char *new_hist);
-void ReadHistory(const std::string& filename);
-void SaveHistory(const std::string& filename);
+void ReadHistory(const std::optional<std::string>& custom_path);
+void SaveHistory();
 extern char *GetMatches(char *);
 extern int  KeyF2Get(DirEntry *start_dir_entry,
                int disp_begin_pos,
@@ -785,6 +785,9 @@ char* Strdup(const std::string& src);
 char* Strndup(const std::string& src, const std::size_t len);
 void StatOrAbort(const std::string& path, struct stat& st);
 std::optional<std::string> GetHomePath();
+std::optional<std::string> GetXdgCachePath();
+std::optional<std::string> GetXdgConfigPath();
+std::string PathJoin(const std::initializer_list<std::string>& parts);
 
 template<class T>
 inline T* MallocOrAbort(const std::size_t size)

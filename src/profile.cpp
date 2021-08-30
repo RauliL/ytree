@@ -1,15 +1,4 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/profile.c,v 1.10 2014/12/26 09:53:11 werner Exp $
- *
- * Profile support
- *
- ***************************************************************************/
-
-
 #include "ytree.h"
-
-
 
 #define NO_SECTION	0
 #define GLOBAL_SECTION	1
@@ -20,14 +9,13 @@
 #define DIRMAP_SECTION 6
 #define DIRCMD_SECTION 7
 
-
-typedef struct
+struct Profile
 {
-  const char *name;
-  const char *def;
-  const char *envvar;
-  char *value;
-} Profile;
+  const char* name;
+  const char* def;
+  const char* envvar;
+  char* value;
+};
 
 struct Viewer
 {
@@ -36,23 +24,26 @@ struct Viewer
   Viewer* next;
 };
 
-typedef struct _dirmenu {
+struct Dirmenu
+{
   int chkey;
   int chremap;
-  char *cmd;
-  struct _dirmenu *next;
-} Dirmenu;
+  char* cmd;
+  Dirmenu* next;
+};
 
-typedef struct _filemenu {
+struct Filemenu
+{
   int chkey;
   int chremap;
-  char *cmd;
-  struct _filemenu *next;
-} Filemenu;
+  char* cmd;
+  Filemenu* next;
+};
 
 static Viewer viewer;
 static Dirmenu dirmenu;
 static Filemenu filemenu;
+static std::optional<std::string> custom_profile_path;
 
 /* MUSS sortiert sein! */
 static Profile profile[] = {
@@ -102,10 +93,12 @@ static int Compare(const void *s1, const void *s2);
 
 static int ChCode(const char *s);
 
-int ReadProfile(const std::string& filename)
+int ReadProfile(const std::optional<std::string>& custom_path)
 {
+  std::string filename;
+  char buffer[BUFSIZ];
   int  l, result = -1;
-  char buffer[1024], *n, *old;
+  char *n, *old;
   unsigned char *name, *value, *cptr;
   int section;
   Profile *p, key;
@@ -119,16 +112,29 @@ int ReadProfile(const std::string& filename)
   m = &filemenu;
   d = &dirmenu;
 
-  v->next = NULL;
-  m->next = NULL;
-  d->next = NULL;
+  v->next = nullptr;
+  m->next = nullptr;
+  d->next = nullptr;
+
+  if (custom_path)
+  {
+    custom_profile_path = *custom_path;
+    filename = *custom_path;
+  }
+  else if (const auto config_path = GetXdgConfigPath())
+  {
+    filename = PathJoin({ *config_path, "config.ini" });
+  } else {
+    goto FNC_XIT;
+  }
 
   if (!(f = std::fopen(filename.c_str(), "r")))
   {
     goto FNC_XIT;
   }
 
-  while( fgets( buffer, sizeof( buffer ), f ) ) {
+  while (std::fgets(buffer, BUFSIZ, f))
+  {
     if(*buffer == '#')
       continue;
     l = strlen( buffer );

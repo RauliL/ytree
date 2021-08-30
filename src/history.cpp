@@ -1,36 +1,38 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/history.c,v 1.6 2005/09/07 18:50:33 werner Exp $
- *
- * Functionkey F2 History
- *
- ***************************************************************************/
-
-
 #include "ytree.h"
-
-
 
 #define MAX_HST_FILE_LINES 50
 #define MAX(a,b) (((a) > (b)) ? (a):(b))
 
-typedef struct _history
+struct History
 {
-  char             *hst;
-  struct _history  *next;
-  struct _history  *prev;
-} History;
+  char* hst;
+  History* next;
+  History* prev;
+};
 
+static std::optional<std::string> custom_history_path;
 
 static int total_hist     = 0;
 static int cursor_pos     = 0;
 static int disp_begin_pos = 0;
 static History *Hist = NULL ;
 
-void ReadHistory(const std::string& filename)
+void ReadHistory(const std::optional<std::string>& custom_path)
 {
+  std::string filename;
   char buffer[BUFSIZ];
 
+  if (custom_path)
+  {
+    custom_history_path = custom_path;
+    filename = *custom_path;
+  }
+  else if (const auto cache_dir = GetXdgCachePath())
+  {
+    filename = PathJoin({ *cache_dir, "history" });
+  } else {
+    return;
+  }
   if (auto f = std::fopen(filename.c_str(), "r"))
   {
     while (std::fgets(buffer, sizeof(buffer), f))
@@ -45,12 +47,27 @@ void ReadHistory(const std::string& filename)
   }
 }
 
-void SaveHistory(const std::string& filename)
+void SaveHistory()
 {
+  std::string filename;
   auto hst = Hist;
 
   if (!hst)
   {
+    return;
+  }
+  else if (custom_history_path)
+  {
+    filename = *custom_history_path;
+  }
+  else if (const auto cache_dir = GetXdgCachePath())
+  {
+    if (mkdir(cache_dir->c_str(), S_IRUSR | S_IWUSR | S_IXUSR))
+    {
+      return;
+    }
+    filename = PathJoin({ *cache_dir, "history" });
+  } else {
     return;
   }
   if (auto f = std::fopen(filename.c_str(), "w"))
@@ -100,7 +117,7 @@ void InsHistory( char *NewHst)
 
    if (flag == 0)
    {
-      if ((TMP=(History *) malloc(sizeof(struct _history))) != NULL)
+     if ((TMP = static_cast<History*>(std::malloc(sizeof(History)))))
       {
          TMP -> next = Hist;
 	 TMP->prev = nullptr;

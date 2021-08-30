@@ -149,12 +149,7 @@ void Quit()
 
   if (term == 'Y' || term == 'Q' || term == 'q')
   {
-    const auto home_path = GetHomePath();
-
-    if (home_path)
-    {
-      SaveHistory(*home_path + FILE_SEPARATOR_CHAR + HISTORY_FILENAME);
-    }
+    SaveHistory();
     endwin();
     std::exit(EXIT_SUCCESS);
   }

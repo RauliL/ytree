@@ -51,6 +51,7 @@ ADD_EXECUTABLE(
   mktime.cpp
   move.cpp
   passwd.cpp
+  path.cpp
   pipe.cpp
   print.cpp
   profile.cpp

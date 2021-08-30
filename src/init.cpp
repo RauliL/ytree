@@ -15,9 +15,11 @@ static WINDOW *Subwin(WINDOW *orig, int nlines, int ncols,
 static WINDOW *Newwin(int nlines, int ncols,
                       int begin_y, int begin_x);
 
-int Init(char *configuration_file, char *history_file)
+int Init(
+  const std::optional<std::string>& configuration_file,
+  const std::optional<std::string>& history_file
+)
 {
-  const auto home_path = GetHomePath();
 
   user_umask = umask(0);
   initscr();
@@ -41,22 +43,8 @@ int Init(char *configuration_file, char *history_file)
 
   file_window = small_file_window;
 
-  if (configuration_file)
-  {
-    ReadProfile(configuration_file);
-  }
-  else if (home_path)
-  {
-    ReadProfile(*home_path + FILE_SEPARATOR_CHAR + PROFILE_FILENAME);
-  }
-  if (history_file)
-  {
-    ReadHistory(history_file);
-  }
-  else if (home_path)
-  {
-    ReadHistory(*home_path + FILE_SEPARATOR_CHAR + HISTORY_FILENAME);
-  }
+  ReadProfile(configuration_file);
+  ReadHistory(history_file);
 
   SetFileMode( strtod(FILEMODE, NULL) );
   SetKindOfSort( SORT_BY_NAME );
