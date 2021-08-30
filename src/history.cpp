@@ -27,55 +27,51 @@ static int cursor_pos     = 0;
 static int disp_begin_pos = 0;
 static History *Hist = NULL ;
 
-
-
-void ReadHistory(char *Filename)
+void ReadHistory(const std::string& filename)
 {
-  FILE *HstFile;
   char buffer[BUFSIZ];
 
-  if ( (HstFile = fopen( Filename, "r" ) ) != NULL) {
-    while( fgets( buffer, sizeof( buffer ), HstFile ) )
+  if (auto f = std::fopen(filename.c_str(), "r"))
+  {
+    while (std::fgets(buffer, sizeof(buffer), f))
     {
-        if (strlen(buffer) > 0)
-        {
-          buffer[strlen(buffer) -1] = '\0';
-          InsHistory(buffer);
-        }
+      if (std::strlen(buffer) > 0)
+      {
+        buffer[std::strlen(buffer) - 1] = 0;
+        InsHistory(buffer);
+      }
     }
-    fclose( HstFile );
+    std::fclose(f);
   }
-  return;
 }
 
-
-
-void SaveHistory(char *Filename)
+void SaveHistory(const std::string& filename)
 {
-  FILE *HstFile;
-  int j;
-  History *hst, *last_hst;
+  auto hst = Hist;
 
-  hst = last_hst = NULL;
-
-  if((hst = Hist)) {
-    if( (HstFile = fopen( Filename, "w" ) ) != NULL) {
-      for(j = 0 ; hst && j < MAX_HST_FILE_LINES; j++ ) {
-        last_hst = hst;
-        hst = hst->next;
-      }
-
-      /* write in reverse order */
-      for(hst=last_hst; hst; hst=hst->prev) {
-         fputs(hst->hst, HstFile);
-         fputs("\n", HstFile);
-      }
-      fclose( HstFile );
-    }
+  if (!hst)
+  {
+    return;
   }
-  return;
-}
+  if (auto f = std::fopen(filename.c_str(), "w"))
+  {
+    History* last_hst = nullptr;
 
+    for (int j = 0; hst && j < MAX_HST_FILE_LINES; ++j)
+    {
+      last_hst = hst;
+      hst = hst->next;
+    }
+
+    // Write in reverse order.
+    for (hst = last_hst; hst; hst = hst->prev)
+    {
+      std::fputs(hst->hst, f);
+      std::fputc('\n', f);
+    }
+    std::fclose(f);
+  }
+}
 
 void InsHistory( char *NewHst)
 {

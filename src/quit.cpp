@@ -143,24 +143,19 @@ static int QuitFileCheck(char *fname)
 	return(0);
 }
 
-
-void Quit(void)
+void Quit()
 {
-  int term;
-  char path[PATH_LENGTH + 1];
-  char *p;
+  const auto term = InputChoise("quit ytree (Y/N) ?", "YNQq\r\033");
 
-  term = InputChoise( "quit ytree (Y/N) ?", "YNQq\r\033" );
-
-  if( term == 'Y' || term == 'Q' || term == 'q' )
+  if (term == 'Y' || term == 'Q' || term == 'q')
   {
-    if (( p = getenv("HOME") ))
+    const auto home_path = GetHomePath();
+
+    if (home_path)
     {
-      sprintf(path, "%s%c%s", p, FILE_SEPARATOR_CHAR, HISTORY_FILENAME);
-      SaveHistory(path);
+      SaveHistory(*home_path + FILE_SEPARATOR_CHAR + HISTORY_FILENAME);
     }
     endwin();
-    exit( 0 );
+    std::exit(EXIT_SUCCESS);
   }
 }
-

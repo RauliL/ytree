@@ -657,7 +657,7 @@ int Edit(const DirEntry* dir_entry, const std::string& file_path);
 extern void DisplayAvailBytes(void);
 extern void DisplayFileSpec(void);
 extern void QuitTo(DirEntry * dir_entry);
-extern void Quit(void);
+void Quit();
 extern int  ReadFileSpec(void);
 extern int  InputString(char *s, int y, int x, int cursor_pos, int length, const char *term);
 extern void RotateFileMode(void);
@@ -744,15 +744,15 @@ extern int  MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry 
 extern int  MakeDirEntry( DirEntry *father_dir_entry, char *dir_name );
 extern void NormPath( const char *in_path, char *out_path );
 extern char *Strtok_r( char *str, const char *delim, char **old );
-extern int  ReadProfile( char *filename );
+int ReadProfile(const std::string& filename);
 extern const char *GetProfileValue( const char *key );
 void ScanSubTree(DirEntry* dir_entry);
 extern void GetMaxYX(WINDOW *win, int *height, int *width);
 
 extern char *GetHistory(void);
 extern void InsHistory(char *new_hist);
-extern void ReadHistory(char *filename);
-extern void SaveHistory(char *filename);
+void ReadHistory(const std::string& filename);
+void SaveHistory(const std::string& filename);
 extern char *GetMatches(char *);
 extern int  KeyF2Get(DirEntry *start_dir_entry,
                int disp_begin_pos,
@@ -797,6 +797,7 @@ void WAttrAddStr(WINDOW* win, int attr, const std::string& str);
 char* Strdup(const std::string& src);
 char* Strndup(const std::string& src, const std::size_t len);
 void StatOrAbort(const std::string& path, struct stat& st);
+std::optional<std::string> GetHomePath();
 
 template<class T>
 inline T* MallocOrAbort(const std::size_t size)

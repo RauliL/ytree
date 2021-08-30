@@ -821,7 +821,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
   bool need_dsp_help;
   char new_name[PATH_LENGTH + 1];
   char new_login_path[PATH_LENGTH + 1];
-  char *home;
+  std::optional<std::string> home;
 
   unput_char = 0;
   de_ptr = NULL;
@@ -850,10 +850,11 @@ int HandleDirWindow(DirEntry *start_dir_entry)
         strcpy( new_login_path, start_dir_entry->name );
         strcat( new_login_path, initial_directory+1 );
       }
-      else if ( *initial_directory == '~' && ( home = getenv("HOME") ) ) {
-                                           /* Entry of form "~/alpha/beta" */
-        strcpy( new_login_path, home );
-        strcat( new_login_path, initial_directory+1 );
+      else if (*initial_directory == '~' && (home = GetHomePath()))
+      {
+        /* Entry of form "~/alpha/beta" */
+        std::strcpy(new_login_path, home->c_str());
+        std::strcat(new_login_path, initial_directory + 1);
       }
       else {            /* Entry of form "beta" or "/full/path/alpha/beta" */
         strcpy(new_login_path, initial_directory);

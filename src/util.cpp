@@ -1100,3 +1100,17 @@ void StatOrAbort(const std::string& path, struct stat& st)
     std::exit(EXIT_FAILURE);
   }
 }
+
+std::optional<std::string> GetHomePath()
+{
+  const auto env_variable = std::getenv("HOME");
+
+  if (!env_variable)
+  {
+    const auto pw = getpwuid(getuid());
+
+    return pw ? std::make_optional<std::string>(pw->pw_dir) : std::nullopt;
+  }
+
+  return env_variable;
+}

@@ -102,7 +102,7 @@ static int Compare(const void *s1, const void *s2);
 
 static int ChCode(const char *s);
 
-int ReadProfile( char *filename )
+int ReadProfile(const std::string& filename)
 {
   int  l, result = -1;
   char buffer[1024], *n, *old;
@@ -123,8 +123,9 @@ int ReadProfile( char *filename )
   m->next = NULL;
   d->next = NULL;
 
-  if( ( f = fopen( filename, "r" ) ) == NULL ) {
-    ESCAPE;
+  if (!(f = std::fopen(filename.c_str(), "r")))
+  {
+    goto FNC_XIT;
   }
 
   while( fgets( buffer, sizeof( buffer ), f ) ) {

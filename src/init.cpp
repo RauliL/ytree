@@ -17,8 +17,7 @@ static WINDOW *Newwin(int nlines, int ncols,
 
 int Init(char *configuration_file, char *history_file)
 {
-  char buffer[PATH_LENGTH + 1];
-  char *home = NULL;
+  const auto home_path = GetHomePath();
 
   user_umask = umask(0);
   initscr();
@@ -42,19 +41,21 @@ int Init(char *configuration_file, char *history_file)
 
   file_window = small_file_window;
 
-  if (configuration_file != NULL) {
+  if (configuration_file)
+  {
     ReadProfile(configuration_file);
   }
-  else if( ( home = getenv("HOME") ) ) {
-    sprintf(buffer, "%s%c%s", home, FILE_SEPARATOR_CHAR, PROFILE_FILENAME);
-    ReadProfile(buffer);
+  else if (home_path)
+  {
+    ReadProfile(*home_path + FILE_SEPARATOR_CHAR + PROFILE_FILENAME);
   }
-  if (history_file != NULL) {
+  if (history_file)
+  {
     ReadHistory(history_file);
   }
-  else if ( home ) {
-    sprintf(buffer, "%s%c%s", home, FILE_SEPARATOR_CHAR, HISTORY_FILENAME);
-    ReadHistory(buffer);
+  else if (home_path)
+  {
+    ReadHistory(*home_path + FILE_SEPARATOR_CHAR + HISTORY_FILENAME);
   }
 
   SetFileMode( strtod(FILEMODE, NULL) );
