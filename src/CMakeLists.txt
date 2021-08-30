@@ -5,17 +5,28 @@ LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../cmake")
 INCLUDE(FindCurses)
 INCLUDE(FindReadline)
 
+OPTION(
+  COLOR_SUPPORT
+  "Whether colors should be enabled or not."
+  ON
+)
+OPTION(
+  CLOCK_SUPPORT
+  "Whether experimental clock should be enabled or not."
+  OFF
+)
+OPTION(
+  WITH_UTF8
+  "Whether support for UTF-8 should be enabled or not."
+  ON
+)
+
 CONFIGURE_FILE(
   ${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
   ${CMAKE_CURRENT_SOURCE_DIR}/config.h
 )
 
-ADD_DEFINITIONS(
-  -DCOLOR_SUPPORT
-#  -DCLOCK_SUPPORT # Experimental!
-  -DREADLINE_SUPPORT
-  -DWITH_UTF8
-)
+ADD_DEFINITIONS(-DREADLINE_SUPPORT)
 
 ADD_EXECUTABLE(
   ytree

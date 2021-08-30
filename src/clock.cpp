@@ -1,82 +1,74 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/clock.c,v 1.4 2003/08/31 11:11:00 werner Exp $
- *
- * Clock Module
- *
- ***************************************************************************/
-
-
 #include "ytree.h"
-
-
 
 void InitClock()
 {
+#if defined(CLOCK_SUPPORT)
+  struct itimerval value;
+  struct itimerval ovalue;
 
-#ifdef CLOCK_SUPPORT
-
-  struct itimerval value, ovalue;
   print_time = true;
 
-  if (getitimer(ITIMER_REAL, &value)!= 0) {
-      sprintf(message,"getitimer() failed: %s", strerror(errno));
-      ERROR_MSG(message);
+  if (getitimer(ITIMER_REAL, &value) != 0)
+  {
+    ErrorPrintf("gettimer() failed:*%s", std::strerror(errno));
   }
+
   value.it_interval.tv_sec = CLOCK_INTERVAL;
   value.it_value.tv_sec = CLOCK_INTERVAL;
   value.it_interval.tv_usec = 0;
-  
-  if (setitimer(ITIMER_REAL, &value, &ovalue)!= 0) {
-      sprintf(message,"setitimer() failed: %s", strerror(errno));
-      ERROR_MSG(message);
+
+  if (setitimer(ITIMER_REAL, &value, &ovalue) != 0)
+  {
+    ErrorPrintf("setitimer() failed:*%s", std::strerror(errno));
   }
+
   ClockHandler(0);
 #endif
 }
 
-
-
-
 void ClockHandler(int sig)
 {
-#ifdef CLOCK_SUPPORT
+#if defined(CLOCK_SUPPORT)
+  if (COLS > 15 && print_time)
+  {
+    std::time_t hora;
+    struct tm* hora_tm;
+    char strtm[23];
 
-   char strtm[23];
-   time_t HORA;
-   struct tm *hora;
+    std::time(&hora);
+    hora_tm = std::localtime(&hora);
 
-   if(COLS > 15 && print_time)
-   {
-      time(&HORA);
-      hora = localtime(&HORA);
-      *strtm = '\0';
-      
-      sprintf(strtm,"[time %.2d:%.2d:%.2d]",hora->tm_hour,hora->tm_min,hora->tm_sec);
-
-#ifdef COLOR_SUPPORT
-      mvwaddch(time_window, 0, 0, ACS_RTEE| COLOR_PAIR(MENU_COLOR)|A_BOLD);
-      mvwaddch(time_window, 0, 14, ACS_LTEE| COLOR_PAIR(MENU_COLOR)|A_BOLD);
-#else
-      mvwaddch(time_window, 0, 0, ACS_RTEE);
-      mvwaddch(time_window, 0, 14, ACS_LTEE);
-#endif
-      PrintMenuOptions(time_window,0, 1, strtm, MENU_COLOR, HIMENUS_COLOR);
-   }
-   signal(SIGALRM,  ClockHandler );
+    std::snprintf(
+      strtm,
+      sizeof(strtm),
+      "[time %.2d:%.2d:%.2d]",
+      hora_tm->tm_hour,
+      hora_tm->tm_min,
+      hora_tm->tm_sec
+    );
+# if defined(COLOR_SUPPORT)
+    mvwaddch(time_window, 0, 0, ACS_RTEE | COLOR_PAIR(MENU_COLOR) | A_BOLD);
+    mvwaddch(time_window, 0, 14, ACS_LTEE | COLOR_PAIR(MENU_COLOR) | A_BOLD);
+# else
+    mvwaddch(time_window, 0, 0, ACS_RTEE);
+    mvwaddch(time_window, 0, 14, ACS_LTEE);
+# endif
+    PrintMenuOptions(time_window, 0, 1, strtm, MENU_COLOR, HIMENUS_COLOR);
+  }
+  std::signal(SIGALRM, ClockHandler);
 #endif
 }
 
-void SuspendClock(void)
+void SuspendClock()
 {
-#ifdef CLOCK_SUPPORT
-  struct itimerval value, ovalue;
+#if defined(CLOCK_SUPPORT)
+  struct itimerval value;
+  struct itimerval ovalue;
+
   value.it_interval.tv_sec = 0;
   value.it_value.tv_sec = 0;
   value.it_interval.tv_usec = 0;
   setitimer(ITIMER_REAL, &value, &ovalue);
-  signal(SIGALRM, SIG_IGN);
+  std::signal(SIGALRM, SIG_IGN);
 #endif
-  return;
-  }
-  
+}

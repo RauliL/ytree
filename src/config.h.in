@@ -5,6 +5,10 @@
 #cmakedefine CURSES_HAVE_NCURSES_NCURSES_H
 #cmakedefine CURSES_HAVE_NCURSES_CURSES_H
 
+#cmakedefine COLOR_SUPPORT
+#cmakedefine CLOCK_SUPPORT
+#cmakedefine WITH_UTF8
+
 /* Default (max) TreeDepth on startup */
 #define DEFAULT_TREEDEPTH     "1"
 #define DEFAULT_FILEMODE      "2"
