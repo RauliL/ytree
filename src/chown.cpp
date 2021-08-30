@@ -61,7 +61,7 @@ int GetNewOwner(int st_uid)
 
   MvAddStr( LINES - 2, 1, "New Owner:" );
 
-  if( InputString( owner, LINES - 2, 12, 0, OWNER_NAME_MAX, "\r\033" ) == CR )
+  if (InputString( owner, LINES - 2, 12, 0, OWNER_NAME_MAX))
   {
     if (const auto owner_id_ptr = GetPasswdUid(owner))
     {

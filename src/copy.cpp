@@ -258,13 +258,17 @@ int GetCopyParameter(const char *from_file, bool path_copy, char *to_file, char 
   MvAddStr( LINES - 3, 1, buffer );
   MvAddStr( LINES - 2, 1, "AS   ");
 
-  if( InputString(to_file, LINES - 2, 6, 0, COLS - 6, "\r\033" ) == CR){
+  if (InputString(to_file, LINES - 2, 6, 0, COLS - 6) == CR)
+  {
     MvAddStr( LINES - 1, 1, "TO   " );
-    if( InputString( to_dir, LINES - 1, 6, 0, COLS - 6, "\r\033" ) == CR )
-    return( 0 );
+    if (InputString( to_dir, LINES - 1, 6, 0, COLS - 6) == CR)
+    {
+      return 0;
+    }
   }
   ClearHelp();
-  return( -1 );
+
+  return -1;
 }
 
 static int Copy(const std::string& to_path, const std::string& from_path)

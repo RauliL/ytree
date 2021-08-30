@@ -639,7 +639,7 @@ int GetNewLoginPath(char *path)
     if( aux[strlen(aux) - 1] == '>' ) aux[strlen(aux) - 1 ] = '\0';
   }
 
-  if( InputString( aux, LINES - 2, 17, 0, COLS - 24, "\r\033" ) == CR )
+  if (InputString( aux, LINES - 2, 17, 0, COLS - 24) == CR)
   {
     NormPath(aux, path);
     result = 0;

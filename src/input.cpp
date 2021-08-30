@@ -109,7 +109,7 @@ int StrVisualLength(const char *str)
 }
 
 
-int InputString(char *s, int y, int x, int cursor_pos, int length, const char *term)
+int InputString(char *s, int y, int x, int cursor_pos, int length)
                                /* Ein- und Ausgabestring              */
                                /* Position auf Bildschirm             */
                                /* max. Laenge                         */
@@ -390,7 +390,7 @@ int GetTapeDeviceName( void )
   (void) strcpy( path, statistic.tape_name );
 
   MvAddStr( LINES - 2, 1, "Tape-Device:" );
-  if( InputString( path, LINES - 2, 14, 0, COLS - 15, "\r\033" ) == CR )
+  if (InputString( path, LINES - 2, 14, 0, COLS - 15) == CR)
   {
     result = 0;
     (void) strcpy( statistic.tape_name, path );

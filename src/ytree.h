@@ -641,7 +641,7 @@ extern void DisplayFileSpec(void);
 extern void QuitTo(DirEntry * dir_entry);
 void Quit();
 extern int  ReadFileSpec(void);
-extern int  InputString(char *s, int y, int x, int cursor_pos, int length, const char *term);
+extern int  InputString(char *s, int y, int x, int cursor_pos, int length);
 extern void RotateFileMode(void);
 int Execute(const DirEntry* dir_entry, const FileEntry* file_entry);
 extern int  Pipe(DirEntry *dir_entry, FileEntry *file_entry);

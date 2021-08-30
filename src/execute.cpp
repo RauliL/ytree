@@ -48,7 +48,7 @@ int GetCommandLine(char *command_line)
   ClearHelp();
 
   MvAddStr( LINES - 2, 1, "Command: " );
-  if( InputString( command_line, LINES - 2, 10, 0, COLS - 11, "\r\033" ) == CR )
+  if (InputString( command_line, LINES - 2, 10, 0, COLS - 11) == CR)
   {
     move( LINES - 2, 1 ); clrtoeol();
     result = 0;
@@ -82,7 +82,7 @@ int GetSearchCommandLine(char *command_line)
   } else {
     pos = 0;
   }
-  if( InputString( command_line, LINES - 2, 23, pos, COLS - 24, "\r\033" ) == CR )
+  if (InputString( command_line, LINES - 2, 23, pos, COLS - 24) == CR)
   {
     move( LINES - 2, 1 ); clrtoeol();
     result = 0;
