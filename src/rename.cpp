@@ -36,8 +36,7 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
 
   (void) strcpy( cptr + 1, new_name );
 
-
-  if (access(from_path, W_OK))
+  if (!IsWriteable(from_path))
   {
     MessagePrintf(
       "Rename not possible!*\"%s\"*%s",
@@ -131,8 +130,7 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
   (void) strcat( to_path, FILE_SEPARATOR_STRING );
   (void) strcat( to_path, new_name );
 
-
-  if (access(from_path.c_str(), W_OK))
+  if (!IsWriteable(from_path))
   {
     MessagePrintf(
       "Rename not possible!*\"%s\"*%s",

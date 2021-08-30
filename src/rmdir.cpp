@@ -54,7 +54,7 @@ int DeleteDirectory(DirEntry *dir_entry)
   {
     (void) GetPath( dir_entry, buffer );
 
-    if( access( buffer, W_OK ) )
+    if (!IsWriteable(buffer))
     {
       MessagePrintf(
         "Can't delete directory*\"%s\"*%s",
@@ -137,15 +137,15 @@ static int DeleteSingleDirectory( DirEntry *dir_entry )
 
   (void) GetPath( dir_entry, buffer );
 
-
-  if (access(buffer, W_OK))
+  if (!IsWriteable(buffer))
   {
     MessagePrintf(
       "Can't delete directory*\"%s\"*%s",
 		  buffer,
       std::strerror(errno)
 		);
-    ESCAPE;
+
+    return -1;
   }
 
   for( fe_ptr = dir_entry->file; fe_ptr; fe_ptr=next_fe_ptr ) {

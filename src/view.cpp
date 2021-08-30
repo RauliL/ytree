@@ -76,7 +76,7 @@ static int ViewFile(DirEntry* dir_entry, const std::string& file_path)
   bool notice_mapped = false;
   char path[PATH_LENGTH+1];
 
-  if (access(file_path.c_str(), R_OK))
+  if (!IsReadable(file_path))
   {
     MessagePrintf(
       "View not possible!*\"%s\"*%s",

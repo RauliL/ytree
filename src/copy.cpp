@@ -140,26 +140,17 @@ int CopyFile(Statistic *statistic_ptr,
       (void) DeleteFile( dest_file_entry );
     }
   }
-  else
+  /* access benutzen */
+  /*-----------------*/
+  else if (Exists(to_path) && confirm)
   {
-    /* access benutzen */
+    /* Datei existiert */
     /*-----------------*/
-
-    if( !access( to_path, F_OK ) )
+    term = InputChoise( "file exist; overwrite (Y/N) ? ", "YN\033" );
+    if (term != 'Y')
     {
-      /* Datei existiert */
-      /*-----------------*/
-
-      if( confirm )
-      {
-	term = InputChoise( "file exist; overwrite (Y/N) ? ", "YN\033" );
-
-        if( term != 'Y' )
-        {
-	  result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
-          ESCAPE;
-        }
-      }
+      result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
+      ESCAPE;
     }
   }
 

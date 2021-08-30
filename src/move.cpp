@@ -52,8 +52,7 @@ int MoveFile(FileEntry *fe_ptr,
     ESCAPE;
   }
 
-
-  if (access(from_path, W_OK))
+  if (!IsWriteable(from_path))
   {
     MessagePrintf(
       "Unmoveable file*\"%s\"*%s",
@@ -89,35 +88,31 @@ int MoveFile(FileEntry *fe_ptr,
       (void) DeleteFile( dest_file_entry );
     }
   }
-  else
+  /* access benutzen */
+  /*-----------------*/
+  else if (Exists(to_path))
   {
-    /* access benutzen */
+    /* Datei existiert */
     /*-----------------*/
 
-    if( !access( to_path, F_OK ) )
+    if( confirm )
     {
-      /* Datei existiert */
-      /*-----------------*/
-
-      if( confirm )
+      term = InputChoise( "file exist; overwrite (Y/N) ? ", "YN\033" );
+      if (term != 'Y')
       {
-	term = InputChoise( "file exist; overwrite (Y/N) ? ", "YN\033" );
-
-        if( term != 'Y' ) {
-	  result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
-	  ESCAPE;
-	}
-      }
-
-      if (unlink(to_path))
-      {
-        MessagePrintf(
-          "Can't unlink*\"%s\"*%s",
-          to_path,
-          std::strerror(errno)
-        );
+        result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
         ESCAPE;
       }
+    }
+
+    if (unlink(to_path))
+    {
+      MessagePrintf(
+        "Can't unlink*\"%s\"*%s",
+        to_path,
+        std::strerror(errno)
+      );
+      ESCAPE;
     }
   }
 

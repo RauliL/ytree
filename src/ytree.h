@@ -819,3 +819,18 @@ inline T* MallocOrAbort(const std::size_t size)
 
   return ptr;
 }
+
+inline bool Exists(const std::string& path)
+{
+  return !access(path.c_str(), F_OK);
+}
+
+inline bool IsReadable(const std::string& path)
+{
+  return !access(path.c_str(), R_OK);
+}
+
+inline bool IsWriteable(const std::string& path)
+{
+  return !access(path.c_str(), W_OK);
+}

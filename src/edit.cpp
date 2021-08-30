@@ -12,7 +12,7 @@ int Edit(const DirEntry* dir_entry, const std::string& file_path)
     return -1;
   }
 
-  if (access(file_path.c_str(), R_OK))
+  if (!IsReadable(file_path))
   {
     MessagePrintf(
 		  "Edit not possible!*\"%s\"*%s",

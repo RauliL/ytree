@@ -26,9 +26,9 @@ int DeleteFile(FileEntry *fe_ptr)
 
   if (!S_ISLNK( fe_ptr->stat_struct.st_mode))
   {
-    if (access(filepath.c_str(), W_OK))
+    if (!IsWriteable(filepath))
     {
-      if (access(filepath.c_str(), F_OK))
+      if (!Exists(filepath))
       {
         /* Datei existiert nicht ==> fertig */
         goto UNLINK_DONE;

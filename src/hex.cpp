@@ -32,7 +32,7 @@ static int ViewHexFile(const std::string& file_path)
   char* command_line;
   int result = -1;
 
-  if (access(file_path.c_str(), R_OK))
+  if (!IsReadable(file_path))
   {
     MessagePrintf(
       "HexView not possible!*\"%s\"*%s",
