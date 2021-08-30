@@ -7,9 +7,7 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
 
   if (file_entry && (file_entry->stat_struct.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
   {
-    const auto escaped_name = ShellEscape(file_entry->name);
-
-    std::strcpy(command_line, escaped_name.c_str());
+    std::strcpy(command_line, ("\"" + ShellEscape(file_entry->name) + "\"").c_str());
   }
 
   MvAddStr(LINES - 2, 1, "Command:");

@@ -377,7 +377,7 @@ static int CopyArchiveFile(
   const auto to_p_aux = ShellEscape(from_path);
   int result = -1;
 
-  std::snprintf(buffer, PATH_LENGTH + 2, "> %s", to_p_aux.c_str());
+  std::snprintf(buffer, PATH_LENGTH + 2, "> \"%s\"", to_p_aux.c_str());
 
   MakeExtractCommandLine(
     command_line,
