@@ -1,60 +1,36 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/dirwin.c,v 1.27 2016/09/04 14:41:12 werner Exp $
- *
- * Funktionen zur Handhabung des DIR-Windows
- *
- ***************************************************************************/
-
-
 #include "ytree.h"
 
+#include <vector>
 
-static DirEntryList *dir_entry_list;
-static int current_dir_entry;
-static int total_dirs;
-static int window_height, window_width;
+struct DirEntryList
+{
+  std::size_t indent;
+  DirEntry* dir_entry;
+  unsigned short level;
+};
 
-static void ReadDirList(DirEntry *dir_entry);
+static std::vector<DirEntryList> dir_entry_list;
+static std::vector<DirEntryList>::size_type current_dir_entry;
+static int window_height;
+static int window_width;
+
+static void ReadDirList(DirEntry* dir_entry);
 static void PrintDirEntry(WINDOW *win, int entry_no, int y, unsigned char hilight);
-static void BuildDirEntryList(DirEntry *dir_entry);
+static void BuildDirEntryList(DirEntry* dir_entry);
 
 static int dir_mode;
 
-
-static void BuildDirEntryList(DirEntry *dir_entry)
+static void BuildDirEntryList(DirEntry* dir_entry)
 {
-  if( dir_entry_list )
-  {
-    free( dir_entry_list );
-    dir_entry_list = NULL;
-  }
+  dir_entry_list.clear();
 
   /* fuer !ANSI-Systeme.. */
   /*----------------------*/
 
-  if( statistic.disk_total_directories == 0 )
-  {
-    dir_entry_list = NULL;
-  }
-  else
-  {
-    if( ( dir_entry_list = ( DirEntryList *)
-		             calloc( statistic.disk_total_directories,
-	        	     sizeof( DirEntryList )
-		           ) ) == NULL )
-    {
-      Error("calloc() failed*ABORT");
-      std::exit(EXIT_FAILURE);
-    }
-  }
-
+  dir_entry_list.reserve(statistic.disk_total_directories);
   current_dir_entry = 0;
 
-  ReadDirList( dir_entry );
-
-  total_dirs = current_dir_entry;
-
+  ReadDirList(dir_entry);
 }
 
 static void RotateDirMode(void)
@@ -72,35 +48,35 @@ static void RotateDirMode(void)
 
 
 
-static void ReadDirList(DirEntry *dir_entry)
+static void ReadDirList(DirEntry* dir_entry)
 {
-  DirEntry    *de_ptr;
-  static int  level = 0;
-  static unsigned long indent = 0L;
+  static std::size_t indent = 0;
+  static int level = 0;
 
-  for( de_ptr = dir_entry; de_ptr; de_ptr = de_ptr->next )
+  for (auto de_ptr = dir_entry; de_ptr; de_ptr = de_ptr->next)
   {
-    indent &= ~( 1L << level );
-    if( de_ptr->next ) indent |= ( 1L << level );
-
-    dir_entry_list[current_dir_entry].dir_entry = de_ptr;
-    dir_entry_list[current_dir_entry].level = (unsigned short) level;
-    dir_entry_list[current_dir_entry].indent = indent;
-
-    current_dir_entry++;
-
-    if( !de_ptr->not_scanned && de_ptr->sub_tree )
+    indent &= ~(1L << level);
+    if (de_ptr->next)
     {
-      level++;
-      ReadDirList( de_ptr->sub_tree );
-      level--;
+      indent |= ( 1L << level );
+    }
+
+    dir_entry_list.push_back({
+      indent,
+      de_ptr,
+      static_cast<unsigned short>(level),
+    });
+
+    ++current_dir_entry;
+
+    if (!de_ptr->not_scanned && de_ptr->sub_tree)
+    {
+      ++level;
+      ReadDirList(de_ptr->sub_tree);
+      --level;
     }
   }
 }
-
-
-
-
 
 static void PrintDirEntry(WINDOW *win,
                           int entry_no,
@@ -114,14 +90,13 @@ static void PrintDirEntry(WINDOW *win,
   char buffer[32*3+PATH_LENGTH+1];
   char format[60];
   char *line_buffer = NULL;
-  char *dir_name;
   char attributes[11];
   char modify_time[13];
   char change_time[13];
   char access_time[13];
   char owner[OWNER_NAME_MAX + 1];
   char group[GROUP_NAME_MAX + 1];
-  DirEntry *de_ptr;
+  const DirEntry* de_ptr;
   bool suppress_output = false;
 
 
@@ -233,9 +208,9 @@ static void PrintDirEntry(WINDOW *win,
   if(!suppress_output) {
 
     /* Output Dirname */
+    const auto dir_name = de_ptr->name;
 
-    dir_name = de_ptr->name;
-    (void) strcpy( buffer, ( *dir_name ) ? dir_name : "." );
+    std::strcpy(buffer, *dir_name ? dir_name : ".");
     if( de_ptr->not_scanned ) {
       (void) strcat( buffer, "/" );
     }
@@ -308,7 +283,7 @@ void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no)
 
 static void Movedown(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
 {
-   if( *disp_begin_pos + *cursor_pos + 1 >= total_dirs )
+   if (*disp_begin_pos + *cursor_pos + 1 >= dir_entry_list.size())
    {
       /* Element nicht vorhanden */
       /*-------------------------*/
@@ -419,7 +394,7 @@ static void Moveup(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
 
 static void Movenpage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
 {
-   if( *disp_begin_pos + *cursor_pos >= total_dirs - 1 )
+   if (*disp_begin_pos + *cursor_pos >= dir_entry_list.size() - 1)
    {
       /* Letzte Position */
       /*-----------------*/
@@ -437,8 +412,8 @@ static void Movenpage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
                           *cursor_pos,
                           false
                           );
-           if( *disp_begin_pos + window_height > total_dirs  - 1 )
-              *cursor_pos = total_dirs - *disp_begin_pos - 1;
+           if( *disp_begin_pos + window_height > dir_entry_list.size() - 1 )
+              *cursor_pos = dir_entry_list.size() - *disp_begin_pos - 1;
            else
               *cursor_pos = window_height - 1;
            *dir_entry = dir_entry_list[*disp_begin_pos + *cursor_pos].dir_entry;
@@ -456,16 +431,16 @@ static void Movenpage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
       {
           /* Scrollen */
           /*----------*/
-          if( *disp_begin_pos + *cursor_pos + window_height < total_dirs )
+          if( *disp_begin_pos + *cursor_pos + window_height < dir_entry_list.size())
           {
               *disp_begin_pos += window_height;
               *cursor_pos = window_height - 1;
           }
           else
           {
-              *disp_begin_pos = total_dirs - window_height;
+              *disp_begin_pos = dir_entry_list.size() - window_height;
               if( *disp_begin_pos < 0 ) *disp_begin_pos = 0;
-              *cursor_pos = total_dirs - *disp_begin_pos - 1;
+              *cursor_pos = dir_entry_list.size() - *disp_begin_pos - 1;
           }
           *dir_entry = dir_entry_list[*disp_begin_pos + *cursor_pos].dir_entry;
       	  (*dir_entry)->start_file = 0;
@@ -532,8 +507,8 @@ static void Moveppage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
 
 void MoveEnd(DirEntry **dir_entry)
 {
-    statistic.disp_begin_pos = MAXIMUM(0, total_dirs - window_height);
-    statistic.cursor_pos     = total_dirs - statistic.disp_begin_pos - 1;
+    statistic.disp_begin_pos = std::max<int>(0, dir_entry_list.size() - window_height);
+    statistic.cursor_pos     = dir_entry_list.size() - statistic.disp_begin_pos - 1;
     *dir_entry = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry;
     (*dir_entry)->start_file = 0;
     (*dir_entry)->cursor_pos = -1;
@@ -664,7 +639,7 @@ void HandleTagAllDirs(DirEntry *dir_entry, bool value )
 {
     FileEntry *fe_ptr;
     long i;
-    for(i=0; i < total_dirs; i++)
+    for(i=0; i < dir_entry_list.size(); i++)
     {
 	for(fe_ptr=dir_entry_list[i].dir_entry->file; fe_ptr; fe_ptr=fe_ptr->next)
 	{
@@ -1231,7 +1206,7 @@ int KeyF2Get(DirEntry *start_dir_entry,
     {
       case -1:       break;
       case ' ':      break;  /* Quick-Key */
-      case KEY_DOWN: if( disp_begin_pos + cursor_pos + 1 >= total_dirs )
+      case KEY_DOWN: if( disp_begin_pos + cursor_pos + 1 >= dir_entry_list.size())
 		     {
 		       beep();
 		     }
@@ -1282,7 +1257,7 @@ int KeyF2Get(DirEntry *start_dir_entry,
                      break;
 
       case KEY_NPAGE:
-		     if( disp_begin_pos + cursor_pos >= total_dirs - 1 )
+		     if( disp_begin_pos + cursor_pos >= dir_entry_list.size() - 1)
 		     {
 		       beep();
 		     }
@@ -1293,8 +1268,8 @@ int KeyF2Get(DirEntry *start_dir_entry,
 			 PrintDirEntry( f2_window,
 			                disp_begin_pos + cursor_pos,
 					cursor_pos, false );
-		         if( disp_begin_pos + win_height > total_dirs  - 1 )
-			   cursor_pos = total_dirs - disp_begin_pos - 1;
+		         if( disp_begin_pos + win_height > dir_entry_list.size() - 1)
+			   cursor_pos = dir_entry_list.size() - disp_begin_pos - 1;
 			 else
 			   cursor_pos = win_height - 1;
 			 PrintDirEntry( f2_window,
@@ -1303,16 +1278,16 @@ int KeyF2Get(DirEntry *start_dir_entry,
 		       }
 		       else
 		       {
-			 if( disp_begin_pos + cursor_pos + win_height < total_dirs )
+			 if( disp_begin_pos + cursor_pos + win_height < dir_entry_list.size())
 			 {
 			   disp_begin_pos += win_height;
 			   cursor_pos = win_height - 1;
 			 }
 			 else
 			 {
-			   disp_begin_pos = total_dirs - win_height;
+			   disp_begin_pos = dir_entry_list.size() - win_height;
 			   if( disp_begin_pos < 0 ) disp_begin_pos = 0;
-			   cursor_pos = total_dirs - disp_begin_pos - 1;
+			   cursor_pos = dir_entry_list.size() - disp_begin_pos - 1;
 			 }
                          DisplayTree( f2_window, disp_begin_pos,
 				      disp_begin_pos + cursor_pos);
@@ -1361,8 +1336,9 @@ int KeyF2Get(DirEntry *start_dir_entry,
 		     }
                      break;
 
-      case KEY_END : disp_begin_pos = MAXIMUM(0, total_dirs - win_height);
-		     cursor_pos     = total_dirs - disp_begin_pos - 1;
+      case KEY_END:
+        disp_begin_pos = std::max<int>(0, dir_entry_list.size() - win_height);
+		     cursor_pos     = dir_entry_list.size() - disp_begin_pos - 1;
                      DisplayTree( f2_window, disp_begin_pos,
 				  disp_begin_pos + cursor_pos);
                      break;
@@ -1403,7 +1379,7 @@ int RefreshDirWindow()
 	BuildDirEntryList( dir_entry_list[0].dir_entry );
 
 	/* Search old entry */
-	for(n=-1, i=0;i < total_dirs; i++) {
+	for(n=-1, i=0;i < dir_entry_list.size(); i++) {
 		if(dir_entry_list[i].dir_entry == de_ptr) {
 			n = i;
 			break;

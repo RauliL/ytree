@@ -479,13 +479,6 @@ struct DirEntry
   char               name[1];
 };
 
-struct DirEntryList
-{
-  unsigned long      indent;
-  DirEntry           *dir_entry;
-  unsigned short     level;
-};
-
 struct Statistic
 {
   DirEntry      *tree;
