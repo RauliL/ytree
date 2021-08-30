@@ -283,7 +283,7 @@ void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no)
 
 static void Movedown(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
 {
-   if (*disp_begin_pos + *cursor_pos + 1 >= dir_entry_list.size())
+   if (*disp_begin_pos + *cursor_pos + 1 >= static_cast<int>(dir_entry_list.size()))
    {
       /* Element nicht vorhanden */
       /*-------------------------*/
@@ -394,7 +394,7 @@ static void Moveup(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
 
 static void Movenpage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
 {
-   if (*disp_begin_pos + *cursor_pos >= dir_entry_list.size() - 1)
+   if (*disp_begin_pos + *cursor_pos >= static_cast<int>(dir_entry_list.size() - 1))
    {
       /* Letzte Position */
       /*-----------------*/
@@ -412,7 +412,7 @@ static void Movenpage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
                           *cursor_pos,
                           false
                           );
-           if( *disp_begin_pos + window_height > dir_entry_list.size() - 1 )
+           if( *disp_begin_pos + window_height > static_cast<int>(dir_entry_list.size() - 1))
               *cursor_pos = dir_entry_list.size() - *disp_begin_pos - 1;
            else
               *cursor_pos = window_height - 1;
@@ -431,7 +431,7 @@ static void Movenpage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
       {
           /* Scrollen */
           /*----------*/
-          if( *disp_begin_pos + *cursor_pos + window_height < dir_entry_list.size())
+          if( *disp_begin_pos + *cursor_pos + window_height < static_cast<int>(dir_entry_list.size()))
           {
               *disp_begin_pos += window_height;
               *cursor_pos = window_height - 1;
@@ -635,39 +635,40 @@ void HandleTagDir(DirEntry *dir_entry, bool value)
     return;
 }
 
-void HandleTagAllDirs(DirEntry *dir_entry, bool value )
+void HandleTagAllDirs(DirEntry* dir_entry, bool value)
 {
-    FileEntry *fe_ptr;
-    long i;
-    for(i=0; i < dir_entry_list.size(); i++)
+  for (std::size_t i = 0; i < dir_entry_list.size(); ++i)
+  {
+    for (
+      auto fe_ptr = dir_entry_list[i].dir_entry->file;
+      fe_ptr;
+      fe_ptr = fe_ptr->next
+    )
     {
-	for(fe_ptr=dir_entry_list[i].dir_entry->file; fe_ptr; fe_ptr=fe_ptr->next)
-	{
-	    if( (fe_ptr->matching) && (fe_ptr->tagged != value) )
-	    {
-	        if (value)
-	        {
-		    fe_ptr->tagged = value;
-	       	    dir_entry->tagged_files++;
-		    dir_entry->tagged_bytes += fe_ptr->stat_struct.st_size;
-	       	    statistic.disk_tagged_files++;
-		    statistic.disk_tagged_bytes += fe_ptr->stat_struct.st_size;
-	        }else{
-		    fe_ptr->tagged = value;
-	       	    dir_entry->tagged_files--;
-		    dir_entry->tagged_bytes -= fe_ptr->stat_struct.st_size;
-	       	    statistic.disk_tagged_files--;
-		    statistic.disk_tagged_bytes -= fe_ptr->stat_struct.st_size;
-	        }
-	    }
-	}
+        if (fe_ptr->matching && fe_ptr->tagged != value)
+        {
+          if (value)
+          {
+            fe_ptr->tagged = value;
+                  dir_entry->tagged_files++;
+            dir_entry->tagged_bytes += fe_ptr->stat_struct.st_size;
+                  statistic.disk_tagged_files++;
+            statistic.disk_tagged_bytes += fe_ptr->stat_struct.st_size;
+          } else {
+            fe_ptr->tagged = value;
+                  dir_entry->tagged_files--;
+            dir_entry->tagged_bytes -= fe_ptr->stat_struct.st_size;
+                  statistic.disk_tagged_files--;
+            statistic.disk_tagged_bytes -= fe_ptr->stat_struct.st_size;
+          }
+        }
     }
-    dir_entry->start_file = 0;
-    dir_entry->cursor_pos = -1;
-    DisplayFileWindow( dir_entry );
-    RefreshWindow( file_window );
-    DisplayDiskStatistic();
-    return;
+  }
+  dir_entry->start_file = 0;
+  dir_entry->cursor_pos = -1;
+  DisplayFileWindow( dir_entry );
+  RefreshWindow( file_window );
+  DisplayDiskStatistic();
 }
 
 void HandleShowAllTagged(DirEntry *dir_entry,DirEntry *start_dir_entry, bool *need_dsp_help, int *ch)
@@ -1206,7 +1207,8 @@ int KeyF2Get(DirEntry *start_dir_entry,
     {
       case -1:       break;
       case ' ':      break;  /* Quick-Key */
-      case KEY_DOWN: if( disp_begin_pos + cursor_pos + 1 >= dir_entry_list.size())
+      case KEY_DOWN:
+        if (disp_begin_pos + cursor_pos + 1 >= static_cast<int>(dir_entry_list.size()))
 		     {
 		       beep();
 		     }
@@ -1257,7 +1259,7 @@ int KeyF2Get(DirEntry *start_dir_entry,
                      break;
 
       case KEY_NPAGE:
-		     if( disp_begin_pos + cursor_pos >= dir_entry_list.size() - 1)
+		     if (disp_begin_pos + cursor_pos >= static_cast<int>(dir_entry_list.size() - 1))
 		     {
 		       beep();
 		     }
@@ -1268,7 +1270,7 @@ int KeyF2Get(DirEntry *start_dir_entry,
 			 PrintDirEntry( f2_window,
 			                disp_begin_pos + cursor_pos,
 					cursor_pos, false );
-		         if( disp_begin_pos + win_height > dir_entry_list.size() - 1)
+		         if (disp_begin_pos + win_height > static_cast<int>(dir_entry_list.size() - 1))
 			   cursor_pos = dir_entry_list.size() - disp_begin_pos - 1;
 			 else
 			   cursor_pos = win_height - 1;
@@ -1278,7 +1280,7 @@ int KeyF2Get(DirEntry *start_dir_entry,
 		       }
 		       else
 		       {
-			 if( disp_begin_pos + cursor_pos + win_height < dir_entry_list.size())
+			 if (disp_begin_pos + cursor_pos + win_height < static_cast<int>(dir_entry_list.size()))
 			 {
 			   disp_begin_pos += win_height;
 			   cursor_pos = win_height - 1;
@@ -1371,7 +1373,8 @@ int KeyF2Get(DirEntry *start_dir_entry,
 int RefreshDirWindow()
 {
 	DirEntry *de_ptr;
-	int i, n;
+  int i;
+  int n;
 	int result = -1;
 	int window_width, window_height;
 
@@ -1379,8 +1382,10 @@ int RefreshDirWindow()
 	BuildDirEntryList( dir_entry_list[0].dir_entry );
 
 	/* Search old entry */
-	for(n=-1, i=0;i < dir_entry_list.size(); i++) {
-		if(dir_entry_list[i].dir_entry == de_ptr) {
+	for (n = -1, i = 0; i < static_cast<int>(dir_entry_list.size()); ++i)
+  {
+		if (dir_entry_list[i].dir_entry == de_ptr)
+    {
 			n = i;
 			break;
 		}

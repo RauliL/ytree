@@ -20,9 +20,8 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
     {
       /* Kommandozeile zusammenbasteln */
       /*-------------------------------*/
-      std::snprintf(
+      std::sprintf(
         command_line,
-        COMMAND_LINE_LENGTH,
         "%s \"%s\" %s",
         CAT,
         file_name_p_aux.c_str(),

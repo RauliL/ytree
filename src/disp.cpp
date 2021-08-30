@@ -343,7 +343,7 @@ void UnmapF2Window(void)
 
 static void PrintMenuLine(WINDOW *win, int y, int x, const char *line)
 {
-  int  i;
+  std::size_t i;
   std::size_t p = std::strchr(line, '(') ? 2 : 0;
   const std::size_t l = COLS + 2 + (std::strchr(line, '(') ? 2 : 0);
   auto buffer = MallocOrAbort<char>(l);
@@ -353,7 +353,7 @@ static void PrintMenuLine(WINDOW *win, int y, int x, const char *line)
      p = COLS - 25;
   else
      p = COLS - 27;
-  for(i=1; i < p; i++)
+  for (i = 1; i < p; i++)
       buffer[i] = line[1];
   (void) strncpy( &buffer[i], &line[2], l - i );
   buffer[l-1] = '\0';
