@@ -55,9 +55,9 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
     return( result );
   }
 
-  (void) GetPath( father_dir_entry, buffer );
-  (void) strcat( buffer, FILE_SEPARATOR_STRING );
-  (void) strcat( buffer, dir_name );
+  std::strcpy(buffer, GetPath(father_dir_entry).c_str());
+  std::strcat(buffer, FILE_SEPARATOR_STRING);
+  std::strcat(buffer, dir_name);
 
   if( ( result = mkdir( buffer, (S_IREAD  |
 		                 S_IWRITE |

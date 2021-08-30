@@ -3,7 +3,6 @@
 int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
 {
   static char command_line[COMMAND_LINE_LENGTH + 1];
-  char path[PATH_LENGTH + 1];
   int result = -1;
 
   if (file_entry && (file_entry->stat_struct.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
@@ -20,9 +19,11 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
 
     if (mode == DISK_MODE || mode == USER_MODE)
     {
-      if (chdir(GetPath( dir_entry, path)))
+      const auto path = GetPath(dir_entry);
+
+      if (chdir(path.c_str()))
       {
-        MessagePrintf("Can't change directory to*\"%s\"", path);
+        MessagePrintf("Can't change directory to*\"%s\"", path.c_str());
       } else {
         refresh();
         result = QuerySystemCall( command_line );

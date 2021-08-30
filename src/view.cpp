@@ -74,7 +74,6 @@ static int ViewFile(DirEntry* dir_entry, const std::string& file_path)
   const auto file_p_aux = ShellEscape(file_path);
   int  result = -1;
   bool notice_mapped = false;
-  char path[PATH_LENGTH+1];
 
   if (!IsReadable(file_path))
   {
@@ -155,10 +154,11 @@ the ytree starting cwd. new code grabbed from execute.c.
   if (mode == DISK_MODE)
   {
     const auto cwd = GetcwdOrDot();
+    const auto path = GetPath(dir_entry);
 
-  	if (chdir(GetPath(dir_entry, path)))
+    if (chdir(path.c_str()))
   	{
-  		MessagePrintf("Can't change directory to*\"%s\"", path);
+  		MessagePrintf("Can't change directory to*\"%s\"", path.c_str());
   	} else {
   		result = SystemCall(command_line);
   	}

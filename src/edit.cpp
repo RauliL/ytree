@@ -3,7 +3,7 @@
 int Edit(const DirEntry* dir_entry, const std::string& file_path)
 {
   std::string command_line;
-  int result;
+  int result = -1;
 
   if (mode != DISK_MODE && mode != USER_MODE)
   {
@@ -28,11 +28,11 @@ int Edit(const DirEntry* dir_entry, const std::string& file_path)
   if (mode == DISK_MODE)
   {
     const auto cwd = GetcwdOrDot();
-    char path[PATH_LENGTH + 1];
+    const auto path = GetPath(dir_entry);
 
-    if (chdir(GetPath(dir_entry, path)))
+    if (chdir(path.c_str()))
     {
-      MessagePrintf("Can't change directory to*\"%s\"", path);
+      MessagePrintf("Can't change directory to*\"%s\"", path.c_str());
     } else {
       result = SystemCall(command_line);
     }

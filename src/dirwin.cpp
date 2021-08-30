@@ -566,25 +566,37 @@ void MoveHome(DirEntry **dir_entry)
     return;
 }
 
-void HandlePlus(DirEntry *dir_entry, DirEntry *de_ptr, char *new_login_path,
-		DirEntry *start_dir_entry, bool *need_dsp_help)
+void HandlePlus(
+  DirEntry* dir_entry,
+  DirEntry* de_ptr,
+  char* new_login_path,
+  DirEntry* start_dir_entry,
+  bool* need_dsp_help
+)
 {
-    if( !dir_entry->not_scanned ) {
-        beep();
-    } else {
-	for( de_ptr=dir_entry->sub_tree; de_ptr; de_ptr=de_ptr->next) {
-	    GetPath( de_ptr, new_login_path );
-	    ReadTree( de_ptr, new_login_path, 0 );
-	    SetMatchingParam( de_ptr );
-	}
-	dir_entry->not_scanned = false;
-	BuildDirEntryList( start_dir_entry );
-	DisplayTree( dir_window, statistic.disp_begin_pos,
-                 statistic.disp_begin_pos + statistic.cursor_pos );
-	DisplayDiskStatistic();
-	DisplayAvailBytes();
-	*need_dsp_help = true;
-    }
+  if (!dir_entry->not_scanned)
+  {
+    beep();
+    return;
+  }
+  for (de_ptr = dir_entry->sub_tree; de_ptr; de_ptr = de_ptr->next)
+  {
+    const auto path = GetPath(de_ptr);
+
+    std::strcpy(new_login_path, path.c_str());
+    ReadTree(de_ptr, new_login_path, 0);
+    SetMatchingParam(de_ptr);
+  }
+  dir_entry->not_scanned = false;
+  BuildDirEntryList(start_dir_entry);
+  DisplayTree(
+    dir_window,
+    statistic.disp_begin_pos,
+    statistic.disp_begin_pos + statistic.cursor_pos
+  );
+  DisplayDiskStatistic();
+  DisplayAvailBytes();
+  *need_dsp_help = true;
 }
 
 void HandleReadSubTree(DirEntry *dir_entry, DirEntry *start_dir_entry,
@@ -805,11 +817,11 @@ void HandleSwitchWindow(DirEntry *dir_entry, DirEntry *start_dir_entry, bool *ne
 int HandleDirWindow(DirEntry *start_dir_entry)
 {
   DirEntry  *dir_entry, *de_ptr;
-  int i, ch, unput_char;
+  int ch, unput_char;
   bool need_dsp_help;
   char new_name[PATH_LENGTH + 1];
   char new_login_path[PATH_LENGTH + 1];
-  char *home, *p;
+  char *home;
 
   unput_char = 0;
   de_ptr = NULL;
@@ -846,13 +858,17 @@ int HandleDirWindow(DirEntry *start_dir_entry)
       else {            /* Entry of form "beta" or "/full/path/alpha/beta" */
         strcpy(new_login_path, initial_directory);
       }
-      for ( i = 0; i < (int)statistic.disk_total_directories; i++ )
+      for (int i = 0; i < static_cast<int>(statistic.disk_total_directories); ++i)
       {
-        if ( *new_login_path == FILE_SEPARATOR_CHAR )
-          GetPath( dir_entry_list[i].dir_entry, new_name );
-        else
-          strcpy( new_name, dir_entry_list[i].dir_entry->name );
-        if ( !strcmp( new_login_path, new_name ) )
+        if (*new_login_path == FILE_SEPARATOR_CHAR)
+        {
+          const auto path = GetPath(dir_entry_list[i].dir_entry);
+
+          std::strcpy(new_name, path.c_str());
+        } else {
+          std::strcpy(new_name, dir_entry_list[i].dir_entry->name);
+        }
+        if (!std::strcmp(new_login_path, new_name))
         {
           statistic.disp_begin_pos = i;
           statistic.cursor_pos = 0;
@@ -1095,85 +1111,92 @@ int HandleDirWindow(DirEntry *start_dir_entry)
       case 'q':      need_dsp_help = true;
                      break;
 
-#ifndef VI_KEYS
+#if !defined(VI_KEYS)
       case 'l':
-#endif /* VI_KEYS */
-      case 'L':      if( mode != DISK_MODE && mode != USER_MODE )
-		       (void) strcpy( new_login_path, disk_statistic.login_path );
-		     else
-		       (void) GetPath( dir_entry, new_login_path );
-		     if( !GetNewLoginPath( new_login_path ) )
-		     {
-		       DisplayMenu();
-		       doupdate();
-		       (void) LoginDisk( new_login_path );
+#endif
+      case 'L':
+        if (mode != DISK_MODE && mode != USER_MODE)
+        {
+          std::strcpy(new_login_path, disk_statistic.login_path);
+        } else {
+          const auto path = GetPath(dir_entry);
+
+          std::strcpy(new_login_path, path.c_str());
+        }
+        if (!GetNewLoginPath(new_login_path))
+        {
+          DisplayMenu();
+          doupdate();
+          LoginDisk(new_login_path);
 		     }
 		     need_dsp_help = true;
 		     break;
+
       case 'L' & 0x1F:
 		     clearok( stdscr, true );
 		     break;
 
-      case 'P':    /* press 'p' or 'P' to log parent of current root */
+      // Press 'p' or 'P' to log parent of current root.
+      case 'P':
       case 'p':
+      {
+        std::string path;
+        char* p;
 
-                MoveHome(&dir_entry);
-          	(void) GetPath(dir_entry, new_login_path);
+        MoveHome(&dir_entry);
+        path = GetPath(dir_entry);
+        std::strcpy(new_login_path, path.c_str());
 
-          	/*  char *p; defined before this current switch */
-          	if((p = strrchr(new_login_path, FILE_SEPARATOR_CHAR)) == NULL)
-              	  break;
+        if (!(p = std::strrchr(new_login_path, FILE_SEPARATOR_CHAR)))
+        {
+          break;
+        }
 
-          	/*  p is now pointing to rightmost file separator */
-          	/*  in new_login_path, just truncate this path */
+        // p is now pointing to rightmost file separator in new_login_path,
+        // just truncate this path.
+        *p = 0;
 
-          	*p='\0';
+        // Rightmost slash was first and only character?
+        if (!std::strlen(new_login_path))
+        {
+          new_login_path[0] = FILE_SEPARATOR_CHAR;
+          new_login_path[1] = 0;
+        }
 
-          	/*  rightmost slash was first and only character? */
-          	if(!strlen(new_login_path))
-          	{
-              	  new_login_path[0]=FILE_SEPARATOR_CHAR;
-              	  new_login_path[1]='\0';
-          	}
+        // Following needed to ignore old tree in memory.
+        *disk_statistic.login_path = 0;
 
-          	/* following needed to ignore old tree in memory */
-          	*disk_statistic.login_path = '\0';
+        LoginDisk(new_login_path);
+        need_dsp_help = true;
 
-          	(void) LoginDisk(new_login_path);
-          	need_dsp_help = true;
-          	return ch;
+        return ch;
+      }
 
-      default :      beep();
-		     break;
+      default:
+        beep();
+        break;
     } /* switch */
   } while( (ch != 'q') && (ch != 'Q') && (ch != 'l') && (ch != 'L') );
   return( ch );
 }
 
-
-
-int ScanSubTree( DirEntry *dir_entry )
+void ScanSubTree(DirEntry* dir_entry)
 {
-  DirEntry *de_ptr;
-  char new_login_path[PATH_LENGTH + 1];
-
-  if( dir_entry->not_scanned ) {
-    for( de_ptr=dir_entry->sub_tree; de_ptr; de_ptr=de_ptr->next) {
-      GetPath( de_ptr, new_login_path );
-      ReadTree( de_ptr, new_login_path, 999 );
-      SetMatchingParam( de_ptr );
+  if (dir_entry->not_scanned)
+  {
+    for (auto de_ptr = dir_entry->sub_tree; de_ptr; de_ptr = de_ptr->next)
+    {
+      ReadTree(de_ptr, GetPath(de_ptr), 999);
+      SetMatchingParam(de_ptr);
     }
     dir_entry->not_scanned = false;
   } else {
-    for( de_ptr=dir_entry->sub_tree; de_ptr; de_ptr=de_ptr->next) {
-      ScanSubTree( de_ptr );
+    for (auto de_ptr = dir_entry->sub_tree; de_ptr; de_ptr = de_ptr->next)
+    {
+      ScanSubTree(de_ptr);
     }
   }
-  return( 0 );
 }
-
-
-
 
 int KeyF2Get(DirEntry *start_dir_entry,
              int disp_begin_pos,
@@ -1343,11 +1366,16 @@ int KeyF2Get(DirEntry *start_dir_entry,
 				  disp_begin_pos + cursor_pos);
                      break;
 
-      case LF :
-      case CR :
-                     GetPath(dir_entry_list[cursor_pos + disp_begin_pos].dir_entry, path);
-		     result = 0;
-		     break;
+      case LF:
+      case CR:
+      {
+        const auto tmp_path = GetPath(dir_entry_list[cursor_pos + disp_begin_pos].dir_entry);
+
+        std::strcpy(path, tmp_path.c_str());
+        result = 0;
+        break;
+      }
+
       case ESC:
       case 'Q':
       case 'q':      break;

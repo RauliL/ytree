@@ -82,12 +82,11 @@ static int QuitFileCheck(char *fname);
 
 void QuitTo(DirEntry* dir_entry)
 {
-  char nbuf[MAXPATH];
+  const auto nbuf = GetPath(dir_entry);
   char qfilename[MAXPATH];
   const auto parpid = getppid();
   const auto pwp = getpwuid(getuid());
 
-  GetPath(dir_entry, nbuf);
   std::snprintf(
     qfilename,
     MAXPATH,
@@ -101,7 +100,7 @@ void QuitTo(DirEntry* dir_entry)
   {
     if (auto qfile = std::fopen(qfilename, "w"))
     {
-      std::fprintf(qfile, "cd %s\n", nbuf);
+      std::fprintf(qfile, "cd %s\n", nbuf.c_str());
       std::fclose(qfile);
     }
   }

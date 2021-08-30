@@ -615,7 +615,7 @@ extern void DisplayDiskName(void);
 extern void DisplayFileParameter(FileEntry *file_entry);
 extern void DisplayGlobalFileParameter(FileEntry *file_entry);
 extern void RefreshWindow(WINDOW *win);
-extern int  ReadTree(DirEntry *dir_entry, char *path, int depth);
+int ReadTree(DirEntry* dir_entry, const std::string& path, int depth);
 extern void UnReadTree(DirEntry *dir_entry);
 extern int  ReadTreeFromTAR(DirEntry *dir_entry, FILE *f);
 extern int  ReadTreeFromRPM(DirEntry *dir_entry, FILE *f);
@@ -632,7 +632,7 @@ extern int  GetDiskParameter(char *path,
 extern int  HandleDirWindow(DirEntry *start_dir_entry);
 extern void DisplayFileWindow(DirEntry *dir_entry);
 extern int Init(char *configuration_file, char *history_file);
-extern char *GetPath(const DirEntry *dir_entry, char *buffer);
+std::string GetPath(const DirEntry* dir_entry);
 extern bool Match(char *file_name);
 extern int  SetMatchSpec(char *new_spec);
 extern int  SetFileSpec(char *file_spec);
@@ -754,7 +754,7 @@ extern void NormPath( const char *in_path, char *out_path );
 extern char *Strtok_r( char *str, const char *delim, char **old );
 extern int  ReadProfile( char *filename );
 extern const char *GetProfileValue( const char *key );
-extern int  ScanSubTree( DirEntry *dir_entry );
+void ScanSubTree(DirEntry* dir_entry);
 extern void GetMaxYX(WINDOW *win, int *height, int *width);
 
 extern char *GetHistory(void);

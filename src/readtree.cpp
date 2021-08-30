@@ -20,12 +20,10 @@ static void UnReadSubTree(DirEntry *dir_entry);
  */
 
 
-int ReadTree(DirEntry *dir_entry, char *path, int depth)
+int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
 {
   DIR           *dir;
   struct stat   stat_struct;
-  struct dirent *dirent;
-  char          new_path[PATH_LENGTH + 1];
   DirEntry      first_dir_entry;
   DirEntry      *des_ptr;
   DirEntry      *den_ptr;
@@ -61,21 +59,20 @@ int ReadTree(DirEntry *dir_entry, char *path, int depth)
   if( S_ISBLK( dir_entry->stat_struct.st_mode ) )
     return( 0 ); /* Block-Device */
 
-  if( depth < 0 )
+  if (depth < 0 && dir_entry->up_tree)
   {
-    if( dir_entry->up_tree )
-    {
-      dir_entry->up_tree->not_scanned = true;
-      return( 1 );
-    }
+    dir_entry->up_tree->not_scanned = true;
+
+    return 1;
   }
 
   statistic.disk_total_directories++;
 
-  if( ( dir = opendir( path ) ) == NULL )
+  if (!(dir = opendir(path.c_str())))
   {
     dir_entry->access_denied = true;
-    return( 1 );
+
+    return 1;
   }
 
   first_dir_entry.prev  = NULL;
@@ -85,10 +82,16 @@ int ReadTree(DirEntry *dir_entry, char *path, int depth)
   fes_ptr               = &first_file_entry;
 
   file_count = 0;
-  while( ( dirent = readdir( dir ) ) != NULL )
+
+  while (auto dirent = readdir(dir))
   {
-    if( !strcmp( dirent->d_name, "." ) || !strcmp( dirent->d_name, ".." ) )
+    std::string new_path;
+
+    if (!std::strcmp(dirent->d_name, ".") ||
+        !std::strcmp(dirent->d_name, ".."))
+    {
       continue;
+    }
 
     if( EscapeKeyPressed() )
     {
@@ -100,16 +103,19 @@ int ReadTree(DirEntry *dir_entry, char *path, int depth)
       doupdate();
     }
 
-
-    (void) strcpy( new_path, path );
-    if( strcmp( new_path, FILE_SEPARATOR_STRING ) )
-      (void) strcat( new_path, FILE_SEPARATOR_STRING );
-    (void) strcat( new_path, dirent->d_name );
-
-    if( STAT_( new_path, &stat_struct ) )
+    new_path = path;
+    if (new_path.compare(FILE_SEPARATOR_STRING))
     {
-      if( errno == EACCES ) continue;
-      ErrorPrintf("Stat failed on*%s*IGNORED", new_path);
+      new_path += FILE_SEPARATOR_CHAR;
+    }
+    new_path += dirent->d_name;
+
+    if (STAT_(new_path.c_str(), &stat_struct))
+    {
+      if (errno != EACCES)
+      {
+        ErrorPrintf("stat() failed on*%s*IGNORED", new_path.c_str());
+      }
       continue;
     }
 
@@ -120,15 +126,16 @@ int ReadTree(DirEntry *dir_entry, char *path, int depth)
       den_ptr = MallocOrAbort<DirEntry>(sizeof(DirEntry) + std::strlen(dirent->d_name));
       den_ptr->up_tree = dir_entry;
 
-      (void) strcpy( den_ptr->name, dirent->d_name );
+      std::strcpy( den_ptr->name, dirent->d_name );
+      std::memcpy(
+        static_cast<void*>(&den_ptr->stat_struct),
+        static_cast<const void*>(&stat_struct),
+        sizeof(stat_struct)
+      );
+      den_ptr->prev = nullptr;
+      den_ptr->next = nullptr;
 
-      (void) memcpy( &den_ptr->stat_struct,
-		     &stat_struct,
-		     sizeof( stat_struct )
-		    );
-      den_ptr->prev = den_ptr->next = NULL;
-
-      (void) ReadTree( den_ptr, new_path, depth - 1);
+      ReadTree(den_ptr, new_path, depth - 1);
 
       /* Sortieren durch direktes Einfuegen */
       /*------------------------------------*/
@@ -172,36 +179,34 @@ int ReadTree(DirEntry *dir_entry, char *path, int depth)
 
       n = 0; *link_path = '\0';
 
-      if( S_ISLNK( stat_struct.st_mode ) )
+      if (S_ISLNK(stat_struct.st_mode))
       {
-	/* Ja, symbolischer Name wird an "echten" Namen angehaengt */
-	/*---------------------------------------------------------*/
-
-	if( ( n = readlink( new_path, link_path, sizeof( link_path ) ) ) == -1 )
-	{
-          (void) strcpy( link_path, "unknown" );
-	  n = strlen( link_path );
-	}
-	link_path[n] = '\0';
+        /* Ja, symbolischer Name wird an "echten" Namen angehaengt */
+        /*---------------------------------------------------------*/
+        if ((n = readlink(new_path.c_str(), link_path, sizeof(link_path))) == -1)
+        {
+          std::strcpy(link_path, "unknown");
+          n = std::strlen(link_path);
+        }
+        link_path[n] = 0;
 
         fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + std::strlen(dirent->d_name) + n + 1);
         std::strcpy(fen_ptr->name, dirent->d_name);
         std::strcpy(&fen_ptr->name[strlen(fen_ptr->name) + 1], link_path);
-      }
-      else
-      {
+      } else {
         fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + std::strlen(dirent->d_name));
         std::strcpy(fen_ptr->name, dirent->d_name);
       }
 
-      fen_ptr->next = NULL;
-      fen_ptr->prev = NULL;
+      fen_ptr->next = nullptr;
+      fen_ptr->prev = nullptr;
       fen_ptr->tagged = false;
 
-      (void) memcpy( &fen_ptr->stat_struct,
-		     &stat_struct,
-		     sizeof( stat_struct )
-		    );
+      std::memcpy(
+        static_cast<void*>(&fen_ptr->stat_struct),
+        static_cast<const void*>(&stat_struct),
+        sizeof(stat_struct)
+      );
 
       fen_ptr->dir_entry = dir_entry;
       fes_ptr->next      = fen_ptr;

@@ -6,7 +6,6 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
   const auto file_name_path = GetRealFileNamePath(file_entry);
   const auto file_name_p_aux = ShellEscape(file_name_path);
   auto command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
-  char path[PATH_LENGTH + 1];
   int result = -1;
 
   ClearHelp();
@@ -16,8 +15,6 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
   {
     move(LINES - 2, 1);
     clrtoeol();
-
-    GetPath(dir_entry, path);
 
     if (mode == DISK_MODE || mode == USER_MODE)
     {

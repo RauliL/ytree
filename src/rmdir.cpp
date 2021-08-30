@@ -17,7 +17,6 @@ static int DeleteSingleDirectory(DirEntry *dir_entry);
 
 int DeleteDirectory(DirEntry *dir_entry)
 {
-  char buffer[PATH_LENGTH+1];
   int result = -1;
 
   if( mode != DISK_MODE && mode != USER_MODE )
@@ -36,9 +35,7 @@ int DeleteDirectory(DirEntry *dir_entry)
   {
     if( InputChoise( "Directory not empty, PRUNE ? (Y/N) ? ", "YN\033" ) == 'Y' ) {
       if( dir_entry->sub_tree ) {
-        if( ScanSubTree( dir_entry ) ) {
-	  ESCAPE;
-	}
+        ScanSubTree(dir_entry);
         if( DeleteSubTree( dir_entry->sub_tree ) ) {
           ESCAPE;
         }
@@ -52,26 +49,24 @@ int DeleteDirectory(DirEntry *dir_entry)
   }
   else if( InputChoise( "Delete this directory (Y/N) ? ", "YN\033" ) == 'Y' )
   {
-    (void) GetPath( dir_entry, buffer );
+    const auto path = GetPath(dir_entry);
 
-    if (!IsWriteable(buffer))
+    if (!IsWriteable(path))
     {
       MessagePrintf(
         "Can't delete directory*\"%s\"*%s",
-		    buffer,
+		    path.c_str(),
         std::strerror(errno)
       );
     }
-    else if( rmdir( buffer ) )
+    else if (rmdir(path.c_str()))
     {
       MessagePrintf(
         "Can't delete directory*\"%s\"*%s",
-		    buffer,
+		    path.c_str(),
         std::strerror(errno)
       );
-    }
-    else
-    {
+    } else {
       /* Directory geloescht
        * ==> aus Baum loeschen
        */
@@ -83,7 +78,7 @@ int DeleteDirectory(DirEntry *dir_entry)
 
       if( dir_entry->next ) dir_entry->next->prev = dir_entry->prev;
 
-      free( dir_entry );
+      std::free(static_cast<void*>(dir_entry));
 
       (void) GetAvailBytes( &statistic.disk_space );
 
@@ -130,39 +125,38 @@ FNC_XIT:
 
 static int DeleteSingleDirectory( DirEntry *dir_entry )
 {
-  int result = -1;
-  char buffer[PATH_LENGTH+1];
-  FileEntry *fe_ptr, *next_fe_ptr;
+  const auto path = GetPath(dir_entry);
+  FileEntry* next_fe_ptr = nullptr;
 
-
-  (void) GetPath( dir_entry, buffer );
-
-  if (!IsWriteable(buffer))
+  if (!IsWriteable(path))
   {
     MessagePrintf(
       "Can't delete directory*\"%s\"*%s",
-		  buffer,
+		  path.c_str(),
       std::strerror(errno)
 		);
 
     return -1;
   }
 
-  for( fe_ptr = dir_entry->file; fe_ptr; fe_ptr=next_fe_ptr ) {
+  for (auto fe_ptr = dir_entry->file; fe_ptr; fe_ptr = next_fe_ptr)
+  {
     next_fe_ptr = fe_ptr->next;
-    if( DeleteFile( fe_ptr ) ) {
-      ESCAPE;
+    if (DeleteFile(fe_ptr))
+    {
+      return -1;
     }
   }
 
-  if (rmdir(buffer))
+  if (rmdir(path.c_str()))
   {
     MessagePrintf(
       "Can't delete directory*\"%s\"*%s",
-		  buffer,
+		  path.c_str(),
       std::strerror(errno)
     );
-    ESCAPE;
+
+    return -1;
   }
 
   if( !dir_entry->up_tree->not_scanned )
@@ -172,12 +166,7 @@ static int DeleteSingleDirectory( DirEntry *dir_entry )
   else dir_entry->up_tree->sub_tree = dir_entry->next;
   if( dir_entry->next ) dir_entry->next->prev = dir_entry->prev;
 
-  free( dir_entry );
+  std::free(static_cast<void*>(dir_entry));
 
-  result = 0;
-
-FNC_XIT:
-
-  return( result );
+  return 0;
 }
-

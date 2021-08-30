@@ -15,37 +15,45 @@
 int DirUserMode(DirEntry *dir_entry, int ch)
 {
   int chremap;
-  char *command_line, *aux;
-  char filepath[PATH_LENGTH +1];
+  const auto filepath = GetPath(dir_entry);
+  char* command_line = nullptr;
 
-  GetPath( dir_entry, filepath );
-  command_line = NULL;
-
-  while (( aux = GetUserDirAction(ch, &chremap)) != NULL)
+  while (auto aux = GetUserDirAction(ch, &chremap))
   {
     if (!command_line)
     {
       command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
     }
-     if (strstr(aux,"%s") != NULL) {
-  	(void) sprintf( command_line, aux, filepath );
-     } else {
-  	(void) sprintf( command_line, "%s%c%s", aux, ' ', filepath );
-     }
-     if (SilentSystemCall(command_line))
-     {
-       MessagePrintf("can't execute*%s", command_line);
-     }
-     if (chremap == ch || chremap == 0)
-       break;
-     else
-       ch = chremap;
+    if (std::strstr(aux, "%s"))
+    {
+      std::snprintf(command_line, COMMAND_LINE_LENGTH, aux, filepath.c_str());
+    } else {
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s%c%s",
+        aux,
+        ' ',
+        filepath.c_str()
+      );
+    }
+    if (SilentSystemCall(command_line))
+    {
+      MessagePrintf("Can't execute*%s", command_line);
+    }
+    if (chremap == ch || chremap == 0)
+    {
+      break;
+    }
+    ch = chremap;
   }
 
-  if (command_line != NULL)
-     free( command_line );
+  if (command_line)
+  {
+    std::free(static_cast<void*>(command_line));
+  }
 
-  return(ch);
+  return ch;
 }
 
 int FileUserMode(FileEntryList* file_entry_list, int ch)

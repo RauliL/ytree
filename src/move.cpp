@@ -1,19 +1,6 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/move.c,v 1.16 2011/01/09 12:28:01 werner Exp $
- *
- * Beschreibung : Bewegen von Dateien
- *
- ***************************************************************************/
-
-
 #include "ytree.h"
 
-
-
-
-static int Move(char *to_path, char *from_path);
-
+static bool Move(const std::string&, const std::string&);
 
 int MoveFile(FileEntry *fe_ptr,
 	     unsigned char confirm,
@@ -23,9 +10,9 @@ int MoveFile(FileEntry *fe_ptr,
 	     FileEntry **new_fe_ptr
 	    )
 {
-  DirEntry    *de_ptr;
+  const auto de_ptr = fe_ptr->dir_entry;
+  const auto from_path = GetPath(de_ptr) + FILE_SEPARATOR_CHAR + fe_ptr->name;
   long long file_size;
-  char        from_path[PATH_LENGTH+1];
   char        to_path[PATH_LENGTH+1];
   FileEntry   *dest_file_entry;
   FileEntry   *fen_ptr;
@@ -35,20 +22,14 @@ int MoveFile(FileEntry *fe_ptr,
 
   result = -1;
   *new_fe_ptr = NULL;
-  de_ptr = fe_ptr->dir_entry;
-
-  (void) GetPath( de_ptr, from_path );
-  (void) strcat( from_path, FILE_SEPARATOR_STRING );
-  (void) strcat( from_path, fe_ptr->name );
 
   (void) strcpy( to_path, to_dir_path );
   (void) strcat( to_path, FILE_SEPARATOR_STRING );
   (void) strcat( to_path, to_file );
 
-
-  if( !strcmp( to_path, from_path ) )
+  if (!std::strcmp(to_path, from_path.c_str()))
   {
-    MESSAGE( "Can't move file into itself" );
+    Message("Can't move file into itself");
     ESCAPE;
   }
 
@@ -56,7 +37,7 @@ int MoveFile(FileEntry *fe_ptr,
   {
     MessagePrintf(
       "Unmoveable file*\"%s\"*%s",
-      from_path,
+      from_path.c_str(),
       std::strerror(errno)
     );
     ESCAPE;
@@ -117,7 +98,7 @@ int MoveFile(FileEntry *fe_ptr,
   }
 
 
-  if( !Move( to_path, from_path ) )
+  if (Move(to_path, from_path))
   {
     /* File wurde bewegt */
     /*-------------------*/
@@ -211,48 +192,40 @@ int GetMoveParameter(const char *from_file, char *to_file, char *to_dir)
   return( -1 );
 }
 
-
-
-
-
-static int Move(char *to_path, char *from_path)
+static bool Move(const std::string& to_path, const std::string& from_path)
 {
-  if( !strcmp( to_path, from_path ) )
+  if (!to_path.compare(from_path))
   {
-    MESSAGE( "Can't move file into itself" );
-    return( -1 );
+    Message("Can't move file into itself");
+
+    return false;
   }
 
-  if (link(from_path, to_path))
+  if (link(from_path.c_str(), to_path.c_str()))
   {
     MessagePrintf(
       "Can't link \"%s\"*to \"%s\"*%s",
-      from_path,
-      to_path,
+      from_path.c_str(),
+      to_path.c_str(),
       std::strerror(errno)
     );
 
-    return -1;
+    return false;
   }
 
-  if (unlink(from_path))
+  if (unlink(from_path.c_str()))
   {
     MessagePrintf(
       "Can't unlink*\"%s\"*%s",
-      from_path,
+      from_path.c_str(),
       std::strerror(errno)
     );
 
-    return -1;
+    return false;
   }
 
-  return( 0 );
+  return true;
 }
-
-
-
-
-
 
 int MoveTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
 {

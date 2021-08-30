@@ -53,44 +53,41 @@ static const std::unordered_map<std::string, CompressMethod> file_extensions =
   { ".SPM", CompressMethod::RPM_COMPRESS }
 };
 
-char *GetPath(const DirEntry *dir_entry, char *buffer)
+std::string GetPath(const DirEntry* dir_entry)
 {
-  char     help_buffer[PATH_LENGTH + 1];
-
-  *buffer = '\0';
+  std::string result;
 
   for (auto de_ptr = dir_entry; de_ptr; de_ptr = de_ptr->up_tree)
   {
-    *help_buffer = '\0';
-    if( de_ptr->up_tree ) (void) strcat( help_buffer, FILE_SEPARATOR_STRING );
-    if( strcmp( de_ptr->name, FILE_SEPARATOR_STRING ) )
-      (void) strcat( help_buffer, de_ptr->name );
-    (void) strcat( help_buffer, buffer );
-    (void) strcpy( buffer, help_buffer );
+    if (std::strcmp(de_ptr->name, FILE_SEPARATOR_STRING))
+    {
+      result.insert(0, de_ptr->name);
+    }
+    if (de_ptr->up_tree)
+    {
+      result.insert(0, FILE_SEPARATOR_STRING);
+    }
   }
 
-  /* if( *buffer == '\0' ) (void) strcpy( buffer, FILE_SEPARATOR_STRING ); */
-
-  return( buffer );
+  return result;
 }
 
 std::string GetFileNamePath(const FileEntry* file_entry)
 {
-  char buffer[PATH_LENGTH + 1];
+  auto result = GetPath(file_entry->dir_entry);
 
-  GetPath(file_entry->dir_entry, buffer);
-  if (*buffer && std::strcmp(buffer, FILE_SEPARATOR_STRING))
+  if (!result.empty() && result.compare(FILE_SEPARATOR_STRING))
   {
-    std::strcat(buffer, FILE_SEPARATOR_STRING);
+    result.append(1, FILE_SEPARATOR_CHAR);
   }
-  std::strcat(buffer, file_entry->name);
+  result += file_entry->name;
 
-  return buffer;
+  return result;
 }
 
 std::string GetRealFileNamePath(const FileEntry* file_entry)
 {
-  char buffer[PATH_LENGTH + 1];
+  std::string result;
 
   if (mode == DISK_MODE || mode == USER_MODE)
   {
@@ -107,17 +104,17 @@ std::string GetRealFileNamePath(const FileEntry* file_entry)
     }
   }
 
-  GetPath(file_entry->dir_entry, buffer);
-  if (*buffer && std::strcmp(buffer, FILE_SEPARATOR_STRING))
+  result = GetPath(file_entry->dir_entry);
+  if (!result.empty() && result.compare(FILE_SEPARATOR_STRING))
   {
-    std::strcat(buffer, FILE_SEPARATOR_STRING);
+    result.append(1, FILE_SEPARATOR_CHAR);
   }
   if (S_ISLNK(file_entry->stat_struct.st_mode))
   {
-    return std::strcat(buffer, &file_entry->name[std::strlen(file_entry->name) + 1]);
+    return result + &file_entry->name[std::strlen(file_entry->name) + 1];
   }
 
-  return std::strcat(buffer, file_entry->name);
+  return result + file_entry->name;
 }
 
 int GetDirEntry(DirEntry *tree,
@@ -129,7 +126,6 @@ int GetDirEntry(DirEntry *tree,
 {
   char dest_path[PATH_LENGTH+1];
   std::string current_path;
-  char help_path[PATH_LENGTH+1];
   char *token, *old;
   DirEntry *de_ptr, *sde_ptr;
   int n;
@@ -148,13 +144,12 @@ int GetDirEntry(DirEntry *tree,
     return -1;
   }
 
-  if( *dir_path != FILE_SEPARATOR_CHAR )
+  if (*dir_path != FILE_SEPARATOR_CHAR &&
+      chdir(GetPath(current_dir_entry).c_str()))
   {
-    if( chdir( GetPath( current_dir_entry, help_path ) ) )
-    {
-      ERROR_MSG( "Chdir Failed" );
-      return( -1 );
-    }
+    ERROR_MSG("chdir() failed");
+
+    return -1;
   }
 
   if( chdir( dir_path ) )

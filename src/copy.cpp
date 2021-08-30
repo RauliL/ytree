@@ -14,7 +14,7 @@ int CopyFile(Statistic *statistic_ptr,
 {
   long long file_size;
   const auto from_path = GetRealFileNamePath(fe_ptr);
-  char        from_dir[PATH_LENGTH+1];
+  const auto from_dir = GetPath(fe_ptr->dir_entry);
   char        to_path[PATH_LENGTH+1];
   char        abs_path[PATH_LENGTH+1];
   char        buffer[20];
@@ -29,8 +29,6 @@ int CopyFile(Statistic *statistic_ptr,
 
   result = -1;
 
-  (void) GetPath(fe_ptr->dir_entry, from_dir);
-
   *to_path = '\0';
   if( strcmp( to_dir_path, FILE_SEPARATOR_STRING ) )
   {
@@ -39,19 +37,22 @@ int CopyFile(Statistic *statistic_ptr,
 
     (void) strcat( to_path, to_dir_path );
   }
-  if( path_copy )
+  if (path_copy)
   {
-    (void) GetPath( fe_ptr->dir_entry, &to_path[strlen(to_path)] );
+    const auto path = GetPath(fe_ptr->dir_entry);
+
+    std::strcpy(&to_path[std::strlen(to_path)], path.c_str());
 
     /* Create destination folder (if neccessary) */
     /*-------------------------------------------*/
-    strcat(to_path, FILE_SEPARATOR_STRING );
+    std::strcat(to_path, FILE_SEPARATOR_STRING);
 
-    if(*to_path != FILE_SEPARATOR_CHAR) {
-         strcpy(abs_path, from_dir);
-	 strcat(abs_path, FILE_SEPARATOR_STRING);
-	 strcat(abs_path, to_path);
-	 strcpy(to_path, abs_path);
+    if (*to_path != FILE_SEPARATOR_CHAR)
+    {
+      std::strcpy(abs_path, from_dir.c_str());
+      std::strcat(abs_path, FILE_SEPARATOR_STRING);
+      std::strcat(abs_path, to_path);
+      std::strcpy(to_path, abs_path);
     }
 
     if( MakePath( statistic_ptr->tree, to_path, &dest_dir_entry ) )
@@ -70,11 +71,12 @@ int CopyFile(Statistic *statistic_ptr,
     if (errno == ENOENT) {
      if ( (term =InputChoise( "Directory does not exist; create (y/N) ? ", "YN\033" ))== 'Y')
      {
-        if(*to_path != FILE_SEPARATOR_CHAR) {
-          strcpy(abs_path, from_dir);
-	  strcat(abs_path, FILE_SEPARATOR_STRING);
-	  strcat(abs_path, to_path);
-	  strcpy(to_path, abs_path);
+        if (*to_path != FILE_SEPARATOR_CHAR)
+        {
+          std::strcpy(abs_path, from_dir.c_str());
+          std::strcat(abs_path, FILE_SEPARATOR_STRING);
+          std::strcat(abs_path, to_path);
+          std::strcpy(to_path, abs_path);
         }
         if (MakePath(statistic_ptr->tree, to_path, &dest_dir_entry ) )
         {

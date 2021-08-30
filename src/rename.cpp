@@ -1,7 +1,7 @@
 #include "ytree.h"
 
-static int RenameDirEntry(char *to_path, char *from_path);
-static int RenameFileEntry(const std::string& to_path, const std::string& from_path);
+static bool RenameDirEntry(const std::string&, const std::string&);
+static bool RenameFileEntry(const std::string&, const std::string&);
 
 int RenameDirectory(DirEntry *de_ptr, char *new_name)
 {
@@ -9,7 +9,7 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
   DirEntry    *sde_ptr;
   DirEntry    *ude_ptr;
   FileEntry   *fe_ptr;
-  char        from_path[PATH_LENGTH+1];
+  const auto from_path = GetPath(de_ptr);
   char        to_path[PATH_LENGTH+1];
   struct stat stat_struct;
   int         result;
@@ -17,10 +17,8 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
 
   result = -1;
 
-  (void) GetPath( de_ptr, from_path );
-  (void) strcpy( to_path, from_path );
-
-  cptr = strrchr( to_path, '/' );
+  std::strcpy(to_path, from_path.c_str());
+  cptr = std::strrchr(to_path, '/');
 
   if (!cptr)
   {
@@ -40,7 +38,7 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
   {
     MessagePrintf(
       "Rename not possible!*\"%s\"*%s",
-      from_path,
+      from_path.c_str(),
       std::strerror(errno)
     );
     ESCAPE;
@@ -48,7 +46,7 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
 
 
 
-  if( !RenameDirEntry( to_path, from_path ) )
+  if (RenameDirEntry(to_path, from_path))
   {
     /* Rename erfolgreich */
     /*--------------------*/
@@ -113,22 +111,16 @@ FNC_XIT:
 
 int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
 {
-  DirEntry    *de_ptr;
   FileEntry   *fen_ptr;
+  const auto de_ptr = fe_ptr->dir_entry;
   const auto from_path = GetFileNamePath(fe_ptr);
-  char        to_path[PATH_LENGTH+1];
+  const auto to_path = GetPath(de_ptr) + FILE_SEPARATOR_CHAR + new_name;
   struct stat stat_struct;
   int         result;
 
   result = -1;
 
   *new_fe_ptr = fe_ptr;
-
-  de_ptr = fe_ptr->dir_entry;
-
-  (void) GetPath( de_ptr, to_path );
-  (void) strcat( to_path, FILE_SEPARATOR_STRING );
-  (void) strcat( to_path, new_name );
 
   if (!IsWriteable(from_path))
   {
@@ -137,12 +129,11 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
       from_path.c_str(),
       std::strerror(errno)
     );
-    ESCAPE;
+
+    return -1;
   }
 
-
-
-  if (!RenameFileEntry(to_path, from_path))
+  if (RenameFileEntry(to_path, from_path))
   {
     /* Rename erfolgreich */
     /*--------------------*/
@@ -177,8 +168,6 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
 
     *new_fe_ptr = fen_ptr;
   }
-
-FNC_XIT:
 
   move( LINES - 2, 1 ); clrtoeol();
 
@@ -236,42 +225,41 @@ int GetRenameParameter(char *old_name, char *new_name)
   return( 0 );
 }
 
-
-
-
-
-static int RenameDirEntry(char *to_path, char *from_path)
+static bool RenameDirEntry(
+  const std::string& to_path,
+  const std::string& from_path
+)
 {
-  struct stat fdstat;
-
-  if( !strcmp( to_path, from_path ) )
+  if (!to_path.compare(from_path))
   {
-    MESSAGE( "Can't rename directory:*New Name == Old Name" );
-    return( 0 );
+    Message("Can't rename directory:*New Name == Old Name");
+
+    return false;
   }
 
-  if( stat( to_path, &fdstat ) == 0 )
+  if (Exists(to_path))
   {
-    MESSAGE( "Can't rename directory:*Destination object already exist!" );
-    return( -1 );
+    Message("Can't rename directory:*Destination object already exist!");
+
+    return false;
   }
 
-  if( rename( from_path, to_path ) )
+  if (rename(from_path.c_str(), to_path.c_str()))
   {
     MessagePrintf(
       "Can't rename \"%s\"*to \"%s\"*%s",
-      from_path,
-      to_path,
+      from_path.c_str(),
+      to_path.c_str(),
       std::strerror(errno)
     );
 
-    return -1;
+    return false;
   }
 
-  return( 0 );
+  return true;
 }
 
-static int RenameFileEntry(
+static bool RenameFileEntry(
   const std::string& to_path,
   const std::string& from_path)
 {
@@ -279,7 +267,7 @@ static int RenameFileEntry(
   {
     Message("Can't rename!*New Name == Old Name");
 
-    return -1;
+    return false;
   }
 
   if (link(from_path.c_str(), to_path.c_str()))
@@ -291,7 +279,7 @@ static int RenameFileEntry(
       std::strerror(errno)
     );
 
-    return -1;
+    return false;
   }
 
   if (unlink(from_path.c_str()))
@@ -302,10 +290,10 @@ static int RenameFileEntry(
       std::strerror(errno)
     );
 
-    return -1;
+    return false;
   }
 
-  return 0;
+  return true;
 }
 
 int RenameTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)

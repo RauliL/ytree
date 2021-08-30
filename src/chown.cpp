@@ -134,40 +134,26 @@ int ChangeDirOwner(DirEntry *de_ptr)
   return( result );
 }
 
-
-
-
-
-
-static int SetDirOwner(DirEntry *de_ptr, int new_owner_id)
+static int SetDirOwner(DirEntry* de_ptr, int new_owner_id)
 {
-  struct stat stat_struct;
-  char buffer[PATH_LENGTH+1];
-  int  result;
+  const auto path = GetPath(de_ptr);
 
-  result = -1;
-
-
-  if( !chown( GetPath( de_ptr, buffer ),
-	      new_owner_id,
-	      de_ptr->stat_struct.st_gid
-	    ) )
+  if (!chown(path.c_str(), new_owner_id, de_ptr->stat_struct.st_gid))
   {
+    struct stat st;
+
     /* Erfolgreich modifiziert */
     /*-------------------------*/
+    if (STAT_(path.c_str(), &st))
+    {
+      ERROR_MSG("stat() failed");
+    } else {
+      de_ptr->stat_struct = st;
+    }
 
-    if( STAT_( buffer, &stat_struct ) )
-    {
-      ERROR_MSG( "Stat Failed" );
-    }
-    else
-    {
-      de_ptr->stat_struct = stat_struct;
-    }
-    result = 0;
-  } else {
-    MessagePrintf("Can't change Owner:*%s", std::strerror(errno));
+    return 0;
   }
+  MessagePrintf("Can't change Owner:*%s", std::strerror(errno));
 
-  return( result );
+  return -1;
 }

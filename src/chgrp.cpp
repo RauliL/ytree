@@ -134,40 +134,26 @@ int ChangeDirGroup(DirEntry *de_ptr)
   return( result );
 }
 
-
-
-
-
-
 static int SetDirGroup(DirEntry *de_ptr, int new_group_id)
 {
-  struct stat stat_struct;
-  char buffer[PATH_LENGTH+1];
-  int  result;
+  const auto path = GetPath(de_ptr);
 
-  result = -1;
-
-
-  if( !chown( GetPath( de_ptr, buffer ),
-	      de_ptr->stat_struct.st_uid ,
-	      new_group_id
-	    ) )
+  if (!chown(path.c_str(), de_ptr->stat_struct.st_uid, new_group_id))
   {
+    struct stat st;
+
     /* Erfolgreich modifiziert */
     /*-------------------------*/
+    if (STAT_(path.c_str(), &st))
+    {
+      Warning("stat() failed");
+    } else {
+      de_ptr->stat_struct = st;
+    }
 
-    if( STAT_( buffer, &stat_struct ) )
-    {
-      Warning( "stat failed" );
-    }
-    else
-    {
-      de_ptr->stat_struct = stat_struct;
-    }
-    result = 0;
-  } else {
-    MessagePrintf("Can't change owner:*%s", std::strerror(errno));
+    return 0;
   }
+  MessagePrintf("Can't change owner:*%s", std::strerror(errno));
 
-  return( result );
+  return -1;
 }

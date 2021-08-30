@@ -68,13 +68,14 @@ void DisplayDiskName(void)
 
 void DisplayDirStatistic(DirEntry *dir_entry)
 {
+  const auto path = GetPath(dir_entry);
   char format[10];
   char buffer[PATH_LENGTH + 1];
   char auxbuff[PATH_LENGTH + 1];
 
   *auxbuff = *buffer = '\0';
   (void) sprintf( format, "%%-%ds", COLS - 10 );
-  (void) GetPath( dir_entry, statistic.path );
+  std::strcpy(statistic.path, path.c_str());
   if (dir_entry -> not_scanned)
      strcat(statistic.path,"*");
   sprintf(auxbuff, format, FormFilename( buffer, statistic.path, COLS - 10 ));
@@ -119,6 +120,7 @@ void DisplayDiskTagged(void)
 
 void DisplayDirParameter(DirEntry *dir_entry)
 {
+  const auto path = GetPath(dir_entry);
   char *p, *f;
   char format[10];
   char buffer[PATH_LENGTH + 1];
@@ -130,7 +132,7 @@ void DisplayDirParameter(DirEntry *dir_entry)
   else            f = p + 1;
 
   (void) sprintf( format, "%%-%ds", COLS - 10 );
-  (void) GetPath( dir_entry, statistic.path );
+  std::strcpy(statistic.path, path.c_str());
   if (dir_entry -> not_scanned)
      strcat(statistic.path,"*");
   sprintf(auxbuff, format, FormFilename(buffer,statistic.path, COLS-10));
@@ -151,12 +153,13 @@ void DisplayDirParameter(DirEntry *dir_entry)
 
 void DisplayGlobalFileParameter(FileEntry *file_entry)
 {
+  const auto path = GetPath(file_entry->dir_entry);
   char buffer1[PATH_LENGTH+1];
   char buffer2[PATH_LENGTH+1];
   char format[10];
 
   (void) sprintf( format, "[%%-%ds]", COLS - 10 );
-  (void) GetPath( file_entry->dir_entry, buffer1 );
+  std::strcpy(buffer1, path.c_str());
   FormFilename( buffer2, buffer1, COLS - 10 );
   sprintf(buffer1, format, buffer2);
   wmove( stdscr, 0, 6);

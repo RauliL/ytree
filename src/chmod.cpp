@@ -187,44 +187,35 @@ int SetFileModus(FileEntry *fe_ptr, WalkingPackage *walking_package)
 
 static int SetDirModus(DirEntry *de_ptr, WalkingPackage *walking_package)
 {
-  struct stat stat_struct;
-  char buffer[PATH_LENGTH+1];
-  int  result;
-  int  new_modus;
+  const auto path = GetPath(de_ptr);
+  auto new_modus = GetNewModus(
+    de_ptr->stat_struct.st_mode,
+    walking_package->function_data.change_modus.new_modus
+  );
 
-  result = -1;
+  new_modus = new_modus | (de_ptr->stat_struct.st_mode & ~(
+    S_IRWXO | S_IRWXG | S_IRWXU | S_ISGID | S_ISUID
+  ));
 
-  new_modus = GetNewModus( de_ptr->stat_struct.st_mode,
-			   walking_package->function_data.change_modus.new_modus
-			 );
-
-  new_modus = new_modus | ( de_ptr->stat_struct.st_mode &
-	      ~( S_IRWXO | S_IRWXG | S_IRWXU | S_ISGID | S_ISUID ) );
-
-  if( !chmod( GetPath( de_ptr, buffer ), new_modus ) )
+  if (!chmod(path.c_str(), new_modus))
   {
+    struct stat st;
+
     /* Erfolgreich modifiziert */
     /*-------------------------*/
-
-    if( STAT_( buffer, &stat_struct ) )
+    if (STAT_(path.c_str(), &st))
     {
-      ERROR_MSG( "Stat Failed" );
-    }
-    else
-    {
-      de_ptr->stat_struct = stat_struct;
+      ERROR_MSG("stat() Failed");
+    } else {
+      de_ptr->stat_struct = st;
     }
 
-    result = 0;
-  } else {
-    MessagePrintf("Cant't change modus:*%s", std::strerror(errno));
+    return 0;
   }
+  MessagePrintf("Cant't change modus:*%s", std::strerror(errno));
 
-  return( result );
+  return -1;
 }
-
-
-
 
 static int GetNewModus(int old_modus, const char *modus )
 {
