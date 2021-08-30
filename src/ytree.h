@@ -100,12 +100,6 @@
 #define KEY_END   KEY_EOL
 #endif
 
-#if defined(_IBMR2) && !defined(_AIX41)
-#define echochar( c )  { addch( c ); refresh(); }
-#define wgetch( w )    AixWgetch( w )
-#endif
-
-
 #if defined( S_IFLNK ) && !defined( isc386 )
 #define STAT_(a, b) lstat(a, b)
 #else

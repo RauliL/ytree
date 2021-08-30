@@ -466,21 +466,6 @@ int ViKey( int ch )
 #endif /* VI_KEYS */
 
 
-#ifdef _IBMR2
-#undef wgetch
-
-int AixWgetch( WINDOW *w )
-{
-  int c;
-
-  if( ( c = wgetch( w ) ) == KEY_ENTER ) c = LF;
-
-  return( c );
-}
-
-#endif
-
-
 int Getch()
 {
   int c;

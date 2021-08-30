@@ -246,7 +246,7 @@ int GetDiskParameter( char *path,
     *avail_bytes = bfree * statfs_struct.f_frsize;
     this_disk_space   = statfs_struct.f_blocks * statfs_struct.f_frsize;
 #else
-#if defined( _IBMR2 ) || defined( linux ) || defined( sun ) || defined( __GNU__ )
+#if defined( linux ) || defined( sun ) || defined( __GNU__ )
     bfree = getuid() ? statfs_struct.f_bavail : statfs_struct.f_bfree;
     if( bfree < 0L ) bfree = 0L;
     *avail_bytes = bfree * statfs_struct.f_bsize;
