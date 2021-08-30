@@ -101,7 +101,7 @@ static int ViewFile(DirEntry* dir_entry, const std::string& file_path)
       std::snprintf(
         command_line,
         COMMAND_LINE_LENGTH,
-        "%s %s",
+        "%s \"%s\"",
         aux->c_str(),
         file_p_aux.c_str()
       );
@@ -128,7 +128,7 @@ static int ViewFile(DirEntry* dir_entry, const std::string& file_path)
       std::snprintf(
         command_line,
         COMMAND_LINE_LENGTH,
-        "%s < %s %s | %s",
+        "%s < \"%s\" %s | %s",
         uncompress_command,
         file_p_aux.c_str(),
         ERR_TO_STDOUT,
@@ -138,7 +138,7 @@ static int ViewFile(DirEntry* dir_entry, const std::string& file_path)
       std::snprintf(
         command_line,
         COMMAND_LINE_LENGTH,
-        "%s %s",
+        "%s \"%s\"",
         PAGER,
         file_p_aux.c_str()
       );
