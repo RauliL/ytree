@@ -28,7 +28,7 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
 
   if( cptr == to_path )
   {
-    MESSAGE( "Can't rename ROOT" );
+    Message("Can't rename ROOT");
     ESCAPE;
   }
 
@@ -210,16 +210,18 @@ int GetRenameParameter(char *old_name, char *new_name)
   if(!strlen(new_name))
     return( -1 );
 
-  if(old_name && !strcmp(old_name, new_name))
+  if (old_name && !std::strcmp(old_name, new_name))
   {
-    MESSAGE("Can't rename: New name same as old name.");
-    return( -1 );
+    Message("Can't rename: New name same as old name.");
+
+    return -1;
   }
 
-  if(strrchr(new_name, FILE_SEPARATOR_CHAR) != NULL)
+  if (std::strrchr(new_name, FILE_SEPARATOR_CHAR))
   {
-    MESSAGE("Invalid new name:*No slashes when renaming!");
-    return( -1 );
+    Message("Invalid new name:*No slashes when renaming!");
+
+    return -1;
   }
 
   return( 0 );
@@ -309,7 +311,7 @@ int RenameTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
   {
     if( *new_name == '\0' )
     {
-      MESSAGE( "Can't rename file to*empty name" );
+      Message("Can't rename file to*empty name");
     }
     else
     {

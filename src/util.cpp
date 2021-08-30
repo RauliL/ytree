@@ -147,7 +147,7 @@ int GetDirEntry(DirEntry *tree,
   if (*dir_path != FILE_SEPARATOR_CHAR &&
       chdir(GetPath(current_dir_entry).c_str()))
   {
-    ERROR_MSG("chdir() failed");
+    Error("chdir() failed");
 
     return -1;
   }
@@ -174,7 +174,7 @@ int GetDirEntry(DirEntry *tree,
 
   if (chdir(current_path.c_str()))
   {
-    ERROR_MSG("chdir() failed; Can't resume");
+    Error("chdir() failed; Can't resume");
 
     return -1;
   }
@@ -205,8 +205,7 @@ int GetDirEntry(DirEntry *tree,
       if( sde_ptr == NULL )
       {
 #ifdef DEBUG
-	(void) sprintf( message, "Can't find directory; token=%s", token );
-	ERROR_MSG( message );
+	ErrorPrintf("Can't find directory; token=%s", token);
 #endif
 	return( -3 );
       }
@@ -299,13 +298,13 @@ char *GetAttributes(unsigned short modus, char *buffer)
 
 char *CTime(time_t f_time, char *buffer)
 {
+  const auto now = std::time(nullptr);
   char   *cptr;
-  time_t now;
 
-  if( (now = time( NULL )) == -1 )
+  if (now == -1)
   {
-    ERROR_MSG( "time() failed" );
-    exit( 1 );
+    Error("time() failed");
+    std::exit(EXIT_FAILURE);
   }
 
   cptr = ctime( &f_time );
@@ -324,75 +323,75 @@ char *CTime(time_t f_time, char *buffer)
   return( buffer );
 }
 
-
-
-
-void PrintSpecialString(WINDOW *win, int y, int x, const char *str, int color)
+void PrintSpecialString(
+  WINDOW* win,
+  int y,
+  int x,
+  const std::string& str,
+  int color
+)
 {
-  int ch;
-
-  if(x < 0 || y < 0) {
-     /* screen too small */
-    return;
-  }
-
-  wmove( win, y, x);
-
-  for( ; *str; str++ )
+  if (x < 0 || y < 0)
   {
-    if ( (!iscntrl(*str)) || (!isspace(*str)) || (*str==' ') )
-    switch( *str )
-    {
-      case '1': ch = ACS_ULCORNER; break;
-      case '2': ch = ACS_URCORNER; break;
-      case '3': ch = ACS_LLCORNER; break;
-      case '4': ch = ACS_LRCORNER; break;
-      case '5': ch = ACS_TTEE;     break;
-      case '6': ch = ACS_LTEE;     break;
-      case '7': ch = ACS_RTEE;     break;
-      case '8': ch = ACS_BTEE;     break;
-      case '9': ch = ACS_LARROW;   break;
-      case '|': ch = ACS_VLINE;    break;
-      case '-': ch = ACS_HLINE;    break;
-      default:  ch = PRINT(*str);
-    }
-    else
-            ch = ACS_BLOCK;
-
-#ifdef COLOR_SUPPORT
-    wattrset( win, COLOR_PAIR(color) | A_BOLD );
-#endif /* COLOR_SUPPORT */
-    waddch( win, ch );
-#ifdef COLOR_SUPPORT
-    wattrset( win, 0 );
-#endif /* COLOR_SUPPORT */
+    return; // Screen too small.
   }
-}
 
-
-void Print(WINDOW *win, int y, int x, const char *str, int color)
-{
- int ch;
-
-  if(x < 0 || y < 0) {
-     /* screen too small */
-    return;
-  }
   wmove(win, y, x);
-  for( ; *str; str++ )
-  {
-    ch = PRINT((int) *str);
 
-#ifdef COLOR_SUPPORT
-    wattrset( win, COLOR_PAIR(color) | A_BOLD);
-#endif /* COLOR_SUPPORT */
-    waddch(win, ch );
-#ifdef COLOR_SUPPORT
-    wattrset( win, 0);
-#endif /* COLOR_SUPPORT */
+  for (const auto& c : str)
+  {
+    int result;
+
+    if (!std::iscntrl(c) || !std::isspace(c) || c == ' ')
+    {
+      switch (c)
+      {
+        case '1': result = ACS_ULCORNER; break;
+        case '2': result = ACS_URCORNER; break;
+        case '3': result = ACS_LLCORNER; break;
+        case '4': result = ACS_LRCORNER; break;
+        case '5': result = ACS_TTEE;     break;
+        case '6': result = ACS_LTEE;     break;
+        case '7': result = ACS_RTEE;     break;
+        case '8': result = ACS_BTEE;     break;
+        case '9': result = ACS_LARROW;   break;
+        case '|': result = ACS_VLINE;    break;
+        case '-': result = ACS_HLINE;    break;
+        default:  result = PRINT(c);
+      }
+    } else {
+      result = ACS_BLOCK;
+    }
+#if defined(COLOR_SUPPORT)
+    wattrset(win, COLOR_PAIR(color) | A_BOLD);
+#endif
+    waddch(win, result);
+#if defined(COLOR_SUPPORT)
+    wattrset(win, 0);
+#endif
   }
 }
 
+void Print(WINDOW* win, int y, int x, const std::string& str, int color)
+{
+  if (x < 0 || y < 0)
+  {
+    return; // Screen too small.
+  }
+
+  wmove(win, y, x);
+
+  for (const auto& c : str)
+  {
+#if defined(COLOR_SUPPORT)
+    wattrset(win, COLOR_PAIR(color) | A_BOLD);
+#endif
+    waddch(win, PRINT(c));
+#if defined(COLOR_SUPPORT)
+    wattrset(win, 0);
+#endif
+  }
+}
 
 void PrintOptions(WINDOW *win, int y, int x, const char *str)
 {
@@ -804,8 +803,8 @@ void GetMaxYX(WINDOW *win, int *height, int *width)
   }
   else
   {
-    ERROR_MSG( "Unknown Window-ID*ABORT" );
-    exit( 1 );
+    Error("Unknown Window-ID*ABORT");
+    std::exit(EXIT_FAILURE);
   }
 }
 
@@ -1097,7 +1096,7 @@ void StatOrAbort(const std::string& path, struct stat& st)
 {
   if (!Stat(path, st))
   {
-    ERROR_MSG("stat() failed*ABORT");
+    Error("stat() failed*ABORT");
     std::exit(EXIT_FAILURE);
   }
 }

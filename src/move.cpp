@@ -239,9 +239,9 @@ int MoveTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
 		   ) == 0 )
 
   {
-    if( *new_name == '\0' )
+    if (!*new_name)
     {
-      MESSAGE( "Can't move file to*empty name" );
+      Message("Can't move file to*empty name");
     }
     else
     {

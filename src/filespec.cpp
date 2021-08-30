@@ -93,7 +93,7 @@ int ReadFileSpec(void)
   {
     if( SetFileSpec( buffer ) )
     {
-      MESSAGE( "Invalid Filespec" );
+      Message("Invalid Filespec");
     }
     else
     {

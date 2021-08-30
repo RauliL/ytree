@@ -121,7 +121,7 @@ int GetNewFileModus(int y, int x, char *modus, const char *term)
 
       if( modus[p] != 'x' && modus[p] != 's' )
       {
-	MESSAGE( "Execute-Permission required*for set-ID" );
+	Message("Execute-Permission required*for set-ID");
       }
       else
       {
@@ -172,7 +172,7 @@ int SetFileModus(FileEntry *fe_ptr, WalkingPackage *walking_package)
     /*-------------------------*/
     if (STAT_(path.c_str(), &stat_struct))
     {
-      ERROR_MSG( "Stat Failed" );
+      Error("stat() failed");
     } else {
       fe_ptr->stat_struct = stat_struct;
     }
@@ -205,7 +205,7 @@ static int SetDirModus(DirEntry *de_ptr, WalkingPackage *walking_package)
     /*-------------------------*/
     if (STAT_(path.c_str(), &st))
     {
-      ERROR_MSG("stat() Failed");
+      Error("stat() Failed");
     } else {
       de_ptr->stat_struct = st;
     }

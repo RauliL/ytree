@@ -241,7 +241,7 @@ void UnReadTree(DirEntry *dir_entry)
 
   if( dir_entry == statistic.tree )
   {
-    MESSAGE( "Can't delete ROOT" );
+    Message("Can't delete ROOT");
   }
   else
   {

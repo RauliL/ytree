@@ -34,9 +34,9 @@
 static void
 memory_error_and_abort (const char *fname)
 {
-  ERROR_MSG("malloc() Failed*Abort");
+  Error("malloc() failed*Abort");
   /* fprintf (stderr, "%s: out of virtual memory\n", fname); */
-  exit (2);
+  std::exit(2);
 }
 
 /* Return a pointer to free()able block of memory large enough

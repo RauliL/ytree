@@ -44,8 +44,8 @@ static void BuildDirEntryList(DirEntry *dir_entry)
 	        	     sizeof( DirEntryList )
 		           ) ) == NULL )
     {
-      ERROR_MSG( "Calloc Failed*ABORT" );
-      exit( 1 );
+      Error("calloc() failed*ABORT");
+      std::exit(EXIT_FAILURE);
     }
   }
 
@@ -1411,7 +1411,7 @@ int RefreshDirWindow()
 
 	if(n == -1) {
 		/* Directory disapeared */
-      		ERROR_MSG( "Current directory disappeared" );
+    Error("Current directory disappeared");
 		result = -1;
 	} else {
 

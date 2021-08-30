@@ -214,10 +214,11 @@ int LoginDisk(char *path)
   {
     (void) strcpy( statistic.tree->name, path );
 
-    if( pipe( p ) )
+    if (pipe(p))
     {
-      ERROR_MSG( "pipe failed" );
-      return( -1 );
+      Error("pipe() failed");
+
+      return -1;
     }
 
 
@@ -461,12 +462,13 @@ int LoginDisk(char *path)
 
     pid = fork();
 
-    if( pid == -1 )
+    if (pid == -1)
     {
-      ERROR_MSG( "can't fork()" );
-      (void) close( p[0] );
-      (void) close( p[1] );
-      return( -1 );
+      Error("fork() failed");
+      close(p[0]);
+      close(p[1]);
+
+      return -1;
     }
     else if( pid == 0 )
     {
@@ -496,17 +498,18 @@ int LoginDisk(char *path)
       (void) close( p[1] );
       status = 0;
 
-      if( ( f = fdopen( p[0], "r" ) ) == NULL )
+      if (!(f = fdopen(p[0], "r")))
       {
-	ERROR_MSG( "fdopen failed" );
-	return( -1 );
+	      Error("fdopen() failed");
+
+        return -1;
       }
 
       if( mode == ZOO_FILE_MODE )
       {
 	if( ReadTreeFromZOO( statistic.tree, f ) )
         {
-	  ERROR_MSG( "ReadTreeFromZOO Failed" );
+	  Error("ReadTreeFromZOO() failed");
           (void) fclose( f );
 	  (void) wait( &status );
           return( -1 );
@@ -516,7 +519,7 @@ int LoginDisk(char *path)
       {
 	if( ReadTreeFromRPM( statistic.tree, f ) )
         {
-	  ERROR_MSG( "ReadTreeFromRPM Failed" );
+	  Error("ReadTreeFromRPM() failed");
           (void) fclose( f );
 	  (void) wait( &status );
           return( -1 );
@@ -526,7 +529,7 @@ int LoginDisk(char *path)
       {
 	if( ReadTreeFromLHA( statistic.tree, f ) )
         {
-	  ERROR_MSG( "ReadTreeFromLHA Failed" );
+	  Error("ReadTreeFromLHA() failed");
           (void) fclose( f );
 	  (void) wait( &status );
           return( -1 );
@@ -536,7 +539,7 @@ int LoginDisk(char *path)
       {
 	if( ReadTreeFromZIP( statistic.tree, f ) )
         {
-	  ERROR_MSG( "ReadTreeFromZIP Failed" );
+	  Error("ReadTreeFromZIP() failed");
           (void) fclose( f );
 	  (void) wait( &status );
           return( -1 );
@@ -546,7 +549,7 @@ int LoginDisk(char *path)
       {
 	if( ReadTreeFromARC( statistic.tree, f ) )
         {
-	  ERROR_MSG( "ReadTreeFromARC Failed" );
+	  Error("ReadTreeFromARC() failed");
           (void) fclose( f );
 	  (void) wait( &status );
           return( -1 );
@@ -556,7 +559,7 @@ int LoginDisk(char *path)
       {
 	if( ReadTreeFromRAR( statistic.tree, f ) )
         {
-	  ERROR_MSG( "ReadTreeFromRAR Failed" );
+	  Error("ReadTreeFromRAR() failed");
           (void) fclose( f );
 	  (void) wait( &status );
           return( -1 );
@@ -566,7 +569,7 @@ int LoginDisk(char *path)
       {
         if( ReadTreeFromTAR( statistic.tree, f ) )
         {
-          ERROR_MSG( "ReadTreeFromTAR Failed" );
+          Error("ReadTreeFromTAR() failed");
           (void) fclose( f );
 	  (void) wait( &status );
           return( -1 );
@@ -594,10 +597,11 @@ int LoginDisk(char *path)
     statistic.tree->next = statistic.tree->prev = NULL;
 
     depth = strtod(TREEDEPTH, NULL);
-    if( ReadTree( statistic.tree, path, depth ) )
+    if (ReadTree(statistic.tree, path, depth))
     {
-      ERROR_MSG( "ReadTree Failed" );
-      return( -1 );
+      Error("ReadTree() failed");
+
+      return -1;
     }
     (void) memcpy( (char *) &disk_statistic,
 		   (char *) &statistic,

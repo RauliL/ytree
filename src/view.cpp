@@ -556,7 +556,6 @@ void move_right(WINDOW *win)
 void hex_edit(const std::string& file_path)
 {
     int ch;
-    char mensaje[50];
 
     bool QUIT=false;
 
@@ -564,8 +563,7 @@ void hex_edit(const std::string& file_path)
     fd2 = fd;
     fd=open(file_path.c_str(),O_RDWR);
     if (fd == -1){
-        sprintf(mensaje,"Error %s ", strerror(errno));
-	ERROR_MSG(mensaje);
+	ErrorPrintf("Error %s", std::strerror(errno));
 	touchwin(VIEW);
         fd = fd2;
 	return;

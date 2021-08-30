@@ -27,9 +27,9 @@ int DeleteDirectory(DirEntry *dir_entry)
 
   ClearHelp();
 
-  if( dir_entry == statistic.tree )
+  if (dir_entry == statistic.tree)
   {
-    MESSAGE( "Can't delete ROOT" );
+    Message("Can't delete ROOT");
   }
   else if( dir_entry->file || dir_entry->sub_tree )
   {

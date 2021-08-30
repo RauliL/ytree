@@ -279,11 +279,8 @@
 #define DEFAULT_TREE       "."
 
 
-#define ERROR_MSG( msg )   Error( msg, __FILE__, __LINE__ )
+#define Error(msg) ErrorEx(msg, __FILE__, __LINE__)
 #define ErrorPrintf(format, ...) ErrorPrintfEx(format, __FILE__, __LINE__, __VA_ARGS__)
-#define WARNING( msg )     Warning( msg )
-#define MESSAGE( msg )     Message( msg )
-#define NOTICE( msg )      Notice( msg )
 
 #define TAGGED_SYMBOL '*'
 #define MAX_MODES      11
@@ -637,11 +634,11 @@ extern bool Match(char *file_name);
 extern int  SetMatchSpec(char *new_spec);
 extern int  SetFileSpec(char *file_spec);
 extern void SetMatchingParam(DirEntry *dir_entry);
-extern void Error(const char *msg, const char *module, int line);
+void ErrorEx(const std::string& msg, const std::string& module, int line);
 void ErrorPrintfEx(const char* format, const char* module, int line, ...);
-extern void Warning(const char *msg);
+void Warning(const std::string& msg);
 void WarningPrintf(const char* format, ...);
-extern void Notice(const char *msg);
+void Notice(const std::string& msg);
 extern void UnmapNoticeWindow(void);
 extern void SetFileMode(int new_file_mode);
 extern int  HandleFileWindow(DirEntry *dir_entry);
@@ -685,7 +682,7 @@ extern int  CopyFile(Statistic *statistic_ptr, FileEntry *fe_ptr, unsigned char 
 extern int  MoveTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
 extern int  MoveFile(FileEntry *fe_ptr, unsigned char confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, FileEntry **new_fe_ptr);
 extern int  InputChoise(const char *msg, const char *term);
-extern void Message(const char *msg);
+void Message(const std::string& msg);
 void MessagePrintf(const char* format, ...);
 extern int  GetDirEntry(DirEntry *tree, DirEntry *current_dir_entry, char *dir_path, DirEntry **dir_entry, char *to_path);
 extern int  GetFileEntry(DirEntry *de_ptr, char *file_name, FileEntry **file_entry);
@@ -716,8 +713,8 @@ extern int  GetRenameParameter(char *old_name, char *new_name);
 extern char *CTime(time_t f_time, char *buffer);
 extern int  LoginDisk(char *path);
 extern int  GetNewLoginPath(char *path);
-extern void PrintSpecialString(WINDOW *win, int y, int x, const char *str, int color);
-extern void Print(WINDOW *, int, int, const char *, int);
+void PrintSpecialString(WINDOW* win, int y, int x, const std::string& str, int color);
+void Print(WINDOW* win, int y, int x, const std::string& str, int color);
 extern void PrintOptions(WINDOW *,int, int, const char *);
 extern void PrintMenuOptions(WINDOW *,int, int, char *, int, int);
 extern char *FormFilename(char *dest, char *src, unsigned int max_len);
@@ -813,7 +810,7 @@ inline T* MallocOrAbort(const std::size_t size)
 
   if (!ptr)
   {
-    ERROR_MSG("malloc() failed*ABORT");
+    Error("malloc() failed*ABORT");
     std::exit(EXIT_FAILURE);
   }
 

@@ -189,8 +189,9 @@ int InsertArchiveFileEntry(DirEntry *tree, char *path, struct stat *stat)
 
     if( TryInsertArchiveDirEntry( tree, dir, &stat_struct ) )
     {
-      ERROR_MSG( "inserting directory failed" );
-      return( -1 );
+      Error("Inserting directory failed");
+
+      return -1;
     }
     if( GetArchiveDirEntry( tree, dir, &de_ptr ) )
     {

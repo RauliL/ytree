@@ -111,8 +111,9 @@ int CopyFile(Statistic *statistic_ptr,
 
   if (!std::strcmp( to_path, from_path.c_str()))
   {
-    MESSAGE( "Can't copy file into itself" );
-    return( result );
+    Message("Can't copy file into itself");
+
+    return result;
   }
 
 
@@ -349,7 +350,7 @@ int CopyTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
   {
     if( *new_name == '\0' )
     {
-      MESSAGE( "Can't copy file to*empty name" );
+      Message("Can't copy file to*empty name");
     }
 
     result = CopyFile( walking_package->function_data.copy.statistic_ptr,

@@ -189,8 +189,8 @@ static void BuildFileEntryList(DirEntry *dir_entry){
 				      sizeof( FileEntryList )
 				    )
                               ) == NULL ) {
-        ERROR_MSG( "Calloc Failed*ABORT" );
-        exit( 1 );
+        Error("calloc() failed*ABORT");
+        std::exit(EXIT_FAILURE);
         }
      }
      file_count = 0;
@@ -206,8 +206,8 @@ static void BuildFileEntryList(DirEntry *dir_entry){
 				      sizeof( FileEntryList )
 				    ) )
                               == NULL )  {
-           ERROR_MSG( "Calloc Failed*ABORT" );
-           exit( 1 );
+           Error("calloc() failed*ABORT");
+           std::exit(EXIT_FAILURE);
            }
         }
         file_count = 0;
@@ -225,8 +225,8 @@ static void BuildFileEntryList(DirEntry *dir_entry){
 				      sizeof( FileEntryList )
 				    ) )
                               == NULL )  {
-            ERROR_MSG( "Calloc Failed*ABORT" );
-            exit( 1 );
+            Error("calloc() failed*ABORT");
+            std::exit(EXIT_FAILURE);
         }
      }
      file_count = 0;
@@ -2487,7 +2487,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 		      else if( mode != DISK_MODE && mode != USER_MODE )
 		      {
-			MESSAGE( "i am sorry*^P not supported in Archive-mode" );
+			Message("i am sorry*^P not supported in Archive-mode");
 		      }
 		      else
 		      {
@@ -2519,7 +2519,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 			if( pclose( walking_package.function_data.pipe_cmd.pipe_file ) )
 			{
-			  WARNING( "pclose failed" );
+			  Warning("pclose() failed");
 			}
 
                         (void) GetAvailBytes( &statistic.disk_space );
@@ -2547,7 +2547,7 @@ int HandleFileWindow(DirEntry *dir_entry)
                       }
 		      else if( mode != DISK_MODE && mode != USER_MODE )
 		      {
-			MESSAGE( "Feature not available in archives." );
+			Message("Feature not available in archives.");
 		      }
 		      else
 		      {
@@ -2588,7 +2588,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 		      else if( mode != DISK_MODE && mode != USER_MODE )
 		      {
-			MESSAGE( "I am sorry*^X not supported in Archive-mode" );
+			Message("I am sorry*^X not supported in Archive-mode");
 		      }
 		      else
 		      {
