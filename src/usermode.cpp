@@ -18,21 +18,26 @@ int DirUserMode(DirEntry *dir_entry, int ch)
   const auto filepath = GetPath(dir_entry);
   char* command_line = nullptr;
 
-  while (auto aux = GetUserDirAction(ch, &chremap))
+  while (const auto aux = GetUserDirAction(ch, &chremap))
   {
     if (!command_line)
     {
       command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
     }
-    if (std::strstr(aux, "%s"))
+    if (aux->find("%s") != std::string::npos)
     {
-      std::snprintf(command_line, COMMAND_LINE_LENGTH, aux, filepath.c_str());
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        aux->c_str(),
+        filepath.c_str()
+      );
     } else {
       std::snprintf(
         command_line,
         COMMAND_LINE_LENGTH,
         "%s%c%s",
-        aux,
+        aux->c_str(),
         ' ',
         filepath.c_str()
       );
@@ -68,12 +73,12 @@ int FileUserMode(FileEntry* file_entry, int ch)
     {
       command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
     }
-    if (std::strstr(aux, "%s"))
+    if (aux->find("%s") != std::string::npos)
     {
       std::snprintf(
         command_line,
         COMMAND_LINE_LENGTH,
-        aux,
+        aux->c_str(),
         filepath.c_str()
       );
     } else {
@@ -81,7 +86,7 @@ int FileUserMode(FileEntry* file_entry, int ch)
         command_line,
         COMMAND_LINE_LENGTH,
         "%s%c%s",
-        aux,
+        aux->c_str(),
         ' ',
         filepath.c_str()
       );

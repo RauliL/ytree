@@ -1,120 +1,219 @@
 #include "ytree.h"
 
-#define NO_SECTION	0
-#define GLOBAL_SECTION	1
-#define VIEWER_SECTION	2
-#define MENU_SECTION 3
-#define FILEMAP_SECTION 4
-#define FILECMD_SECTION 5
-#define DIRMAP_SECTION 6
-#define DIRCMD_SECTION 7
+#include <unordered_map>
+#include <vector>
+
+enum class Section
+{
+  GLOBAL = 1,
+  VIEWER = 2,
+  MENU = 3,
+  FILEMAP = 4,
+  FILECMD = 5,
+  DIRMAP = 6,
+  DIRCMD = 7,
+};
 
 struct Profile
 {
-  const char* name;
   const char* def;
   const char* envvar;
   char* value;
 };
 
-struct Viewer
-{
-  char* ext;
-  char* cmd;
-  Viewer* next;
-};
-
-struct Dirmenu
+struct UserAction
 {
   int chkey;
   int chremap;
-  char* cmd;
-  Dirmenu* next;
+  std::optional<std::string> cmd;
 };
 
-struct Filemenu
-{
-  int chkey;
-  int chremap;
-  char* cmd;
-  Filemenu* next;
-};
-
-static Viewer viewer;
-static Dirmenu dirmenu;
-static Filemenu filemenu;
+static std::vector<UserAction> dirmenu;
+static std::vector<UserAction> filemenu;
 static std::optional<std::string> custom_profile_path;
+static std::unordered_map<std::string, std::string> viewer_mapping;
 
-/* MUSS sortiert sein! */
-static Profile profile[] = {
-  { "ARCEXPAND",    	DEFAULT_ARCEXPAND,     NULL,     NULL },
-  { "ARCLIST",      	DEFAULT_ARCLIST,       NULL,     NULL },
-  { "BUNZIP",       	DEFAULT_BUNZIP,        NULL,     NULL },
-  { "CAT",          	DEFAULT_CAT,           NULL,     NULL },
-  { "DIR1",         	DEFAULT_DIR1,          NULL,     NULL },
-  { "DIR2",         	DEFAULT_DIR2,          NULL,     NULL },
-  { "EDITOR",       	DEFAULT_EDITOR,        "EDITOR", NULL },
-  { "FILE1",        	DEFAULT_FILE1,         NULL,     NULL },
-  { "FILE2",        	DEFAULT_FILE2,         NULL,     NULL },
-  { "FILEMODE",     	DEFAULT_FILEMODE,      NULL,     NULL },
-  { "GNUUNZIP",     	DEFAULT_GNUUNZIP,      NULL,     NULL },
-  { "HEXDUMP",      	DEFAULT_HEXDUMP,       NULL,     NULL },
-  { "HEXEDITOFFSET",	DEFAULT_HEXEDITOFFSET, NULL,     NULL },
-  { "INITIALDIR",   	DEFAULT_INITIALDIR,    NULL,     NULL },
-  { "LHAEXPAND",    	DEFAULT_LHAEXPAND,     NULL,     NULL },
-  { "LHALIST",      	DEFAULT_LHALIST,       NULL,     NULL },
-  { "LISTJUMPSEARCH",   DEFAULT_LISTJUMPSEARCH,NULL,     NULL },
-  { "MANROFF",      	DEFAULT_MANROFF,       NULL,     NULL },
-  { "MELT",         	DEFAULT_MELT,          NULL,     NULL },
-  { "NOSMALLWINDOW",	DEFAULT_NOSMALLWINDOW, NULL,     NULL },
-  { "NUMBERSEP",    	DEFAULT_NUMBERSEP,     NULL,     NULL },
-  { "PAGER",        	DEFAULT_PAGER,        "PAGER",  NULL },
-  { "RAREXPAND",    	DEFAULT_RAREXPAND,     NULL,     NULL },
-  { "RARLIST",      	DEFAULT_RARLIST,       NULL,     NULL },
-  { "RPMEXPAND",    	DEFAULT_RPMEXPAND,     NULL,     NULL },
-  { "RPMLIST",      	DEFAULT_RPMLIST,       NULL,     NULL },
-  { "SEARCHCOMMAND",	DEFAULT_SEARCHCOMMAND, NULL,     NULL },
-  { "TAPEDEV",      	DEFAULT_TAPEDEV,       "TAPE",   NULL },
-  { "TAREXPAND",    	DEFAULT_TAREXPAND,     NULL,     NULL },
-  { "TARLIST",      	DEFAULT_TARLIST,       NULL,     NULL },
-  { "TREEDEPTH",    	DEFAULT_TREEDEPTH,     NULL,     NULL },
-  { "UNCOMPRESS",   	DEFAULT_UNCOMPRESS,    NULL,     NULL },
-  { "USERVIEW",     	"",                    NULL,     NULL },
-  { "ZIPEXPAND",    	DEFAULT_ZIPEXPAND,     NULL,     NULL },
-  { "ZIPLIST",      	DEFAULT_ZIPLIST,       NULL,     NULL },
-  { "ZOOEXPAND",    	DEFAULT_ZOOEXPAND,     NULL,     NULL },
-  { "ZOOLIST",      	DEFAULT_ZOOLIST,       NULL,     NULL }
+static std::unordered_map<std::string, Profile> profile =
+{
+  { { "ARCEXPAND" }, { DEFAULT_ARCEXPAND,     NULL,     NULL } },
+  { { "ARCLIST" },    { DEFAULT_ARCLIST,       NULL,     NULL } },
+  { { "BUNZIP" },     { DEFAULT_BUNZIP,        NULL,     NULL } },
+  { { "CAT" },        { DEFAULT_CAT,           NULL,     NULL } },
+  { { "DIR1" },       { DEFAULT_DIR1,          NULL,     NULL } },
+  { { "DIR2" },       { DEFAULT_DIR2,          NULL,     NULL } },
+  { { "EDITOR" },     { DEFAULT_EDITOR,        "EDITOR", NULL } },
+  { { "FILE1" },      { DEFAULT_FILE1,         NULL,     NULL } },
+  { { "FILE2" },      { DEFAULT_FILE2,         NULL,     NULL } },
+  { { "FILEMODE" },   { DEFAULT_FILEMODE,      NULL,     NULL } },
+  { { "GNUUNZIP" },   { DEFAULT_GNUUNZIP,      NULL,     NULL } },
+  { { "HEXDUMP" },    { DEFAULT_HEXDUMP,       NULL,     NULL } },
+  { { "HEXEDITOFFSET" }, { DEFAULT_HEXEDITOFFSET, NULL,     NULL } },
+  { { "INITIALDIR" },    { DEFAULT_INITIALDIR,    NULL,     NULL } },
+  { { "LHAEXPAND" },     { DEFAULT_LHAEXPAND,     NULL,     NULL } },
+  { { "LHALIST" },       { DEFAULT_LHALIST,       NULL,     NULL } },
+  { { "LISTJUMPSEARCH" }, { DEFAULT_LISTJUMPSEARCH,NULL,     NULL } },
+  { { "MANROFF" },       { DEFAULT_MANROFF,       NULL,     NULL } },
+  { { "MELT" },          { DEFAULT_MELT,          NULL,     NULL } },
+  { { "NOSMALLWINDOW" }, { DEFAULT_NOSMALLWINDOW, NULL,     NULL } },
+  { { "NUMBERSEP" },     { DEFAULT_NUMBERSEP,     NULL,     NULL } },
+  { { "PAGER" },         { DEFAULT_PAGER,        "PAGER",  NULL } },
+  { { "RAREXPAND" },     { DEFAULT_RAREXPAND,     NULL,     NULL } },
+  { { "RARLIST" },       { DEFAULT_RARLIST,       NULL,     NULL } },
+  { { "RPMEXPAND" },     { DEFAULT_RPMEXPAND,     NULL,     NULL } },
+  { { "RPMLIST" },       { DEFAULT_RPMLIST,       NULL,     NULL } },
+  { { "SEARCHCOMMAND" }, { DEFAULT_SEARCHCOMMAND, NULL,     NULL } },
+  { { "TAPEDEV" },       { DEFAULT_TAPEDEV,       "TAPE",   NULL } },
+  { { "TAREXPAND" },     { DEFAULT_TAREXPAND,     NULL,     NULL } },
+  { { "TARLIST" },       { DEFAULT_TARLIST,       NULL,     NULL } },
+  { { "TREEDEPTH" },     { DEFAULT_TREEDEPTH,     NULL,     NULL } },
+  { { "UNCOMPRESS" },    { DEFAULT_UNCOMPRESS,    NULL,     NULL } },
+  { { "USERVIEW" },      {	"",                    NULL,     NULL } },
+  { { "ZIPEXPAND" },     { DEFAULT_ZIPEXPAND,     NULL,     NULL } },
+  { { "ZIPLIST" },       { DEFAULT_ZIPLIST,       NULL,     NULL } },
+  { { "ZOOEXPAND" },     { DEFAULT_ZOOEXPAND,     NULL,     NULL } },
+  { { "ZOOLIST" },       { DEFAULT_ZOOLIST,       NULL,     NULL } },
 };
 
-#define PROFILE_ENTRIES (sizeof(profile) / sizeof(profile[0]))
+static inline int ChCode(const char*);
 
+static void ParseUserActionMapEntry(
+  std::vector<UserAction>& container,
+  char* name,
+  char* buffer
+)
+{
+  auto value = std::strchr(buffer, '=');
+  char* n;
+  char* old = nullptr;
 
-static int Compare(const void *s1, const void *s2);
+  if (*name && value)
+  {
+    *value++ = 0;
+    // Trim whitespace.
+    while (*value && std::isspace(*value))
+    {
+      ++value;
+    }
+    n = Strtok_r(name, ",", &old);
+    // Maybe comma-separated list, e.g. "k,K=x"
+    while (n)
+    {
+      bool found = false;
 
-static int ChCode(const char *s);
+      // Check for existing entry from FILECMD_SECTION.
+      for (auto& entry : filemenu)
+      {
+        if (entry.chkey == ChCode(n))
+        {
+          entry.chremap = ChCode(value);
+          if (entry.chremap == 0)
+          {
+            // Don't beep if user cmd defined.
+            entry.chremap = -1;
+          }
+          found = true;
+          break;
+        }
+      }
+      if (!found)
+      {
+        filemenu.push_back({
+          ChCode(n),
+          ChCode(value),
+          std::nullopt
+        });
+      }
+      n = Strtok_r(nullptr, ",",  &old);
+    }
+  }
+}
+
+static void ParseUserActionCmdEntry(
+  std::vector<UserAction>& container,
+  const char* name,
+  char* buffer
+)
+{
+  auto value = std::strchr(buffer, '=');
+
+  if (*name && value)
+  {
+    bool found = false;
+
+    *value++ = 0;
+    // Trim whitespace.
+    while (*value && std::isspace(*value))
+    {
+      ++value;
+    }
+    // May not be comma-separated list.
+    // Check for existing entry from FILEMAP_SECTION.
+    for (auto& entry : filemenu)
+    {
+      if (entry.chkey == ChCode(name))
+      {
+        entry.cmd = value;
+        if (entry.chremap == 0)
+        {
+          // Don't beep if user cmd defined.
+          entry.chremap = -1;
+        }
+        found = true;
+        break;
+      }
+    }
+    if (!found)
+    {
+      filemenu.push_back({
+        ChCode(name),
+        ChCode(name),
+        value,
+      });
+    }
+  }
+}
+
+static std::optional<Section> ParseSectionName(const char* name)
+{
+  if (!std::strcmp(name, "[GLOBAL]"))
+  {
+    return Section::GLOBAL;
+  }
+  else if (!std::strcmp(name, "[VIEWER]"))
+  {
+    return Section::VIEWER;
+  }
+  else if (!std::strcmp(name, "[MENU]"))
+  {
+    return Section::MENU;
+  }
+  else if (!std::strcmp(name, "[FILEMAP]"))
+  {
+    return Section::FILEMAP;
+  }
+  else if (!std::strcmp(name, "[FILECMD]"))
+  {
+    return Section::FILECMD;
+  }
+  else if (!std::strcmp(name, "[DIRMAP]"))
+  {
+    return Section::DIRMAP;
+  }
+  else if (!std::strcmp(name, "[DIRCMD]"))
+  {
+    return Section::DIRCMD;
+  }
+
+  return std::nullopt;
+}
 
 int ReadProfile(const std::optional<std::string>& custom_path)
 {
   std::string filename;
   char buffer[BUFSIZ];
-  int  l, result = -1;
-  char *n, *old;
-  unsigned char *name, *value, *cptr;
-  int section;
-  Profile *p, key;
-  Viewer *v, *new_v;
-  Filemenu *m, *new_m;
-  Dirmenu *d, *new_d;
-  FILE *f;
-
-  section = NO_SECTION;
-  v = &viewer;
-  m = &filemenu;
-  d = &dirmenu;
-
-  v->next = nullptr;
-  m->next = nullptr;
-  d->next = nullptr;
+  std::optional<Section> section;
+  FILE* f;
+  int result = -1;
 
   if (custom_path)
   {
@@ -135,213 +234,122 @@ int ReadProfile(const std::optional<std::string>& custom_path)
 
   while (std::fgets(buffer, BUFSIZ, f))
   {
-    if(*buffer == '#')
+    std::size_t l;
+
+    if (*buffer == '#')
+    {
       continue;
-    l = strlen( buffer );
-    if( l > 2 ) {
-      buffer[l-1] = '\0';
-      /* trim whitspace */
-      for( name = (unsigned char *) buffer; isspace(*name); name++ )
-        ;
-      for(cptr=name; !isspace(*cptr) && *cptr != '='; cptr++ )
-        ;
-      if(*cptr != '=')
-        *cptr = '\0';
-      if(*name == '[') {
-        /* section */
-	if( !strcmp((const char *) name, "[GLOBAL]") )
-	  section = GLOBAL_SECTION;
-	else if( !strcmp((const char *) name, "[VIEWER]") )
-	  section = VIEWER_SECTION;
-	else if( !strcmp((const char *) name, "[MENU]") )
-	  section = MENU_SECTION;
-	else if( !strcmp((const char *) name, "[FILEMAP]") )
-	  section = FILEMAP_SECTION;
-	else if( !strcmp((const char *) name, "[FILECMD]") )
-	  section = FILECMD_SECTION;
-	else if( !strcmp((const char *) name, "[DIRMAP]") )
-	  section = DIRMAP_SECTION;
-	else if( !strcmp((const char *) name, "[DIRCMD]") )
-	  section = DIRCMD_SECTION;
-	else
-	  section = NO_SECTION;
+    }
+    l = std::strlen(buffer);
+    if (l > 2)
+    {
+      char* name;
+      char* cptr;
 
-	continue;
+      buffer[l - 1] = 0;
+      // Trim whitespace.
+      for (name = buffer; std::isspace(*name); ++name);
+      for (cptr = name; !std::isspace(*cptr) && *cptr != '='; ++cptr);
+      if (*cptr != '=')
+      {
+        *cptr = 0;
       }
+      // Section
+      if (*name == '[')
+      {
+        section = ParseSectionName(name);
+        continue;
+      }
+      if (!section)
+      {
+        continue;
+      }
+      else if (*section == Section::GLOBAL)
+      {
+        auto value = std::strchr(buffer, '=');
 
+        if (*name && value)
+        {
+          auto entry = profile.find(reinterpret_cast<char*>(name));
 
-      if( section == GLOBAL_SECTION ) {
-        value = (unsigned char *) strchr( buffer, '=' );
-        if( *name && value ) {
-          *value++ = '\0';
-          key.name = (char *) name;
-          if(( p = static_cast<Profile*>(bsearch(&key, profile, PROFILE_ENTRIES, sizeof(*p), Compare)))) {
-	    p->value = Strdup( (const char *) value );
+          *value++ = 0;
+          if (entry != std::end(profile))
+          {
+            entry->second.value = Strdup(value);
           }
         }
-      } else if( section == MENU_SECTION ) {
-        value = (unsigned char *) strchr( buffer, '=' );
-        if( *name && value ) {
-          *value++ = '\0';
-          if (!strcmp((const char *) name, "DIR1") ||
-              !strcmp((const char *) name, "DIR2") ||
-              !strcmp((const char *) name, "FILE1") ||
-              !strcmp((const char *) name, "FILE2") ) {
-            key.name = (char *) name;
-            if(( p = static_cast<Profile*>(bsearch(&key, profile, PROFILE_ENTRIES, sizeof(*p), Compare)))) {
-              /* Space pad menu strings to length COLS, ignoring '(' and ')' characters */
-              l = 0;
-              for (cptr = value; *cptr; ++cptr) {
-                if (*cptr != '(' && *cptr != ')') {
+      }
+      else if (*section == Section::MENU)
+      {
+        auto value = std::strchr(buffer, '=');
+
+        if (*name && value)
+        {
+          *value++ = 0;
+          if (
+            !std::strcmp(name, "DIR1") ||
+            !std::strcmp(name, "DIR2") ||
+            !std::strcmp(name, "FILE1") ||
+            !std::strcmp(name, "FILE2")
+          )
+          {
+            const auto entry = profile.find(name);
+
+            if (entry != std::end(profile))
+            {
+              // Space pad menu strings to length COLS, ignoring '(' and ')'
+              // characters.
+              std::size_t l = 0;
+
+              for (auto cptr = value; *cptr; ++cptr)
+              {
+                if (*cptr != '(' && *cptr != ')')
+                {
                   ++l;
                 }
               }
-              while (l++ < COLS - 1)
+              while (l++ < static_cast<std::size_t>(COLS - 1))
+              {
                 *cptr++ = ' ';
-              *cptr = '\0';
-	      p->value = Strdup( (const char *) value );
-            }
-          }
-        }
-      } else if(section == FILEMAP_SECTION ) {
-        value = (unsigned char *) strchr( buffer, '=' );
-        if( *name && value ) {
-	  *value++ = '\0';
-          /* trim whitespace */
-          while(*value && isspace(*value))
-            value++;
-	  n = Strtok_r((char *) name, ",", &old);
-	  /* maybe comma-separated list, eg.: k,K=x */
-	  while(n) {
-            /* Check for existing entry from FILECMD_SECTION */
-            for(new_m = filemenu.next; new_m != NULL; new_m = new_m->next) {
-              if (new_m->chkey == ChCode( n )) {
-                new_m->chremap = ChCode( (const char *) value );
-                if (new_m->chremap == 0)
-                  new_m->chremap = -1;   /* Don't beep if user cmd defined */
-                break;
               }
-            }
-	    if( new_m == NULL && ( new_m = static_cast<Filemenu*>(malloc( sizeof(*new_m) )) ) ) {
-	      new_m->chkey = ChCode( n );
-              new_m->chremap = ChCode( (const char *) value );
-	      new_m->cmd = NULL;
-	      new_m->next = NULL;
-	      m->next = new_m;
-	      m = new_m;
-	    }
-	    n = Strtok_r(NULL, ",", &old);
-	  }
-        }
-      } else if(section == FILECMD_SECTION ) {
-        value = (unsigned char *) strchr( buffer, '=' );
-        if( *name && value ) {
-	  *value++ = '\0';
-          /* trim whitespace */
-          while(*value && isspace(*value))
-            value++;
-	  /* may not be comma-separated list */
-          /* Check for existing entry from FILEMAP_SECTION */
-          for (new_m = filemenu.next; new_m != NULL; new_m = new_m->next) {
-            if (new_m->chkey == ChCode( (const char *) name )) {
-	      new_m->cmd = Strdup( (const char *) value );
-              if (new_m->chremap == 0)
-                new_m->chremap = -1;   /* Don't beep if user cmd defined */
-              break;
+              *cptr = 0;
+              entry->second.value = Strdup(value);
             }
           }
-	  if( new_m == NULL && ( new_m = static_cast<Filemenu*>(malloc( sizeof(*new_m) )) ) ) {
-            new_m->chkey = ChCode( (const char *) name );
-	    new_m->chremap = new_m->chkey;
-	    new_m->cmd = Strdup( (const char *) value );
-	    new_m->next = NULL;
-	    m->next = new_m;
-	    m = new_m;
-	  }
         }
-      } else if(section == DIRMAP_SECTION ) {
-        value = (unsigned char *) strchr( buffer, '=' );
-        if( *name && value ) {
-	  *value++ = '\0';
-          /* trim whitespace */
-          while(*value && isspace(*value))
-            value++;
-	  n = Strtok_r((char *) name, ",", &old);
-	  /* maybe comma-separated list, eg.: k,K=x */
-	  while(n) {
-            /* Check for existing entry from DIRCMD_SECTION */
-            for(new_d = dirmenu.next; new_d != NULL; new_d = new_d->next) {
-              if (new_d->chkey == ChCode( n )) {
-                new_d->chremap = ChCode( (const char *) value );
-                if (new_d->chremap == 0)
-                  new_d->chremap = -1;   /* Don't beep if user cmd defined */
-                break;
-              }
-            }
-	    if( new_d == NULL && ( new_d = static_cast<Dirmenu*>(malloc( sizeof(*new_d) )) ) ) {
-	      new_d->chkey = ChCode( n );
-              new_d->chremap = ChCode( (const char *) value );
-	      new_d->cmd = NULL;
-	      new_d->next = NULL;
-	      d->next = new_d;
-	      d = new_d;
-	    }
-	    n = Strtok_r(NULL, ",", &old);
-	  }
-        }
-      } else if(section == DIRCMD_SECTION ) {
-        value = (unsigned char *) strchr( buffer, '=' );
-        if( *name && value ) {
-	  *value++ = '\0';
-          /* trim whitespace */
-          while(*value && isspace(*value))
-            value++;
-	  /* may not be comma-separated list */
-          /* Check for existing entry from DIRMAP_SECTION */
-          for(new_d = dirmenu.next; new_d != NULL; new_d = new_d->next) {
-            if (new_d->chkey == ChCode( (const char *) name )) {
-	      new_d->cmd = Strdup( (const char *) value );
-              if (new_d->chremap == 0)
-                new_d->chremap = -1;   /* Don't beep if user cmd defined */
-              break;
-            }
+      }
+      else if (*section == Section::FILEMAP)
+      {
+        ParseUserActionMapEntry(filemenu, name, buffer);
+      }
+      else if (*section == Section::FILECMD)
+      {
+        ParseUserActionCmdEntry(filemenu, name, buffer);
+      }
+      else if (*section == Section::DIRMAP)
+      {
+        ParseUserActionMapEntry(dirmenu, name, buffer);
+      }
+      else if (*section == Section::DIRCMD)
+      {
+        ParseUserActionCmdEntry(dirmenu, name, buffer);
+      }
+      else if (*section == Section::VIEWER)
+      {
+        auto value = std::strchr(buffer, '=');
+
+        if (*name && value)
+        {
+          char* n;
+          char* old = nullptr;
+
+          *value++ = 0;
+          n = Strtok_r(name, ",", &old);
+          while (n)
+          {
+            viewer_mapping[n] = value;
+            n = Strtok_r(nullptr, ",", &old);
           }
-	  if ( new_d == NULL && ( new_d = static_cast<Dirmenu*>(malloc( sizeof(*new_d) )) ) ) {
-            new_d->chkey = ChCode( (const char *) name );
-	    new_d->chremap = new_d->chkey;
-	    new_d->cmd = Strdup( (const char *) value );
-	    new_d->next = NULL;
-	    d->next = new_d;
-	    d = new_d;
-	  }
-        }
-      } else if ( section == VIEWER_SECTION ) {
-        value = (unsigned char *) strchr( buffer, '=' );
-
-        if( *name && value ) {
-
-	  *value++ = '\0';
-	  n = Strtok_r((char *) name, ",", &old);
-	  /* maybe comma-separated list, eg.: .jpeg,.gif=xv */
-	  while(n) {
-	    if(( new_v = static_cast<Viewer*>(malloc( sizeof(*new_v) )) ) ) {
-	      new_v->ext = Strdup( n );
-	      new_v->cmd = Strdup( (const char *) value );
-	      new_v->next = NULL;
-	      if(new_v->ext == NULL || new_v->cmd == NULL) {
-	        /* ignore entry */
-	        if(new_v->ext)
-	          free(new_v->ext);
-	        if(new_v->cmd)
-	          free(new_v->cmd);
-	        free(new_v);
-	      } else {
-	        v->next = new_v;
-	        v = new_v;
-	      }
-	    }
-	    n = Strtok_r(NULL, ",", &old);
-	  }
         }
       }
     }
@@ -349,97 +357,96 @@ int ReadProfile(const std::optional<std::string>& custom_path)
   result = 0;
 
 FNC_XIT:
+  if (f)
+  {
+    std::fclose(f);
+  }
 
-  if( f )
-    fclose( f );
-
-  return( result );
+  return result;
 }
 
-
-
-const char *GetProfileValue( const char *name )
+const char* GetProfileValue(const char* name)
 {
-  Profile *p, key;
-  char    *cptr;
+  const auto entry = profile.find(name);
 
-  key.name = const_cast<char*>(name);
+  if (entry != std::end(profile))
+  {
+    if (entry->second.value)
+    {
+      return entry->second.value;
+    }
+    else if (entry->second.envvar)
+    {
+      if (const auto value = std::getenv(entry->second.envvar))
+      {
+        return value;
+      }
+    }
 
-  p = static_cast<Profile*>(bsearch(&key, profile, PROFILE_ENTRIES, sizeof(*p), Compare));
+    return entry->second.def;
+  }
 
-  if(!p)
-    return( "" );
-
-  if( p->value )
-    return( p->value );
-
-  if( p->envvar && (cptr = getenv( p->envvar ) ) )
-    return( cptr );
-
-  return( p->def );
+  return "";
 }
 
-static int ChCode(const char *s)
+static inline int ChCode(const char* s)
 {
-  if (*s == '^' && *(s+1) != '^')
-    return((int)((*(s+1)) & 0x1F));
-  else
-    return((int)(*s));
+  return *s == '^' && *(s + 1) != '^'
+    ? static_cast<int>((*(s + 1)) & 0x1f)
+    : static_cast<int>(*s);
 }
 
-static int Compare(const void *s1, const void *s2)
+std::optional<std::string> GetUserAction(
+  const std::vector<UserAction>& container,
+  int chkey,
+  int* pchremap
+)
 {
-  return( strcmp( ((Profile *)s1)->name, ((Profile *)s2)->name ) );
-}
-
-char *GetUserFileAction(int chkey, int *pchremap)
-{
-  Filemenu *m;
-
-  for(m=filemenu.next; m; m=m->next) {
-    if(chkey == m->chkey) {
+  for (const auto& entry : container)
+  {
+    if (chkey == entry.chkey)
+    {
       if (pchremap)
-        *pchremap = m->chremap;
-      return(m->cmd);
+      {
+        *pchremap = entry.chremap;
+      }
+
+      return entry.cmd;
     }
   }
   if (pchremap)
+  {
     *pchremap = chkey;
-  return(NULL);
-}
-
-char *GetUserDirAction(int chkey, int *pchremap)
-{
-  Dirmenu *d;
-
-  for(d=dirmenu.next; d; d=d->next) {
-    if(chkey == d->chkey) {
-      if (pchremap)
-        *pchremap = d->chremap;
-      return(d->cmd);
-    }
   }
-  if (pchremap)
-    *pchremap = chkey;
-  return(NULL);
+
+  return std::nullopt;
+
 }
 
-bool IsUserActionDefined(void)
+std::optional<std::string> GetUserFileAction(int chkey, int* pchremap)
 {
-  return((bool)(dirmenu.next != NULL || filemenu.next != NULL));
+  return GetUserAction(filemenu, chkey, pchremap);
+}
+
+std::optional<std::string> GetUserDirAction(int chkey, int* pchremap)
+{
+  return GetUserAction(dirmenu, chkey, pchremap);
+}
+
+bool IsUserActionDefined()
+{
+  return !dirmenu.empty() || !dirmenu.empty();
 }
 
 std::optional<std::string> GetExtViewer(const std::string& filename)
 {
-  const auto length = filename.length();
-
-  for (auto v = viewer.next; v; v = v->next)
+  if (const auto extension = GetExtension(filename))
   {
-    const auto x = std::strlen(v->ext);
+    const auto entry = viewer_mapping.find('.' + *extension);
 
-    if (length > x && !filename.substr(length - x).compare(v->ext))
+    if (entry != std::end(viewer_mapping))
     {
-      return v->cmd;
+      return entry->second;
     }
   }
 
