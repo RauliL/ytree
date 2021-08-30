@@ -224,11 +224,6 @@
 #define GLOBAL_COLOR    17
 #define HIGLOBAL_COLOR  18
 
-
-#define PROFILE_FILENAME	".ytree"
-#define HISTORY_FILENAME	".ytree-hst"
-
-
 /* Auswahl der benutzten UNIX-Kommandos */
 /*--------------------------------------*/
 
@@ -345,8 +340,8 @@ enum class CompressMethod
 
 #define CLOCK_INTERVAL	   1
 
-#define FILE_SEPARATOR_CHAR   '/'
-#define FILE_SEPARATOR_STRING "/"
+extern const char* FILE_SEPARATOR_STRING;
+extern const char FILE_SEPARATOR_CHAR;
 
 #define ERR_TO_NULL           " 2> /dev/null"
 #define ERR_TO_STDOUT         " 2>&1 "
