@@ -1,6 +1,6 @@
 #include "ytree.h"
 
-static int Copy(char *to_path, char *from_path);
+static int Copy(const std::string& to_path, const std::string& from_path);
 static int CopyArchiveFile(const std::string& to_path, const std::string& from_path);
 
 int CopyFile(Statistic *statistic_ptr,
@@ -13,7 +13,7 @@ int CopyFile(Statistic *statistic_ptr,
 	    )
 {
   long long file_size;
-  char        from_path[PATH_LENGTH+1];
+  const auto from_path = GetRealFileNamePath(fe_ptr);
   char        from_dir[PATH_LENGTH+1];
   char        to_path[PATH_LENGTH+1];
   char        abs_path[PATH_LENGTH+1];
@@ -29,7 +29,6 @@ int CopyFile(Statistic *statistic_ptr,
 
   result = -1;
 
-  (void) GetRealFileNamePath( fe_ptr, from_path );
   (void) GetPath(fe_ptr->dir_entry, from_dir);
 
   *to_path = '\0';
@@ -108,7 +107,7 @@ int CopyFile(Statistic *statistic_ptr,
   fprintf( stderr, "Copy: \"%s\" --> \"%s\"\n", from_path, to_path );
 #endif /* DEBUG */
 
-  if( !strcmp( to_path, from_path ) )
+  if (!std::strcmp( to_path, from_path.c_str()))
   {
     MESSAGE( "Can't copy file into itself" );
     return( result );
@@ -274,45 +273,49 @@ int GetCopyParameter(const char *from_file, bool path_copy, char *to_file, char 
   return( -1 );
 }
 
-
-
-
-
-static int Copy(char *to_path, char *from_path)
+static int Copy(const std::string& to_path, const std::string& from_path)
 {
-  int         i, o, n;
-  char        buffer[2048];
+  int i;
+  int o;
+  int n;
+  char buffer[2048];
 
-  if( mode != DISK_MODE && mode != USER_MODE )
+  if (mode != DISK_MODE && mode != USER_MODE)
   {
-    return( CopyArchiveFile( to_path, from_path ) );
+    return CopyArchiveFile(to_path, from_path);
   }
 
 #ifdef DEBUG
   fprintf( stderr, "Copy: \"%s\" --> \"%s\"\n", from_path, to_path );
 #endif /* DEBUG */
 
-  if( !strcmp( to_path, from_path ) )
+  if (!to_path.compare(from_path))
   {
-    MESSAGE( "Can't copy file into itself" );
-    return( -1 );
-  }
-
-  if( ( i = open( from_path, O_RDONLY ) ) == -1 )
-  {
-    MessagePrintf("Can't open file*\"%s\"*%s", from_path, std::strerror(errno));
+    Message("Can't copy file into itself");
 
     return -1;
   }
 
-  if( ( o = open( to_path,
-		  O_CREAT | O_TRUNC | O_WRONLY,
-                  S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH
-      ) ) == -1 )
+  if ((i = open(from_path.c_str(), O_RDONLY)) == -1)
+  {
+    MessagePrintf(
+      "Can't open file*\"%s\"*%s",
+      from_path.c_str(),
+      std::strerror(errno)
+    );
+
+    return -1;
+  }
+
+  if ((o = open(
+    to_path.c_str(),
+    O_CREAT | O_TRUNC | O_WRONLY,
+    S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH
+  )) == -1)
   {
     MessagePrintf(
 		  "Can't open file*\"%s\"*%s",
-		  to_path,
+		  to_path.c_str(),
 		  strerror(errno)
 		);
     close(i);
@@ -320,28 +323,24 @@ static int Copy(char *to_path, char *from_path)
     return -1;
   }
 
-  while( ( n = read( i, buffer, sizeof( buffer ) ) ) > 0 )
+  while (( n = read(i, buffer, sizeof(buffer))) > 0)
   {
-    if( write( o, buffer, n ) != n )
+    if (write(o, buffer, n) != n)
     {
       MessagePrintf("Write-Error!*%s", std::strerror(errno));
       close(i);
       close(o);
-      unlink(to_path);
+      unlink(to_path.c_str());
 
       return -1;
     }
   }
 
-  (void) close( i ); (void) close( o );
+  close(i);
+  close(o);
 
-  return( 0 );
+  return 0;
 }
-
-
-
-
-
 
 int CopyTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
 {

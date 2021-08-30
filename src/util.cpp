@@ -74,47 +74,51 @@ char *GetPath(const DirEntry *dir_entry, char *buffer)
   return( buffer );
 }
 
-
-
-
-
-char *GetFileNamePath(FileEntry *file_entry, char *buffer)
+std::string GetFileNamePath(const FileEntry* file_entry)
 {
-  (void) GetPath( file_entry->dir_entry, buffer );
-  if( *buffer && strcmp( buffer, FILE_SEPARATOR_STRING ) )
-    (void) strcat( buffer, FILE_SEPARATOR_STRING );
-  return( strcat( buffer, file_entry->name ) );
+  char buffer[PATH_LENGTH + 1];
+
+  GetPath(file_entry->dir_entry, buffer);
+  if (*buffer && std::strcmp(buffer, FILE_SEPARATOR_STRING))
+  {
+    std::strcat(buffer, FILE_SEPARATOR_STRING);
+  }
+  std::strcat(buffer, file_entry->name);
+
+  return buffer;
 }
 
-
-
-char *GetRealFileNamePath(FileEntry *file_entry, char *buffer)
+std::string GetRealFileNamePath(const FileEntry* file_entry)
 {
-  char *sym_name;
+  char buffer[PATH_LENGTH + 1];
 
-  if( mode == DISK_MODE || mode == USER_MODE )
-    return( GetFileNamePath( file_entry, buffer ) );
-
-  if( S_ISLNK( file_entry->stat_struct.st_mode ) )
+  if (mode == DISK_MODE || mode == USER_MODE)
   {
-    sym_name = &file_entry->name[ strlen( file_entry->name ) + 1 ];
-    if( *sym_name == FILE_SEPARATOR_CHAR )
-      return( strcpy( buffer, sym_name ) );
+    return GetFileNamePath(file_entry);
   }
 
-  (void) GetPath( file_entry->dir_entry, buffer );
-  if( *buffer && strcmp( buffer, FILE_SEPARATOR_STRING ) )
-    (void) strcat( buffer, FILE_SEPARATOR_STRING );
-  if( S_ISLNK( file_entry->stat_struct.st_mode ) )
-    return( strcat( buffer, &file_entry->name[ strlen( file_entry->name ) + 1 ] ) );
-  else
-    return( strcat( buffer, file_entry->name ) );
+  if (S_ISLNK(file_entry->stat_struct.st_mode))
+  {
+    const auto sym_name = &file_entry->name[std::strlen(file_entry->name) + 1];
+
+    if (*sym_name == FILE_SEPARATOR_CHAR)
+    {
+      return sym_name;
+    }
+  }
+
+  GetPath(file_entry->dir_entry, buffer);
+  if (*buffer && std::strcmp(buffer, FILE_SEPARATOR_STRING))
+  {
+    std::strcat(buffer, FILE_SEPARATOR_STRING);
+  }
+  if (S_ISLNK(file_entry->stat_struct.st_mode))
+  {
+    return std::strcat(buffer, &file_entry->name[std::strlen(file_entry->name) + 1]);
+  }
+
+  return std::strcat(buffer, file_entry->name);
 }
-
-
-
-
-
 
 int GetDirEntry(DirEntry *tree,
                 DirEntry *current_dir_entry,

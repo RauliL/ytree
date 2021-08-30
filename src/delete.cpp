@@ -17,23 +17,20 @@ extern int rmdir(const char *);
 
 int DeleteFile(FileEntry *fe_ptr)
 {
-  char     filepath[PATH_LENGTH+1];
+  const auto filepath = GetFileNamePath(fe_ptr);
   char	   buffer[PATH_LENGTH+1];
   int      result;
   int      term;
 
   result = -1;
 
-  (void) GetFileNamePath( fe_ptr, filepath );
-
-  if( !S_ISLNK( fe_ptr->stat_struct.st_mode ) )
+  if (!S_ISLNK( fe_ptr->stat_struct.st_mode))
   {
-    if( access( filepath, W_OK ) )
+    if (access(filepath.c_str(), W_OK))
     {
-      if( access( filepath, F_OK ) )
+      if (access(filepath.c_str(), F_OK))
       {
         /* Datei existiert nicht ==> fertig */
-
         goto UNLINK_DONE;
       }
 
@@ -46,7 +43,7 @@ int DeleteFile(FileEntry *fe_ptr)
       {
         MessagePrintf(
           "Can't delete file*\"%s\"*%s",
-          filepath,
+          filepath.c_str(),
           std::strerror(errno)
         );
         ESCAPE;
@@ -54,11 +51,11 @@ int DeleteFile(FileEntry *fe_ptr)
     }
   }
 
-  if( unlink( filepath ) )
+  if (unlink(filepath.c_str()))
   {
     MessagePrintf(
       "Can't delete file*\"%s\"*%s",
-      filepath,
+      filepath.c_str(),
       std::strerror(errno)
     );
     ESCAPE;

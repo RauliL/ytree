@@ -150,8 +150,8 @@ int GetNewFileModus(int y, int x, char *modus, const char *term)
 
 int SetFileModus(FileEntry *fe_ptr, WalkingPackage *walking_package)
 {
+  const auto path = GetFileNamePath(fe_ptr);
   struct stat stat_struct;
-  char buffer[PATH_LENGTH+1];
   int  result;
   int  new_modus;
 
@@ -166,17 +166,14 @@ int SetFileModus(FileEntry *fe_ptr, WalkingPackage *walking_package)
   new_modus = new_modus | ( fe_ptr->stat_struct.st_mode &
 	      ~( S_IRWXO | S_IRWXG | S_IRWXU | S_ISGID | S_ISUID ) );
 
-  if( !chmod( GetFileNamePath( fe_ptr, buffer ), new_modus ) )
+  if (!chmod(path.c_str(), new_modus))
   {
     /* Erfolgreich modifiziert */
     /*-------------------------*/
-
-    if( STAT_( buffer, &stat_struct ) )
+    if (STAT_(path.c_str(), &stat_struct))
     {
       ERROR_MSG( "Stat Failed" );
-    }
-    else
-    {
+    } else {
       fe_ptr->stat_struct = stat_struct;
     }
 

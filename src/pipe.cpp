@@ -3,16 +3,11 @@
 int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
 {
   static char input_buffer[COMMAND_LINE_LENGTH + 1] = "| ";
-  char file_name_path[PATH_LENGTH + 1];
-  std::string file_name_p_aux;
+  const auto file_name_path = GetRealFileNamePath(file_entry);
+  const auto file_name_p_aux = ShellEscape(file_name_path);
   auto command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
   char path[PATH_LENGTH + 1];
   int result = -1;
-
-  result = -1;
-
-  GetRealFileNamePath(file_entry, file_name_path);
-  file_name_p_aux = ShellEscape(file_name_path);
 
   ClearHelp();
 
@@ -81,39 +76,34 @@ int GetPipeCommand(char *pipe_command)
   return( result );
 }
 
-
-
-
-
-
-int PipeTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
+int PipeTaggedFiles(FileEntry* fe_ptr, WalkingPackage* walking_package)
 {
-  int  i, n;
-  char from_path[PATH_LENGTH+1];
+  const auto from_path = GetRealFileNamePath(fe_ptr);
+  int i;
+  int n;
   char buffer[2048];
 
+  walking_package->new_fe_ptr = fe_ptr; // Unchanged.
 
-  walking_package->new_fe_ptr = fe_ptr;  /* unchanged */
-
-  (void) GetRealFileNamePath( fe_ptr, from_path );
-  if ((i = open(from_path, O_RDONLY)) == -1)
+  if ((i = open(from_path.c_str(), O_RDONLY)) == -1)
   {
     MessagePrintf(
       "Can't open file*\"%s\"*%s",
-      from_path,
+      from_path.c_str(),
       std::strerror(errno)
     );
 
     return -1;
   }
 
-  while( ( n = read( i, buffer, sizeof( buffer ) ) ) > 0 )
+  while ((n = read(i, buffer, sizeof(buffer))) > 0)
   {
-    if( fwrite( buffer,
-		n,
-		1,
-		walking_package->function_data.pipe_cmd.pipe_file ) != 1
-      )
+    if (std::fwrite(
+      buffer,
+      n,
+      1,
+      walking_package->function_data.pipe_cmd.pipe_file
+    ) != 1)
     {
       MessagePrintf("Write-Error!*%s", std::strerror(errno));
       close(i);
@@ -122,7 +112,7 @@ int PipeTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
     }
   }
 
-  (void) close( i );
+  close(i);
 
-  return( 0 );
+  return 0;
 }

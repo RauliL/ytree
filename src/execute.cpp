@@ -94,40 +94,24 @@ int GetSearchCommandLine(char *command_line)
   return( result );
 }
 
-
-
-int ExecuteCommand(FileEntry *fe_ptr, WalkingPackage *walking_package)
+int ExecuteCommand(FileEntry* fe_ptr, WalkingPackage* walking_package)
 {
-  char command_line[COMMAND_LINE_LENGTH + 1];
-  int i, result;
-  char c;
-  char *cptr;
+  std::string command_line;
 
-  command_line[0] = '\0';
-  cptr = command_line;
+  walking_package->new_fe_ptr = fe_ptr;
 
-  walking_package->new_fe_ptr = fe_ptr;  /* unchanged */
-
-  for( i=0; (c = walking_package->function_data.execute.command[i]); i++ )
+  for (int i = 0; walking_package->function_data.execute.command[i]; ++i)
   {
-    if( c == '{' && walking_package->function_data.execute.command[i+1] == '}' )
+    const auto c = walking_package->function_data.execute.command[i];
+
+    if (c == '{' && walking_package->function_data.execute.command[i + 1] == '}')
     {
-      (void) GetFileNamePath( fe_ptr, cptr );
-      cptr = &command_line[ strlen( command_line ) ];
-      i++;
-    }
-    else
-    {
-      *cptr++ = c;
+      command_line += GetFileNamePath(fe_ptr);
+      ++i;
+    } else {
+      command_line.append(1, static_cast<char>(c));
     }
   }
-  *cptr = '\0';
 
-  result = SilentSystemCallEx( command_line, false );
-
-  /* Ignore Result */
-  /*---------------*/
-
-  return( result );
+  return SilentSystemCallEx(command_line, false);
 }
-

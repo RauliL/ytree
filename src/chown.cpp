@@ -81,8 +81,8 @@ int GetNewOwner(int st_uid)
 
 int SetFileOwner(FileEntry *fe_ptr, WalkingPackage *walking_package)
 {
+  const auto path = GetFileNamePath(fe_ptr);
   struct stat stat_struct;
-  char buffer[PATH_LENGTH+1];
   int  result;
   int  new_owner_id;
 
@@ -92,20 +92,14 @@ int SetFileOwner(FileEntry *fe_ptr, WalkingPackage *walking_package)
 
   new_owner_id = walking_package->function_data.change_owner.new_owner_id;
 
-  if( !chown( GetFileNamePath( fe_ptr, buffer ),
-	      new_owner_id,
-	      fe_ptr->stat_struct.st_gid
-	    ) )
+  if (!chown(path.c_str(), new_owner_id, fe_ptr->stat_struct.st_gid))
   {
     /* Erfolgreich modifiziert */
     /*-------------------------*/
-
-    if( STAT_( buffer, &stat_struct ) )
+    if (STAT_(path.c_str(), &stat_struct))
     {
       ERROR_MSG( "Stat Failed" );
-    }
-    else
-    {
+    } else {
       fe_ptr->stat_struct = stat_struct;
     }
     result = 0;

@@ -1273,7 +1273,6 @@ int HandleFileWindow(DirEntry *dir_entry)
   bool need_dsp_help;
   bool maybe_change_x_step;
   char new_name[PATH_LENGTH+1];
-  char new_login_path[PATH_LENGTH + 1];
   int  dir_window_width, dir_window_height;
 
 
@@ -1851,28 +1850,28 @@ int HandleFileWindow(DirEntry *dir_entry)
 			          );
 		      break;
 
-      case 'V' :
-      case 'v' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
-		      de_ptr = fe_ptr->dir_entry;
-		      (void) GetRealFileNamePath( fe_ptr, filepath );
-		      (void) View( dir_entry, filepath );
-		      need_dsp_help = true;
-		      break;
+      case 'V':
+      case 'v':
+        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+		    de_ptr = fe_ptr->dir_entry;
+        View(dir_entry, GetRealFileNamePath(fe_ptr));
+        need_dsp_help = true;
+        break;
 
-      case 'H' :
-      case 'h' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
-		      de_ptr = fe_ptr->dir_entry;
-		      (void) GetRealFileNamePath( fe_ptr, filepath );
-		      (void) ViewHex( filepath );
-		      need_dsp_help = true;
-		      break;
+      case 'H':
+      case 'h':
+        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+		    de_ptr = fe_ptr->dir_entry;
+        ViewHex(GetRealFileNamePath(fe_ptr));
+        need_dsp_help = true;
+        break;
 
       case 'E':
-      case 'e' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
-		      de_ptr = fe_ptr->dir_entry;
-		      (void) GetFileNamePath( fe_ptr, filepath );
-		      (void) Edit( de_ptr, filepath );
-		      break;
+      case 'e':
+        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+		    de_ptr = fe_ptr->dir_entry;
+        Edit(de_ptr, GetFileNamePath(fe_ptr));
+		    break;
 
       case 'Y' :
       case 'y' :
@@ -2435,21 +2434,25 @@ int HandleFileWindow(DirEntry *dir_entry)
 #ifndef VI_KEYS
       case 'l':
 #endif /* VI_KEYS */
-      case 'L':      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
-		     if( mode == DISK_MODE || mode == USER_MODE )
-		     {
-		       (void) GetFileNamePath( fe_ptr, new_login_path );
-                       if( !GetNewLoginPath( new_login_path ) )
-		       {
-			 dir_entry->login_flag  = true;
+      case 'L':
+        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+        if (mode == DISK_MODE || mode == USER_MODE)
+        {
+          const auto path = GetFileNamePath(fe_ptr);
+          char new_login_path[PATH_LENGTH + 1];
 
-		         (void) LoginDisk( new_login_path );
-		         unput_char = LOGIN_ESC;
-			}
-		        need_dsp_help = true;
-		     }
-		     else beep();
-		     break;
+          std::strcpy(new_login_path, path.c_str());
+          if (!GetNewLoginPath(new_login_path))
+          {
+            dir_entry->login_flag = true;
+            LoginDisk(new_login_path);
+            unput_char = LOGIN_ESC;
+          }
+          need_dsp_help = true;
+        } else {
+          beep();
+        }
+        break;
 
       case LF:
       case CR:        if( dir_entry->big_window ) break;

@@ -1,20 +1,7 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/rename.c,v 1.15 2020/02/10 18:55:40 werner Exp $
- *
- * Umbenennen von Dateien/Verzeichnissen
- *
- ***************************************************************************/
-
-
 #include "ytree.h"
 
-
-
-
 static int RenameDirEntry(char *to_path, char *from_path);
-static int RenameFileEntry(char *to_path, char *from_path);
-
+static int RenameFileEntry(const std::string& to_path, const std::string& from_path);
 
 int RenameDirectory(DirEntry *de_ptr, char *new_name)
 {
@@ -129,7 +116,7 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
 {
   DirEntry    *de_ptr;
   FileEntry   *fen_ptr;
-  char        from_path[PATH_LENGTH+1];
+  const auto from_path = GetFileNamePath(fe_ptr);
   char        to_path[PATH_LENGTH+1];
   struct stat stat_struct;
   int         result;
@@ -140,17 +127,16 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
 
   de_ptr = fe_ptr->dir_entry;
 
-  (void) GetFileNamePath( fe_ptr, from_path );
   (void) GetPath( de_ptr, to_path );
   (void) strcat( to_path, FILE_SEPARATOR_STRING );
   (void) strcat( to_path, new_name );
 
 
-  if (access(from_path, W_OK))
+  if (access(from_path.c_str(), W_OK))
   {
     MessagePrintf(
       "Rename not possible!*\"%s\"*%s",
-      from_path,
+      from_path.c_str(),
       std::strerror(errno)
     );
     ESCAPE;
@@ -158,7 +144,7 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
 
 
 
-  if( !RenameFileEntry( to_path, from_path ) )
+  if (!RenameFileEntry(to_path, from_path))
   {
     /* Rename erfolgreich */
     /*--------------------*/
@@ -287,47 +273,42 @@ static int RenameDirEntry(char *to_path, char *from_path)
   return( 0 );
 }
 
-
-
-
-
-static int RenameFileEntry(char *to_path, char *from_path)
+static int RenameFileEntry(
+  const std::string& to_path,
+  const std::string& from_path)
 {
-  if( !strcmp( to_path, from_path ) )
+  if (!to_path.compare(from_path))
   {
-    MESSAGE( "Can't rename!*New Name == Old Name" );
-    return( -1 );
+    Message("Can't rename!*New Name == Old Name");
+
+    return -1;
   }
 
-  if (link(from_path, to_path))
+  if (link(from_path.c_str(), to_path.c_str()))
   {
     MessagePrintf(
       "Can't link \"%s\"*to \"%s\"*%s",
-      from_path,
-      to_path,
+      from_path.c_str(),
+      to_path.c_str(),
       std::strerror(errno)
     );
 
     return -1;
   }
 
-  if (unlink(from_path))
+  if (unlink(from_path.c_str()))
   {
     MessagePrintf(
       "Can't unlink*\"%s\"*%s",
-      from_path,
+      from_path.c_str(),
       std::strerror(errno)
     );
 
     return -1;
   }
 
-  return( 0 );
+  return 0;
 }
-
-
-
-
 
 int RenameTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
 {
