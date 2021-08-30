@@ -328,7 +328,7 @@ by calling ytree from the command line with an archive file
 given as a command line argument.
 
 ytree recognize the filename extensions ".F", ".Z", ".z" and
-".gz" and calls the appropriate uncompressor MELT 
+".gz" and calls the appropriate uncompressor MELT
 (default=melt), UNCOMPRESS (default=uncompress) and GNUUNZIP
 (default=gunzip \-c). You may change these settings in ~/.ytree.
 
@@ -350,7 +350,7 @@ ytree supports following archive types and requires:
 
 Archive files will be recognized by filename extension (e.g zoo, zip).
 TAR-Files may have following extensions:
-.nf 
+.nf
 .RS
 .sp 1
 \fB  ".F", ".TFR", ".Faa",                            (freeze)\fR
@@ -365,7 +365,7 @@ The View command is customizeable in the [VIEWER] section of ~/.ytree:
 
 Example:
 
-.nf 
+.nf
 \fB [VIEWER]
 \fB .jpg,.gif,.bmp,.tif,.ppm,.xpm=xv
 \fB .1,.2,.3,.4,.5,.6,.7,.8,.n=nroff -man | less
@@ -378,7 +378,7 @@ Example:
 \fB .pdf,.PDF=acroread
 \fB .mp3=mpg123
 .fi
-.PP 
+.PP
 
 A command-line history is supported: Use cursor up/down.
 Use "F2" on the command-line to select directories.
@@ -386,7 +386,7 @@ Use "F2" on the command-line to select directories.
 
 .SH FILES
 
-$HOME/.ytree	ytree configuration file
+$XDG_CONFIG_HOME/ytree/config.ini	ytree configuration file
 
 
 .SH BUGS
@@ -399,6 +399,6 @@ ESCDELAY=1000
 export ESCDELAY
 .fi
 
-.SH AUTOR
+.SH AUTHOR
 
 W. Bregulla (werner@frolix.han.de)
