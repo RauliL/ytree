@@ -1,14 +1,7 @@
 #include "ytree.h"
 
 #include <functional>
-
-
-#define MAX( a, b ) ( ( (a) > (b) ) ? (a) : (b) )
-
-
-extern void qsort(void *, size_t, size_t, int (*) (const void *, const void *));
-
-
+#include <vector>
 
 static bool reverse_sort;
 static bool order;
@@ -24,26 +17,25 @@ static int  my_x_step;
 static int  hide_left;
 static int  hide_right;
 
-static FileEntryList *file_entry_list;
-static unsigned      file_count;
+static std::vector<FileEntry*> file_entry_list;
 static unsigned      max_userview_len;
-static unsigned      max_filename_len;
-static unsigned      max_linkname_len;
-static unsigned      global_max_filename_len;
-static unsigned      global_max_linkname_len;
+static std::size_t max_filename_len;
+static std::size_t max_linkname_len;
+static std::size_t global_max_filename_len;
+static std::size_t global_max_linkname_len;
 
-static void ReadFileList(DirEntry *dir_entry);
-static void SortFileEntryList(void);
-static int  SortByName(const FileEntryList *e1, const FileEntryList *e2);
-static int  SortByChgTime(const FileEntryList *e1, const FileEntryList *e2);
-static int  SortByAccTime(const FileEntryList *e1, const FileEntryList *e2);
-static int  SortByModTime(const FileEntryList *e1, const FileEntryList *e2);
-static int  SortBySize(const FileEntryList *e1, const FileEntryList *e2);
-static int  SortByOwner(const FileEntryList *e1, const FileEntryList *e2);
-static int  SortByGroup(const FileEntryList *e1, const FileEntryList *e2);
-static int  SortByExtension(const FileEntryList *e1, const FileEntryList *e2);
+static void ReadFileList(const DirEntry* dir_entry);
+static void SortFileEntryList();
+static bool SortByName(const FileEntry* e1, const FileEntry* e2);
+static bool SortByChgTime(const FileEntry* e1, const FileEntry* e2);
+static bool SortByAccTime(const FileEntry* e1, const FileEntry* e2);
+static bool SortByModTime(const FileEntry* e1, const FileEntry* e2);
+static bool SortBySize(const FileEntry* e1, const FileEntry* e2);
+static bool SortByOwner(const FileEntry* e1, const FileEntry* e2);
+static bool SortByGroup(const FileEntry* e1, const FileEntry* e2);
+static bool SortByExtension(const FileEntry* e1, const FileEntry* e2);
 static void DisplayFiles(DirEntry *de_ptr, int start_file_no, int hilight_no, int start_x);
-static void ReadGlobalFileList(DirEntry *dir_entry);
+static void ReadGlobalFileList(const DirEntry* dir_entry);
 static void WalkTaggedFiles(
   int,
   int,
@@ -127,217 +119,160 @@ void RotateFileMode(void)
   }
 }
 
-
-
-
-static void ReadTaggedList(DirEntry *dir_entry)
+static void ReadTaggedList(const DirEntry* dir_entry)
 {
-  FileEntry *fe_ptr;
-  unsigned int name_len;
-  unsigned int linkname_len;
-
   max_filename_len = 0;
   max_linkname_len = 0;
 
-  for( fe_ptr = dir_entry->file; fe_ptr; fe_ptr = fe_ptr->next )
+  for (auto fe_ptr = dir_entry->file; fe_ptr; fe_ptr = fe_ptr->next)
   {
-    if (( fe_ptr->matching ) && ( fe_ptr->tagged ))
+    if (fe_ptr->matching && fe_ptr->tagged)
     {
-      file_entry_list[file_count++].file = fe_ptr;
-      name_len = strlen( fe_ptr->name );
+      const auto name_len = std::strlen(fe_ptr->name);
+
+      file_entry_list.push_back(fe_ptr);
       if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
       {
-	linkname_len = strlen( &fe_ptr->name[name_len+1] );
-	max_linkname_len = MAX( max_linkname_len, linkname_len );
+	      const auto linkname_len = std::strlen(&fe_ptr->name[name_len + 1]);
+
+	      max_linkname_len = std::max(max_linkname_len, linkname_len);
       }
-      max_filename_len = MAX( max_filename_len, name_len );
+      max_filename_len = std::max(max_filename_len, name_len);
     }
   }
 }
 
-static void ReadTaggedFileList(DirEntry *dir_entry)
+static void ReadTaggedFileList(const DirEntry* dir_entry)
 {
-  DirEntry  *de_ptr;
-
-  for( de_ptr=dir_entry; de_ptr; de_ptr=de_ptr->next )
+  for (auto de_ptr = dir_entry; de_ptr; de_ptr = de_ptr->next)
   {
-    if( de_ptr->sub_tree ) ReadTaggedFileList( de_ptr->sub_tree );
-    ReadTaggedList( de_ptr );
-    global_max_filename_len = MAX( global_max_filename_len, max_filename_len );
-    global_max_linkname_len = MAX( global_max_linkname_len, max_linkname_len );
+    if (de_ptr->sub_tree)
+    {
+      ReadTaggedFileList(de_ptr->sub_tree);
+    }
+    ReadTaggedList(de_ptr);
+    global_max_filename_len = std::max(global_max_filename_len, max_filename_len);
+    global_max_linkname_len = std::max(global_max_linkname_len, max_linkname_len);
   }
   max_filename_len = global_max_filename_len;
   max_linkname_len = global_max_linkname_len;
 }
 
-
-
-static void BuildFileEntryList(DirEntry *dir_entry){
-
-  if( file_entry_list ) {
-    free( file_entry_list );
-    file_entry_list = NULL;
-  }
+static void BuildFileEntryList(DirEntry *dir_entry)
+{
+  file_entry_list.clear();
   if( !dir_entry->global_flag )  {
      /* ... for !ANSI-Systeme ... */
      /*----------------------------*/
-     if( dir_entry->matching_files == 0 )    {
-        file_entry_list = NULL;
-     } else {
-        if( ( file_entry_list = (FileEntryList *)
-	  		      calloc( dir_entry->matching_files,
-				      sizeof( FileEntryList )
-				    )
-                              ) == NULL ) {
-        Error("calloc() failed*ABORT");
-        std::exit(EXIT_FAILURE);
-        }
-     }
-     file_count = 0;
      ReadFileList( dir_entry );
      SortFileEntryList();
      SetFileMode( file_mode ); /* recalc */
   }  else if (!dir_entry->tagged_flag)  {
-     	if( statistic.disk_matching_files == 0 ) {
-           file_entry_list = NULL;
-        } else {
-           if( ( file_entry_list = (FileEntryList *)
-	  		      calloc( statistic.disk_matching_files,
-				      sizeof( FileEntryList )
-				    ) )
-                              == NULL )  {
-           Error("calloc() failed*ABORT");
-           std::exit(EXIT_FAILURE);
-           }
-        }
-        file_count = 0;
-        global_max_filename_len = 0;
-        global_max_linkname_len = 0;
-        ReadGlobalFileList( statistic.tree );
-        SortFileEntryList();
-        SetFileMode( file_mode ); /* recalc */
+    global_max_filename_len = 0;
+    global_max_linkname_len = 0;
+    ReadGlobalFileList( statistic.tree );
+    SortFileEntryList();
+    SetFileMode( file_mode ); /* recalc */
   } else  {
-     if( statistic.disk_matching_files == 0 ) {
-        file_entry_list = NULL;
-     } else {
-        if( ( file_entry_list = (FileEntryList *)
-	  		      calloc( statistic.disk_tagged_files,
-				      sizeof( FileEntryList )
-				    ) )
-                              == NULL )  {
-            Error("calloc() failed*ABORT");
-            std::exit(EXIT_FAILURE);
-        }
-     }
-     file_count = 0;
-     global_max_filename_len = 0;
-     global_max_linkname_len = 0;
-     ReadTaggedFileList( statistic.tree );
-     SortFileEntryList();
-     SetFileMode( file_mode ); /* recalc */
+    global_max_filename_len = 0;
+    global_max_linkname_len = 0;
+    ReadTaggedFileList( statistic.tree );
+    SortFileEntryList();
+    SetFileMode( file_mode ); /* recalc */
   }
 }
 
-
-static void ReadFileList(DirEntry *dir_entry)
+static void ReadFileList(const DirEntry* dir_entry)
 {
-  FileEntry *fe_ptr;
-  unsigned int name_len;
-  unsigned int linkname_len;
-
   max_filename_len = 0;
   max_linkname_len = 0;
 
-  for( fe_ptr = dir_entry->file; fe_ptr; fe_ptr = fe_ptr->next )
+  for (auto fe_ptr = dir_entry->file; fe_ptr; fe_ptr = fe_ptr->next)
   {
-    if( fe_ptr->matching )
+    if (fe_ptr->matching)
     {
-      file_entry_list[file_count++].file = fe_ptr;
-      name_len = strlen( fe_ptr->name );
-      if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
+      const auto name_len = std::strlen(fe_ptr->name);
+
+      file_entry_list.push_back(fe_ptr);
+      if (S_ISLNK(fe_ptr->stat_struct.st_mode))
       {
-	linkname_len = strlen( &fe_ptr->name[name_len+1] );
-	max_linkname_len = MAX( max_linkname_len, linkname_len );
+	      const auto linkname_len = std::strlen(&fe_ptr->name[name_len + 1]);
+
+	      max_linkname_len = std::max(max_linkname_len, linkname_len);
       }
-      max_filename_len = MAX( max_filename_len, name_len );
+      max_filename_len = std::max(max_filename_len, name_len);
     }
   }
 }
 
-
-
-static void ReadGlobalFileList(DirEntry *dir_entry)
+static void ReadGlobalFileList(const DirEntry* dir_entry)
 {
-  DirEntry  *de_ptr;
-
-  for( de_ptr=dir_entry; de_ptr; de_ptr=de_ptr->next )
+  for (auto de_ptr = dir_entry; de_ptr; de_ptr = de_ptr->next)
   {
-    if( de_ptr->sub_tree ) ReadGlobalFileList( de_ptr->sub_tree );
-    ReadFileList( de_ptr );
-    global_max_filename_len = MAX( global_max_filename_len, max_filename_len );
-    global_max_linkname_len = MAX( global_max_linkname_len, max_linkname_len );
+    if (de_ptr->sub_tree)
+    {
+      ReadGlobalFileList(de_ptr->sub_tree);
+    }
+    ReadFileList(de_ptr);
+    global_max_filename_len = std::max(global_max_filename_len, max_filename_len);
+    global_max_linkname_len = std::max(global_max_linkname_len, max_linkname_len);
   }
   max_filename_len = global_max_filename_len;
   max_linkname_len = global_max_linkname_len;
 }
 
-
-
-
-static void SortFileEntryList(void)
+static void SortFileEntryList()
 {
-  int aux;
-  int (*compare)(const FileEntryList*, const FileEntryList*);
+  int aux = statistic.kind_of_sort;
+  std::function<bool(const FileEntry*, const FileEntry*)> compare;
 
   reverse_sort = false;
-  if ((aux = statistic.kind_of_sort) > SORT_DSC)
+  if (aux > SORT_DSC)
   {
      order = false;
      aux -= SORT_DSC;
-  }
-  else
-  {
+  } else {
      order = true;
      aux -= SORT_ASC;
   }
-  switch( aux )
+  switch (aux)
   {
-    case SORT_BY_NAME :      compare = SortByName; break;
-    case SORT_BY_MOD_TIME :  compare = SortByModTime; break;
-    case SORT_BY_CHG_TIME :  compare = SortByChgTime; break;
-    case SORT_BY_ACC_TIME :  compare = SortByAccTime; break;
-    case SORT_BY_OWNER :     compare = SortByOwner; break;
-    case SORT_BY_GROUP :     compare = SortByGroup; break;
-    case SORT_BY_SIZE :      compare = SortBySize; break;
-    case SORT_BY_EXTENSION : compare = SortByExtension; break;
-    default:                 compare = SortByName; beep();
+    case SORT_BY_NAME: compare = SortByName; break;
+    case SORT_BY_MOD_TIME: compare = SortByModTime; break;
+    case SORT_BY_CHG_TIME: compare = SortByChgTime; break;
+    case SORT_BY_ACC_TIME: compare = SortByAccTime; break;
+    case SORT_BY_OWNER: compare = SortByOwner; break;
+    case SORT_BY_GROUP: compare = SortByGroup; break;
+    case SORT_BY_SIZE: compare = SortBySize; break;
+    case SORT_BY_EXTENSION: compare = SortByExtension; break;
+    default: compare = SortByName; beep();
   }
 
-  qsort( (char *) file_entry_list,
-	 file_count,
-	 sizeof( file_entry_list[0] ),
-	 reinterpret_cast<int(*)(const void*, const void*)>(compare)
-	);
+  std::sort(
+    file_entry_list.begin(),
+    file_entry_list.end(),
+    compare
+  );
 }
 
-static int SortByName(const FileEntryList *e1, const FileEntryList *e2)
+static bool SortByName(const FileEntry* e1, const FileEntry* e2)
 {
   if (do_case)
      if (order)
-        return( strcmp( e1->file->name, e2->file->name ) );
+        return std::strcmp(e1->name, e2->name) < 0;
      else
-        return( - (strcmp( e1->file->name, e2->file->name ) ) );
+        return -std::strcmp(e1->name, e2->name) < 0;
   else
      if (order)
-        return( strcasecmp( e1->file->name, e2->file->name ) );
+        return strcasecmp(e1->name, e2->name) < 0;
      else
-        return( - (strcasecmp( e1->file->name, e2->file->name ) ) );
+        return -strcasecmp(e1->name, e2->name) < 0;
 }
 
-static int SortByExtension(const FileEntryList* e1, const FileEntryList* e2)
+static bool SortByExtension(const FileEntry* e1, const FileEntry* e2)
 {
-  const auto ext1 = GetExtension(e1->file->name).value_or("");
-  const auto ext2 = GetExtension(e2->file->name).value_or("");
+  const auto ext1 = GetExtension(e1->name).value_or("");
+  const auto ext2 = GetExtension(e2->name).value_or("");
   int result;
 
   /* Ok, this isn't optimized */
@@ -356,106 +291,106 @@ static int SortByExtension(const FileEntryList* e1, const FileEntryList* e2)
     result = strcasecmp(ext1.c_str(), ext2.c_str());
   }
 
-  return do_case ? result : -result;
+  return (do_case ? result : -result) < 0;
 }
 
-static int SortByModTime(const FileEntryList *e1, const FileEntryList *e2)
+static bool SortByModTime(const FileEntry* e1, const FileEntry* e2)
 {
   if (order)
-     return( e1->file->stat_struct.st_mtime - e2->file->stat_struct.st_mtime );
+     return (e1->stat_struct.st_mtime - e2->stat_struct.st_mtime) < 0;
   else
-     return( - (e1->file->stat_struct.st_mtime - e2->file->stat_struct.st_mtime ) );
+     return -(e1->stat_struct.st_mtime - e2->stat_struct.st_mtime) < 0;
 }
 
-static int SortByChgTime(const FileEntryList *e1, const FileEntryList *e2)
+static bool SortByChgTime(const FileEntry* e1, const FileEntry* e2)
 {
   if (order)
-     return( e1->file->stat_struct.st_ctime - e2->file->stat_struct.st_ctime );
+     return (e1->stat_struct.st_ctime - e2->stat_struct.st_ctime) < 0;
   else
-     return( - (e1->file->stat_struct.st_ctime - e2->file->stat_struct.st_ctime ) );
+     return -(e1->stat_struct.st_ctime - e2->stat_struct.st_ctime) < 0;
 }
 
-static int SortByAccTime(const FileEntryList *e1, const FileEntryList *e2)
+static bool SortByAccTime(const FileEntry* e1, const FileEntry* e2)
 {
   if (order)
-     return( e1->file->stat_struct.st_atime - e2->file->stat_struct.st_atime );
+     return (e1->stat_struct.st_atime - e2->stat_struct.st_atime) < 0;
   else
-     return( - (e1->file->stat_struct.st_atime - e2->file->stat_struct.st_atime ) );
+     return -(e1->stat_struct.st_atime - e2->stat_struct.st_atime) < 0;
 }
 
-static int SortBySize(const FileEntryList *e1, const FileEntryList *e2)
+static bool SortBySize(const FileEntry* e1, const FileEntry* e2)
 {
   if (order)
-     return( e1->file->stat_struct.st_size - e2->file->stat_struct.st_size );
+     return (e1->stat_struct.st_size - e2->stat_struct.st_size) < 0;
   else
-     return( - (e1->file->stat_struct.st_size - e2->file->stat_struct.st_size) );
+     return -(e1->stat_struct.st_size - e2->stat_struct.st_size) < 0;
 }
 
-static int SortByOwner(const FileEntryList* e1, const FileEntryList* e2)
+static bool SortByOwner(const FileEntry* e1, const FileEntry* e2)
 {
   std::string n1;
   std::string n2;
 
-  if (const auto o1 = GetPasswdName(e1->file->stat_struct.st_uid))
+  if (const auto o1 = GetPasswdName(e1->stat_struct.st_uid))
   {
     n1 = *o1;
   } else {
-    n1 = std::to_string(e1->file->stat_struct.st_uid);
+    n1 = std::to_string(e1->stat_struct.st_uid);
   }
-  if (const auto o2 = GetPasswdName(e2->file->stat_struct.st_uid))
+  if (const auto o2 = GetPasswdName(e2->stat_struct.st_uid))
   {
     n2 = *o2;
   } else {
-    n2 = std::to_string(e2->file->stat_struct.st_uid);
+    n2 = std::to_string(e2->stat_struct.st_uid);
   }
   if (do_case)
   {
     if (order)
     {
-      return n1.compare(n2);
+      return n1.compare(n2) < 0;
     } else {
-      return -n1.compare(n2);
+      return -n1.compare(n2) < 0;
     }
   }
   else if (order)
   {
-    return strcasecmp(n1.c_str(), n2.c_str());
+    return strcasecmp(n1.c_str(), n2.c_str()) < 0;
   } else {
-    return -strcasecmp(n1.c_str(), n2.c_str());
+    return -strcasecmp(n1.c_str(), n2.c_str()) < 0;
   }
 }
 
-static int SortByGroup(const FileEntryList* e1, const FileEntryList* e2)
+static bool SortByGroup(const FileEntry* e1, const FileEntry* e2)
 {
   std::string n1;
   std::string n2;
 
-  if (const auto g1 = GetGroupName(e1->file->stat_struct.st_gid))
+  if (const auto g1 = GetGroupName(e1->stat_struct.st_gid))
   {
     n1 = *g1;
   } else {
-    n1 = std::to_string(e1->file->stat_struct.st_gid);
+    n1 = std::to_string(e1->stat_struct.st_gid);
   }
-  if (const auto g2 = GetGroupName(e2->file->stat_struct.st_gid))
+  if (const auto g2 = GetGroupName(e2->stat_struct.st_gid))
   {
     n2 = *g2;
   } else {
-    n2 = std::to_string(e2->file->stat_struct.st_gid);
+    n2 = std::to_string(e2->stat_struct.st_gid);
   }
   if (do_case)
   {
     if (order)
     {
-      return n1.compare(n2);
+      return n1.compare(n2) < 0;
     } else {
-      return -n1.compare(n2);
+      return -n1.compare(n2) < 0;
     }
   }
   else if (order)
   {
-    return strcasecmp(n1.c_str(), n2.c_str());
+    return strcasecmp(n1.c_str(), n2.c_str()) < 0;
   } else {
-    return -strcasecmp(n1.c_str(), n2.c_str());
+    return -strcasecmp(n1.c_str(), n2.c_str()) < 0;
   }
 }
 
@@ -464,62 +399,34 @@ void SetKindOfSort(int new_kind_of_sort)
   statistic.kind_of_sort = new_kind_of_sort;
 }
 
-
-
 static void RemoveFileEntry(int entry_no)
 {
-  int i, n, l;
-  FileEntry *fe_ptr;
-
-  max_filename_len = 0;
-  max_linkname_len = 0;
-  n = file_count - 1;
-
-  for( i=0; i < n; i++ )
-  {
-    if( i >= entry_no ) file_entry_list[i] = file_entry_list[i+1];
-    fe_ptr = file_entry_list[i].file;
-    l = strlen( fe_ptr->name );
-    max_filename_len = MAX( (int)max_filename_len, l );
-    if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
-    {
-      max_linkname_len = MAX( max_filename_len, strlen( &fe_ptr->name[l+1] ) );
-    }
-  }
-
-  SetFileMode( file_mode ); /* recalc */
-
-  file_count--; /* no realloc */
+  file_entry_list.erase(file_entry_list.begin() + entry_no);
+  ChangeFileEntry();
 }
 
-
-
-static void ChangeFileEntry(void)
+static void ChangeFileEntry()
 {
-  int i, n, l;
-  FileEntry *fe_ptr;
 
   max_filename_len = 0;
   max_linkname_len = 0;
-  n = file_count - 1;
 
-  for( i=0; i < n; i++ )
+  for (const auto& entry : file_entry_list)
   {
-    fe_ptr = file_entry_list[i].file;
-    if( fe_ptr )
+    const auto length = std::strlen(entry->name);
+
+    max_filename_len = std::max<unsigned int>(max_filename_len, length);
+    if (S_ISLNK(entry->stat_struct.st_mode))
     {
-      l = strlen( fe_ptr->name );
-      max_filename_len = MAX( (int)max_filename_len, l );
-      if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
-      {
-        max_linkname_len = MAX( max_filename_len, strlen( &fe_ptr->name[l+1] ) );
-      }
+      max_linkname_len = std::max<unsigned int>(
+        max_filename_len,
+        std::strlen(&entry->name[length + 1])
+      );
     }
   }
 
-  SetFileMode( file_mode ); /* recalc */
+  SetFileMode(file_mode); // Recalc.
 }
-
 
 char GetTypeOfFile(struct stat fst)
 {
@@ -571,7 +478,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
     line_buffer = MallocOrAbort<char>(COLS + PATH_LENGTH);
   }
 
-  fe_ptr = file_entry_list[entry_no].file;
+  fe_ptr = file_entry_list[entry_no];
 
   if( fe_ptr && S_ISLNK( fe_ptr->stat_struct.st_mode ) )
     sym_link_name = &fe_ptr->name[strlen(fe_ptr->name)+1];
@@ -595,7 +502,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
                     if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
 		    {
-		      (void) sprintf( format, "%%c%%c%%-%ds %%10s %%3d %%11lld %%12s -> %%-%ds",
+		      (void) sprintf( format, "%%c%%c%%-%lds %%10s %%3d %%11lld %%12s -> %%-%lds",
 				      max_filename_len,
 				      max_linkname_len
 				    );
@@ -613,7 +520,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
                     }
 		    else
 		    {
-		      (void) sprintf( format, "%%c%%c%%%c%ds %%10s %%3d %%11lld %%12s",
+		      (void) sprintf( format, "%%c%%c%%%c%lds %%10s %%3d %%11lld %%12s",
                                       justify,
 				      max_filename_len
 				    );
@@ -634,7 +541,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		    /* Empty Entry */
 		    /*-------------*/
 
-		    (void) sprintf( format, "%%-%ds", max_filename_len + 42 );
+		    (void) sprintf( format, "%%-%lds", max_filename_len + 42 );
 		    (void) sprintf( line_buffer, format, "" );
 		  }
 
@@ -665,7 +572,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
                     if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
 		    {
-                      (void) sprintf( format, "%%c%%c%%%c%ds %%10lld %%-12s %%-12s -> %%-%ds",
+                      (void) sprintf( format, "%%c%%c%%%c%lds %%10lld %%-12s %%-12s -> %%-%lds",
                                       justify,
 			              max_filename_len,
 			              max_linkname_len
@@ -682,7 +589,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
                     }
 		    else
 		    {
-                      (void) sprintf( format, "%%c%%c%%%c%ds %%10lld %%-12s %%-12s",
+                      (void) sprintf( format, "%%c%%c%%%c%lds %%10lld %%-12s %%-12s",
                                       justify,
 			              max_filename_len
 				      );
@@ -702,7 +609,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		    /* Empty-Entry */
 		    /*-------------*/
 
-		    (void) sprintf( format, "%%-%ds", max_filename_len + 38 );
+		    (void) sprintf( format, "%%-%lds", max_filename_len + 38 );
 		    (void) sprintf( line_buffer, format, "" );
 		  }
 
@@ -714,7 +621,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     case MODE_3 : if( fe_ptr )
 		  {
-		    (void) sprintf( format, "%%c%%c%%%c%ds",
+		    (void) sprintf( format, "%%c%%c%%%c%lds",
                                     justify,
                                     max_filename_len );
 
@@ -729,7 +636,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		    /* Empty-Entry */
 		    /*-------------*/
 
-		    (void) sprintf( format, "%%-%ds", max_filename_len + 2 );
+		    (void) sprintf( format, "%%-%lds", max_filename_len + 2 );
 		    (void) sprintf( line_buffer, format, "" );
 		  }
 
@@ -743,7 +650,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
                     if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
 		    {
-                      (void) sprintf( format, "%%c%%c%%%c%ds Chg: %%12s  Acc: %%12s -> %%-%ds",
+                      (void) sprintf( format, "%%c%%c%%%c%lds Chg: %%12s  Acc: %%12s -> %%-%lds",
                                       justify,
 				      max_filename_len,
 				      max_linkname_len
@@ -759,7 +666,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
                     }
 		    else
 		    {
-                      (void) sprintf( format, "%%c%%c%%%c%ds Chg: %%12s  Acc: %%12s",
+                      (void) sprintf( format, "%%c%%c%%%c%lds Chg: %%12s  Acc: %%12s",
                                       justify,
 				      max_filename_len
 				    );
@@ -777,7 +684,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		    /* Empty-Entry */
 		    /*-------------*/
 
-		    (void) sprintf( format, "%%-%ds", max_filename_len + 39 );
+		    (void) sprintf( format, "%%-%lds", max_filename_len + 39 );
 		    (void) sprintf( line_buffer, format, "" );
 		  }
 
@@ -879,7 +786,7 @@ static void DisplayFiles(DirEntry *de_ptr, int start_file_no, int hilight_no, in
 
   werase( file_window );
 
-  if( file_count == 0 )
+  if( file_entry_list.size() == 0 )
   {
     mvwaddstr( file_window,
 	       0,
@@ -893,7 +800,7 @@ static void DisplayFiles(DirEntry *de_ptr, int start_file_no, int hilight_no, in
   {
     for( y=0; y < window_height; y++ )
     {
-      if( j < (int)file_count )
+      if( j < (int)file_entry_list.size() )
       {
 	if( j == hilight_no )
 	{
@@ -917,7 +824,7 @@ static void DisplayFiles(DirEntry *de_ptr, int start_file_no, int hilight_no, in
 
 static void fmovedown(int *start_file, int *cursor_pos, int *start_x, DirEntry *dir_entry)
 {
-   if( *start_file + *cursor_pos + 1 >= (int)file_count )
+   if( *start_file + *cursor_pos + 1 >= (int)file_entry_list.size() )
    {
       /* File nicht vorhanden */
       /*----------------------*/
@@ -1016,7 +923,7 @@ static void fmoveright(int *start_file, int *cursor_pos, int *start_x,DirEntry *
                       );
       if( hide_right < 0 ) (*start_x)--;
    }
-   else if( *start_file + *cursor_pos >= (int)file_count - 1 )
+   else if( *start_file + *cursor_pos >= (int)file_entry_list.size() - 1 )
    {
       /*letzte Position erreicht */
       /*-------------------------*/
@@ -1024,12 +931,12 @@ static void fmoveright(int *start_file, int *cursor_pos, int *start_x,DirEntry *
    }
    else
    {
-      if( *start_file + *cursor_pos + x_step >= (int)file_count )
+      if( *start_file + *cursor_pos + x_step >= (int)file_entry_list.size() )
       {
           /* voller Step nicht moeglich;
            * auf letzten Eintrag positionieren
            */
-           my_x_step = file_count - *start_file - *cursor_pos - 1;
+           my_x_step = file_entry_list.size() - *start_file - *cursor_pos - 1;
       }
       else
       {
@@ -1140,7 +1047,7 @@ static void fmoveleft(int *start_file, int *cursor_pos, int *start_x, DirEntry *
 
 static void fmovenpage(int *start_file, int *cursor_pos, int *start_x, DirEntry *dir_entry)
 {
-   if( *start_file + *cursor_pos >= (int)file_count - 1 )
+   if( *start_file + *cursor_pos >= (int)file_entry_list.size() - 1 )
    {
       /*letzte Position erreicht */
       /*-------------------------*/
@@ -1160,10 +1067,10 @@ static void fmovenpage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
                          false,
                          *start_x
                          );
-         if( *start_file + max_disp_files <= (int)file_count - 1 )
+         if( *start_file + max_disp_files <= (int)file_entry_list.size() - 1 )
             *cursor_pos = max_disp_files - 1;
          else
-            *cursor_pos = file_count - *start_file - 1;
+            *cursor_pos = file_entry_list.size() - *start_file - 1;
          PrintFileEntry( *start_file + *cursor_pos,
                          *cursor_pos % window_height,
                          *cursor_pos / window_height,
@@ -1175,14 +1082,14 @@ static void fmovenpage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
       {
         /* Scrollen */
         /*----------*/
-        if( *start_file + *cursor_pos + max_disp_files < (int)file_count )
+        if( *start_file + *cursor_pos + max_disp_files < (int)file_entry_list.size() )
            *start_file += max_disp_files;
         else
-           *start_file = file_count - max_disp_files;
-        if( *start_file + max_disp_files <= (int)file_count - 1 )
+           *start_file = file_entry_list.size() - max_disp_files;
+        if( *start_file + max_disp_files <= (int)file_entry_list.size() - 1 )
            *cursor_pos = max_disp_files - 1;
         else
-           *cursor_pos = file_count - *start_file - 1;
+           *cursor_pos = file_entry_list.size() - *start_file - 1;
         DisplayFiles( dir_entry,
                       *start_file,
                       *start_file + *cursor_pos,
@@ -1329,7 +1236,7 @@ int HandleFileWindow(DirEntry *dir_entry)
     }
     else
     {
-      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
 
       if( dir_entry->global_flag )
         DisplayGlobalFileParameter( fe_ptr );
@@ -1425,7 +1332,7 @@ int HandleFileWindow(DirEntry *dir_entry)
    }
 
    if (mode == USER_MODE) { /* FileUserMode returns (possibly remapped) ch, or -1 if it handles ch */
-      ch = FileUserMode(&(file_entry_list[dir_entry->start_file + dir_entry->cursor_pos]), ch);
+      ch = FileUserMode(file_entry_list[dir_entry->start_file + dir_entry->cursor_pos], ch);
    }
 
    switch( ch )
@@ -1459,7 +1366,7 @@ int HandleFileWindow(DirEntry *dir_entry)
       case KEY_PPAGE: fmoveppage(&dir_entry->start_file, &dir_entry->cursor_pos, &start_x, dir_entry);
 		      break;
 
-      case KEY_END  : if( dir_entry->start_file + dir_entry->cursor_pos + 1 >= (int)file_count )
+      case KEY_END  : if( dir_entry->start_file + dir_entry->cursor_pos + 1 >= (int)file_entry_list.size() )
 		      {
 			/* Letzte Position erreicht */
 			/*--------------------------*/
@@ -1468,15 +1375,15 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 		      else
 		      {
-			if( (int)file_count < max_disp_files )
+			if( (int)file_entry_list.size() < max_disp_files )
 		        {
 			  dir_entry->start_file = 0;
-			  dir_entry->cursor_pos = file_count - 1;
+			  dir_entry->cursor_pos = file_entry_list.size() - 1;
 		        }
 		        else
 	                {
-                          dir_entry->start_file = file_count - max_disp_files;
-			  dir_entry->cursor_pos = file_count - dir_entry->start_file - 1;
+                          dir_entry->start_file = file_entry_list.size() - max_disp_files;
+			  dir_entry->cursor_pos = file_entry_list.size() - dir_entry->start_file - 1;
 		        }
 
 			DisplayFiles( dir_entry,
@@ -1509,7 +1416,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'A' :
-      case 'a' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+      case 'a' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
 
 	              need_dsp_help = true;
 
@@ -1562,7 +1469,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'O' :
-      case 'o' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+      case 'o' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
 
 		      need_dsp_help = true;
 
@@ -1604,7 +1511,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'G' :
-      case 'g' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+      case 'g' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
 
 		      need_dsp_help = true;
 
@@ -1647,7 +1554,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'T' :
-      case 't' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+      case 't' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
 		      de_ptr = fe_ptr->dir_entry;
 
 		      if( !fe_ptr->tagged )
@@ -1673,7 +1580,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
                       break;
       case 'U' :
-      case 'u' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+      case 'u' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
 		      de_ptr = fe_ptr->dir_entry;
                       if( fe_ptr->tagged )
 		      {
@@ -1725,9 +1632,9 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'T' & 0x1F :
-                      for(i=0; i < (int)file_count; i++)
+                      for(i=0; i < (int)file_entry_list.size(); i++)
                       {
-			fe_ptr = file_entry_list[i].file;
+			fe_ptr = file_entry_list[i];
 			de_ptr = fe_ptr->dir_entry;
 
 			if( !fe_ptr->tagged )
@@ -1756,9 +1663,9 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 
       case 'U' & 0x1F :
-                      for(i=0; i < (int)file_count; i++)
+                      for(i=0; i < (int)file_entry_list.size(); i++)
                       {
-			fe_ptr = file_entry_list[i].file;
+			fe_ptr = file_entry_list[i];
 			de_ptr = fe_ptr->dir_entry;
 
 			if( fe_ptr->tagged )
@@ -1789,9 +1696,9 @@ int HandleFileWindow(DirEntry *dir_entry)
 
       case ';':
       case 't' | 0x80 :
-                      for(i=dir_entry->start_file + dir_entry->cursor_pos; i < (int)file_count; i++)
+                      for(i=dir_entry->start_file + dir_entry->cursor_pos; i < (int)file_entry_list.size(); i++)
                       {
-			fe_ptr = file_entry_list[i].file;
+			fe_ptr = file_entry_list[i];
 			de_ptr = fe_ptr->dir_entry;
 
 			if( !fe_ptr->tagged )
@@ -1821,9 +1728,9 @@ int HandleFileWindow(DirEntry *dir_entry)
 
       case ':':
       case 'u' | 0x80 :
-                      for(i=dir_entry->start_file + dir_entry->cursor_pos; i < (int)file_count; i++)
+                      for(i=dir_entry->start_file + dir_entry->cursor_pos; i < (int)file_entry_list.size(); i++)
                       {
-			fe_ptr = file_entry_list[i].file;
+			fe_ptr = file_entry_list[i];
 			de_ptr = fe_ptr->dir_entry;
 
 			if( fe_ptr->tagged )
@@ -1852,7 +1759,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
       case 'V':
       case 'v':
-        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
 		    de_ptr = fe_ptr->dir_entry;
         View(dir_entry, GetRealFileNamePath(fe_ptr));
         need_dsp_help = true;
@@ -1860,7 +1767,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
       case 'H':
       case 'h':
-        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
 		    de_ptr = fe_ptr->dir_entry;
         ViewHex(GetRealFileNamePath(fe_ptr));
         need_dsp_help = true;
@@ -1868,7 +1775,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
       case 'E':
       case 'e':
-        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
 		    de_ptr = fe_ptr->dir_entry;
         Edit(de_ptr, GetFileNamePath(fe_ptr));
 		    break;
@@ -1876,7 +1783,7 @@ int HandleFileWindow(DirEntry *dir_entry)
       case 'Y' :
       case 'y' :
       case 'C' :
-      case 'c' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+      case 'c' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
 		      de_ptr = fe_ptr->dir_entry;
 
 		      path_copy = false;
@@ -2115,7 +2022,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			break;
 		      }
 
-		      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+		      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
 		      de_ptr = fe_ptr->dir_entry;
 
 		      need_dsp_help = true;
@@ -2157,9 +2064,9 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 			BuildFileEntryList( dir_entry );
 
-			if( file_count == 0 ) unput_char = ESC;
+			if( file_entry_list.size() == 0 ) unput_char = ESC;
 
-			if( dir_entry->start_file + dir_entry->cursor_pos >= (int)file_count )
+			if( dir_entry->start_file + dir_entry->cursor_pos >= (int)file_entry_list.size() )
 			{
 			  if( --dir_entry->cursor_pos < 0 )
 			  {
@@ -2227,7 +2134,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 			BuildFileEntryList( dir_entry );
 
-			if( file_count == 0 ) unput_char = ESC;
+			if( file_entry_list.size() == 0 ) unput_char = ESC;
 
 			dir_entry->start_file = 0;
 			dir_entry->cursor_pos = 0;
@@ -2256,7 +2163,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 		      if( term != 'Y' ) break;
 
-		      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+		      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
 		      de_ptr = fe_ptr->dir_entry;
 
 		      if( !DeleteFile( fe_ptr ) )
@@ -2273,9 +2180,9 @@ int HandleFileWindow(DirEntry *dir_entry)
 
                         RemoveFileEntry( dir_entry->start_file + dir_entry->cursor_pos );
 
-			if( file_count == 0 ) unput_char = ESC;
+			if( file_entry_list.size() == 0 ) unput_char = ESC;
 
-			if( dir_entry->start_file + dir_entry->cursor_pos >= (int)file_count )
+			if( dir_entry->start_file + dir_entry->cursor_pos >= (int)file_entry_list.size() )
 			{
 			  if( --dir_entry->cursor_pos < 0 )
 			  {
@@ -2305,7 +2212,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      {
 		        need_dsp_help = true;
 			(void) DeleteTaggedFiles( max_disp_files );
-			if( file_count == 0 ) unput_char = ESC;
+			if( file_entry_list.size() == 0 ) unput_char = ESC;
 			dir_entry->start_file = 0;
 			dir_entry->cursor_pos = 0;
                         DisplayAvailBytes();
@@ -2325,7 +2232,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			break;
 		      }
 
-		      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+		      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
 		      de_ptr = fe_ptr->dir_entry;
 
 		      if( !GetRenameParameter( fe_ptr->name, new_name ) )
@@ -2377,7 +2284,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 			BuildFileEntryList( dir_entry );
 
-			if( file_count == 0 ) unput_char = ESC;
+			if( file_entry_list.size() == 0 ) unput_char = ESC;
 
 			DisplayFiles( dir_entry,
 				      dir_entry->start_file,
@@ -2425,7 +2332,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		        else
 		          DisplayDirStatistic( dir_entry );
 
-                        if( file_count == 0 ) unput_char = ESC;
+                        if( file_entry_list.size() == 0 ) unput_char = ESC;
 		        maybe_change_x_step = true;
 	              }
 		      need_dsp_help = true;
@@ -2435,7 +2342,7 @@ int HandleFileWindow(DirEntry *dir_entry)
       case 'l':
 #endif /* VI_KEYS */
       case 'L':
-        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
         if (mode == DISK_MODE || mode == USER_MODE)
         {
           const auto path = GetFileNamePath(fe_ptr);
@@ -2472,7 +2379,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'P' :
-      case 'p' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+      case 'p' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
 		      de_ptr = fe_ptr->dir_entry;
 		      (void) Pipe( de_ptr, fe_ptr );
 		      need_dsp_help = true;
@@ -2534,7 +2441,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'X':
-      case 'x' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].file;
+      case 'x' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
 		      de_ptr = fe_ptr->dir_entry;
 		      (void) Execute( de_ptr, fe_ptr );
 		      need_dsp_help = true;
@@ -2618,8 +2525,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
       case 'Q' & 0x1F:
                       need_dsp_help = true;
-                      fe_ptr = file_entry_list[dir_entry->start_file
-                                + dir_entry->cursor_pos].file;
+                      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
                       de_ptr = fe_ptr->dir_entry;
                       QuitTo(de_ptr);
                       break;
@@ -2682,9 +2588,9 @@ static void WalkTaggedFiles(
 
   max_disp_files = window_height * max_column;
 
-  for( i=0; i < (int)file_count && result == 0; i++ )
+  for( i=0; i < (int)file_entry_list.size() && result == 0; i++ )
   {
-    fe_ptr = file_entry_list[i].file;
+    fe_ptr = file_entry_list[i];
 
     if( fe_ptr->tagged && fe_ptr->matching )
     {
@@ -2715,7 +2621,7 @@ static void WalkTaggedFiles(
 	/* Scroll noetig */
 	/*---------------*/
 
-	start_file = MAX( 0, i - max_disp_files + 1 );
+	start_file = std::max( 0, i - max_disp_files + 1 );
 	cursor_pos = i - start_file;
 
         DisplayFiles( fe_ptr->dir_entry,
@@ -2736,7 +2642,7 @@ static void WalkTaggedFiles(
       result = fkt( fe_ptr, walking_package );
       if( walking_package->new_fe_ptr != fe_ptr )
       {
-        file_entry_list[i].file = walking_package->new_fe_ptr;
+        file_entry_list[i] = walking_package->new_fe_ptr;
 	ChangeFileEntry();
         max_disp_files = window_height * max_column;
 	maybe_change_x = true;
@@ -2765,9 +2671,9 @@ static void SilentWalkTaggedFiles(
   int       i;
 
 
-  for( i=0; i < (int)file_count; i++ )
+  for( i=0; i < (int)file_entry_list.size(); i++ )
   {
-    fe_ptr = file_entry_list[i].file;
+    fe_ptr = file_entry_list[i];
 
     if( fe_ptr->tagged && fe_ptr->matching )
     {
@@ -2802,9 +2708,9 @@ static void SilentTagWalkTaggedFiles(
   int       result = 0;
 
 
-  for( i=0; i < (int)file_count; i++ )
+  for( i=0; i < (int)file_entry_list.size(); i++ )
   {
-    fe_ptr = file_entry_list[i].file;
+    fe_ptr = file_entry_list[i];
 
     if( fe_ptr->tagged && fe_ptr->matching )
     {
@@ -2825,9 +2731,9 @@ static bool IsMatchingTaggedFiles(void)
   FileEntry *fe_ptr;
   int i;
 
-  for( i=0; i < (int)file_count; i++)
+  for( i=0; i < (int)file_entry_list.size(); i++)
   {
-    fe_ptr = file_entry_list[i].file;
+    fe_ptr = file_entry_list[i];
 
     if( fe_ptr->matching && fe_ptr->tagged )
       return( true );
@@ -2863,16 +2769,16 @@ static int DeleteTaggedFiles(int max_disp_files)
 
   if( baudrate() >= QUICK_BAUD_RATE ) typeahead( 0 );
 
-  for( i=0; i < (int)file_count && result == 0; )
+  for( i=0; i < (int)file_entry_list.size() && result == 0; )
   {
     deleted = false;
 
-    fe_ptr = file_entry_list[i].file;
+    fe_ptr = file_entry_list[i];
     de_ptr = fe_ptr->dir_entry;
 
     if( fe_ptr->tagged && fe_ptr->matching )
     {
-      start_file = MAX( 0, i - max_disp_files + 1 );
+      start_file = std::max( 0, i - max_disp_files + 1 );
       cursor_pos = i - start_file;
 
       DisplayFiles( de_ptr,
@@ -2936,7 +2842,7 @@ static void RereadWindowSize(DirEntry *dir_entry)
   max_disp_files = window_height * max_column;
 
 
-  if( dir_entry->start_file + dir_entry->cursor_pos < (int)file_count )
+  if( dir_entry->start_file + dir_entry->cursor_pos < (int)file_entry_list.size() )
   {
      while( dir_entry->cursor_pos >= max_disp_files )
      {
@@ -2988,7 +2894,7 @@ static void ListJump( DirEntry * dir_entry, const char *str )
     /* index of current entry in list */
     tmp2 = (incremental && n == 0) ? 0 : dir_entry->start_file + dir_entry->cursor_pos;
 
-    if( tmp2 == static_cast<int>(file_count - 1))
+    if( tmp2 == static_cast<int>(file_entry_list.size() - 1))
     {
         ClearHelp();
         MvAddStr( LINES - 2, 1, "Last entry!");
@@ -3001,14 +2907,14 @@ static void ListJump( DirEntry * dir_entry, const char *str )
         return;
     }
 
-    for( i=tmp2; i < static_cast<int>(file_count); i++ )
+    for( i=tmp2; i < static_cast<int>(file_entry_list.size()); i++ )
     {
-        fe_ptr = file_entry_list[i].file;
+        fe_ptr = file_entry_list[i];
 	if(!strncasecmp(newStr, fe_ptr->name, n+1))
           break;
     }
 
-    if ( i == static_cast<int>(file_count) )
+    if ( i == static_cast<int>(file_entry_list.size()) )
     {
         ClearHelp();
         MvAddStr( LINES - 2, 1, "No match!");

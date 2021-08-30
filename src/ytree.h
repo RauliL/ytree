@@ -486,11 +486,6 @@ struct DirEntryList
   unsigned short     level;
 };
 
-struct FileEntryList
-{
-  FileEntry          *file;
-};
-
 struct Statistic
 {
   DirEntry      *tree;
@@ -789,7 +784,7 @@ extern void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no);
 extern void ReCreateWindows(void);
 extern int  Getch(void);
 extern int  DirUserMode(DirEntry *dir_entry, int ch);
-extern int  FileUserMode(FileEntryList *file_entry_list, int ch);
+extern int  FileUserMode(FileEntry* file_entry, int ch);
 extern char *GetUserFileAction(int chkey, int *pchremap);
 extern char *GetUserDirAction(int chkey, int *pchremap);
 extern bool IsUserActionDefined(void);

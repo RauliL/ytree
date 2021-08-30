@@ -56,9 +56,9 @@ int DirUserMode(DirEntry *dir_entry, int ch)
   return ch;
 }
 
-int FileUserMode(FileEntryList* file_entry_list, int ch)
+int FileUserMode(FileEntry* file_entry, int ch)
 {
-  const auto filepath = GetRealFileNamePath(file_entry_list->file);
+  const auto filepath = GetRealFileNamePath(file_entry);
   char* command_line = nullptr;
   int chremap;
 
