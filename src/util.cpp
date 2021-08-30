@@ -53,14 +53,13 @@ static const std::unordered_map<std::string, CompressMethod> file_extensions =
   { ".SPM", CompressMethod::RPM_COMPRESS }
 };
 
-char *GetPath(DirEntry *dir_entry, char *buffer)
+char *GetPath(const DirEntry *dir_entry, char *buffer)
 {
-  DirEntry *de_ptr;
   char     help_buffer[PATH_LENGTH + 1];
 
   *buffer = '\0';
 
-  for( de_ptr = dir_entry; de_ptr; de_ptr = de_ptr->up_tree )
+  for (auto de_ptr = dir_entry; de_ptr; de_ptr = de_ptr->up_tree)
   {
     *help_buffer = '\0';
     if( de_ptr->up_tree ) (void) strcat( help_buffer, FILE_SEPARATOR_STRING );
@@ -866,19 +865,37 @@ std::optional<std::string> GetExtension(const std::string& filename)
   return filename.substr(pos + 1);
 }
 
-void StrCp(char* dest, const std::string& src)
+std::string ShellEscape(const std::string& src)
 {
-  static const std::string esc_chars ="#*|&;()<> \t\n\r\"!$?'`~";
+  static const std::string esc_chars = "\\!\"#$&'()*;<>?[]^`{|}~";
+  std::string result;
 
   for (const auto& c : src)
   {
-    if (esc_chars.find(c) != std::string::npos)
+    switch (c)
     {
-      *dest++ = '\\';
+      case '\t':
+        result += "\\t";
+        break;
+
+      case '\n':
+        result += "\\n";
+        break;
+
+      case '\r':
+        result += "\\r";
+        break;
+
+      default:
+        if (esc_chars.find(c) != std::string::npos)
+        {
+          result += '\\';
+        }
+        result += c;
     }
-    *dest++ = c;
   }
-  *dest = 0;
+
+  return result;
 }
 
 int BuildUserFileEntry(FileEntry *fe_ptr,

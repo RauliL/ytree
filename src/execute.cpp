@@ -1,51 +1,29 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/execute.c,v 1.15 2014/12/26 09:53:11 werner Exp $
- *
- * Ausfuehren von System-Kommandos
- *
- ***************************************************************************/
-
-
 #include "ytree.h"
 
-
-extern int chdir(const char *);
-
-
-int Execute(DirEntry *dir_entry, FileEntry *file_entry)
+int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
 {
   static char command_line[COMMAND_LINE_LENGTH + 1];
-  char path[PATH_LENGTH+1];
-  int  result;
+  char path[PATH_LENGTH + 1];
+  int result = -1;
 
-  result = -1;
-
-  if( file_entry )
+  if (file_entry && (file_entry->stat_struct.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
   {
-    if( file_entry->stat_struct.st_mode &
-	( S_IXUSR | S_IXGRP | S_IXOTH ) )
-    {
-      /* ausfuehrbare Datei */
-      /*--------------------*/
+    const auto escaped_name = ShellEscape(file_entry->name);
 
-      (void) StrCp( command_line, file_entry->name );
-    }
+    std::strcpy(command_line, escaped_name.c_str());
   }
 
-  MvAddStr( LINES - 2, 1, "Command:" );
-  if( !GetCommandLine( command_line ) )
+  MvAddStr(LINES - 2, 1, "Command:");
+  if (!GetCommandLine(command_line))
   {
     const auto cwd = GetcwdOrDot();
 
-    if( mode == DISK_MODE || mode == USER_MODE )
+    if (mode == DISK_MODE || mode == USER_MODE)
     {
-      if( chdir( GetPath( dir_entry, path ) ) )
+      if (chdir(GetPath( dir_entry, path)))
       {
         MessagePrintf("Can't change directory to*\"%s\"", path);
-      }
-      else
-      {
+      } else {
         refresh();
         result = QuerySystemCall( command_line );
       }
@@ -53,19 +31,14 @@ int Execute(DirEntry *dir_entry, FileEntry *file_entry)
       {
         MessagePrintf("Can't change directory to*\"%s\"", cwd.c_str());
       }
-    }
-    else
-    {
+    } else {
       refresh();
       result = QuerySystemCall( command_line );
     }
   }
 
-  return( result );
+  return result;
 }
-
-
-
 
 int GetCommandLine(char *command_line)
 {

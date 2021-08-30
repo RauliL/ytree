@@ -632,7 +632,7 @@ extern int  GetDiskParameter(char *path,
 extern int  HandleDirWindow(DirEntry *start_dir_entry);
 extern void DisplayFileWindow(DirEntry *dir_entry);
 extern int Init(char *configuration_file, char *history_file);
-extern char *GetPath(DirEntry *dir_entry, char *buffer);
+extern char *GetPath(const DirEntry *dir_entry, char *buffer);
 extern bool Match(char *file_name);
 extern int  SetMatchSpec(char *new_spec);
 extern int  SetFileSpec(char *file_spec);
@@ -661,7 +661,7 @@ int SilentSystemCallEx(const std::string& command_line, bool enable_clock);
 int View(DirEntry* dir_entry, const std::string& file_path);
 int ViewHex(const std::string& file_path);
 int InternalView(const std::string& file_path);
-extern int  Edit(DirEntry * dir_entry, char *file_path);
+int Edit(const DirEntry* dir_entry, const std::string& file_path);
 extern void DisplayAvailBytes(void);
 extern void DisplayFileSpec(void);
 extern void QuitTo(DirEntry * dir_entry);
@@ -669,7 +669,7 @@ extern void Quit(void);
 extern int  ReadFileSpec(void);
 extern int  InputString(char *s, int y, int x, int cursor_pos, int length, const char *term);
 extern void RotateFileMode(void);
-extern int  Execute(DirEntry *dir_entry, FileEntry *file_entry);
+int Execute(const DirEntry* dir_entry, const FileEntry* file_entry);
 extern int  Pipe(DirEntry *dir_entry, FileEntry *file_entry);
 extern int  PipeTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
 extern int  GetPipeCommand(char *pipe_command);
@@ -781,7 +781,7 @@ std::optional<std::string> GetExtViewer(const std::string& filename);
 extern void InitClock(void);
 extern void SuspendClock(void);
 std::optional<std::string> GetExtension(const std::string& filename);
-void StrCp(char* dest, const std::string& src);
+std::string ShellEscape(const std::string& src);
 extern int  BuildUserFileEntry(FileEntry *fe_ptr,
             int max_filename_len, int max_linkname_len,
             const char *tmpl, int linelen, char *line);

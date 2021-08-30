@@ -1,20 +1,7 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/copy.c,v 1.22 2011/01/09 12:28:01 werner Exp $
- *
- * Kopieren von Dateien / Verzeichnissen
- *
- ***************************************************************************/
-
-
 #include "ytree.h"
 
-
-
 static int Copy(char *to_path, char *from_path);
-static int CopyArchiveFile(char *to_path, char *from_path);
-
-
+static int CopyArchiveFile(const std::string& to_path, const std::string& from_path);
 
 int CopyFile(Statistic *statistic_ptr,
              FileEntry *fe_ptr,
@@ -386,44 +373,39 @@ int CopyTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
   return( result );
 }
 
-
-
-
-
-static int CopyArchiveFile(char *to_path, char *from_path)
+static int CopyArchiveFile(
+  const std::string& to_path,
+  const std::string& from_path
+)
 {
   auto command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
   char buffer[PATH_LENGTH + 3];
-  char from_p_aux[PATH_LENGTH + 3];
-  char to_p_aux[PATH_LENGTH + 3];
-  char *archive;
+  const auto from_p_aux = ShellEscape(to_path);
+  const auto to_p_aux = ShellEscape(from_path);
   int result = -1;
 
-  (void) StrCp( to_p_aux, to_path );
+  std::snprintf(buffer, PATH_LENGTH + 2, "> %s", to_p_aux.c_str());
 
-  std::snprintf(buffer, PATH_LENGTH + 2, "> %s", to_p_aux);
-
-  archive = (mode == TAPE_MODE) ? statistic.tape_name : statistic.login_path;
-
-  (void) StrCp( from_p_aux, from_path);
   MakeExtractCommandLine(
     command_line,
     COMMAND_LINE_LENGTH,
-		archive,
+    mode == TAPE_MODE ? statistic.tape_name : statistic.login_path,
     from_p_aux,
     buffer
   );
 
-  result = SilentSystemCall( command_line );
+  result = SilentSystemCall(command_line);
 
-  free( command_line );
+  std::free(static_cast<void*>(command_line));
 
   if (result)
   {
-    WarningPrintf("can't copy file*%s*to file*%s", from_p_aux, to_p_aux);
+    WarningPrintf(
+      "Can't copy file*%s*to file*%s",
+      from_p_aux.c_str(),
+      to_p_aux.c_str()
+    );
   }
 
-  return( result );
+  return result;
 }
-
-

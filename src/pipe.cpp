@@ -1,76 +1,62 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/pipe.c,v 1.15 2004/03/21 14:13:11 werner Exp $
- *
- * Umlenken von Datei-Inhalten zu einem Kommando
- *
- ***************************************************************************/
-
-
 #include "ytree.h"
 
-
-extern int chdir(const char *);
-
-
-
-
-int Pipe(DirEntry *dir_entry, FileEntry *file_entry)
+int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
 {
   static char input_buffer[COMMAND_LINE_LENGTH + 1] = "| ";
-  char file_name_path[PATH_LENGTH+1];
-  char file_name_p_aux[PATH_LENGTH+1];
+  char file_name_path[PATH_LENGTH + 1];
+  std::string file_name_p_aux;
   auto command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
-  char *archive;
-  char path[PATH_LENGTH+1];
-  int  result;
+  char path[PATH_LENGTH + 1];
+  int result = -1;
 
   result = -1;
 
-  (void) GetRealFileNamePath( file_entry, file_name_path );
-  (void) StrCp( file_name_p_aux, file_name_path);
+  GetRealFileNamePath(file_entry, file_name_path);
+  file_name_p_aux = ShellEscape(file_name_path);
 
   ClearHelp();
 
-  MvAddStr( LINES - 2, 1, "Pipe-Command:" );
-  if( GetPipeCommand( &input_buffer[2] ) == 0 )
+  MvAddStr(LINES - 2, 1, "Pipe-Command:");
+  if (!GetPipeCommand(&input_buffer[2]))
   {
     move(LINES - 2, 1);
     clrtoeol();
 
     GetPath(dir_entry, path);
 
-    if( mode == DISK_MODE || mode == USER_MODE )
+    if (mode == DISK_MODE || mode == USER_MODE)
     {
       /* Kommandozeile zusammenbasteln */
       /*-------------------------------*/
-
-      (void) sprintf( command_line, "%s %s %s",
-				    CAT,
-				    file_name_p_aux,
-				    input_buffer
-		    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s %s %s",
+        CAT,
+        file_name_p_aux.c_str(),
+        input_buffer
+      );
     } else {
       /* TAR/ZOO/ZIP_FILE_MODE */
       /*-----------------------*/
-      archive = (mode == TAPE_MODE) ? statistic.tape_name : statistic.login_path;
       MakeExtractCommandLine(
         command_line,
         COMMAND_LINE_LENGTH,
-			  archive,
+        mode == TAPE_MODE ? statistic.tape_name : statistic.login_path,
         file_name_p_aux,
 			  input_buffer
 			);
     }
     refresh();
-    result = QuerySystemCall( command_line );
+    result = QuerySystemCall(command_line);
   } else {
-    move( LINES - 2, 1 ); clrtoeol();
+    move(LINES - 2, 1);
+    clrtoeol();
   }
 
-  free( command_line );
+  std::free(static_cast<void*>(command_line));
 
-  return( result );
+  return result;
 }
 
 
@@ -140,11 +126,3 @@ int PipeTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
 
   return( 0 );
 }
-
-
-
-
-
-
-
-

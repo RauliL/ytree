@@ -71,12 +71,10 @@ int View(DirEntry* dir_entry, const std::string& file_path)
 static int ViewFile(DirEntry* dir_entry, const std::string& file_path)
 {
   char* command_line = nullptr;
-  auto file_p_aux = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
+  const auto file_p_aux = ShellEscape(file_path);
   int  result = -1;
   bool notice_mapped = false;
   char path[PATH_LENGTH+1];
-
-  StrCp(file_p_aux, file_path);
 
   if (access(file_path.c_str(), R_OK))
   {
@@ -98,7 +96,7 @@ static int ViewFile(DirEntry* dir_entry, const std::string& file_path)
         command_line,
         COMMAND_LINE_LENGTH,
         aux->c_str(),
-        file_p_aux
+        file_p_aux.c_str()
       );
     } else {
       std::snprintf(
@@ -106,57 +104,45 @@ static int ViewFile(DirEntry* dir_entry, const std::string& file_path)
         COMMAND_LINE_LENGTH,
         "%s %s",
         aux->c_str(),
-        file_p_aux
+        file_p_aux.c_str()
       );
     }
   } else {
     const auto compress_method = GetFileMethod(file_path);
 
-    if (compress_method && *compress_method == CompressMethod::FREEZE_COMPRESS)
+    if (
+      compress_method && (
+        *compress_method == CompressMethod::FREEZE_COMPRESS ||
+        *compress_method == CompressMethod::COMPRESS_COMPRESS ||
+        *compress_method == CompressMethod::GZIP_COMPRESS ||
+        *compress_method == CompressMethod::BZIP_COMPRESS
+      )
+    )
     {
-      (void) sprintf( command_line,
-		      "%s < %s %s | %s",
-		      MELT,
-		      file_p_aux,
-		      ERR_TO_STDOUT,
-		      PAGER
-		    );
-    }
-    else if (compress_method && *compress_method == CompressMethod::COMPRESS_COMPRESS)
-    {
-      (void) sprintf( command_line,
-		      "%s < %s %s | %s",
-		      UNCOMPRESS,
-		      file_p_aux,
-		      ERR_TO_STDOUT,
-		      PAGER
-		    );
-    }
-    else if (compress_method && *compress_method == CompressMethod::GZIP_COMPRESS)
-    {
-      (void) sprintf( command_line,
+      const auto uncompress_command = (
+        *compress_method == CompressMethod::FREEZE_COMPRESS ? MELT :
+        *compress_method == CompressMethod::COMPRESS_COMPRESS ? UNCOMPRESS :
+        *compress_method == CompressMethod::GZIP_COMPRESS ? GNUUNZIP :
+        BUNZIP
+      );
+
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
         "%s < %s %s | %s",
-		    GNUUNZIP,
-		    file_p_aux,
-		    ERR_TO_STDOUT,
-		    PAGER
-		  );
-    }
-    else if (compress_method && *compress_method == CompressMethod::BZIP_COMPRESS)
-    {
-      (void) sprintf( command_line,
-        "%s < %s %s | %s",
-		    BUNZIP,
-		    file_p_aux,
-		    ERR_TO_STDOUT,
-		    PAGER
-		  );
+        uncompress_command,
+        file_p_aux.c_str(),
+        ERR_TO_STDOUT,
+        PAGER
+      );
     } else {
-      (void) sprintf( command_line,
-		    "%s %s",
-		    PAGER,
-		    file_p_aux
-		  );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s %s",
+        PAGER,
+        file_p_aux.c_str()
+      );
     }
   }
 
@@ -184,22 +170,17 @@ the ytree starting cwd. new code grabbed from execute.c.
   	result = SystemCall(command_line);
   }
 
-  /*  if((result = SilentSystemCall( command_line )))   ..did systemcall just above */
-  if(result)
+  if (result)
   {
     MessagePrintf("can't execute*%s", command_line );
   }
 
-  if( notice_mapped )
+  if (notice_mapped)
   {
     UnmapNoticeWindow();
   }
 
 FNC_XIT:
-  if (file_p_aux)
-  {
-    std::free(file_p_aux);
-  }
   if (command_line)
   {
     std::free(command_line);
