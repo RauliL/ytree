@@ -827,28 +827,26 @@ int Strrcmp(char *s1, char* s2)/*compares in reverse order 2 strings*/
    return(0);
 }
 
-char* Strdup(const std::string& src)
+char* Strdup(const char* src)
 {
-  const auto result = static_cast<char*>(std::malloc(src.length() + 1));
+  const auto length = std::strlen(src);
+  auto copy = static_cast<char*>(std::malloc(length + 1));
 
-  std::strncpy(result, src.c_str(), src.length());
+  std::memcpy(static_cast<void*>(copy), static_cast<const void*>(src), length);
+  copy[length] = 0;
 
-  return result;
+  return copy;
 }
 
-char* Strndup(const std::string& src, const std::size_t len)
+char* Strndup(const char* src, const std::size_t len)
 {
-  const auto l = std::min(src.length(), len);
-  const auto result = static_cast<char*>(std::malloc(l + 1));
+  const auto n = std::min(std::strlen(src), len);
+  auto copy = static_cast<char*>(std::malloc(n + 1));
 
-  std::memcpy(
-    static_cast<void*>(result),
-    static_cast<const void*>(src.c_str()),
-    l
-  );
-  result[l] = 0;
+  std::memcpy(static_cast<void*>(copy), static_cast<const void*>(src), n);
+  copy[n] = 0;
 
-  return result;
+  return copy;
 }
 
 std::optional<std::string> GetExtension(const std::string& filename)
