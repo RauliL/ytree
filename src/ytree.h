@@ -640,7 +640,13 @@ extern void DisplayFileSpec(void);
 extern void QuitTo(DirEntry * dir_entry);
 void Quit();
 extern int  ReadFileSpec(void);
-extern int  InputString(char *s, int y, int x, int cursor_pos, int length);
+int InputString(
+  char* s,
+  const int y,
+  const int x,
+  const std::size_t initial_pos,
+  const std::size_t max_length
+);
 extern void RotateFileMode(void);
 int Execute(const DirEntry* dir_entry, const FileEntry* file_entry);
 extern int  Pipe(DirEntry *dir_entry, FileEntry *file_entry);
@@ -726,12 +732,11 @@ int ReadProfile(const std::optional<std::string>& custom_path);
 extern const char *GetProfileValue( const char *key );
 void ScanSubTree(DirEntry* dir_entry);
 extern void GetMaxYX(WINDOW *win, int *height, int *width);
-
-extern char *GetHistory(void);
-extern void InsHistory(char *new_hist);
+const char* GetHistory();
+void InsHistory(const std::string& str);
 void ReadHistory(const std::optional<std::string>& custom_path);
 void SaveHistory();
-extern char *GetMatches(char *);
+char* GetMatches(const std::string& base);
 extern int  KeyF2Get(DirEntry *start_dir_entry,
                int disp_begin_pos,
                int cursor_pos,

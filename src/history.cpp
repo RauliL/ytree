@@ -90,53 +90,54 @@ void SaveHistory()
   }
 }
 
-void InsHistory( char *NewHst)
+void InsHistory(const std::string& str)
 {
-   History *TMP, *TMP2 = NULL;
-   int flag = 0;
+  History* TMP;
+  History* TMP2 = nullptr;
+  bool found = false;
 
-   if (strlen(NewHst)== 0)
-     return;
+  if (str.empty())
+  {
+    return;
+  }
 
-   TMP2 = Hist;
-   for ( TMP = Hist; TMP != NULL; TMP = TMP -> next)
-   {
-       if (strcmp(TMP -> hst, NewHst) == 0)
-       {
-         if (TMP2 != TMP)
-         {
-            TMP2 -> next = TMP -> next;
-            TMP -> next = Hist;
-            Hist = TMP;
-         }
-         flag = 1;
-         break;
-       };
-       TMP2 = TMP;
-   }
-
-   if (flag == 0)
-   {
-     if ((TMP = static_cast<History*>(std::malloc(sizeof(History)))))
+  TMP2 = Hist;
+  for (TMP = Hist; TMP; TMP = TMP->next)
+  {
+    if (!std::strcmp(TMP->hst, str.c_str()))
+    {
+      if (TMP2 != TMP)
       {
-         TMP -> next = Hist;
-	 TMP->prev = nullptr;
-   if (!(TMP->hst = Strdup(NewHst)))
-	 {
-	    std::free(TMP);
-	    return;
-	 }
-
-         if (Hist != NULL)
-	     Hist -> prev = TMP;
-         Hist = TMP;
-         total_hist++;
+        TMP2->next = TMP->next;
+        TMP->next = Hist;
+        Hist = TMP;
       }
-   }
-   return;
+      found = true;
+      break;
+    }
+    TMP2 = TMP;
+  }
+
+  if (!found)
+  {
+    if ((TMP = static_cast<History*>(std::malloc(sizeof(History)))))
+    {
+      TMP->next = Hist;
+      TMP->prev = nullptr;
+      if (!(TMP->hst = Strdup(str.c_str())))
+      {
+        std::free(TMP);
+        return;
+      }
+      if (Hist)
+      {
+        Hist->prev = TMP;
+      }
+      Hist = TMP;
+      ++total_hist;
+    }
+  }
 }
-
-
 
 void PrintHstEntry(int entry_no, int y, int color,
                    int start_x, int *hide_left, int *hide_right)
@@ -244,13 +245,11 @@ int DisplayHistory()
   return 0;
 }
 
-
-
-char *GetHistory()
+const char* GetHistory()
 {
   int     ch, tmp;
   int     start_x;
-  char    *RetVal = NULL;
+  const char* RetVal = nullptr;
   History *TMP;
   int     hide_left, hide_right;
 

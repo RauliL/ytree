@@ -7,7 +7,7 @@
 
 #define MAX(a,b) (((a) > (b)) ? (a):(b))
 
-static char **Mtchs       = NULL;
+static char** Mtchs = nullptr;
 static int total_matches  = 0;
 static int cursor_pos     = 0;
 static int disp_begin_pos = 1;
@@ -113,8 +113,7 @@ int DisplayMatches()
   return 0;
 }
 
-
-char *GetMatches( char *base)
+char* GetMatches(const std::string& base)
 {
   int     ch;
   int     start_x;
@@ -123,20 +122,16 @@ char *GetMatches( char *base)
   char    *tmpval;
   int     hide_left, hide_right;
 
-/*  tmpval = rl_filename_completion_function(base, 0);
-  if (!strcmp(tmpval,base))
-    return(tmpval);*/
+  Mtchs = nullptr;
 
-  Mtchs = NULL;
-
-#ifdef READLINE_SUPPORT
-  tmpval=tilde_expand(base);
-
-  if ((Mtchs = rl_completion_matches(tmpval, rl_filename_completion_function))
-	== NULL)
-    return(NULL);
+#if defined(READLINE_SUPPORT)
+  tmpval = tilde_expand(base.c_str());
+  if (!(Mtchs = rl_completion_matches(tmpval, rl_filename_completion_function)))
+  {
+    return nullptr;
+  }
 #else
-    return(NULL);
+  return nullptr;
 #endif
 
 

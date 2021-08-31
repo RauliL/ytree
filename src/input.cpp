@@ -1,4 +1,3 @@
-
 #include "ytree.h"
 #include "tilde.h"
 #include "xmalloc.h"
@@ -11,340 +10,413 @@
  * Zurueckgegeben wird das Zeichen, mit dem die Eingabe beendet wurde      *
  ***************************************************************************/
 
-
-char *StrLeft(const char *str, size_t count)
+char *StrLeft(const char* str, std::size_t count)
 {
-#ifdef WITH_UTF8
-  mbstate_t state;
-  char *p;
+#if defined(WITH_UTF8)
+  std::mbstate_t state;
+  char* p;
 #endif
-  char *rez, *tmp;
-  size_t len, i;
+  char* rez;
+  char* tmp;
+  std::size_t len;
 
-#ifdef WITH_UTF8
-  memset(&state, 0, sizeof(state));
+#if defined(WITH_UTF8)
+  std::memset(static_cast<void*>(&state), 0, sizeof(state));
 #endif
-  if (count == 0) return(Strdup(""));
+  if (count == 0)
+  {
+    return Strdup("");
+  }
   len = StrVisualLength(str);
-  if (count >= len) return(Strdup(str));
+  if (count >= len)
+  {
+    return Strdup(str);
+  }
 
   len = 0;
-
   tmp = Strdup(str);
 #ifdef WITH_UTF8
   p = tmp;
 #endif
-  for (i = 0; i < count; i++) {
-#ifdef WITH_UTF8
-    len += mbrlen(p, 4, &state);
+
+  for (std::size_t i = 0; i < count; ++i)
+  {
+#if defined(WITH_UTF8)
+    len += std::mbrlen(p, 4, &state);
     p = tmp + len;
 #else
-    len++;
+    ++len;
 #endif
   }
-  free(tmp);
+
+  std::free(static_cast<void*>(tmp));
 
   rez = Strndup(str, len);
-  rez[len] = '\0';
-  return(rez);
+  rez[len] = 0;
+
+  return rez;
 }
 
-char *StrRight(const char *str, size_t count)
+static char* StrRight(const char* str, std::size_t count)
 {
-#ifdef WITH_UTF8
-  mbstate_t state;
+#if defined(WITH_UTF8)
+  std::mbstate_t state;
 #endif
-  char *rez, *p, *tmp;
-  size_t byte_len, char_len, tmp_len, i;
+  char* rez;
+  char* p;
+  char* tmp;
+  std::size_t byte_len;
+  std::size_t char_len;
+  std::size_t i;
 
-#ifdef WITH_UTF8
-  memset(&state, 0, sizeof(state));
+#if defined(WITH_UTF8)
+  std::memset(static_cast<void*>(&state), 0, sizeof(state));
 #endif
 
-  if (count == 0) return(Strdup(""));
+  if (count == 0)
+  {
+    return Strdup("");
+  }
 
-  byte_len = strlen(str);
+  byte_len = std::strlen(str);
   char_len = StrVisualLength(str);
 
-  if (count > char_len) count = char_len;
+  if (count > char_len)
+  {
+    count = char_len;
+  }
 
   tmp = Strdup(str);
   p = tmp;
   i = 0;
-  rez = NULL;
-  while ( (p - tmp) < static_cast<long>(byte_len) ) {
-    if (i == (char_len - count) ) {
+  rez = nullptr;
+
+  while ((p - tmp) < byte_len)
+  {
+    if (i == (char_len - count))
+    {
       rez = Strdup(p);
     }
-#ifdef WITH_UTF8
-    tmp_len = mbrlen(p, 4, &state);
+#if defined(WITH_UTF8)
+    p += std::mbrlen(p, 4, &state);
 #else
-    tmp_len = 1;
+    ++p;
 #endif
-    p += tmp_len;
-    i++;
+    ++i;
   }
 
-  free(tmp);
-  return(rez);
+  std::free(static_cast<void*>(tmp));
+
+  return rez;
 }
 
-int StrVisualLength(const char *str)
+int StrVisualLength(const char* str)
 {
-#ifdef WITH_UTF8
-  mbstate_t state;
+#if defined(WITH_UTF8)
+  std::mbstate_t state;
   int len = 0;
 
-  memset(&state, '\0', sizeof(state));
-  len = mbsrtowcs(NULL, &str, strlen(str), &state);
-  if(len < 0) {
+  std::memset(static_cast<void*>(&state), 0, sizeof(state));
+  len = std::mbsrtowcs(nullptr, &str, std::strlen(str), &state);
+  if (len < 0)
+  {
     /* Invalid multibyte sequence */
-    len = strlen(str);
+    len = std::strlen(str);
   }
 
   return len;
 #else
-  return(strlen(str));
+  return std::strlen(str);
 #endif
 }
 
-
-int InputString(char *s, int y, int x, int cursor_pos, int length)
-                               /* Ein- und Ausgabestring              */
-                               /* Position auf Bildschirm             */
-                               /* max. Laenge                         */
-                               /* Menge von Terminierungszeichen      */
+static inline void RefreshInputString(
+  const std::string& buffer,
+  const int y,
+  const int x,
+  const std::size_t pos,
+  const std::size_t max_length
+)
 {
-  int p;                       /* Aktuelle Position                   */
-  int c1;                      /* Gelesenes Zeichen                   */
-  int i;                       /* Laufvariable                        */
-  char *pp;
-  bool len_flag = false;
-  char path[PATH_LENGTH + 1];
-  char buf[2], sbuf[20], *ls, *rs;
-  static bool insert_flag = true;
+  MvWAddStr(stdscr, y, x, buffer);
+  for (auto i = buffer.length(); i < max_length; ++i)
+  {
+    mvwaddch(stdscr, y, x + i, '_');
+  }
+  wmove(stdscr, y, x + pos);
+}
 
-  buf[1] = '\0';
-  strcpy(sbuf, "");
+int InputString(
+  char* s,
+  const int y,
+  const int x,
+  const std::size_t initial_pos,
+  const std::size_t max_length
+)
+{
+  static bool insert_flag = true;
+  bool max_length_reached = false;
+  int c;
+  std::string buffer = s;
+  std::size_t pos = initial_pos;
+  std::string char_buffer;
+  char* pp;
 
   /* Feld gefuellt ausgeben */
   /*------------------------*/
   print_time = false;
   curs_set(1);
-  MvAddStr( y, x, s );
-  leaveok(stdscr, false);
+  leaveok(stdscr, FALSE);
+  nodelay(stdscr, TRUE);
 
-  for(i=strlen(s); i < length; i++)
-    addch( '_' );
+  RefreshInputString(buffer, y, x, pos, max_length);
 
-  p = cursor_pos;
+  do
+  {
+    if ((c = wgetch(stdscr)) == ERR)
+    {
+      if (!char_buffer.empty())
+      {
+        const auto ptr = buffer.c_str();
 
-  MvAddStr( y, x, s );
-
-  nodelay( stdscr, true );
-  do {
-    c1 = wgetch(stdscr);
-
-    if ( c1 != ERR ) {
-
-      if( c1 >= ' ' && c1 < 0xff && c1 != 127 ) {
-        if ( len_flag == true) beep();
-        else {
-          buf[0] = (char)c1;
-	  strcat(sbuf, buf);
-	}
-      } else {
-        /* Control symbols */
-        switch( c1 )
+        if (insert_flag && pos >= StrVisualLength(ptr))
         {
-        case 'C' & 0x1f     : c1 = 27;
-			      break;
+          // Append symbol.
+          buffer.append(char_buffer);
+        } else {
+          // Insert / overwrite symbol at cursor position.
+          auto ls = pos > 0 ? StrLeft(ptr, pos) : Strdup("");
+          auto rs = StrRight(
+            ptr,
+            StrVisualLength(ptr) - pos - (insert_flag ? 0 : 1)
+          );
 
-        case KEY_LEFT       : if( p > 0 )
-                                p--;
-                              else
-                                beep();
-                              break;
-        case KEY_RIGHT      : if( p < StrVisualLength(s) )
-                                p++;
-                              else
-                                beep();
-                              break;
-	case KEY_UP         :
-	                      nodelay(stdscr, false);
-			      pp = GetHistory();
-			      nodelay(stdscr, true);
-                             if (pp == NULL) break;
-                             if(*pp)
-                             {
-			       ls = StrLeft(pp, length);
-			       strcpy(s, ls);
-			       free(ls);
-			       p = StrVisualLength(s);
-                               MvAddStr( y, x, s );
-                               for(i=p; i < length; i++)
-                                 addch( '_' );
-                               RefreshWindow( stdscr );
-                               doupdate();
-                             }
-                             break;
-
-        case KEY_HOME       : p = 0;
-                              break;
-        case KEY_END        : p = StrVisualLength( s );
-                              break;
-        case KEY_DC         : if( p < StrVisualLength(s) )
-                              {
-			        ls = StrLeft(s, p);
-				rs = StrRight(s, StrVisualLength(s) - p - 1);
-				strcpy(s, ls);
-				strcat(s, rs);
-				free(ls);
-				free(rs);
-				MvAddStr( y, x, s );
-                                addch( '_' );
-                              }
-                              break;
-	case 0x08           :
-        case 0x7F           :
-        case KEY_BACKSPACE  : if( p > 0 )
-                              {
-			        ls = StrLeft(s, p - 1);
-				rs = StrRight(s, StrVisualLength(s) - p);
-				strcpy(s, ls);
-				strcat(s, rs);
-				free(ls);
-				free(rs);
-				MvAddStr( y, x, s );
-                                addch( '_' );
-                                p--;
-                              }
-                              else
-                                beep();
-                              break;
-        case KEY_DL         : for(i=0; i < StrVisualLength(s) - p; i++) addch( '_' );
-			      ls = StrLeft(s, p);
-			      strcpy(s, ls);
-			      free(ls);
-                              break;
-	case KEY_EIC        :
-        case KEY_IC         : insert_flag ^= true;
-                              break;
-	case '\t'           : if(( pp = GetMatches(s)) == NULL) {
-			       break;
-			     }
-                             if(*pp)
-                             {
-			       ls = StrLeft(pp, length);
-			       strcpy(s, ls);
-			       free(ls);
-			       p = StrVisualLength(s);
-			       free(pp);
-                               MvAddStr( y, x, s );
-                               for(i=p; i < length; i++) addch( '_' );
-                               RefreshWindow( stdscr );
-                               doupdate();
-                             }
-                             break;
-#ifdef KEY_F
-        case KEY_F(2)       :
-#endif
-        case 'F' & 0x1f     : if(KeyF2Get( statistic.tree,
-                                           statistic.disp_begin_pos,
-                                           statistic.cursor_pos, path))
-                              {
-			        /* beep(); */
-				break;
-			      }
-                              if(*path)
-                              {
-			        ls = StrLeft(path, length);
-				strcpy(s, ls);
-				free(ls);
-			        p = StrVisualLength(s);
-                                MvAddStr( y, x, s );
-                                for(i=p; i < length; i++) addch( '_' );
-                                RefreshWindow( stdscr );
-                                doupdate();
-                              }
-                              break;
-
-        default             : if( c1 == LF ) c1 = CR;
-                              break;
-        } /* switch */
-      } /* else control symbols */
-    } else {
-
-      if (strlen(sbuf) > 0) {
-       if ( insert_flag ) {
-  	    /* append symbol */
-	    if ( p >= StrVisualLength(s)) strcat(s, sbuf);
-	    else {
-	      /* insert symbol at cursor position */
-	      if ( p > 0 ) ls = StrLeft(s, p);
-	      else ls = Strdup("");
-	      rs = StrRight(s, StrVisualLength(s) - p);
-	      strcpy(s, ls);
-	      strcat(s, sbuf);
-	      strcat(s, rs);
-	      free(ls);
-	      free(rs);
-	    }
-          } else {
-            /* owerwrite symbol at cursor position */
-	    if ( p > StrVisualLength(s) - 1) strcat(s, sbuf);
-	    else {
-  	      if (p > 0) ls = StrLeft(s, p);
-	      else ls = Strdup("");
-	      rs = StrRight(s, StrVisualLength(s) - p - 1);
-	      strcpy(s, ls);
-	      strcat(s, sbuf);
-	      strcat(s, rs);
-	      free(ls);
-	      free(rs);
-	    }
-	  }
-
-	strcpy(sbuf, "");
-	p++;
+          buffer.assign(ls);
+          std::free(static_cast<void*>(ls));
+          buffer.append(char_buffer);
+          if (rs)
+          {
+            buffer.append(rs);
+            std::free(static_cast<void*>(rs));
+          }
+        }
+        char_buffer.clear();
+        ++pos;
       }
 
-      if (StrVisualLength(s) >= length) len_flag = true;
-      else len_flag = false;
-
-      MvAddStr( y, x, s );
-      wmove(stdscr, y, x + p);
+      max_length_reached = StrVisualLength(buffer.c_str()) >= max_length;
+      RefreshInputString(buffer, y, x, pos, max_length);
+      continue;
     }
-  } while( c1 !=  27 && c1 != CR );
 
-  nodelay( stdscr, false );
+    switch (c)
+    {
+      case 'C' & 0x1f:
+        c = 27;
+        break;
 
-  p = strlen( s );
-  move( y, x + p );
+      case KEY_LEFT:
+        if (pos > 0)
+        {
+          --pos;
+        } else {
+          beep();
+        }
+        break;
 
-  for(i=0; i < length - p; i++ )
-   addch( ' ' );
+      case KEY_RIGHT:
+        if (pos < StrVisualLength(buffer.c_str()))
+        {
+          ++pos;
+        } else {
+          break;
+        }
+        break;
 
-  move( y, x );
-  leaveok( stdscr, true);
+      case KEY_BACKSPACE:
+      case 'H' & 0x1f:
+      case 0x7f:
+        if (pos > 0)
+        {
+          const auto ptr = buffer.c_str();
+          const auto ls = StrLeft(ptr, pos - 1);
+          const auto rs = StrRight(ptr, StrVisualLength(ptr) - pos);
+
+          buffer.assign(ls);
+          std::free(static_cast<void*>(ls));
+          if (rs)
+          {
+            buffer.append(rs);
+            std::free(static_cast<void*>(rs));
+          }
+          --pos;
+        } else {
+          beep();
+        }
+        break;
+
+      case KEY_DC:
+        if (pos < StrVisualLength(buffer.c_str()))
+        {
+          const auto ptr = buffer.c_str();
+          const auto ls = StrLeft(ptr, pos);
+          const auto rs = StrRight(ptr, StrVisualLength(ptr) - pos - 1);
+
+          buffer.assign(ls);
+          std::free(static_cast<void*>(ls));
+          if (rs)
+          {
+            buffer.append(rs);
+            std::free(static_cast<void*>(rs));
+          }
+        } else {
+          beep();
+        }
+        break;
+
+      case KEY_DL:
+        {
+          const auto ls = StrLeft(buffer.c_str(), pos);
+
+          buffer.assign(ls);
+          std::free(static_cast<void*>(ls));
+          break;
+        }
+
+      case KEY_UP:
+      {
+        const char* pp;
+
+        nodelay(stdscr, FALSE);
+        pp = GetHistory();
+        nodelay(stdscr, TRUE);
+        if (pp && *pp)
+        {
+          const auto ls = StrLeft(pp, max_length);
+
+          buffer = ls;
+          pos = StrVisualLength(ls);
+          std::free(static_cast<void*>(ls));
+          MvAddStr(y, x, buffer);
+          for (auto i = pos; i < max_length; ++i)
+          {
+            addch('_');
+          }
+          RefreshWindow(stdscr);
+          doupdate();
+        }
+        break;
+      }
+
+      case KEY_HOME:
+      case 'A' & 0x1f:
+        pos = 0;
+        break;
+
+      case KEY_END:
+      case 'E' & 0x1f:
+        pos = StrVisualLength(buffer.c_str());
+        break;
+
+      case KEY_EIC:
+      case KEY_IC:
+        insert_flag = !insert_flag;
+        break;
+
+      case '\t':
+      {
+        auto pp = GetMatches(buffer);
+
+        if (!pp)
+        {
+          break;
+        }
+        if (*pp)
+        {
+          const auto ls = StrLeft(pp, max_length);
+
+          buffer = ls;
+          pos = StrVisualLength(ls);
+          std::free(static_cast<void*>(ls));
+          MvWAddStr(stdscr, y, x, buffer);
+          for (auto i = pos; i < max_length; ++i)
+          {
+            addch('_');
+          }
+          RefreshWindow(stdscr);
+          doupdate();
+        }
+        std::free(static_cast<void*>(pp));
+        break;
+      }
+
+#if defined(KEY_F)
+      case KEY_F(2):
+#endif
+      case 'F' & 0x1f:
+      {
+        char path[PATH_LENGTH + 1];
+
+        if (KeyF2Get(statistic.tree, statistic.disp_begin_pos, statistic.cursor_pos, path))
+        {
+          break;
+        }
+        if (*path)
+        {
+          const auto ls = StrLeft(path, max_length);
+
+          buffer = ls;
+          pos = StrVisualLength(ls);
+          std::free(static_cast<void*>(ls));
+        }
+        break;
+      }
+
+      case LF:
+        c = CR;
+        break;
+
+      default:
+        if (c >= ' ' && c < 0xff && c != 127)
+        {
+          if (max_length_reached)
+          {
+            beep();
+          } else {
+            char_buffer.append(1, static_cast<char>(c));
+          }
+        }
+        break;
+    }
+  }
+  while (c != 27 && c != CR);
+
+  wmove(stdscr, y, x + buffer.length());
+  for (std::size_t i = 0; i < max_length - buffer.length(); ++i)
+  {
+    mvwaddch(stdscr, y, x + i, ' ');
+  }
+  wmove(stdscr, y, x);
+
+  nodelay(stdscr, FALSE);
+  leaveok(stdscr, TRUE);
   curs_set(0);
   print_time = true;
-  InsHistory( s );
-#ifdef READLINE_SUPPORT
-  pp = tilde_expand(s);
+
+  InsHistory(buffer);
+
+#if defined(READLINE_SUPPORT)
+  pp = tilde_expand(buffer.c_str());
 #else
-  pp = Strdup(s);
+  pp = Strdup(buffer.c_str());
 #endif
 
-  strncpy( s, pp, length - 1);
-  s[length]='\0';
-  xfree(pp);
-  return( c1 );
+  std::strncpy(s, pp, max_length - 1);
+  s[max_length] = 0;
+  xfree(static_cast<void*>(pp));
+
+  return c;
 }
-
-
-
-
 
 int InputChoise(const char *msg, const char *term)
 {
