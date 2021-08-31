@@ -749,7 +749,6 @@ void MvWAddStr(WINDOW* win, int y, int x, const std::string& str);
 void WAddStr(WINDOW* win, const std::string& str);
 void AddStr(const std::string& str);
 extern void ClockHandler(int);
-extern int Strrcmp(char *s1, char* s2);
 std::optional<std::string> GetExtViewer(const std::string& filename);
 extern void InitClock(void);
 extern void SuspendClock(void);
