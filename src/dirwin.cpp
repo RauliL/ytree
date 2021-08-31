@@ -124,18 +124,23 @@ static void PrintDirEntry(WINDOW *win,
 
   switch( dir_mode )
   {
-    case MODE_1 :
-                 (void)GetAttributes(de_ptr->stat_struct.st_mode, attributes);
-                 (void)CTime( de_ptr->stat_struct.st_mtime, modify_time );
-                 line_buffer = MallocOrAbort<char>(38);
-                 std::strcpy(format, "%10s %3d %8lld %12s");
+    case MODE_1:
+      GetAttributes(de_ptr->stat_struct.st_mode, attributes);
+      CTime(de_ptr->stat_struct.st_mtime, modify_time);
+      line_buffer = MallocOrAbort<char>(38);
+      std::strcpy(format, "%10s %3d %8lld %12s");
 
-		 (void) sprintf( line_buffer, format, attributes,
-                                 de_ptr->stat_struct.st_nlink,
-                                 (long long) de_ptr->stat_struct.st_size,
-                                 modify_time
-                                 );
-		 break;
+      std::snprintf(
+        line_buffer,
+        38,
+        format,
+        attributes,
+        de_ptr->stat_struct.st_nlink,
+        static_cast<long long>(de_ptr->stat_struct.st_size),
+        modify_time
+      );
+      break;
+
     case MODE_2 :
                  (void)GetAttributes(de_ptr->stat_struct.st_mode, attributes);
                  if (const auto owner_name_ptr = GetPasswdName(de_ptr->stat_struct.st_uid))

@@ -246,11 +246,9 @@ int GetCopyParameter(const char *from_file, bool path_copy, char *to_file, char 
 
   if( path_copy )
   {
-    (void) sprintf( buffer, "PATHCOPY %s", from_file );
-  }
-  else
-  {
-    (void) sprintf( buffer, "COPY %s", from_file );
+    std::snprintf(buffer, sizeof(buffer), "PATHCOPY %s", from_file);
+  } else {
+    std::snprintf(buffer, sizeof(buffer), "COPY %s", from_file);
   }
 
   ClearHelp();

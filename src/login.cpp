@@ -210,9 +210,9 @@ int LoginDisk(char *path)
   }
 
 
-  if( mode != DISK_MODE && mode != USER_MODE)
+  if (mode != DISK_MODE && mode != USER_MODE)
   {
-    (void) strcpy( statistic.tree->name, path );
+    std::strcpy(statistic.tree->name, path);
 
     if (pipe(p))
     {
@@ -221,7 +221,6 @@ int LoginDisk(char *path)
       return -1;
     }
 
-
     if (!file_method)
     {
       /* NO_COMPRESS */
@@ -229,220 +228,256 @@ int LoginDisk(char *path)
 
       /* gtar tvf - < TAR_FILE */
       /*-----------------------*/
-
-      (void) sprintf( command_line, "%s < '%s'",
-		      TARLIST,
-		      statistic.login_path
-		    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s < '%s'",
+        TARLIST,
+        statistic.login_path
+      );
     }
     else if (*file_method == CompressMethod::ZOO_COMPRESS)
     {
       /* zoo vom ZOO_FILE */
       /*------------------*/
-
-      (void) sprintf( command_line, "%s '%s'",
-                      ZOOLIST,
-                      statistic.login_path
-                    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s '%s'",
+        ZOOLIST,
+        statistic.login_path
+      );
     }
     else if (*file_method == CompressMethod::RPM_COMPRESS)
     {
       /* rpm vom RPM_FILE */
       /*------------------*/
-
-      (void) sprintf( command_line, "%s '%s'",
-                      RPMLIST,
-                      statistic.login_path
-                    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s '%s'",
+        RPMLIST,
+        statistic.login_path
+      );
     }
     else if (*file_method == CompressMethod::LHA_COMPRESS)
     {
       /* LHA_FILE */
       /*----------*/
-
-      (void) sprintf( command_line, "%s '%s'",
-		      LHALIST,
-		      statistic.login_path
-		    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s '%s'",
+		    LHALIST,
+		    statistic.login_path
+		  );
     }
     else if (*file_method == CompressMethod::ZIP_COMPRESS)
     {
       /* ZIP_FILE */
       /*----------*/
-
-      (void) sprintf( command_line, "%s '%s'",
-		      ZIPLIST,
-		      statistic.login_path
-		    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s '%s'",
+		    ZIPLIST,
+		    statistic.login_path
+		  );
     }
     else if (*file_method == CompressMethod::ARC_COMPRESS)
     {
       /* ARC_FILE */
       /*----------*/
-
-      (void) sprintf( command_line, "%s '%s'",
-		      ARCLIST,
-		      statistic.login_path
-		    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s '%s'",
+		    ARCLIST,
+		    statistic.login_path
+		  );
     }
     else if (*file_method == CompressMethod::RAR_COMPRESS)
     {
       /* RAR_FILE */
       /*----------*/
-
-      (void) sprintf( command_line, "%s '%s'",
-		      RARLIST,
-		      statistic.login_path
-		    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s '%s'",
+		    RARLIST,
+		    statistic.login_path
+		  );
     }
     else if (*file_method == CompressMethod::FREEZE_COMPRESS)
     {
       /* melt < TAR_FILE | gtar tvf - */
       /*------------------------------*/
-
-      (void) sprintf( command_line, "%s < '%s' %s | %s",
-		      MELT,
-		      statistic.login_path,
-		      ERR_TO_STDOUT,
-		      TARLIST
-		    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s < '%s' %s | %s",
+		    MELT,
+		    statistic.login_path,
+		    ERR_TO_STDOUT,
+		    TARLIST
+		  );
     }
     else if (*file_method == CompressMethod::MULTIPLE_FREEZE_COMPRESS)
     {
-      (void) strncpy( cat_file_name, statistic.login_path, l - 2 );
-      (void) strcpy( &cat_file_name[l - 2], "*" );
+      std::strncpy(cat_file_name, statistic.login_path, l - 2);
+      std::strcpy(&cat_file_name[l - 2], "*");
 
       /* cat TAR_FILE | melt | gtar tvf - */
       /*----------------------------------*/
-
-      (void) sprintf( command_line, "%s '%s' %s | %s | %s",
-		      CAT,
-		      cat_file_name,
-		      ERR_TO_STDOUT,
-		      MELT,
-		      TARLIST
-		    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s '%s' %s | %s | %s",
+		    CAT,
+		    cat_file_name,
+		    ERR_TO_STDOUT,
+		    MELT,
+		    TARLIST
+		  );
     }
     else if (*file_method == CompressMethod::COMPRESS_COMPRESS)
     {
       /* uncompress < TAR_FILE | gtar tvf - */
       /*------------------------------------*/
-
-      (void) sprintf( command_line, "%s < '%s' %s | %s",
-		      UNCOMPRESS,
-		      statistic.login_path,
-		      ERR_TO_STDOUT,
-		      TARLIST
-		    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s < '%s' %s | %s",
+		    UNCOMPRESS,
+		    statistic.login_path,
+		    ERR_TO_STDOUT,
+		    TARLIST
+		  );
     }
     else if (*file_method == CompressMethod::MULTIPLE_COMPRESS_COMPRESS)
     {
-      (void) strncpy( cat_file_name, statistic.login_path, l - 2 );
-      (void) strcpy( &cat_file_name[l - 2], "*" );
+      std::strncpy(cat_file_name, statistic.login_path, l - 2);
+      std::strcpy(&cat_file_name[l - 2], "*");
 
       /* cat TAR_FILE.X* | uncompress | gtar tvf - */
       /*-------------------------------------------*/
-
-      (void) sprintf( command_line, "%s %s | %s %s | %s",
-		      CAT,
-		      cat_file_name,
-		      UNCOMPRESS,
-		      ERR_TO_STDOUT,
-		      TARLIST
-		    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s %s | %s %s | %s",
+		    CAT,
+		    cat_file_name,
+		    UNCOMPRESS,
+		    ERR_TO_STDOUT,
+		    TARLIST
+		  );
     }
     else if (*file_method == CompressMethod::GZIP_COMPRESS)
     {
       /* gunzip < TAR_FILE | gtar tvf - */
       /*--------------------------------*/
-
-      (void) sprintf( command_line, "%s < '%s' %s | %s",
-		      GNUUNZIP,
-		      statistic.login_path,
-		      ERR_TO_STDOUT,
-		      TARLIST
-		    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s < '%s' %s | %s",
+		    GNUUNZIP,
+		    statistic.login_path,
+		    ERR_TO_STDOUT,
+		    TARLIST
+		  );
     }
     else if (*file_method == CompressMethod::MULTIPLE_GZIP_COMPRESS)
     {
-      (void) strncpy( cat_file_name, statistic.login_path, l - 2 );
-      (void) strcpy( &cat_file_name[l - 2], "*" );
+      std::strncpy(cat_file_name, statistic.login_path, l - 2);
+      std::strcpy(&cat_file_name[l - 2], "*");
 
       /* cat TAR_FILE.X* | gunzip | gtar tvf - */
       /*---------------------------------------*/
-
-      (void) sprintf( command_line, "%s %s | %s %s | %s",
-		      CAT,
-		      cat_file_name,
-		      GNUUNZIP,
-		      ERR_TO_STDOUT,
-		      TARLIST
-		    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s %s | %s %s | %s",
+		    CAT,
+		    cat_file_name,
+		    GNUUNZIP,
+		    ERR_TO_STDOUT,
+		    TARLIST
+		  );
     }
     else if (*file_method == CompressMethod::BZIP_COMPRESS)
     {
       /* bunzip2 < TAR_FILE | gtar tvf - */
       /*---------------------------------*/
-
-      (void) sprintf( command_line, "%s < '%s' %s | %s",
-		      BUNZIP,
-		      statistic.login_path,
-		      ERR_TO_STDOUT,
-		      TARLIST
-		    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s < '%s' %s | %s",
+		    BUNZIP,
+		    statistic.login_path,
+		    ERR_TO_STDOUT,
+		    TARLIST
+		  );
     }
     else if (*file_method == CompressMethod::TAPE_DIR_FREEZE_COMPRESS)
     {
       /* melt < TAR_FILE */
       /*-----------------*/
-
-      (void) sprintf( command_line, "%s < '%s'",
-		      MELT,
-		      statistic.login_path
-		    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s < '%s'",
+		    MELT,
+		    statistic.login_path
+		  );
     }
     else if (*file_method == CompressMethod::TAPE_DIR_COMPRESS_COMPRESS)
     {
       /* uncompress < TAR_FILE */
       /*-----------------------*/
-
-      (void) sprintf( command_line, "%s < '%s'",
-		      UNCOMPRESS,
-		      statistic.login_path
-		    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s < '%s'",
+		    UNCOMPRESS,
+		    statistic.login_path
+		  );
     }
     else if (*file_method == CompressMethod::TAPE_DIR_GZIP_COMPRESS)
     {
       /* gunzip < TAR_FILE */
       /*-------------------*/
-
-      (void) sprintf( command_line, "%s < '%s'",
-		      GNUUNZIP,
-		      statistic.login_path
-		    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s < '%s'",
+		    GNUUNZIP,
+		    statistic.login_path
+		  );
     }
     else if (*file_method == CompressMethod::TAPE_DIR_BZIP_COMPRESS)
     {
       /* bunzip2 < TAR_FILE */
       /*--------------------*/
-
-      (void) sprintf( command_line, "%s < '%s'",
-		      BUNZIP,
-		      statistic.login_path
-		    );
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s < '%s'",
+		    BUNZIP,
+		    statistic.login_path
+		  );
     }
     else if (*file_method == CompressMethod::TAPE_DIR_NO_COMPRESS)
     {
       /* cat < TAR_FILE */
       /*----------------*/
-
-      (void) sprintf( command_line, "%s < '%s'",
-		      CAT,
-		      statistic.login_path
-		    );
-    }
-    else
-    {
+      std::snprintf(
+        command_line,
+        COMMAND_LINE_LENGTH,
+        "%s < '%s'",
+		    CAT,
+		    statistic.login_path
+		  );
+    } else {
       ErrorPrintf(
         "unknown file method %d",
         static_cast<int>(*file_method)
@@ -454,7 +489,7 @@ int LoginDisk(char *path)
       return -1;
     }
 
-    (void) strcat( command_line, ERR_TO_NULL );
+    std::strcat(command_line, ERR_TO_NULL);
 
 #ifdef DEBUG
   fprintf( stderr, "system( \"%s\" )\n", command_line );

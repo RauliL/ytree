@@ -230,7 +230,7 @@ static int ViewArchiveFile(const std::string& file_path)
   result = SystemCall(command_line);
   if (result)
   {
-    MessagePrintf("can't execute*%s", command_line);
+    MessagePrintf("can't execute*%s", command_line.c_str());
   }
 
   return result;

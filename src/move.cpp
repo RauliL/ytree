@@ -177,7 +177,7 @@ int GetMoveParameter(const char *from_file, char *to_file, char *to_dir)
     (void) strcpy( to_file, from_file );
   }
 
-  (void) sprintf( buffer, "MOVE %s", from_file );
+  std::snprintf(buffer, sizeof(buffer), "MOVE %s", from_file);
 
   ClearHelp();
 

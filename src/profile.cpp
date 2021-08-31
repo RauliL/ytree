@@ -212,7 +212,7 @@ int ReadProfile(const std::optional<std::string>& custom_path)
   std::string filename;
   char buffer[BUFSIZ];
   std::optional<Section> section;
-  FILE* f;
+  std::FILE* f = nullptr;
   int result = -1;
 
   if (custom_path)

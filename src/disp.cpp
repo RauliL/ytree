@@ -150,22 +150,24 @@ static const char* file_help[MAX_MODES][2] =
     }
   };
 
-
-
-
-
-static void DisplayVersion(void)
+static void DisplayVersion()
 {
-  static char version[80];
+  char version[80];
 
   ClearHelp();
-  (void) sprintf( version,
-		  "ytree Version %sPL%d %s (Werner Bregulla)",
-		  VERSION,
-		  PATCHLEVEL,
-		  VERSIONDATE
-		);
-  MvAddStr( LINES - 2, (unsigned) (COLS - strlen( version )) >> 1, version );
+  std::snprintf(
+    version,
+    sizeof(version),
+		"ytree Version %sPL%d %s (Werner Bregulla)",
+		VERSION,
+		PATCHLEVEL,
+		VERSIONDATE
+	);
+  MvAddStr(
+    LINES - 2,
+    static_cast<unsigned>(COLS - std::strlen(version)) >> 1,
+    version
+  );
 }
 
 
