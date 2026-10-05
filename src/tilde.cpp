@@ -25,7 +25,6 @@
 #include "ytree.h"
 #include "tilde.h"
 #include "xmalloc.h"
-/*#include <string.h>*/
 
 /*#if !defined (HAVE_GETPW_DECLS)
 extern struct passwd *getpwuid(uid_t);
@@ -302,7 +301,7 @@ tilde_expand (const char* string)
 
 #ifdef TEST
 
-#include <stdio.h>
+#include <cstdio>
 
 main (argc, argv)
      int argc;

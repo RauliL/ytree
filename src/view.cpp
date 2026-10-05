@@ -8,7 +8,7 @@
 
 
 #include "ytree.h"
-#include <errno.h>
+#include <cerrno>
 #include "xmalloc.h"
 
 typedef struct MODIF {
