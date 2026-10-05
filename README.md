@@ -11,21 +11,36 @@ Fork by Rauli Laine
 
 ## Platforms
 
-Any kind of POSIX compatible system I guess.
+POSIX systems (Linux, *BSD, macOS) with ncurses, and Windows via PDCursesMod
+(disk browsing; archive browsing is not yet supported on Windows).
 
 ## Building
 
-Requires a C++20 compiler, CMake 3.14+, and ncurses.
+Requires a C++20 compiler and CMake 3.14+.
 
-In most instances, it should be sufficient to
+- On Unix: ncurses (default), or optionally PDCursesMod
+- On Windows: PDCursesMod is fetched and built automatically
 
 ```sh
 $ mkdir build
 $ cd build
 $ cmake ..
-$ build
-$ sudo make install
+$ cmake --build .
+$ sudo cmake --install .
 $ ytree
+```
+
+Curses backend selection:
+
+```sh
+# default: ncurses on Unix, PDCursesMod on Windows
+cmake -DYTREE_CURSES_BACKEND=auto ..
+
+# force ncurses
+cmake -DYTREE_CURSES_BACKEND=ncurses ..
+
+# force PDCursesMod (VT port on Unix, wincon on Windows)
+cmake -DYTREE_CURSES_BACKEND=pdcurses ..
 ```
 
 For customizing ytree edit ytree.toml and copy it to

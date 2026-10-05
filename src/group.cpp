@@ -1,8 +1,6 @@
 #include "ytree.h"
 
-#if defined(_WIN32)
-# include <grp.h>
-#endif
+#if !defined(_WIN32)
 
 std::optional<std::string> GetGroupName(gid_t gid)
 {
@@ -17,3 +15,17 @@ std::optional<int> GetGroupId(const std::string& name)
 
   return group ? std::make_optional(group->gr_gid) : std::nullopt;
 }
+
+#else /* _WIN32 */
+
+std::optional<std::string> GetGroupName(gid_t /*gid*/)
+{
+  return std::nullopt;
+}
+
+std::optional<int> GetGroupId(const std::string& /*name*/)
+{
+  return std::nullopt;
+}
+
+#endif

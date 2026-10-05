@@ -1,8 +1,6 @@
 #include "ytree.h"
 
-#if defined(_WIN32)
-# include <pwd.h>
-#endif
+#if !defined(_WIN32)
 
 std::optional<std::string> GetPasswdName(uid_t uid)
 {
@@ -17,3 +15,17 @@ std::optional<int> GetPasswdUid(const std::string& name)
 
   return pwd ? std::make_optional(pwd->pw_uid) : std::nullopt;
 }
+
+#else /* _WIN32 */
+
+std::optional<std::string> GetPasswdName(uid_t /*uid*/)
+{
+  return std::nullopt;
+}
+
+std::optional<int> GetPasswdUid(const std::string& /*name*/)
+{
+  return std::nullopt;
+}
+
+#endif

@@ -212,6 +212,10 @@ int LoginDisk(char *path)
 
   if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
+#if defined(_WIN32)
+    Error("Archive browsing is not supported on this platform yet");
+    return -1;
+#else
     std::strcpy(statistic.tree->name, path);
 
     if (pipe(p))
@@ -617,6 +621,7 @@ int LoginDisk(char *path)
       }
       (void) fclose( f );
     }
+#endif /* !_WIN32 */
   }
   else
   {

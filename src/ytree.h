@@ -25,17 +25,11 @@
 #include <string>
 #include <string_view>
 
-#include <dirent.h>
-#include <fcntl.h>
-#include <grp.h>
-#include <pwd.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
+#include "platform.h"
 
-#if defined(WITH_UTF8) && __has_include(<ncursesw/ncurses.h>)
+#if defined(YTREE_CURSES_PDCURSES)
+# include <curses.h>
+#elif defined(WITH_UTF8) && __has_include(<ncursesw/ncurses.h>)
 # include <ncursesw/ncurses.h>
 #elif defined(WITH_UTF8) && __has_include(<ncursesw/curses.h>)
 # include <ncursesw/curses.h>
@@ -49,35 +43,38 @@
 # include <curses.h>
 #endif
 
-#ifdef WIN32
+#if defined(YTREE_CURSES_PDCURSES) || defined(_WIN32)
 
-#define  S_IREAD         S_IRUSR
-#define  S_IWRITE        S_IWUSR
-#define  S_IEXEC         S_IXUSR
+# if defined(_WIN32)
+#  ifndef S_IREAD
+#   define S_IREAD  S_IRUSR
+#  endif
+#  ifndef S_IWRITE
+#   define S_IWRITE S_IWUSR
+#  endif
+#  ifndef S_IEXEC
+#   define S_IEXEC  S_IXUSR
+#  endif
 
-#define  popen           _popen
-#define  pclose          _pclose
-#define  sys_errlist     _sys_errlist
+#  define popen  _popen
+#  define pclose _pclose
+# endif
 
-/* Diese Funktionen koennen direkt umgesetzt werden */
-/*--------------------------------------------------*/
+/* Fallbacks for APIs that ncurses provides but PDCurses may lack. */
+# ifndef echochar
+#  define echochar(ch) do { addch(ch); refresh(); } while (0)
+# endif
+# ifndef putp
+#  define putp(str) ((void)puts(str))
+# endif
+# ifndef vidattr
+#  define vidattr(attr) ((void)0)
+# endif
+# ifndef typeahead
+#  define typeahead(file) ((void)0)
+# endif
 
-#define  echochar( ch )              { addch( ch ); refresh(); }
-#define  putp( str )                 puts( str )
-
-
-/* ... hier ist ein wenig mehr Arbeit noetig ... */
-/*-----------------------------------------------*/
-
-#define  vidattr( attr )
-
-
-/* ... und hier gibt's keine entsprechende Funktion. */
-/*---------------------------------------------------*/
-
-#define  typeahead( file )
-
-#endif /* WIN32 */
+#endif /* YTREE_CURSES_PDCURSES || _WIN32 */
 
 
 
@@ -348,7 +345,9 @@ struct SortSpec
 extern const char* FILE_SEPARATOR_STRING;
 extern const char FILE_SEPARATOR_CHAR;
 
-#define ERR_TO_NULL           " 2> /dev/null"
+#ifndef ERR_TO_NULL
+# define ERR_TO_NULL " 2> /dev/null"
+#endif
 #define ERR_TO_STDOUT         " 2>&1 "
 
 #define LF         10

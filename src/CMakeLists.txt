@@ -16,19 +16,50 @@ OPTION(
   ON
 )
 
-SET(CURSES_NEED_NCURSES TRUE)
-IF(WITH_UTF8)
-  SET(CURSES_NEED_WIDE TRUE)
+# auto: PDCursesMod on Windows, ncurses elsewhere
+SET(
+  YTREE_CURSES_BACKEND
+  "auto"
+  CACHE STRING
+  "Curses backend: auto, ncurses, or pdcurses"
+)
+SET_PROPERTY(
+  CACHE YTREE_CURSES_BACKEND
+  PROPERTY STRINGS auto ncurses pdcurses
+)
+
+IF(YTREE_CURSES_BACKEND STREQUAL "auto")
+  IF(WIN32)
+    SET(YTREE_CURSES_BACKEND_EFFECTIVE "pdcurses")
+  ELSE()
+    SET(YTREE_CURSES_BACKEND_EFFECTIVE "ncurses")
+  ENDIF()
+ELSE()
+  SET(YTREE_CURSES_BACKEND_EFFECTIVE "${YTREE_CURSES_BACKEND}")
 ENDIF()
 
-INCLUDE(FindCurses)
+MESSAGE(STATUS "ytree curses backend: ${YTREE_CURSES_BACKEND_EFFECTIVE}")
 
-IF(NOT CURSES_FOUND)
+IF(YTREE_CURSES_BACKEND_EFFECTIVE STREQUAL "pdcurses")
+  INCLUDE(PDCursesMod)
+  SET(YTREE_CURSES_PDCURSES TRUE)
+ELSEIF(YTREE_CURSES_BACKEND_EFFECTIVE STREQUAL "ncurses")
+  SET(CURSES_NEED_NCURSES TRUE)
   IF(WITH_UTF8)
-    MESSAGE(FATAL_ERROR "wide ncurses development package is required (e.g. libncurses-dev / libncursesw-dev)")
-  ELSE()
-    MESSAGE(FATAL_ERROR "ncurses development package is required (e.g. libncurses-dev)")
+    SET(CURSES_NEED_WIDE TRUE)
   ENDIF()
+
+  INCLUDE(FindCurses)
+
+  IF(NOT CURSES_FOUND)
+    IF(WITH_UTF8)
+      MESSAGE(FATAL_ERROR "wide ncurses development package is required (e.g. libncurses-dev / libncursesw-dev)")
+    ELSE()
+      MESSAGE(FATAL_ERROR "ncurses development package is required (e.g. libncurses-dev)")
+    ENDIF()
+  ENDIF()
+ELSE()
+  MESSAGE(FATAL_ERROR "Unknown YTREE_CURSES_BACKEND='${YTREE_CURSES_BACKEND}' (use auto, ncurses, or pdcurses)")
 ENDIF()
 
 CONFIGURE_FILE(
@@ -99,19 +130,28 @@ TARGET_COMPILE_FEATURES(
     cxx_std_20
 )
 
-TARGET_INCLUDE_DIRECTORIES(
-  ytree
-  PRIVATE
-    $<BUILD_INTERFACE:${CURSES_INCLUDE_DIR}>
-)
-
-TARGET_LINK_LIBRARIES(
-  ytree
-  PRIVATE
-    ${CURSES_LIBRARIES}
-    PeeloXdg
-    tomlplusplus::tomlplusplus
-)
+IF(YTREE_CURSES_BACKEND_EFFECTIVE STREQUAL "pdcurses")
+  TARGET_LINK_LIBRARIES(
+    ytree
+    PRIVATE
+      ${YTREE_PDCURSES_TARGET}
+      PeeloXdg
+      tomlplusplus::tomlplusplus
+  )
+ELSE()
+  TARGET_INCLUDE_DIRECTORIES(
+    ytree
+    PRIVATE
+      $<BUILD_INTERFACE:${CURSES_INCLUDE_DIR}>
+  )
+  TARGET_LINK_LIBRARIES(
+    ytree
+    PRIVATE
+      ${CURSES_LIBRARIES}
+      PeeloXdg
+      tomlplusplus::tomlplusplus
+  )
+ENDIF()
 
 INSTALL(
   TARGETS

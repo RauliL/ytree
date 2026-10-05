@@ -8,6 +8,7 @@
 #cmakedefine COLOR_SUPPORT
 #cmakedefine CLOCK_SUPPORT
 #cmakedefine WITH_UTF8
+#cmakedefine YTREE_CURSES_PDCURSES
 
 /* Default (max) TreeDepth on startup */
 #define DEFAULT_TREEDEPTH     "1"

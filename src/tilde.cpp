@@ -118,6 +118,18 @@ std::string glue_prefix_and_suffix(const char* prefix, const char* suffix, int s
 
 const char* sh_get_home_dir()
 {
+#if defined(_WIN32)
+  const char* home = std::getenv("USERPROFILE");
+  if (!home || !*home)
+  {
+    home = std::getenv("HOME");
+  }
+  if (!home || !*home)
+  {
+    home = "C:\\";
+  }
+  return home;
+#else
   const auto pw = getpwuid(getuid());
 
   if (!pw)
@@ -126,6 +138,7 @@ const char* sh_get_home_dir()
   }
 
   return pw->pw_dir;
+#endif
 }
 
 } // namespace
@@ -157,6 +170,12 @@ std::string tilde_expand_word(const std::string& filename)
 
   int user_len = 0;
   const auto username = isolate_tilde_prefix(filename.c_str(), &user_len);
+#if defined(_WIN32)
+  /* ~user is not supported on Windows; leave the token unchanged. */
+  (void)username;
+  (void)user_len;
+  return filename;
+#else
   const auto user_entry = getpwnam(username.c_str());
   std::string dirname;
 
@@ -171,6 +190,7 @@ std::string tilde_expand_word(const std::string& filename)
 
   endpwent();
   return dirname;
+#endif
 }
 
 /* Return a new string which is the result of tilde expanding STRING. */

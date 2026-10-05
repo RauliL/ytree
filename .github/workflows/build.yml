@@ -3,7 +3,7 @@ name: Build
 on: [push]
 
 jobs:
-  build:
+  build-ncurses:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,7 +14,23 @@ jobs:
           sudo apt-get install -y cmake g++ libncurses-dev
 
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DYTREE_CURSES_BACKEND=ncurses
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+  build-pdcurses:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ git
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DYTREE_CURSES_BACKEND=pdcurses
 
       - name: Build
         run: cmake --build build --config Release --parallel
