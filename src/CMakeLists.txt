@@ -80,7 +80,6 @@ ADD_EXECUTABLE(
   usermode.cpp
   util.cpp
   view.cpp
-  xmalloc.cpp
   zip.cpp
   zoo.cpp
 )

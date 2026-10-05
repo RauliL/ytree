@@ -788,8 +788,6 @@ extern int  RefreshDirWindow();
 std::string StrLeft(const char* str, std::size_t count);
 extern int  StrVisualLength(const char *str);
 void WAttrAddStr(WINDOW* win, int attr, const std::string& str);
-char* Strdup(const char* src);
-char* Strndup(const char* src, const std::size_t len);
 void StatOrAbort(const std::string& path, struct stat& st);
 std::optional<std::string> GetHomePath();
 std::optional<std::string> GetXdgCachePath();

@@ -1,5 +1,4 @@
 #include "ytree.h"
-#include "xmalloc.h"
 
 #include <unordered_map>
 
@@ -804,28 +803,6 @@ void GetMaxYX(WINDOW *win, int *height, int *width)
     Error("Unknown Window-ID*ABORT");
     std::exit(EXIT_FAILURE);
   }
-}
-
-char* Strdup(const char* src)
-{
-  const auto length = std::strlen(src);
-  auto copy = static_cast<char*>(std::malloc(length + 1));
-
-  std::memcpy(static_cast<void*>(copy), static_cast<const void*>(src), length);
-  copy[length] = 0;
-
-  return copy;
-}
-
-char* Strndup(const char* src, const std::size_t len)
-{
-  const auto n = std::min(std::strlen(src), len);
-  auto copy = static_cast<char*>(std::malloc(n + 1));
-
-  std::memcpy(static_cast<void*>(copy), static_cast<const void*>(src), n);
-  copy[n] = 0;
-
-  return copy;
 }
 
 std::optional<std::string> GetExtension(const std::string& filename)
