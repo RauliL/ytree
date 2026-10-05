@@ -452,11 +452,11 @@ bool KeyPressed()
 {
   bool pressed = false;
 
-#if !defined( linux )
+#if !defined( __linux__ )
   nodelay( stdscr, true );
   if( wgetch( stdscr ) != ERR ) pressed = true;
   nodelay( stdscr, false );
-#endif /* linux */
+#endif /* __linux__ */
 
   return( pressed );
 }
@@ -467,11 +467,11 @@ bool EscapeKeyPressed()
   bool pressed = false;
   int  c = 0;
 
-#if !defined( linux )
+#if !defined( __linux__ )
   nodelay( stdscr, true );
   if( ( c = wgetch( stdscr ) ) != ERR ) pressed = true;
   nodelay( stdscr, false );
-#endif /* linux */
+#endif /* __linux__ */
 
   return( ( pressed && c == ESC ) ? true : false );
 }

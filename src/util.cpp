@@ -903,29 +903,29 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
 
     if(*sptr == '%') {
       sptr++;
-      if(!strncmp(sptr, TAGSYMBOL_VIEWNAME, 3)) {
+      if(std::string_view(sptr).starts_with(TAGSYMBOL_VIEWNAME)) {
         *dptr = tag; n=1;
-      } else if(!strncmp(sptr, FILENAME_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(FILENAME_VIEWNAME)) {
         n = sprintf(dptr, format1, fe_ptr->name);
-      } else if(!strncmp(sptr, ATTRIBUTE_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(ATTRIBUTE_VIEWNAME)) {
         n = sprintf(dptr, "%10s", attributes);
-      } else if(!strncmp(sptr, LINKCOUNT_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(LINKCOUNT_VIEWNAME)) {
         n = sprintf(dptr, "%3d", (int)fe_ptr->stat_struct.st_nlink);
-      } else if(!strncmp(sptr, FILESIZE_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(FILESIZE_VIEWNAME)) {
         n = sprintf(dptr, "%7lld", (long long) fe_ptr->stat_struct.st_size);
-      } else if(!strncmp(sptr, MODTIME_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(MODTIME_VIEWNAME)) {
         n = sprintf(dptr, "%12s", modify_time);
-      } else if(!strncmp(sptr, SYMLINK_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(SYMLINK_VIEWNAME)) {
         n = sprintf(dptr, format2, sym_link_name);
-      } else if(!strncmp(sptr, UID_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(UID_VIEWNAME)) {
         n = sprintf(dptr, "%-8s", owner);
-      } else if(!strncmp(sptr, GID_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(GID_VIEWNAME)) {
         n = sprintf(dptr, "%-8s", group);
-      } else if(!strncmp(sptr, INODE_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(INODE_VIEWNAME)) {
         n = sprintf(dptr, "%7lld", (long long)fe_ptr->stat_struct.st_ino);
-      } else if(!strncmp(sptr, ACCTIME_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(ACCTIME_VIEWNAME)) {
         n = sprintf(dptr, "%12s", access_time);
-      } else if(!strncmp(sptr, CHGTIME_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(CHGTIME_VIEWNAME)) {
         n = sprintf(dptr, "%12s", change_time);
       } else {
 	n = -1;
@@ -960,29 +960,29 @@ int GetUserFileEntryLength( int max_filename_len, int max_linkname_len, const ch
 
     if(*sptr == '%') {
       sptr++;
-      if(!strncmp(sptr, TAGSYMBOL_VIEWNAME, 3)) {
+      if(std::string_view(sptr).starts_with(TAGSYMBOL_VIEWNAME)) {
         n=1;
-      } else if(!strncmp(sptr, FILENAME_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(FILENAME_VIEWNAME)) {
         n = max_filename_len;
-      } else if(!strncmp(sptr, ATTRIBUTE_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(ATTRIBUTE_VIEWNAME)) {
         n = 10;
-      } else if(!strncmp(sptr, LINKCOUNT_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(LINKCOUNT_VIEWNAME)) {
         n = 3;
-      } else if(!strncmp(sptr, FILESIZE_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(FILESIZE_VIEWNAME)) {
         n = 7;
-      } else if(!strncmp(sptr, MODTIME_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(MODTIME_VIEWNAME)) {
         n = 12;
-      } else if(!strncmp(sptr, SYMLINK_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(SYMLINK_VIEWNAME)) {
         n = max_linkname_len;
-      } else if(!strncmp(sptr, UID_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(UID_VIEWNAME)) {
         n = 8;
-      } else if(!strncmp(sptr, GID_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(GID_VIEWNAME)) {
         n = 8;
-      } else if(!strncmp(sptr, INODE_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(INODE_VIEWNAME)) {
         n = 7;
-      } else if(!strncmp(sptr, ACCTIME_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(ACCTIME_VIEWNAME)) {
         n = 12;
-      } else if(!strncmp(sptr, CHGTIME_VIEWNAME, 3)) {
+      } else if(std::string_view(sptr).starts_with(CHGTIME_VIEWNAME)) {
         n = 12;
       } else {
 	n = -1;

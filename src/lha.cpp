@@ -37,7 +37,7 @@ int ReadTreeFromLHA(DirEntry *dir_entry, FILE *f)
 
     if( ( (strlen( lha_line ) > (unsigned) 55 && lha_line[55] == ':' ) ||
           (strlen( lha_line ) > (unsigned) 61 && lha_line[61] == ':' ) ) &&
-  	  lha_line[34] != '*' && strncmp( &lha_line[1], "Total", 5 ) )
+  	  lha_line[34] != '*' && !std::string_view(&lha_line[1]).starts_with("Total") )
     {
       /* gueltiger Eintrag */
       /*-------------------*/

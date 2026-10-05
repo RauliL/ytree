@@ -72,7 +72,7 @@
 #endif
 
 
-#ifdef linux
+#ifdef __linux__
 #undef  DEFAULT_TARLIST
 #undef  DEFAULT_TAREXPAND
 #undef  DEFAULT_HEXDUMP
@@ -89,7 +89,7 @@
 #define DEFAULT_LHAEXPAND  "lharc p"
 #define DEFAULT_TAPEDEV    "/dev/rmt0"
 #define DEFAULT_UNCOMPRESS "gunzip"
-#endif /* linux */
+#endif /* __linux__ */
 
 #ifdef __GNU__
 #undef  DEFAULT_TARLIST
