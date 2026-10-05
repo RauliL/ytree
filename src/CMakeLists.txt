@@ -5,6 +5,14 @@ LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../cmake")
 INCLUDE(FindCurses)
 INCLUDE(FindReadline)
 
+IF(NOT CURSES_FOUND)
+  MESSAGE(FATAL_ERROR "ncurses development package is required (e.g. libncurses-dev)")
+ENDIF()
+
+IF(NOT READLINE_FOUND)
+  MESSAGE(FATAL_ERROR "readline development package is required (e.g. libreadline-dev)")
+ENDIF()
+
 OPTION(
   COLOR_SUPPORT
   "Whether colors should be enabled or not."
@@ -25,8 +33,6 @@ CONFIGURE_FILE(
   ${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
   ${CMAKE_CURRENT_SOURCE_DIR}/config.h
 )
-
-ADD_DEFINITIONS(-DREADLINE_SUPPORT)
 
 ADD_EXECUTABLE(
   ytree
@@ -88,6 +94,12 @@ TARGET_COMPILE_FEATURES(
   ytree
   PRIVATE
     cxx_std_17
+)
+
+TARGET_COMPILE_DEFINITIONS(
+  ytree
+  PRIVATE
+    READLINE_SUPPORT
 )
 
 TARGET_INCLUDE_DIRECTORIES(
