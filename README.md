@@ -28,7 +28,8 @@ $ sudo make install
 $ ytree
 ```
 
-For customizing ytree edit ytree.conf and copy it to $HOME/.ytree
+For customizing ytree edit ytree.toml and copy it to
+`$XDG_CONFIG_HOME/ytree/config.toml` (typically `~/.config/ytree/config.toml`).
 For using the "QuitTo" feature you have to add a bash wrapper to
 your ~/.bashrc. See the man page for details.
 

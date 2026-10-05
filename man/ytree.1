@@ -111,7 +111,7 @@ Delete selected file
 Delete all tagged files
 .TP
 \fB\-Edit\fR
-Edit selected file with EDITOR (see ~/.ytree)
+Edit selected file with EDITOR (see config.toml)
 or \- if not defined \- vi
 .TP
 \fB\-Filespec\fR
@@ -125,7 +125,7 @@ Change group ownership of selected file
 Change group ownership of all tagged files
 .TP
 \fB\-Hex\fR
-View selected file with HEXDUMP (see ~/.ytree),
+View selected file with HEXDUMP (see config.toml),
 or \- if not defined \- hd / od \-h
 .TP
 \fB\-Log\fR
@@ -270,7 +270,7 @@ Set file specification (reg. expression)
 e.g. *.[ch] for all *.c and *.h \- Files
 .TP
 \fB\-Hex\fR
-View selected file with HEXDUMP (see ~/.ytree),
+View selected file with HEXDUMP (see config.toml),
 or \- if not defined \- hd / od \-h
 .TP
 \fB\-Pipe\fR
@@ -330,7 +330,7 @@ given as a command line argument.
 ytree recognize the filename extensions ".F", ".Z", ".z" and
 ".gz" and calls the appropriate uncompressor MELT
 (default=melt), UNCOMPRESS (default=uncompress) and GNUUNZIP
-(default=gunzip \-c). You may change these settings in ~/.ytree.
+(default=gunzip \-c). You may change these settings in config.toml.
 
 ytree supports following archive types and requires:
 .nf
@@ -361,22 +361,22 @@ TAR-Files may have following extensions:
 .RE
 
 
-The View command is customizeable in the [VIEWER] section of ~/.ytree:
+The View command is customizeable via [[viewer]] entries in config.toml:
 
 Example:
 
 .nf
-\fB [VIEWER]
-\fB .jpg,.gif,.bmp,.tif,.ppm,.xpm=xv
-\fB .1,.2,.3,.4,.5,.6,.7,.8,.n=nroff -man | less
-\fB .ps=ghostview
-\fB .mid,.MID=playmidi -e
-\fB .wav,.WAV=splay
-\fB .au=auplay
-\fB .avi,.mpg,.mov=xanim
-\fB .htm,.html=lynx
-\fB .pdf,.PDF=acroread
-\fB .mp3=mpg123
+\fB [[viewer]]
+\fB extensions = [".jpg", ".gif", ".bmp", ".tif", ".ppm", ".xpm"]
+\fB command = "xv -"
+\fB
+\fB [[viewer]]
+\fB extensions = [".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".n"]
+\fB command = "nroff -man | less"
+\fB
+\fB [[viewer]]
+\fB extensions = [".ps"]
+\fB command = "ghostview"
 .fi
 .PP
 
@@ -386,7 +386,7 @@ Use "F2" on the command-line to select directories.
 
 .SH FILES
 
-$XDG_CONFIG_HOME/ytree/config.ini	ytree configuration file
+$XDG_CONFIG_HOME/ytree/config.toml	ytree configuration file
 
 
 .SH BUGS

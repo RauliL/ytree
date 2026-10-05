@@ -2843,7 +2843,7 @@ static void RereadWindowSize(DirEntry *dir_entry)
 
 static void ListJump( DirEntry * dir_entry, const char *str )
 {
-   int incremental = (!strcmp(LISTJUMPSEARCH, "1")) ? 1 : 0; /* from ~/.ytree */
+   int incremental = (!strcmp(LISTJUMPSEARCH, "1")) ? 1 : 0; /* from config.toml */
 
     /*  in file_window press initial char of file to jump to it */
 
