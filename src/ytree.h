@@ -267,18 +267,23 @@
 #define ErrorPrintf(format, ...) ErrorPrintfEx(format, __FILE__, __LINE__, __VA_ARGS__)
 
 #define TAGGED_SYMBOL '*'
-#define MAX_MODES      11
-#define DISK_MODE      0
-#define LL_FILE_MODE   1
-#define TAR_FILE_MODE  2
-#define ZOO_FILE_MODE  3
-#define ZIP_FILE_MODE  4
-#define LHA_FILE_MODE  5
-#define ARC_FILE_MODE  6
-#define RPM_FILE_MODE  7
-#define RAR_FILE_MODE  8
-#define TAPE_MODE      9
-#define USER_MODE      10
+
+enum class Mode : int
+{
+  DISK_MODE = 0,
+  LL_FILE_MODE = 1,
+  TAR_FILE_MODE = 2,
+  ZOO_FILE_MODE = 3,
+  ZIP_FILE_MODE = 4,
+  LHA_FILE_MODE = 5,
+  ARC_FILE_MODE = 6,
+  RPM_FILE_MODE = 7,
+  RAR_FILE_MODE = 8,
+  TAPE_MODE = 9,
+  USER_MODE = 10,
+};
+
+inline constexpr int MAX_MODES = 11;
 
 enum class CompressMethod
 {
@@ -561,7 +566,7 @@ extern WINDOW *time_window;
 
 extern Statistic statistic;
 extern Statistic disk_statistic;
-extern int       mode;
+extern Mode      mode;
 extern int       user_umask;
 extern bool	 print_time;
 extern bool      resize_request;

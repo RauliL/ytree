@@ -94,7 +94,7 @@ int GetDiskParameter( char *path,
       /* Name ermitteln */
       /*----------------*/
 
-      if( mode == DISK_MODE || mode == USER_MODE )
+      if( mode == Mode::DISK_MODE || mode == Mode::USER_MODE )
       {
 
 #ifdef linux

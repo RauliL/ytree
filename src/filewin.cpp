@@ -113,7 +113,7 @@ void RotateFileMode(void)
     case MODE_4: SetFileMode( MODE_2 ); break;
     case MODE_5: SetFileMode( MODE_1 ); break;
   }
-  if( (mode != DISK_MODE && mode != USER_MODE) && file_mode == MODE_4 ) {
+  if( (mode != Mode::DISK_MODE && mode != Mode::USER_MODE) && file_mode == MODE_4 ) {
     RotateFileMode();
   } else if(file_mode == MODE_5 && !strcmp(USERVIEW, "")) {
     RotateFileMode();
@@ -1332,7 +1332,7 @@ int HandleFileWindow(DirEntry *dir_entry)
      }
    }
 
-   if (mode == USER_MODE) { /* FileUserMode returns (possibly remapped) ch, or -1 if it handles ch */
+   if (mode == Mode::USER_MODE) { /* FileUserMode returns (possibly remapped) ch, or -1 if it handles ch */
       ch = FileUserMode(file_entry_list[dir_entry->start_file + dir_entry->cursor_pos], ch);
    }
 
@@ -1433,7 +1433,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'A' & 0x1F :
-		      if( (mode != DISK_MODE && mode != USER_MODE) || !IsMatchingTaggedFiles() )
+		      if( (mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
 		      {
 			beep();
 		      }
@@ -1486,7 +1486,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'O' & 0x1F :
-		      if(( mode != DISK_MODE && mode != USER_MODE) || !IsMatchingTaggedFiles() )
+		      if(( mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
 		      {
 			beep();
 		      }
@@ -1528,7 +1528,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'G' & 0x1F :
-		      if(( mode != DISK_MODE && mode != USER_MODE) || !IsMatchingTaggedFiles() )
+		      if(( mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
 		      {
 			beep();
 		      }
@@ -1798,7 +1798,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			break;
 		      }
 
-		      if( mode == DISK_MODE || mode == USER_MODE )
+		      if( mode == Mode::DISK_MODE || mode == Mode::USER_MODE )
 		      {
                         if( (tmp2 = GetDirEntry( statistic.tree,
 				         de_ptr,
@@ -1856,7 +1856,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 		      else
 		      {
-			/* TAR_FILE_MODE */
+			/* Mode::TAR_FILE_MODE */
 			/*---------------*/
 
 			dest_dir_entry = nullptr;
@@ -1918,7 +1918,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		        }
 
 
-			if( mode == DISK_MODE || mode == USER_MODE )
+			if( mode == Mode::DISK_MODE || mode == Mode::USER_MODE )
 			{
                           if( GetDirEntry( statistic.tree,
 					   de_ptr,
@@ -1962,7 +1962,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		        }
 		        else
 		        {
-			  /* TAR_FILE_MODE */
+			  /* Mode::TAR_FILE_MODE */
 			  /*---------------*/
 
 			  dest_dir_entry = nullptr;
@@ -2017,7 +2017,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'M' :
-      case 'm' :      if( mode != DISK_MODE && mode != USER_MODE )
+      case 'm' :      if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
                       {
 			beep();
 			break;
@@ -2089,7 +2089,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'N' & 0x1F :
-		      if(( mode != DISK_MODE && mode != USER_MODE) || !IsMatchingTaggedFiles() )
+		      if(( mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
 		      {
 			beep();
 		      }
@@ -2150,7 +2150,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'D' :
-      case 'd' :      if( mode != DISK_MODE && mode != USER_MODE )
+      case 'd' :      if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
 		      {
 			beep();
 			break;
@@ -2205,7 +2205,7 @@ int HandleFileWindow(DirEntry *dir_entry)
                       break;
 
       case 'D' & 0x1F :
-		      if(( mode != DISK_MODE && mode != USER_MODE) || !IsMatchingTaggedFiles() )
+		      if(( mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
 		      {
 			beep();
 		      }
@@ -2227,7 +2227,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'R':
-      case 'r':       if( mode != DISK_MODE && mode != USER_MODE )
+      case 'r':       if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
 		      {
 			beep();
 			break;
@@ -2260,7 +2260,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'R' & 0x1F :
-		      if(( mode != DISK_MODE && mode != USER_MODE) || !IsMatchingTaggedFiles() )
+		      if(( mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
 		      {
 			beep();
 		      }
@@ -2344,7 +2344,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 #endif /* VI_KEYS */
       case 'L':
         fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
-        if (mode == DISK_MODE || mode == USER_MODE)
+        if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
         {
           const auto path = GetFileNamePath(fe_ptr);
           char new_login_path[PATH_LENGTH + 1];
@@ -2393,7 +2393,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      {
 			beep();
 		      }
-		      else if( mode != DISK_MODE && mode != USER_MODE )
+		      else if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
 		      {
 			Message("i am sorry*^P not supported in Archive-mode");
 		      }
@@ -2453,7 +2453,7 @@ int HandleFileWindow(DirEntry *dir_entry)
                       {
                         beep();
                       }
-		      else if( mode != DISK_MODE && mode != USER_MODE )
+		      else if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
 		      {
 			Message("Feature not available in archives.");
 		      }
@@ -2494,7 +2494,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      {
 			beep();
 		      }
-		      else if( mode != DISK_MODE && mode != USER_MODE )
+		      else if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
 		      {
 			Message("I am sorry*^X not supported in Archive-mode");
 		      }

@@ -17,7 +17,7 @@ int MakeDirectory(DirEntry *father_dir_entry)
   char dir_name[PATH_LENGTH * 2 +1];
   int result = -1;
 
-  if( mode != DISK_MODE && mode != USER_MODE )
+  if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
   {
     beep();
     return( result );
@@ -49,7 +49,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
   struct stat stat_struct;
   int result = -1;
 
-  if( mode != DISK_MODE && mode != USER_MODE )
+  if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
   {
     beep();
     return( result );

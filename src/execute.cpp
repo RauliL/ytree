@@ -15,7 +15,7 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
   {
     const auto cwd = GetcwdOrDot();
 
-    if (mode == DISK_MODE || mode == USER_MODE)
+    if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
     {
       const auto path = GetPath(dir_entry);
 

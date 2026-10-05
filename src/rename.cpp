@@ -182,7 +182,7 @@ int GetRenameParameter(char *old_name, char *new_name)
 {
   int l;
 
-  if( mode != DISK_MODE && mode != USER_MODE )
+  if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
   {
     beep();
     return( -1 );

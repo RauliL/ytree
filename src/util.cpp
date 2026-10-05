@@ -89,7 +89,7 @@ std::string GetRealFileNamePath(const FileEntry* file_entry)
 {
   std::string result;
 
-  if (mode == DISK_MODE || mode == USER_MODE)
+  if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
   {
     return GetFileNamePath(file_entry);
   }

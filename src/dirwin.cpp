@@ -42,7 +42,7 @@ static void RotateDirMode(void)
     case MODE_3: dir_mode = MODE_1 ; break;
     case MODE_4: dir_mode = MODE_3 ; break;
   }
-  if( (mode != DISK_MODE && mode != USER_MODE ) &&
+  if( (mode != Mode::DISK_MODE && mode != Mode::USER_MODE ) &&
       dir_mode == MODE_4 ) RotateDirMode();
 }
 
@@ -931,7 +931,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
        resize_request = false;
     }
 
-   if (mode == USER_MODE) { /* DirUserMode returns (possibly remapped) ch, or -1 if it handles ch */
+   if (mode == Mode::USER_MODE) { /* DirUserMode returns (possibly remapped) ch, or -1 if it handles ch */
       ch = DirUserMode(dir_entry, ch);
    }
 
@@ -1097,7 +1097,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
       case 'l':
 #endif
       case 'L':
-        if (mode != DISK_MODE && mode != USER_MODE)
+        if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
         {
           std::strcpy(new_login_path, disk_statistic.login_path);
         } else {

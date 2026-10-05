@@ -47,18 +47,18 @@ int View(DirEntry* dir_entry, const std::string& file_path)
 {
   switch (mode)
   {
-    case DISK_MODE:
-    case USER_MODE:
+    case Mode::DISK_MODE:
+    case Mode::USER_MODE:
       return ViewFile(dir_entry, file_path);
 
-    case TAPE_MODE:
-    case RAR_FILE_MODE:
-    case RPM_FILE_MODE:
-    case TAR_FILE_MODE:
-    case ZOO_FILE_MODE:
-    case ZIP_FILE_MODE:
-    case LHA_FILE_MODE:
-    case ARC_FILE_MODE:
+    case Mode::TAPE_MODE:
+    case Mode::RAR_FILE_MODE:
+    case Mode::RPM_FILE_MODE:
+    case Mode::TAR_FILE_MODE:
+    case Mode::ZOO_FILE_MODE:
+    case Mode::ZIP_FILE_MODE:
+    case Mode::LHA_FILE_MODE:
+    case Mode::ARC_FILE_MODE:
       return ViewArchiveFile(file_path);
 
     default:
@@ -151,7 +151,7 @@ the ytree starting cwd. new code grabbed from execute.c.
 */
 
 
-  if (mode == DISK_MODE)
+  if (mode == Mode::DISK_MODE)
   {
     const auto cwd = GetcwdOrDot();
     const auto path = GetPath(dir_entry);
@@ -223,7 +223,7 @@ static int ViewArchiveFile(const std::string& file_path)
     );
   }
   command_line = MakeExtractCommandLine(
-    mode == TAPE_MODE ? statistic.tape_name : statistic.login_path,
+    mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
     file_path,
     buffer
   );

@@ -276,7 +276,7 @@ static int Copy(const std::string& to_path, const std::string& from_path)
   int n;
   char buffer[2048];
 
-  if (mode != DISK_MODE && mode != USER_MODE)
+  if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
     return CopyArchiveFile(to_path, from_path);
   }
@@ -376,7 +376,7 @@ static int CopyArchiveFile(
   const auto from_p_aux = ShellEscape(to_path);
   const auto to_p_aux = ShellEscape(from_path);
   const auto command_line = MakeExtractCommandLine(
-    mode == TAPE_MODE ? statistic.tape_name : statistic.login_path,
+    mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
     from_p_aux,
     "> \"" + to_p_aux + "\""
   );

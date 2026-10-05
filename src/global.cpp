@@ -23,7 +23,7 @@ WINDOW *time_window;
 
 Statistic statistic;
 Statistic disk_statistic;
-int       mode;
+Mode      mode;
 int	  user_umask;
 bool	  print_time;
 bool	  resize_request;

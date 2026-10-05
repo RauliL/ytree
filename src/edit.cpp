@@ -5,7 +5,7 @@ int Edit(const DirEntry* dir_entry, const std::string& file_path)
   std::string command_line;
   int result = -1;
 
-  if (mode != DISK_MODE && mode != USER_MODE)
+  if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
     beep();
 
@@ -25,7 +25,7 @@ int Edit(const DirEntry* dir_entry, const std::string& file_path)
 
   command_line = std::string(EDITOR) + " \"" + ShellEscape(file_path) + "\"";
 
-  if (mode == DISK_MODE)
+  if (mode == Mode::DISK_MODE)
   {
     const auto cwd = GetcwdOrDot();
     const auto path = GetPath(dir_entry);
