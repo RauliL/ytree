@@ -7,7 +7,7 @@
 static bool reverse_sort;
 static bool order;
 static bool do_case = false;
-static int  file_mode;
+static ViewMode file_mode;
 static int  max_column;
 
 static int  window_height;
@@ -60,34 +60,34 @@ static void ListJump( DirEntry * dir_entry, const char *str );
 
 
 
-void SetFileMode(int new_file_mode)
+void SetFileMode(ViewMode new_file_mode)
 {
 
   GetMaxYX( file_window, &window_height, &window_width );
   file_mode = new_file_mode;
   switch( file_mode )
   {
-    case MODE_1: if( max_linkname_len)
+    case ViewMode::MODE_1: if( max_linkname_len)
 		   max_column = window_width /
 				(max_filename_len + max_linkname_len + 45);
 		 else
 		   max_column = window_width / (max_filename_len + 41);
 		 break;
-    case MODE_2: if( max_linkname_len)
+    case ViewMode::MODE_2: if( max_linkname_len)
 		   max_column = window_width /
                    (max_filename_len + max_linkname_len + 41);
 		 else
                    max_column = window_width / (max_filename_len + 37);
 		 break;
-    case MODE_3: max_column = window_width / (max_filename_len + 3);
+    case ViewMode::MODE_3: max_column = window_width / (max_filename_len + 3);
     		 break;
-    case MODE_4: if( max_linkname_len)
+    case ViewMode::MODE_4: if( max_linkname_len)
 		   max_column = window_width /
 				(max_filename_len + max_linkname_len + 44);
 		 else
 		   max_column = window_width / (max_filename_len + 40);
 		 break;
-    case MODE_5: max_userview_len = GetUserFileEntryLength(max_filename_len,
+    case ViewMode::MODE_5: max_userview_len = GetUserFileEntryLength(max_filename_len,
 					                   max_linkname_len,
 					                   USERVIEW);
                  if(max_userview_len)
@@ -107,15 +107,15 @@ void RotateFileMode(void)
 {
   switch( file_mode )
   {
-    case MODE_1: SetFileMode( MODE_3 ); break;
-    case MODE_2: SetFileMode( MODE_5 ); break;
-    case MODE_3: SetFileMode( MODE_4 ); break;
-    case MODE_4: SetFileMode( MODE_2 ); break;
-    case MODE_5: SetFileMode( MODE_1 ); break;
+    case ViewMode::MODE_1: SetFileMode( ViewMode::MODE_3 ); break;
+    case ViewMode::MODE_2: SetFileMode( ViewMode::MODE_5 ); break;
+    case ViewMode::MODE_3: SetFileMode( ViewMode::MODE_4 ); break;
+    case ViewMode::MODE_4: SetFileMode( ViewMode::MODE_2 ); break;
+    case ViewMode::MODE_5: SetFileMode( ViewMode::MODE_1 ); break;
   }
-  if( (mode != Mode::DISK_MODE && mode != Mode::USER_MODE) && file_mode == MODE_4 ) {
+  if( (mode != Mode::DISK_MODE && mode != Mode::USER_MODE) && file_mode == ViewMode::MODE_4 ) {
     RotateFileMode();
-  } else if(file_mode == MODE_5 && !strcmp(USERVIEW, "")) {
+  } else if(file_mode == ViewMode::MODE_5 && !strcmp(USERVIEW, "")) {
     RotateFileMode();
   }
 }
@@ -491,7 +491,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
   switch( file_mode )
   {
-    case MODE_1 : if( fe_ptr )
+    case ViewMode::MODE_1 : if( fe_ptr )
 		  {
 		    (void) GetAttributes( fe_ptr->stat_struct.st_mode,
 		                          attributes
@@ -552,7 +552,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		    pos_x = x * (max_filename_len + 43);
 		  break;
 
-    case MODE_2 : if( fe_ptr )
+    case ViewMode::MODE_2 : if( fe_ptr )
 		  {
 		    (void) GetAttributes( fe_ptr->stat_struct.st_mode,
 		                          attributes
@@ -620,7 +620,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
                     pos_x = x * (max_filename_len + 39);
 		  break;
 
-    case MODE_3 : if( fe_ptr )
+    case ViewMode::MODE_3 : if( fe_ptr )
 		  {
 		    (void) sprintf( format, "%%c%%c%%%c%lds",
                                     justify,
@@ -644,7 +644,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		  pos_x = x * (max_filename_len + 3);
 		  break;
 
-    case MODE_4 : if( fe_ptr )
+    case ViewMode::MODE_4 : if( fe_ptr )
 		  {
 		    (void) CTime( fe_ptr->stat_struct.st_ctime, change_time );
 		    (void) CTime( fe_ptr->stat_struct.st_atime, access_time );
@@ -696,7 +696,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		    pos_x = x * (max_filename_len + 40);
 		  break;
 
-    case MODE_5 : if( fe_ptr )
+    case ViewMode::MODE_5 : if( fe_ptr )
 		  {
  		    BuildUserFileEntry(fe_ptr,  max_filename_len, max_linkname_len,
 		        USERVIEW,
@@ -1301,7 +1301,7 @@ int HandleFileWindow(DirEntry *dir_entry)
      resize_request = false;
    }
 
-   if( file_mode == MODE_1 )
+   if( file_mode == ViewMode::MODE_1 )
    {
       if( ch == '\t' ) ch = KEY_DOWN;
       else if( ch == KEY_BTAB ) ch = KEY_UP;

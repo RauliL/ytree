@@ -406,11 +406,14 @@ extern const char FILE_SEPARATOR_CHAR;
 #define RAR_LINE_LENGTH        512
 #define MESSAGE_LENGTH         (PATH_LENGTH + 80 + 1)
 #define COMMAND_LINE_LENGTH    4096
-#define MODE_1                 0
-#define MODE_2                 1
-#define MODE_3                 2
-#define MODE_4                 3
-#define MODE_5                 4
+enum class ViewMode : int
+{
+  MODE_1 = 0,
+  MODE_2 = 1,
+  MODE_3 = 2,
+  MODE_4 = 3,
+  MODE_5 = 4,
+};
 
 
 #define QUICK_BAUD_RATE      9600
@@ -616,7 +619,7 @@ void Warning(const std::string& msg);
 void WarningPrintf(const char* format, ...);
 void Notice(const std::string& msg);
 void UnmapNoticeWindow();
-extern void SetFileMode(int new_file_mode);
+extern void SetFileMode(ViewMode new_file_mode);
 extern int  HandleFileWindow(DirEntry *dir_entry);
 extern char *GetAttributes(unsigned short modus, char *buffer);
 extern void SwitchToSmallFileWindow(void);

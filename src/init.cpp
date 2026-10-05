@@ -46,7 +46,7 @@ int Init(
   ReadProfile(configuration_file);
   ReadHistory(history_file);
 
-  SetFileMode( strtod(FILEMODE, nullptr) );
+  SetFileMode(static_cast<ViewMode>(static_cast<int>(strtod(FILEMODE, nullptr))));
   SetKindOfSort( SORT_BY_NAME );
   number_seperator = *(NUMBERSEP);
   bypass_small_window = (bool)strtod(NOSMALLWINDOW, nullptr );

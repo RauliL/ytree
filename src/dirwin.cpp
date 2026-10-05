@@ -18,7 +18,7 @@ static void ReadDirList(DirEntry* dir_entry);
 static void PrintDirEntry(WINDOW *win, int entry_no, int y, unsigned char hilight);
 static void BuildDirEntryList(DirEntry* dir_entry);
 
-static int dir_mode;
+static ViewMode dir_mode;
 
 static void BuildDirEntryList(DirEntry* dir_entry)
 {
@@ -37,13 +37,13 @@ static void RotateDirMode(void)
 {
   switch( dir_mode )
   {
-    case MODE_1: dir_mode = MODE_2 ; break;
-    case MODE_2: dir_mode = MODE_4 ; break;
-    case MODE_3: dir_mode = MODE_1 ; break;
-    case MODE_4: dir_mode = MODE_3 ; break;
+    case ViewMode::MODE_1: dir_mode = ViewMode::MODE_2 ; break;
+    case ViewMode::MODE_2: dir_mode = ViewMode::MODE_4 ; break;
+    case ViewMode::MODE_3: dir_mode = ViewMode::MODE_1 ; break;
+    case ViewMode::MODE_4: dir_mode = ViewMode::MODE_3 ; break;
   }
   if( (mode != Mode::DISK_MODE && mode != Mode::USER_MODE ) &&
-      dir_mode == MODE_4 ) RotateDirMode();
+      dir_mode == ViewMode::MODE_4 ) RotateDirMode();
 }
 
 
@@ -124,7 +124,7 @@ static void PrintDirEntry(WINDOW *win,
 
   switch( dir_mode )
   {
-    case MODE_1:
+    case ViewMode::MODE_1:
       GetAttributes(de_ptr->stat_struct.st_mode, attributes);
       CTime(de_ptr->stat_struct.st_mtime, modify_time);
       line_buffer = MallocOrAbort<char>(38);
@@ -141,7 +141,7 @@ static void PrintDirEntry(WINDOW *win,
       );
       break;
 
-    case MODE_2 :
+    case ViewMode::MODE_2 :
                  (void)GetAttributes(de_ptr->stat_struct.st_mode, attributes);
                  if (const auto owner_name_ptr = GetPasswdName(de_ptr->stat_struct.st_uid))
                  {
@@ -166,8 +166,8 @@ static void PrintDirEntry(WINDOW *win,
                    group
                  );
                  break;
-    case MODE_3 : break;
-    case MODE_4 :
+    case ViewMode::MODE_3 : break;
+    case ViewMode::MODE_4 :
                  (void) CTime( de_ptr->stat_struct.st_ctime, change_time );
                  (void) CTime( de_ptr->stat_struct.st_atime, access_time );
                  std::strcpy(format, "Chg.: %12s  Acc.: %12s");
@@ -812,7 +812,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
   /* Merker loeschen */
   /*-----------------*/
 
-  dir_mode = MODE_3;
+  dir_mode = ViewMode::MODE_3;
 
   need_dsp_help = true;
 
