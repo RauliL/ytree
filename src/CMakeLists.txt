@@ -122,6 +122,7 @@ TARGET_LINK_LIBRARIES(
     ${CURSES_LIBRARIES}
     ${READLINE_LIBRARIES}
     PeeloXdg
+    tomlplusplus::tomlplusplus
 )
 
 INSTALL(

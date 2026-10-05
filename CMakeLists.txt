@@ -16,6 +16,15 @@ FETCHCONTENT_DECLARE(
 )
 FETCHCONTENT_MAKEAVAILABLE(PeeloXdg)
 
+FETCHCONTENT_DECLARE(
+  tomlplusplus
+  GIT_REPOSITORY
+    https://github.com/marzer/tomlplusplus.git
+  GIT_TAG
+    v3.4.0
+)
+FETCHCONTENT_MAKEAVAILABLE(tomlplusplus)
+
 ADD_SUBDIRECTORY(man)
 ADD_SUBDIRECTORY(share)
 ADD_SUBDIRECTORY(src)

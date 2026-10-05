@@ -1,0 +1,124 @@
+# Ytree configuration (TOML)
+#
+# Copy this file to $XDG_CONFIG_HOME/ytree/config.toml
+# (typically ~/.config/ytree/config.toml), or pass an explicit path with
+# `-p <profile-filename>`.
+
+[global]
+TREEDEPTH = 2
+FILEMODE = 2
+NUMBERSEP = "."
+NOSMALLWINDOW = 0
+# LISTJUMP search: 0 == standard (one key); 1 == incremental
+LISTJUMPSEARCH = 0
+# SEARCHCOMMAND = "grep  {}"
+
+# Configure if the internal HEX-Viewer/Editor should display
+# address offsets in hex (HEX) or decimal (DECIMAL)
+HEXEDITOFFSET = "HEX"
+
+# Make ytree start in file window mode, in a specified directory.
+# The "root" directory for ytree is specified on the command line;
+# INITIALDIR must be a directory under this root directory.
+# INITIALDIR = "./alpha/beta"
+
+# Custom file view template:
+# %tag %fnm %atr %lct %fsz %mot %lnm %uid %gid %ino %act %sct
+# USERVIEW = "%tag%fnm %atr %lct %fsz %mot"
+
+# ARCEXPAND = "arc p"
+# ARCLIST = "arc v"
+# CAT = "cat"
+# EDITOR = "vim"
+# GNUUNZIP = "gunzip -c"
+HEXDUMP = "builtin"
+# LHAEXPAND = "lharc p"
+# LHALIST = "lharc v"
+# MANROFF = "nroff -man"
+# MELT = "melt"
+# PAGER = "less -cen"
+# TAPEDEV = "/dev/rmt0"
+# TAREXPAND = "tar xOPf -"
+# TARLIST = "tar tvf -"
+# UNCOMPRESS = "gunzip"
+# ZIPEXPAND = "unzip -c"
+# ZIPLIST = "zipinfo -l"
+# ZOOEXPAND = "zoo xp"
+# ZOOLIST = "zoo vm"
+# RAREXPAND = "unrar p -c- -INUL"
+# RARLIST = "unrar l"
+# RPMEXPAND = "builtin"
+# RPMLIST = "rpm -q --dump -l -p"
+
+# External viewers by file extension
+[[viewer]]
+extensions = [".jpg", ".gif", ".bmp", ".tif", ".ppm", ".xpm"]
+command = "xv -"
+
+[[viewer]]
+extensions = [".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".n"]
+command = "nroff -man - | less"
+
+[[viewer]]
+extensions = [".ps"]
+command = "ghostview"
+
+[[viewer]]
+extensions = [".mid"]
+command = "timidity -id"
+
+[[viewer]]
+extensions = [".wav"]
+command = "splay"
+
+[[viewer]]
+extensions = [".au"]
+command = "auplay"
+
+[[viewer]]
+extensions = [".avi", ".mpg", ".mov"]
+command = "xanim"
+
+[[viewer]]
+extensions = [".htm", ".html"]
+command = "lynx"
+
+[[viewer]]
+extensions = [".pdf", ".PDF"]
+command = "acroread"
+
+[[viewer]]
+extensions = [".mp3"]
+command = "mpg123"
+
+# Optional menu banner text for directory / file windows
+# [menu]
+# DIR1 = "DIR-CUST  (A)ttribute (B)->a (D)elete  (F)ilespec (G)roup (k)-du (K)-dirpath (L)og (Q)uit"
+# DIR2 = "COMMANDS  (M)akedir (O)wner (P)ath/owner (R)ename (S)howall (T)ag (U)ntag e(X)ecute   (^F) dirmode"
+# FILE1 = "FILE-CUST (A)ttribute (C)opy (D)elete (E)dit (F)ilespec (G)cc (H)ex (I)->v (L)ogin (M)ove  (Q)uit"
+# FILE2 = "COMMANDS  (O)wner (P)ipe (R)ename (S)ort (T)ag (U)ntag (V)iew (W)c e(X)ecute pathcop(Y) (^F)ilemode"
+
+# Remap or unmap keys in directory / file mode.
+# Use an empty string to unmap a key.
+# [dirmap]
+# B = "a"
+# b = "a"
+# P = "o"
+# p = "o"
+#
+# [filemap]
+# i = "v"
+# I = "v"
+# G = "g"
+# g = ""
+
+# Custom commands. "%s" is replaced with the selected path; otherwise the path
+# is appended. Pair with a map entry (e.g. g = "") to replace a built-in action.
+# [dircmd]
+# k = "du %s | less"
+# K = "echo %s | less"
+# p = "echo %s | less"
+#
+# [filecmd]
+# g = "gcc -O -c"
+# w = "wc %s | less"

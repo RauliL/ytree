@@ -1,18 +1,10 @@
 #include "ytree.h"
 
+#include <toml++/toml.hpp>
+
+#include <sstream>
 #include <unordered_map>
 #include <vector>
-
-enum class Section
-{
-  GLOBAL = 1,
-  VIEWER = 2,
-  MENU = 3,
-  FILEMAP = 4,
-  FILECMD = 5,
-  DIRMAP = 6,
-  DIRCMD = 7,
-};
 
 struct Profile
 {
@@ -74,146 +66,158 @@ static std::unordered_map<std::string, Profile> profile =
   { { "ZOOLIST" },       { DEFAULT_ZOOLIST,       nullptr,     std::nullopt } },
 };
 
-static inline int ChCode(const char*);
+static inline int ChCode(const char* s)
+{
+  return *s == '^' && *(s + 1) != '^'
+    ? static_cast<int>((*(s + 1)) & 0x1f)
+    : static_cast<int>(*s);
+}
 
-static void ParseUserActionMapEntry(
+static std::string TomlValueToString(const toml::node& node)
+{
+  if (const auto* value = node.as_string())
+  {
+    return std::string{**value};
+  }
+  if (const auto* value = node.as_integer())
+  {
+    return std::to_string(**value);
+  }
+  if (const auto* value = node.as_boolean())
+  {
+    return **value ? "1" : "0";
+  }
+  if (const auto* value = node.as_floating_point())
+  {
+    std::ostringstream out;
+    out << **value;
+    return out.str();
+  }
+
+  return {};
+}
+
+static std::string TomlValueToString(const toml::node_view<const toml::node>& view)
+{
+  if (!view)
+  {
+    return {};
+  }
+
+  return TomlValueToString(*view.node());
+}
+
+static void ApplyKeyMap(
   std::vector<UserAction>& container,
-  char* name,
-  char* buffer
+  const std::string& key,
+  const std::string& value
 )
 {
-  auto value = std::strchr(buffer, '=');
-  char* n;
-  char* old = nullptr;
+  const auto chkey = ChCode(key.c_str());
+  auto chremap = ChCode(value.c_str());
 
-  if (*name && value)
+  if (chremap == 0)
   {
-    *value++ = 0;
-    // Trim whitespace.
-    while (*value && std::isspace(*value))
-    {
-      ++value;
-    }
-    n = Strtok_r(name, ",", &old);
-    // Maybe comma-separated list, e.g. "k,K=x"
-    while (n)
-    {
-      bool found = false;
+    chremap = -1;
+  }
 
-      // Check for existing entry from FILECMD_SECTION.
-      for (auto& entry : filemenu)
+  for (auto& entry : container)
+  {
+    if (entry.chkey == chkey)
+    {
+      entry.chremap = chremap;
+      return;
+    }
+  }
+
+  container.push_back({ chkey, chremap, std::nullopt });
+}
+
+static void ApplyKeyCmd(
+  std::vector<UserAction>& container,
+  const std::string& key,
+  const std::string& value
+)
+{
+  const auto chkey = ChCode(key.c_str());
+
+  for (auto& entry : container)
+  {
+    if (entry.chkey == chkey)
+    {
+      entry.cmd = value;
+      if (entry.chremap == 0)
       {
-        if (entry.chkey == ChCode(n))
-        {
-          entry.chremap = ChCode(value);
-          if (entry.chremap == 0)
-          {
-            // Don't beep if user cmd defined.
-            entry.chremap = -1;
-          }
-          found = true;
-          break;
-        }
+        entry.chremap = -1;
       }
-      if (!found)
-      {
-        filemenu.push_back({
-          ChCode(n),
-          ChCode(value),
-          std::nullopt
-        });
-      }
-      n = Strtok_r(nullptr, ",",  &old);
+      return;
+    }
+  }
+
+  container.push_back({ chkey, chkey, value });
+}
+
+static void ApplyKeyTable(
+  std::vector<UserAction>& container,
+  const toml::table* table,
+  bool is_command
+)
+{
+  if (!table)
+  {
+    return;
+  }
+
+  for (const auto& [key, node] : *table)
+  {
+    const auto key_str = std::string{key.str()};
+    const auto value = TomlValueToString(node);
+
+    if (is_command)
+    {
+      ApplyKeyCmd(container, key_str, value);
+    } else {
+      ApplyKeyMap(container, key_str, value);
     }
   }
 }
 
-static void ParseUserActionCmdEntry(
-  std::vector<UserAction>& container,
-  const char* name,
-  char* buffer
-)
+static void ApplyMenuValue(const std::string& name, std::string value)
 {
-  auto value = std::strchr(buffer, '=');
+  const auto entry = profile.find(name);
 
-  if (*name && value)
+  if (entry == std::end(profile))
   {
-    bool found = false;
+    return;
+  }
 
-    *value++ = 0;
-    // Trim whitespace.
-    while (*value && std::isspace(*value))
+  std::size_t visible = 0;
+  for (const auto ch : value)
+  {
+    if (ch != '(' && ch != ')')
     {
-      ++value;
-    }
-    // May not be comma-separated list.
-    // Check for existing entry from FILEMAP_SECTION.
-    for (auto& entry : filemenu)
-    {
-      if (entry.chkey == ChCode(name))
-      {
-        entry.cmd = value;
-        if (entry.chremap == 0)
-        {
-          // Don't beep if user cmd defined.
-          entry.chremap = -1;
-        }
-        found = true;
-        break;
-      }
-    }
-    if (!found)
-    {
-      filemenu.push_back({
-        ChCode(name),
-        ChCode(name),
-        value,
-      });
+      ++visible;
     }
   }
+  if (visible < static_cast<std::size_t>(COLS - 1))
+  {
+    value.append(static_cast<std::size_t>(COLS - 1) - visible, ' ');
+  }
+  entry->second.value = std::move(value);
 }
 
-static std::optional<Section> ParseSectionName(const char* name)
+static std::string NormalizeExtension(std::string extension)
 {
-  if (!std::strcmp(name, "[GLOBAL]"))
+  if (!extension.empty() && extension.front() != '.')
   {
-    return Section::GLOBAL;
+    extension.insert(extension.begin(), '.');
   }
-  else if (!std::strcmp(name, "[VIEWER]"))
-  {
-    return Section::VIEWER;
-  }
-  else if (!std::strcmp(name, "[MENU]"))
-  {
-    return Section::MENU;
-  }
-  else if (!std::strcmp(name, "[FILEMAP]"))
-  {
-    return Section::FILEMAP;
-  }
-  else if (!std::strcmp(name, "[FILECMD]"))
-  {
-    return Section::FILECMD;
-  }
-  else if (!std::strcmp(name, "[DIRMAP]"))
-  {
-    return Section::DIRMAP;
-  }
-  else if (!std::strcmp(name, "[DIRCMD]"))
-  {
-    return Section::DIRCMD;
-  }
-
-  return std::nullopt;
+  return extension;
 }
 
 int ReadProfile(const std::optional<std::string>& custom_path)
 {
   std::string filename;
-  char buffer[BUFSIZ];
-  std::optional<Section> section;
-  std::FILE* f = nullptr;
-  int result = -1;
 
   if (custom_path)
   {
@@ -222,147 +226,79 @@ int ReadProfile(const std::optional<std::string>& custom_path)
   }
   else if (const auto config_path = GetXdgConfigPath())
   {
-    filename = PathJoin({ *config_path, "config.ini" });
+    filename = PathJoin({ *config_path, "config.toml" });
   } else {
-    goto FNC_XIT;
+    return -1;
   }
 
-  if (!(f = std::fopen(filename.c_str(), "r")))
+  toml::table table;
+  try
   {
-    goto FNC_XIT;
+    table = toml::parse_file(filename);
+  }
+  catch (const toml::parse_error&)
+  {
+    return -1;
   }
 
-  while (std::fgets(buffer, BUFSIZ, f))
+  if (const auto* global = table["global"].as_table())
   {
-    std::size_t l;
-
-    if (*buffer == '#')
+    for (const auto& [key, node] : *global)
     {
-      continue;
+      const auto name = std::string{key.str()};
+      auto entry = profile.find(name);
+
+      if (entry != std::end(profile))
+      {
+        entry->second.value = TomlValueToString(node);
+      }
     }
-    l = std::strlen(buffer);
-    if (l > 2)
+  }
+
+  if (const auto* menu = table["menu"].as_table())
+  {
+    for (const auto& name : { "DIR1", "DIR2", "FILE1", "FILE2" })
     {
-      char* name;
-      char* cptr;
+      if ((*menu)[name])
+      {
+        ApplyMenuValue(name, TomlValueToString((*menu)[name]));
+      }
+    }
+  }
 
-      buffer[l - 1] = 0;
-      // Trim whitespace.
-      for (name = buffer; std::isspace(*name); ++name);
-      for (cptr = name; !std::isspace(*cptr) && *cptr != '='; ++cptr);
-      if (*cptr != '=')
-      {
-        *cptr = 0;
-      }
-      // Section
-      if (*name == '[')
-      {
-        section = ParseSectionName(name);
-        continue;
-      }
-      if (!section)
+  if (const auto* viewers = table["viewer"].as_array())
+  {
+    for (const auto& node : *viewers)
+    {
+      const auto* row = node.as_table();
+      if (!row)
       {
         continue;
       }
-      else if (*section == Section::GLOBAL)
-      {
-        auto value = std::strchr(buffer, '=');
 
-        if (*name && value)
+      const auto command = TomlValueToString((*row)["command"]);
+      const auto* extensions = (*row)["extensions"].as_array();
+      if (!extensions || command.empty())
+      {
+        continue;
+      }
+
+      for (const auto& extension_node : *extensions)
+      {
+        if (const auto* extension = extension_node.as_string())
         {
-          auto entry = profile.find(name);
-
-          *value++ = 0;
-          if (entry != std::end(profile))
-          {
-            entry->second.value = value;
-          }
-        }
-      }
-      else if (*section == Section::MENU)
-      {
-        auto value = std::strchr(buffer, '=');
-
-        if (*name && value)
-        {
-          *value++ = 0;
-          if (
-            !std::strcmp(name, "DIR1") ||
-            !std::strcmp(name, "DIR2") ||
-            !std::strcmp(name, "FILE1") ||
-            !std::strcmp(name, "FILE2")
-          )
-          {
-            const auto entry = profile.find(name);
-
-            if (entry != std::end(profile))
-            {
-              // Space pad menu strings to length COLS, ignoring '(' and ')'
-              // characters.
-              std::string padded = value;
-              std::size_t visible = 0;
-
-              for (const auto ch : padded)
-              {
-                if (ch != '(' && ch != ')')
-                {
-                  ++visible;
-                }
-              }
-              if (visible < static_cast<std::size_t>(COLS - 1))
-              {
-                padded.append(static_cast<std::size_t>(COLS - 1) - visible, ' ');
-              }
-              entry->second.value = std::move(padded);
-            }
-          }
-        }
-      }
-      else if (*section == Section::FILEMAP)
-      {
-        ParseUserActionMapEntry(filemenu, name, buffer);
-      }
-      else if (*section == Section::FILECMD)
-      {
-        ParseUserActionCmdEntry(filemenu, name, buffer);
-      }
-      else if (*section == Section::DIRMAP)
-      {
-        ParseUserActionMapEntry(dirmenu, name, buffer);
-      }
-      else if (*section == Section::DIRCMD)
-      {
-        ParseUserActionCmdEntry(dirmenu, name, buffer);
-      }
-      else if (*section == Section::VIEWER)
-      {
-        auto value = std::strchr(buffer, '=');
-
-        if (*name && value)
-        {
-          char* n;
-          char* old = nullptr;
-
-          *value++ = 0;
-          n = Strtok_r(name, ",", &old);
-          while (n)
-          {
-            viewer_mapping[n] = value;
-            n = Strtok_r(nullptr, ",", &old);
-          }
+          viewer_mapping[NormalizeExtension(std::string{**extension})] = command;
         }
       }
     }
   }
-  result = 0;
 
-FNC_XIT:
-  if (f)
-  {
-    std::fclose(f);
-  }
+  ApplyKeyTable(filemenu, table["filemap"].as_table(), false);
+  ApplyKeyTable(filemenu, table["filecmd"].as_table(), true);
+  ApplyKeyTable(dirmenu, table["dirmap"].as_table(), false);
+  ApplyKeyTable(dirmenu, table["dircmd"].as_table(), true);
 
-  return result;
+  return 0;
 }
 
 const char* GetProfileValue(const char* name)
@@ -389,14 +325,7 @@ const char* GetProfileValue(const char* name)
   return "";
 }
 
-static inline int ChCode(const char* s)
-{
-  return *s == '^' && *(s + 1) != '^'
-    ? static_cast<int>((*(s + 1)) & 0x1f)
-    : static_cast<int>(*s);
-}
-
-std::optional<std::string> GetUserAction(
+static std::optional<std::string> GetUserAction(
   const std::vector<UserAction>& container,
   int chkey,
   int* pchremap
@@ -420,7 +349,6 @@ std::optional<std::string> GetUserAction(
   }
 
   return std::nullopt;
-
 }
 
 std::optional<std::string> GetUserFileAction(int chkey, int* pchremap)
@@ -435,7 +363,7 @@ std::optional<std::string> GetUserDirAction(int chkey, int* pchremap)
 
 bool IsUserActionDefined()
 {
-  return !dirmenu.empty() || !dirmenu.empty();
+  return !dirmenu.empty() || !filemenu.empty();
 }
 
 std::optional<std::string> GetExtViewer(const std::string& filename)
