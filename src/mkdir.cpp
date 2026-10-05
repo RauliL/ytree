@@ -9,6 +9,8 @@
 
 #include "ytree.h"
 
+#include <filesystem>
+
 
 
 
@@ -55,9 +57,10 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
     return( result );
   }
 
-  std::strcpy(buffer, GetPath(father_dir_entry).c_str());
-  std::strcat(buffer, FILE_SEPARATOR_STRING);
-  std::strcat(buffer, dir_name);
+  const auto path =
+    (std::filesystem::path(GetPath(father_dir_entry)) / dir_name).string();
+  std::strncpy(buffer, path.c_str(), PATH_LENGTH);
+  buffer[PATH_LENGTH] = '\0';
 
   if( ( result = mkdir( buffer, (S_IREAD  |
 		                 S_IWRITE |

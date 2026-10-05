@@ -1,5 +1,7 @@
 #include "ytree.h"
 
+#include <filesystem>
+
 static int Copy(const std::string& to_path, const std::string& from_path);
 static int CopyArchiveFile(const std::string& to_path, const std::string& from_path);
 
@@ -23,7 +25,6 @@ int CopyFile(Statistic *statistic_ptr,
   struct stat stat_struct;
   int         term;
   int         result;
-  DIR         *tmpdir = nullptr;
   int	      refresh_dirwindow = false;
 
 
@@ -67,10 +68,17 @@ int CopyFile(Statistic *statistic_ptr,
     }
   }
   (void) strcat( to_path, FILE_SEPARATOR_STRING );
-  if ((tmpdir = opendir(to_path)) == nullptr)
-    if (errno == ENOENT) {
-     if ( (term =InputChoise( "Directory does not exist; create (y/N) ? ", "YN\033" ))== 'Y')
-     {
+  {
+    std::error_code ec;
+
+    if (!std::filesystem::is_directory(to_path, ec) &&
+        !std::filesystem::exists(to_path, ec))
+    {
+      if ((term = InputChoise(
+            "Directory does not exist; create (y/N) ? ",
+            "YN\033"
+          )) == 'Y')
+      {
         if (*to_path != FILE_SEPARATOR_CHAR)
         {
           std::strcpy(abs_path, from_dir.c_str());
@@ -78,9 +86,8 @@ int CopyFile(Statistic *statistic_ptr,
           std::strcat(abs_path, to_path);
           std::strcpy(to_path, abs_path);
         }
-        if (MakePath(statistic_ptr->tree, to_path, &dest_dir_entry ) )
+        if (MakePath(statistic_ptr->tree, to_path, &dest_dir_entry))
         {
-          closedir(tmpdir);
           MessagePrintf(
             "Can't create path*\"%s\"*%s",
             to_path,
@@ -89,18 +96,16 @@ int CopyFile(Statistic *statistic_ptr,
 
           return result;
         }
-	else
-	{
-		refresh_dirwindow = true;
-	}
-     }
-     else
-     {
-        if( tmpdir)
-	  closedir(tmpdir);
-
-        return ( result );
-     }
+        else
+        {
+          refresh_dirwindow = true;
+        }
+      }
+      else
+      {
+        return result;
+      }
+    }
   }
   (void) strcat( to_path, to_file );
 

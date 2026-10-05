@@ -1,5 +1,6 @@
 #include "ytree.h"
 
+#include <filesystem>
 #include <unordered_map>
 
 static const std::unordered_map<std::string, CompressMethod> file_extensions =
@@ -73,21 +74,11 @@ std::string GetPath(const DirEntry* dir_entry)
 
 std::string GetFileNamePath(const FileEntry* file_entry)
 {
-  auto result = GetPath(file_entry->dir_entry);
-
-  if (!result.empty() && result.compare(FILE_SEPARATOR_STRING))
-  {
-    result.append(1, FILE_SEPARATOR_CHAR);
-  }
-  result += file_entry->name;
-
-  return result;
+  return (std::filesystem::path(GetPath(file_entry->dir_entry)) / file_entry->name).string();
 }
 
 std::string GetRealFileNamePath(const FileEntry* file_entry)
 {
-  std::string result;
-
   if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
   {
     return GetFileNamePath(file_entry);
@@ -103,17 +94,13 @@ std::string GetRealFileNamePath(const FileEntry* file_entry)
     }
   }
 
-  result = GetPath(file_entry->dir_entry);
-  if (!result.empty() && result.compare(FILE_SEPARATOR_STRING))
-  {
-    result.append(1, FILE_SEPARATOR_CHAR);
-  }
+  const auto dir = std::filesystem::path(GetPath(file_entry->dir_entry));
   if (S_ISLNK(file_entry->stat_struct.st_mode))
   {
-    return result + &file_entry->name[std::strlen(file_entry->name) + 1];
+    return (dir / &file_entry->name[std::strlen(file_entry->name) + 1]).string();
   }
 
-  return result + file_entry->name;
+  return (dir / file_entry->name).string();
 }
 
 int GetDirEntry(DirEntry *tree,
@@ -677,67 +664,22 @@ std::optional<CompressMethod> GetFileMethod(const std::string& filename)
   return std::nullopt;
 }
 
-void NormPath( const char *in_path, char *out_path )
+void NormPath(const char* in_path, char* out_path)
 {
-  const char* s;
-  char* d;
-  char *old, *opath;
-  int  level;
-  auto in_path_dup = MallocOrAbort<char>(std::strlen(in_path) + 1);
+  auto result = std::filesystem::path(in_path).lexically_normal().string();
 
-  level = 0;
-  opath = out_path;
-
-  if( *in_path == FILE_SEPARATOR_CHAR ) {
-    s = in_path + 1;
-    *opath++ = FILE_SEPARATOR_CHAR;
-  } else {
-    s = in_path;
+  // Match historic NormPath: drop a trailing separator except for root.
+  if (result.size() > 1 &&
+      (result.back() == '/' || result.back() == '\\'))
+  {
+    result.pop_back();
+  }
+  if (result.empty())
+  {
+    result = ".";
   }
 
-  for( d=in_path_dup; *s; d++ ) {
-    *d = *s++;
-    while( *d == FILE_SEPARATOR_CHAR && *s == FILE_SEPARATOR_CHAR )
-      s++;
-  }
-  *d = '\0';
-
-  d = opath;
-  s = Strtok_r( in_path_dup, FILE_SEPARATOR_STRING, &old );
-  while( s ) {
-    if( strcmp( s, "." ) ) {		/* skip "." */
-      if( !strcmp( s, ".." ) ) {	/* optimize ".." */
-        if( level > 0 ) {
-          if( level == 1 ) {
-	    d = out_path;
-	  } else {
-	    for( d -= 2; *d != FILE_SEPARATOR_CHAR; d-- )
-	      ;
-	    d++;
-	  }
-        } else {
-          /* level <= 0 */
-	  *d++ = '.';
-	  *d++ = '.';
-	  *d++ = FILE_SEPARATOR_CHAR;
-        }
-        level--;
-      } else {				/* add component */
-        strcpy( d, s );
-        d += strlen( s );
-        *d++ = FILE_SEPARATOR_CHAR;
-        level++;
-      }
-    }
-    s = Strtok_r( nullptr, FILE_SEPARATOR_STRING, &old );
-  }
-  if( level != 0 )
-    d--;
-  *d = '\0';
-  if( *out_path == '\0' )
-    strcpy(out_path, "." );
-
-  free( in_path_dup );
+  std::strcpy(out_path, result.c_str());
 }
 
 
@@ -1016,14 +958,15 @@ long long AtoLL(const char *cptr)
 
 std::optional<std::string> Getcwd()
 {
-  char buffer[PATH_MAX];
+  std::error_code ec;
+  auto path = std::filesystem::current_path(ec);
 
-  if (!getcwd(buffer, PATH_MAX))
+  if (ec)
   {
     return std::nullopt;
   }
 
-  return buffer;
+  return path.string();
 }
 
 std::string GetcwdOrDot()

@@ -1,5 +1,7 @@
 #include "ytree.h"
 
+#include <filesystem>
+
 static bool RenameDirEntry(const std::string&, const std::string&);
 static bool RenameFileEntry(const std::string&, const std::string&);
 
@@ -114,7 +116,8 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
   FileEntry   *fen_ptr;
   const auto de_ptr = fe_ptr->dir_entry;
   const auto from_path = GetFileNamePath(fe_ptr);
-  const auto to_path = GetPath(de_ptr) + FILE_SEPARATOR_CHAR + new_name;
+  const auto to_path =
+    (std::filesystem::path(GetPath(de_ptr)) / new_name).string();
   struct stat stat_struct;
   int         result;
 
