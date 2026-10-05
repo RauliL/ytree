@@ -1,20 +1,20 @@
 #include "ytree.h"
 
+#include <algorithm>
+#include <vector>
+
 #define MAX_HST_FILE_LINES 50
 
-struct History
-{
-  char* hst;
-  History* next;
-  History* prev;
-};
-
 static std::optional<std::string> custom_history_path;
+static std::vector<std::string> history;
 
-static int total_hist     = 0;
+static int total_hist()
+{
+  return static_cast<int>(history.size());
+}
+
 static int cursor_pos     = 0;
 static int disp_begin_pos = 0;
-static History *Hist = nullptr ;
 
 void ReadHistory(const std::optional<std::string>& custom_path)
 {
@@ -49,9 +49,8 @@ void ReadHistory(const std::optional<std::string>& custom_path)
 void SaveHistory()
 {
   std::string filename;
-  auto hst = Hist;
 
-  if (!hst)
+  if (history.empty())
   {
     return;
   }
@@ -71,18 +70,12 @@ void SaveHistory()
   }
   if (auto f = std::fopen(filename.c_str(), "w"))
   {
-    History* last_hst = nullptr;
+    const auto n = std::min<std::size_t>(history.size(), MAX_HST_FILE_LINES);
 
-    for (int j = 0; hst && j < MAX_HST_FILE_LINES; ++j)
+    // Write oldest of the kept entries first.
+    for (auto i = n; i-- > 0;)
     {
-      last_hst = hst;
-      hst = hst->next;
-    }
-
-    // Write in reverse order.
-    for (hst = last_hst; hst; hst = hst->prev)
-    {
-      std::fputs(hst->hst, f);
+      std::fputs(history[i].c_str(), f);
       std::fputc('\n', f);
     }
     std::fclose(f);
@@ -91,58 +84,30 @@ void SaveHistory()
 
 void InsHistory(const std::string& str)
 {
-  History* TMP;
-  History* TMP2 = nullptr;
-  bool found = false;
-
   if (str.empty())
   {
     return;
   }
 
-  TMP2 = Hist;
-  for (TMP = Hist; TMP; TMP = TMP->next)
+  const auto it = std::find(history.begin(), history.end(), str);
+  if (it != history.end())
   {
-    if (!std::strcmp(TMP->hst, str.c_str()))
+    if (it != history.begin())
     {
-      if (TMP2 != TMP)
-      {
-        TMP2->next = TMP->next;
-        TMP->next = Hist;
-        Hist = TMP;
-      }
-      found = true;
-      break;
+      auto entry = std::move(*it);
+      history.erase(it);
+      history.insert(history.begin(), std::move(entry));
     }
-    TMP2 = TMP;
+    return;
   }
 
-  if (!found)
-  {
-    if ((TMP = static_cast<History*>(std::malloc(sizeof(History)))))
-    {
-      TMP->next = Hist;
-      TMP->prev = nullptr;
-      if (!(TMP->hst = Strdup(str.c_str())))
-      {
-        std::free(TMP);
-        return;
-      }
-      if (Hist)
-      {
-        Hist->prev = TMP;
-      }
-      Hist = TMP;
-      ++total_hist;
-    }
-  }
+  history.insert(history.begin(), str);
 }
 
-void PrintHstEntry(int entry_no, int y, int color,
-                   int start_x, int *hide_left, int *hide_right)
+static void PrintHstEntry(int entry_no, int y, int color,
+                          int start_x, int *hide_left, int *hide_right)
 {
   int     n;
-  History *pp;
   char    buffer[BUFSIZ];
   char    *line_ptr;
   int     window_width;
@@ -161,60 +126,56 @@ void PrintHstEntry(int entry_no, int y, int color,
 
   *hide_left = *hide_right = 0;
 
-  for(n=0, pp=Hist; pp && (n < entry_no); pp = pp->next)
+  if (entry_no < 0 || entry_no >= total_hist())
   {
-    n++;
+    return;
   }
 
-  if(pp)
-  {
-    (void) strncpy( buffer, pp->hst, BUFSIZ - 3);
-    buffer[BUFSIZ - 3] = '\0';
-    n = strlen( buffer );
-    wmove(history_window,y,1);
+  (void) strncpy( buffer, history[entry_no].c_str(), BUFSIZ - 3);
+  buffer[BUFSIZ - 3] = '\0';
+  n = strlen( buffer );
+  wmove(history_window,y,1);
 
-    if(n <= ef_window_width) {
+  if(n <= ef_window_width) {
 
-      /* will completely fit into window */
-      /*---------------------------------*/
+    /* will completely fit into window */
+    /*---------------------------------*/
 
-      line_ptr = buffer;
-    } else {
-      /* does not completely fit into window;
-       * ==> use start_x
-       */
+    line_ptr = buffer;
+  } else {
+    /* does not completely fit into window;
+     * ==> use start_x
+     */
 
-      if(n > (start_x + ef_window_width))
-        line_ptr = &buffer[start_x];
-      else
-        line_ptr = &buffer[n - ef_window_width];
+    if(n > (start_x + ef_window_width))
+      line_ptr = &buffer[start_x];
+    else
+      line_ptr = &buffer[n - ef_window_width];
 
-      *hide_left = start_x;
-      *hide_right = n - start_x - ef_window_width;
+    *hide_left = start_x;
+    *hide_right = n - start_x - ef_window_width;
 
-      line_ptr[ef_window_width] ='\0';
-    }
+    line_ptr[ef_window_width] ='\0';
+  }
 
 #ifdef NO_HIGHLIGHT
-    strcat(line_ptr, (color == HIHST_COLOR) ? " <" : "  ");
-    WAddStr( history_window, line_ptr );
+  strcat(line_ptr, (color == HIHST_COLOR) ? " <" : "  ");
+  WAddStr( history_window, line_ptr );
 #else
 #ifdef COLOR_SUPPORT
-    WbkgdSet(history_window, COLOR_PAIR(color)|A_BOLD);
+  WbkgdSet(history_window, COLOR_PAIR(color)|A_BOLD);
 #else
-    if(color == HIHST_COLOR)
-      wattrset( history_window, A_REVERSE );
+  if(color == HIHST_COLOR)
+    wattrset( history_window, A_REVERSE );
 #endif /* COLOR_SUPPORT */
-    WAddStr( history_window, line_ptr );
+  WAddStr( history_window, line_ptr );
 #ifdef COLOR_SUPPORT
-    WbkgdSet(history_window, COLOR_PAIR(WINHST_COLOR)| A_BOLD);
+  WbkgdSet(history_window, COLOR_PAIR(WINHST_COLOR)| A_BOLD);
 #else
-    if(color == HIHST_COLOR)
-      wattrset( history_window, 0 );
+  if(color == HIHST_COLOR)
+    wattrset( history_window, 0 );
 #endif /* COLOR_SUPPORT */
 #endif /* NO_HIGHLIGHT */
-  }
-  return;
 }
 
 
@@ -230,7 +191,7 @@ int DisplayHistory()
   werase( history_window );
   for(i=0; i < HISTORY_WINDOW_HEIGHT; i++)
   {
-    if (disp_begin_pos + i >= total_hist ) break;
+    if (disp_begin_pos + i >= total_hist() ) break;
     if (disp_begin_pos + i != hilight_no )
         PrintHstEntry(disp_begin_pos + i, i, HST_COLOR,
 	              0, &hide_left, &hide_right);
@@ -246,10 +207,9 @@ int DisplayHistory()
 
 const char* GetHistory()
 {
-  int     ch, tmp;
+  int     ch;
   int     start_x;
   const char* RetVal = nullptr;
-  History *TMP;
   int     hide_left, hide_right;
 
 
@@ -297,7 +257,7 @@ const char* GetHistory()
 		      break;
 
       case '\t':
-      case KEY_DOWN: if (disp_begin_pos + cursor_pos+1 >= total_hist)
+      case KEY_DOWN: if (disp_begin_pos + cursor_pos+1 >= total_hist())
       		     {
 		       beep();
 		     }
@@ -355,7 +315,7 @@ const char* GetHistory()
 		     }
                      break;
       case KEY_NPAGE:
-      		     if( disp_begin_pos + cursor_pos >= total_hist - 1 )
+      		     if( disp_begin_pos + cursor_pos >= total_hist() - 1 )
 		     {  beep();  }
 		     else
 		     {
@@ -364,8 +324,8 @@ const char* GetHistory()
 			 PrintHstEntry( disp_begin_pos + cursor_pos,
 					cursor_pos, HST_COLOR,
 		                        start_x, &hide_left, &hide_right);
-		         if( disp_begin_pos + HISTORY_WINDOW_HEIGHT > total_hist  - 1 )
-			   cursor_pos = total_hist - disp_begin_pos - 1;
+		         if( disp_begin_pos + HISTORY_WINDOW_HEIGHT > total_hist()  - 1 )
+			   cursor_pos = total_hist() - disp_begin_pos - 1;
 			 else
 			   cursor_pos = HISTORY_WINDOW_HEIGHT - 1;
 			 PrintHstEntry( disp_begin_pos + cursor_pos,
@@ -374,16 +334,16 @@ const char* GetHistory()
 		       }
 		       else
 		       {
-			 if( disp_begin_pos + cursor_pos + HISTORY_WINDOW_HEIGHT < total_hist )
+			 if( disp_begin_pos + cursor_pos + HISTORY_WINDOW_HEIGHT < total_hist() )
 			 {
 			   disp_begin_pos += HISTORY_WINDOW_HEIGHT;
 			   cursor_pos = HISTORY_WINDOW_HEIGHT - 1;
 			 }
 			 else
 			 {
-			   disp_begin_pos = total_hist - HISTORY_WINDOW_HEIGHT;
+			   disp_begin_pos = total_hist() - HISTORY_WINDOW_HEIGHT;
 			   if( disp_begin_pos < 0 ) disp_begin_pos = 0;
-			   cursor_pos = total_hist - disp_begin_pos - 1;
+			   cursor_pos = total_hist() - disp_begin_pos - 1;
 			 }
                          DisplayHistory();
 		       }
@@ -425,23 +385,19 @@ const char* GetHistory()
 		     }
                      break;
       case KEY_END :
-                     disp_begin_pos = std::max(0, total_hist - HISTORY_WINDOW_HEIGHT);
-		     cursor_pos     = total_hist - disp_begin_pos - 1;
+                     disp_begin_pos = std::max(0, total_hist() - HISTORY_WINDOW_HEIGHT);
+		     cursor_pos     = total_hist() - disp_begin_pos - 1;
                      DisplayHistory();
                      break;
       case LF :
       case CR :
-                     TMP = Hist;
-                     for(tmp = 0; (tmp != disp_begin_pos + cursor_pos); tmp++)
                      {
-                        TMP = TMP -> next;
-                        if (TMP == nullptr)
-                          break;
+                       const auto idx = disp_begin_pos + cursor_pos;
+                       if (idx >= 0 && idx < total_hist())
+                         RetVal = history[idx].c_str();
+                       else
+                         RetVal = nullptr;
                      }
-                     if (TMP != nullptr)
-                        RetVal = TMP -> hst;
-                     else
-                        RetVal = nullptr;
 		     break;
 
       case ESC:      RetVal = nullptr;
@@ -455,5 +411,3 @@ const char* GetHistory()
   touchwin(stdscr);
   return RetVal;
 }
-
-
