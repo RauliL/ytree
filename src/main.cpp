@@ -9,9 +9,10 @@
 
 #include "ytree.h"
 
+#include <filesystem>
 
 
-static char buffer[PATH_LENGTH+1];
+
 static char path[PATH_LENGTH+1];
 
 
@@ -69,22 +70,22 @@ int main(int argc, char **argv)
     std::exit(EXIT_FAILURE);
   }
 
-  if (*p != FILE_SEPARATOR_CHAR)
+  std::string startup_path = p;
+  if (std::filesystem::path(startup_path).is_relative())
   {
-    /* rel. Pfad */
-    /*-----------*/
     if (const auto cwd = Getcwd())
     {
-      std::strcpy(buffer, cwd->c_str());
+      startup_path = (std::filesystem::path(*cwd) / p).string();
     }
-    std::strcat(buffer, FILE_SEPARATOR_STRING);
-    std::strcat(buffer, p);
-    p = buffer;
+    else
+    {
+      startup_path = (std::filesystem::path(".") / p).string();
+    }
   }
 
   /* Normalize path */
 
-  NormPath( p, path );
+  NormPath(startup_path.c_str(), path);
 
   statistic.login_path[0] = '\0';
   statistic.path[0] = '0';
