@@ -10,6 +10,11 @@
 #include "ytree.h"
 
 #include <filesystem>
+
+
+
+
+int MakeDirectory(DirEntry *father_dir_entry)
 {
   char dir_name[PATH_LENGTH * 2 +1];
   int result = -1;

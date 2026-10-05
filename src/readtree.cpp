@@ -13,6 +13,10 @@
 
 
 
+static void UnReadSubTree(DirEntry *dir_entry);
+
+
+
 /* Dateibaum lesen: path = "Root"-Pfad
  * dir_entry wird von der Funktion gefuellt
  */
