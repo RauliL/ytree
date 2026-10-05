@@ -1,5 +1,6 @@
 #include "ytree.h"
 
+#include <filesystem>
 #include <unordered_map>
 
 static const std::unordered_map<std::string, CompressMethod> file_extensions =
@@ -1016,14 +1017,15 @@ long long AtoLL(const char *cptr)
 
 std::optional<std::string> Getcwd()
 {
-  char buffer[PATH_MAX];
+  std::error_code ec;
+  auto path = std::filesystem::current_path(ec);
 
-  if (!getcwd(buffer, PATH_MAX))
+  if (ec)
   {
     return std::nullopt;
   }
 
-  return buffer;
+  return path.string();
 }
 
 std::string GetcwdOrDot()
