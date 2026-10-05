@@ -117,14 +117,13 @@ char* GetMatches(const std::string& base)
   int     start_x;
   char    *RetVal = nullptr;
   char    *TMP;
-  char    *tmpval;
   int     hide_left, hide_right;
 
   Mtchs = nullptr;
 
 #if defined(READLINE_SUPPORT)
-  tmpval = tilde_expand(base.c_str());
-  if (!(Mtchs = rl_completion_matches(tmpval, rl_filename_completion_function)))
+  const auto tmpval = tilde_expand(base);
+  if (!(Mtchs = rl_completion_matches(tmpval.c_str(), rl_filename_completion_function)))
   {
     return nullptr;
   }
@@ -133,7 +132,7 @@ char* GetMatches(const std::string& base)
 #endif
 
 
-  if (!(strcmp(tmpval,Mtchs[0])==0)){
+  if (!(strcmp(tmpval.c_str(),Mtchs[0])==0)){
     TMP=static_cast<char*>(malloc(strlen(Mtchs[0])+1));
     if (TMP != nullptr){
       strcpy(TMP, Mtchs[0]);
@@ -141,7 +140,6 @@ char* GetMatches(const std::string& base)
     }else{
       RetVal = nullptr;}
     free(Mtchs);
-    free(tmpval);
     return RetVal;
   }
 
@@ -344,7 +342,6 @@ char* GetMatches(const std::string& base)
   } while(ch != CR && ch != ESC && ch != -1);
   /* leaveok(stdscr, false); */
   free(Mtchs);
-  free(tmpval);
   touchwin(stdscr);
   return RetVal;
 }

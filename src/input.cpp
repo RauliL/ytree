@@ -1,6 +1,5 @@
 #include "ytree.h"
 #include "tilde.h"
-#include "xmalloc.h"
 
 
 /***************************************************************************
@@ -142,7 +141,6 @@ int InputString(
   std::string buffer = s;
   std::size_t pos = initial_pos;
   std::string char_buffer;
-  char* pp;
 
   /* Feld gefuellt ausgeben */
   /*------------------------*/
@@ -369,14 +367,13 @@ int InputString(
   InsHistory(buffer);
 
 #if defined(READLINE_SUPPORT)
-  pp = tilde_expand(buffer.c_str());
+  const auto expanded = tilde_expand(buffer);
 #else
-  pp = Strdup(buffer.c_str());
+  const auto expanded = buffer;
 #endif
 
-  std::strncpy(s, pp, max_length - 1);
+  std::strncpy(s, expanded.c_str(), max_length - 1);
   s[max_length] = 0;
-  xfree(static_cast<void*>(pp));
 
   return c;
 }
