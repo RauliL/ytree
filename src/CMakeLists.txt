@@ -1,17 +1,4 @@
-SET(CURSES_NEED_NCURSES TRUE)
-
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../cmake")
-
-INCLUDE(FindCurses)
-INCLUDE(FindReadline)
-
-IF(NOT CURSES_FOUND)
-  MESSAGE(FATAL_ERROR "ncurses development package is required (e.g. libncurses-dev)")
-ENDIF()
-
-IF(NOT READLINE_FOUND)
-  MESSAGE(FATAL_ERROR "readline development package is required (e.g. libreadline-dev)")
-ENDIF()
 
 OPTION(
   COLOR_SUPPORT
@@ -28,6 +15,26 @@ OPTION(
   "Whether support for UTF-8 should be enabled or not."
   ON
 )
+
+SET(CURSES_NEED_NCURSES TRUE)
+IF(WITH_UTF8)
+  SET(CURSES_NEED_WIDE TRUE)
+ENDIF()
+
+INCLUDE(FindCurses)
+INCLUDE(FindReadline)
+
+IF(NOT CURSES_FOUND)
+  IF(WITH_UTF8)
+    MESSAGE(FATAL_ERROR "wide ncurses development package is required (e.g. libncurses-dev / libncursesw-dev)")
+  ELSE()
+    MESSAGE(FATAL_ERROR "ncurses development package is required (e.g. libncurses-dev)")
+  ENDIF()
+ENDIF()
+
+IF(NOT READLINE_FOUND)
+  MESSAGE(FATAL_ERROR "readline development package is required (e.g. libreadline-dev)")
+ENDIF()
 
 CONFIGURE_FILE(
   ${CMAKE_CURRENT_SOURCE_DIR}/config.h.in

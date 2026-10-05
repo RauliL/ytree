@@ -838,8 +838,11 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
     std::snprintf(group, sizeof(group), "%d", fe_ptr->stat_struct.st_gid);
   }
 
-  sprintf(format1, "%%-%ds", max_filename_len);
-  sprintf(format2, "%%-%ds", max_linkname_len);
+  sprintf(format1, "%%s");
+  sprintf(format2, "%%s");
+
+  const auto fitted_name = FitVisualWidth(fe_ptr->name, max_filename_len, true);
+  const auto fitted_link = FitVisualWidth(sym_link_name, max_linkname_len, true);
 
   for(sptr=tmpl, dptr=buffer; *sptr; ) {
 
@@ -848,7 +851,7 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
       if(std::string_view(sptr).starts_with(TAGSYMBOL_VIEWNAME)) {
         *dptr = tag; n=1;
       } else if(std::string_view(sptr).starts_with(FILENAME_VIEWNAME)) {
-        n = sprintf(dptr, format1, fe_ptr->name);
+        n = sprintf(dptr, format1, fitted_name.c_str());
       } else if(std::string_view(sptr).starts_with(ATTRIBUTE_VIEWNAME)) {
         n = sprintf(dptr, "%10s", attributes);
       } else if(std::string_view(sptr).starts_with(LINKCOUNT_VIEWNAME)) {
@@ -858,7 +861,7 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
       } else if(std::string_view(sptr).starts_with(MODTIME_VIEWNAME)) {
         n = sprintf(dptr, "%12s", modify_time);
       } else if(std::string_view(sptr).starts_with(SYMLINK_VIEWNAME)) {
-        n = sprintf(dptr, format2, sym_link_name);
+        n = sprintf(dptr, format2, fitted_link.c_str());
       } else if(std::string_view(sptr).starts_with(UID_VIEWNAME)) {
         n = sprintf(dptr, "%-8s", owner);
       } else if(std::string_view(sptr).starts_with(GID_VIEWNAME)) {

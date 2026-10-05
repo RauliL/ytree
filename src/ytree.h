@@ -35,7 +35,11 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#if defined(CURSES_HAVE_NCURSES_NCURSES_H)
+#if defined(WITH_UTF8) && __has_include(<ncursesw/ncurses.h>)
+# include <ncursesw/ncurses.h>
+#elif defined(WITH_UTF8) && __has_include(<ncursesw/curses.h>)
+# include <ncursesw/curses.h>
+#elif defined(CURSES_HAVE_NCURSES_NCURSES_H)
 # include <ncurses/ncurses.h>
 #elif defined(CURSES_HAVE_NCURSES_H)
 # include <ncurses.h>
@@ -776,6 +780,9 @@ std::optional<std::string> Getcwd();
 std::string GetcwdOrDot();
 extern int  RefreshDirWindow();
 std::string StrLeft(const char* str, std::size_t count);
+std::string FitVisualWidth(const char* str, std::size_t width, bool left_justify);
+const char* StrVisualIndex(const char* str, std::size_t index);
+void TruncateVisual(char* str, std::size_t max_len);
 extern int  StrVisualLength(const char *str);
 void WAttrAddStr(WINDOW* win, int attr, const std::string& str);
 void StatOrAbort(const std::string& path, struct stat& st);

@@ -131,12 +131,14 @@ static void ReadTaggedList(const DirEntry* dir_entry)
   {
     if (fe_ptr->matching && fe_ptr->tagged)
     {
-      const auto name_len = std::strlen(fe_ptr->name);
+      const auto name_len = static_cast<std::size_t>(StrVisualLength(fe_ptr->name));
 
       file_entry_list.push_back(fe_ptr);
       if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
       {
-	      const auto linkname_len = std::strlen(&fe_ptr->name[name_len + 1]);
+	      const auto linkname_len = static_cast<std::size_t>(
+          StrVisualLength(&fe_ptr->name[std::strlen(fe_ptr->name) + 1])
+        );
 
 	      max_linkname_len = std::max(max_linkname_len, linkname_len);
       }
@@ -194,12 +196,14 @@ static void ReadFileList(const DirEntry* dir_entry)
   {
     if (fe_ptr->matching)
     {
-      const auto name_len = std::strlen(fe_ptr->name);
+      const auto name_len = static_cast<std::size_t>(StrVisualLength(fe_ptr->name));
 
       file_entry_list.push_back(fe_ptr);
       if (S_ISLNK(fe_ptr->stat_struct.st_mode))
       {
-	      const auto linkname_len = std::strlen(&fe_ptr->name[name_len + 1]);
+	      const auto linkname_len = static_cast<std::size_t>(
+          StrVisualLength(&fe_ptr->name[std::strlen(fe_ptr->name) + 1])
+        );
 
 	      max_linkname_len = std::max(max_linkname_len, linkname_len);
       }
@@ -408,14 +412,16 @@ static void ChangeFileEntry()
 
   for (const auto& entry : file_entry_list)
   {
-    const auto length = std::strlen(entry->name);
+    const auto length = static_cast<std::size_t>(StrVisualLength(entry->name));
 
-    max_filename_len = std::max<unsigned int>(max_filename_len, length);
+    max_filename_len = std::max(max_filename_len, length);
     if (S_ISLNK(entry->stat_struct.st_mode))
     {
-      max_linkname_len = std::max<unsigned int>(
-        max_filename_len,
-        std::strlen(&entry->name[length + 1])
+      max_linkname_len = std::max(
+        max_linkname_len,
+        static_cast<std::size_t>(
+          StrVisualLength(&entry->name[std::strlen(entry->name) + 1])
+        )
       );
     }
   }
@@ -481,7 +487,12 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
     sym_link_name = "";
 
 
-  type_of_file = GetTypeOfFile(fe_ptr->stat_struct);
+  type_of_file = fe_ptr ? GetTypeOfFile(fe_ptr->stat_struct) : ' ';
+
+  const auto fitted_name = fe_ptr
+    ? FitVisualWidth(fe_ptr->name, max_filename_len, justify == '-')
+    : std::string{};
+  const auto fitted_link = FitVisualWidth(sym_link_name, max_linkname_len, true);
 
   switch( file_mode )
   {
@@ -497,33 +508,27 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
                     if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
 		    {
-		      (void) sprintf( format, "%%c%%c%%-%lds %%10s %%3d %%11lld %%12s -> %%-%lds",
-				      max_filename_len,
-				      max_linkname_len
-				    );
+		      (void) sprintf( format, "%%c%%c%%s %%10s %%3d %%11lld %%12s -> %%s");
 
 		      (void) sprintf( line_buffer, format,
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
-				      fe_ptr->name,
+				      fitted_name.c_str(),
 				      attributes,
 				      fe_ptr->stat_struct.st_nlink,
                                       (long long) fe_ptr->stat_struct.st_size,
 				      modify_time,
-				      sym_link_name
+				      fitted_link.c_str()
 				    );
                     }
 		    else
 		    {
-		      (void) sprintf( format, "%%c%%c%%%c%lds %%10s %%3d %%11lld %%12s",
-                                      justify,
-				      max_filename_len
-				    );
+		      (void) sprintf( format, "%%c%%c%%s %%10s %%3d %%11lld %%12s");
 
 		      (void) sprintf( line_buffer, format,
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
-				      fe_ptr->name,
+				      fitted_name.c_str(),
 				      attributes,
 				      fe_ptr->stat_struct.st_nlink,
                                       (long long) fe_ptr->stat_struct.st_size,
@@ -567,31 +572,24 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
                     if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
 		    {
-                      (void) sprintf( format, "%%c%%c%%%c%lds %%10lld %%-12s %%-12s -> %%-%lds",
-                                      justify,
-			              max_filename_len,
-			              max_linkname_len
-				      );
+                      (void) sprintf( format, "%%c%%c%%s %%10lld %%-12s %%-12s -> %%s");
 		      (void) sprintf( line_buffer, format,
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
-				      fe_ptr->name,
+				      fitted_name.c_str(),
 				      (long long)fe_ptr->stat_struct.st_ino,
               owner,
               group,
-				      sym_link_name
+				      fitted_link.c_str()
 				    );
                     }
 		    else
 		    {
-                      (void) sprintf( format, "%%c%%c%%%c%lds %%10lld %%-12s %%-12s",
-                                      justify,
-			              max_filename_len
-				      );
+                      (void) sprintf( format, "%%c%%c%%s %%10lld %%-12s %%-12s");
 		      (void) sprintf( line_buffer, format,
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
-				      fe_ptr->name,
+				      fitted_name.c_str(),
 				      (long long)fe_ptr->stat_struct.st_ino,
               owner,
               group
@@ -616,14 +614,12 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     case ViewMode::MODE_3 : if( fe_ptr )
 		  {
-		    (void) sprintf( format, "%%c%%c%%%c%lds",
-                                    justify,
-                                    max_filename_len );
+		    (void) sprintf( format, "%%c%%c%%s");
 
 		    (void) sprintf( line_buffer, format,
 				    (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				    type_of_file,
-				    fe_ptr->name
+				    fitted_name.c_str()
 				  );
                   }
 		  else
@@ -645,30 +641,23 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
                     if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
 		    {
-                      (void) sprintf( format, "%%c%%c%%%c%lds Chg: %%12s  Acc: %%12s -> %%-%lds",
-                                      justify,
-				      max_filename_len,
-				      max_linkname_len
-				    );
+                      (void) sprintf( format, "%%c%%c%%s Chg: %%12s  Acc: %%12s -> %%s");
 		      (void) sprintf( line_buffer, format,
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
-				      fe_ptr->name,
+				      fitted_name.c_str(),
 				      change_time,
 				      access_time,
-				      sym_link_name
+				      fitted_link.c_str()
 				  );
                     }
 		    else
 		    {
-                      (void) sprintf( format, "%%c%%c%%%c%lds Chg: %%12s  Acc: %%12s",
-                                      justify,
-				      max_filename_len
-				    );
+                      (void) sprintf( format, "%%c%%c%%s Chg: %%12s  Acc: %%12s");
 		      (void) sprintf( line_buffer, format,
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
-				      fe_ptr->name,
+				      fitted_name.c_str(),
 				      change_time,
 				      access_time
 				  );
@@ -728,13 +717,14 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
     /* ... does not fit; use start_x */
     /*-------------------------------*/
 
-    if( n > ( start_x + ef_window_width ) )
-      line_ptr = &line_buffer[start_x];  /* TODO: UTF-8 */
-    else
-      line_ptr = &line_buffer[n - ef_window_width];  /* TODO: UTF-8 */
+    const auto offset = (n > (start_x + ef_window_width))
+      ? start_x
+      : n - ef_window_width;
+
+    line_ptr = const_cast<char*>(StrVisualIndex(line_buffer, offset));
+    *const_cast<char*>(StrVisualIndex(line_ptr, ef_window_width)) = '\0';
     hide_left = start_x;
     hide_right = n - start_x - ef_window_width;
-    line_ptr[ef_window_width] = '\0';
   }
 
 #ifdef NO_HIGHLIGHT
