@@ -9,9 +9,8 @@
 
 #include "ytree.h"
 
-
-extern int unlink(const char *);
-extern int rmdir(const char *);
+#include <filesystem>
+#include <system_error>
 
 
 
@@ -21,6 +20,7 @@ int DeleteFile(FileEntry *fe_ptr)
   char	   buffer[PATH_LENGTH+1];
   int      result;
   int      term;
+  std::error_code ec;
 
   result = -1;
 
@@ -56,12 +56,13 @@ int DeleteFile(FileEntry *fe_ptr)
     }
   }
 
-  if (unlink(filepath.c_str()))
+  std::filesystem::remove(filepath, ec);
+  if (ec)
   {
     MessagePrintf(
       "Can't delete file*\"%s\"*%s",
       filepath.c_str(),
-      std::strerror(errno)
+      ec.message().c_str()
     );
     ESCAPE;
   }

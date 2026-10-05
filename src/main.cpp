@@ -75,7 +75,7 @@ int main(int argc, char **argv)
   {
     if (const auto cwd = Getcwd())
     {
-      startup_path = (std::filesystem::path(*cwd) / p).string();
+      startup_path = (*cwd / p).string();
     }
     else
     {
