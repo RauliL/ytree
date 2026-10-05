@@ -1,6 +1,7 @@
 #include "ytree.h"
 
 #include <algorithm>
+#include <filesystem>
 #include <vector>
 
 #define MAX_HST_FILE_LINES 50
@@ -60,7 +61,10 @@ void SaveHistory()
   }
   else if (const auto cache_dir = GetXdgCachePath())
   {
-    if (mkdir(cache_dir->c_str(), S_IRUSR | S_IWUSR | S_IXUSR))
+    std::error_code ec;
+
+    std::filesystem::create_directories(*cache_dir, ec);
+    if (ec)
     {
       return;
     }
