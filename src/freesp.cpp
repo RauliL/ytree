@@ -9,7 +9,7 @@
 
 #include "ytree.h"
 
-#if ( defined( linux ) || defined( sun ) || defined(hpux) || defined( __DJGPP__ ) || defined ( __GNU__ ) ) && !defined( SVR4 )
+#if ( defined( __linux__ ) || defined( __sun ) || defined(__hpux) || defined( __DJGPP__ ) || defined ( __GNU__ ) ) && !defined( SVR4 )
 
 #include <sys/vfs.h>
 #else
@@ -97,7 +97,7 @@ int GetDiskParameter( char *path,
       if( mode == Mode::DISK_MODE || mode == Mode::USER_MODE )
       {
 
-#ifdef linux
+#ifdef __linux__
 	switch( statfs_struct.f_type ) {
 	  case 0xEF51:
 	       fname = "EXT2-OLD"; break;
@@ -185,7 +185,7 @@ int GetDiskParameter( char *path,
               fname = "HURD";
        }
 #else
-#if defined( sun56 ) || defined( sun ) || defined( hpux ) || defined ( __FreeBSD__ ) || defined (__APPLE__)
+#if defined( sun56 ) || defined( __sun ) || defined( __hpux ) || defined ( __FreeBSD__ ) || defined (__APPLE__)
         fname = "UNIX";
 #else
 #ifdef WIN32
@@ -211,7 +211,7 @@ int GetDiskParameter( char *path,
 #endif /* WIN32 */
 #endif /* sun / hpux / */
 #endif /* __GNU__ */
-#endif /* linux */
+#endif /* __linux__ */
 
         (void) strncpy( volume_name,
 	                fname,
@@ -246,7 +246,7 @@ int GetDiskParameter( char *path,
     *avail_bytes = bfree * statfs_struct.f_frsize;
     this_disk_space   = statfs_struct.f_blocks * statfs_struct.f_frsize;
 #else
-#if defined( linux ) || defined( sun ) || defined( __GNU__ )
+#if defined( __linux__ ) || defined( __sun ) || defined( __GNU__ )
     bfree = getuid() ? statfs_struct.f_bavail : statfs_struct.f_bfree;
     if( bfree < 0L ) bfree = 0L;
     *avail_bytes = bfree * statfs_struct.f_bsize;

@@ -67,27 +67,28 @@ void SetFileMode(ViewMode new_file_mode)
   file_mode = new_file_mode;
   switch( file_mode )
   {
-    case ViewMode::MODE_1: if( max_linkname_len)
+    using enum ViewMode;
+    case MODE_1: if( max_linkname_len)
 		   max_column = window_width /
 				(max_filename_len + max_linkname_len + 45);
 		 else
 		   max_column = window_width / (max_filename_len + 41);
 		 break;
-    case ViewMode::MODE_2: if( max_linkname_len)
+    case MODE_2: if( max_linkname_len)
 		   max_column = window_width /
                    (max_filename_len + max_linkname_len + 41);
 		 else
                    max_column = window_width / (max_filename_len + 37);
 		 break;
-    case ViewMode::MODE_3: max_column = window_width / (max_filename_len + 3);
+    case MODE_3: max_column = window_width / (max_filename_len + 3);
     		 break;
-    case ViewMode::MODE_4: if( max_linkname_len)
+    case MODE_4: if( max_linkname_len)
 		   max_column = window_width /
 				(max_filename_len + max_linkname_len + 44);
 		 else
 		   max_column = window_width / (max_filename_len + 40);
 		 break;
-    case ViewMode::MODE_5: max_userview_len = GetUserFileEntryLength(max_filename_len,
+    case MODE_5: max_userview_len = GetUserFileEntryLength(max_filename_len,
 					                   max_linkname_len,
 					                   USERVIEW);
                  if(max_userview_len)
@@ -107,11 +108,12 @@ void RotateFileMode(void)
 {
   switch( file_mode )
   {
-    case ViewMode::MODE_1: SetFileMode( ViewMode::MODE_3 ); break;
-    case ViewMode::MODE_2: SetFileMode( ViewMode::MODE_5 ); break;
-    case ViewMode::MODE_3: SetFileMode( ViewMode::MODE_4 ); break;
-    case ViewMode::MODE_4: SetFileMode( ViewMode::MODE_2 ); break;
-    case ViewMode::MODE_5: SetFileMode( ViewMode::MODE_1 ); break;
+    using enum ViewMode;
+    case MODE_1: SetFileMode( MODE_3 ); break;
+    case MODE_2: SetFileMode( MODE_5 ); break;
+    case MODE_3: SetFileMode( MODE_4 ); break;
+    case MODE_4: SetFileMode( MODE_2 ); break;
+    case MODE_5: SetFileMode( MODE_1 ); break;
   }
   if( (mode != Mode::DISK_MODE && mode != Mode::USER_MODE) && file_mode == ViewMode::MODE_4 ) {
     RotateFileMode();
@@ -230,14 +232,15 @@ static void SortFileEntryList()
   order = statistic.kind_of_sort.order == SortOrder::Ascending;
   switch (statistic.kind_of_sort.key)
   {
-    case SortKey::Name: compare = SortByName; break;
-    case SortKey::ModTime: compare = SortByModTime; break;
-    case SortKey::ChgTime: compare = SortByChgTime; break;
-    case SortKey::AccTime: compare = SortByAccTime; break;
-    case SortKey::Owner: compare = SortByOwner; break;
-    case SortKey::Group: compare = SortByGroup; break;
-    case SortKey::Size: compare = SortBySize; break;
-    case SortKey::Extension: compare = SortByExtension; break;
+    using enum SortKey;
+    case Name: compare = SortByName; break;
+    case ModTime: compare = SortByModTime; break;
+    case ChgTime: compare = SortByChgTime; break;
+    case AccTime: compare = SortByAccTime; break;
+    case Owner: compare = SortByOwner; break;
+    case Group: compare = SortByGroup; break;
+    case Size: compare = SortBySize; break;
+    case Extension: compare = SortByExtension; break;
   }
 
   std::sort(

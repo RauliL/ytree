@@ -47,18 +47,19 @@ int View(DirEntry* dir_entry, const std::string& file_path)
 {
   switch (mode)
   {
-    case Mode::DISK_MODE:
-    case Mode::USER_MODE:
+    using enum Mode;
+    case DISK_MODE:
+    case USER_MODE:
       return ViewFile(dir_entry, file_path);
 
-    case Mode::TAPE_MODE:
-    case Mode::RAR_FILE_MODE:
-    case Mode::RPM_FILE_MODE:
-    case Mode::TAR_FILE_MODE:
-    case Mode::ZOO_FILE_MODE:
-    case Mode::ZIP_FILE_MODE:
-    case Mode::LHA_FILE_MODE:
-    case Mode::ARC_FILE_MODE:
+    case TAPE_MODE:
+    case RAR_FILE_MODE:
+    case RPM_FILE_MODE:
+    case TAR_FILE_MODE:
+    case ZOO_FILE_MODE:
+    case ZIP_FILE_MODE:
+    case LHA_FILE_MODE:
+    case ARC_FILE_MODE:
       return ViewArchiveFile(file_path);
 
     default:

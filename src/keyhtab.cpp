@@ -132,7 +132,7 @@ char* GetMatches(const std::string& base)
 #endif
 
 
-  if (!(strcmp(tmpval.c_str(),Mtchs[0])==0)){
+  if (!(tmpval == Mtchs[0])){
     TMP=static_cast<char*>(malloc(strlen(Mtchs[0])+1));
     if (TMP != nullptr){
       strcpy(TMP, Mtchs[0]);
