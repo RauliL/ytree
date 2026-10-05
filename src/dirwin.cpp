@@ -190,9 +190,9 @@ static void PrintDirEntry(WINDOW *win,
   if (!suppress_output) {
      WbkgdSet(win, COLOR_PAIR(color)| A_BOLD );
      if(line_buffer) {
-       aux = strlen(line_buffer);
+       aux = StrVisualLength(line_buffer);
        if(window_width <= aux) {
-         line_buffer[window_width - 1] = '\0';
+         TruncateVisual(line_buffer, window_width - 1);
          suppress_output = true;
        }
        mvwaddstr(win, y, 0, line_buffer );
@@ -201,10 +201,10 @@ static void PrintDirEntry(WINDOW *win,
 
   if(!suppress_output) {
     /* Output Graph */
-    l1 = strlen(buffer);
+    l1 = StrVisualLength(buffer);
     n = window_width - aux;
     if((int)l1 > n) {
-       buffer[std::max(n-1, 0)] = '\0';
+       TruncateVisual(buffer, std::max(n - 1, 0));
        suppress_output = true;
     }
     PrintSpecialString( win, y, aux, buffer, color );
@@ -230,9 +230,9 @@ static void PrintDirEntry(WINDOW *win,
       WbkgdSet(win, COLOR_PAIR(color));
 
     n = window_width - aux - l1;
-    l2 = strlen(buffer);
+    l2 = StrVisualLength(buffer);
     if((int)l2 > n)
-      buffer[std::max(n-1, 0)] = '\0';
+      TruncateVisual(buffer, std::max(n - 1, 0));
 
 /*    waddstr( win, buffer );*/
     mvwaddstr( win, y, aux + l1, buffer);
