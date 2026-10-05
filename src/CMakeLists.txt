@@ -22,7 +22,6 @@ IF(WITH_UTF8)
 ENDIF()
 
 INCLUDE(FindCurses)
-INCLUDE(FindReadline)
 
 IF(NOT CURSES_FOUND)
   IF(WITH_UTF8)
@@ -30,10 +29,6 @@ IF(NOT CURSES_FOUND)
   ELSE()
     MESSAGE(FATAL_ERROR "ncurses development package is required (e.g. libncurses-dev)")
   ENDIF()
-ENDIF()
-
-IF(NOT READLINE_FOUND)
-  MESSAGE(FATAL_ERROR "readline development package is required (e.g. libreadline-dev)")
 ENDIF()
 
 CONFIGURE_FILE(
@@ -50,6 +45,7 @@ ADD_EXECUTABLE(
   chown.cpp
   clock.cpp
   color.cpp
+  complete.cpp
   copy.cpp
   delete.cpp
   dirwin.cpp
@@ -103,24 +99,16 @@ TARGET_COMPILE_FEATURES(
     cxx_std_20
 )
 
-TARGET_COMPILE_DEFINITIONS(
-  ytree
-  PRIVATE
-    READLINE_SUPPORT
-)
-
 TARGET_INCLUDE_DIRECTORIES(
   ytree
   PRIVATE
     $<BUILD_INTERFACE:${CURSES_INCLUDE_DIR}>
-    $<BUILD_INTERFACE:${READLINE_INCLUDE_DIRS}>
 )
 
 TARGET_LINK_LIBRARIES(
   ytree
   PRIVATE
     ${CURSES_LIBRARIES}
-    ${READLINE_LIBRARIES}
     PeeloXdg
     tomlplusplus::tomlplusplus
 )

@@ -19,8 +19,6 @@
    along with Readline; see the file COPYING.  If not, write to the Free
    Software Foundation, 59 Temple Place, Suite 330, Boston, MA 02111 USA. */
 
-#ifdef READLINE_SUPPORT
-
 #include "ytree.h"
 #include "tilde.h"
 
@@ -214,5 +212,3 @@ std::string tilde_expand(const std::string& input)
 
   return result;
 }
-
-#endif /* READLINE_SUPPORT */

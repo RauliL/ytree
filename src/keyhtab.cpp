@@ -1,8 +1,6 @@
 #include "ytree.h"
-#ifdef READLINE_SUPPORT
+#include "complete.h"
 #include "tilde.h"
-#include <readline/readline.h>
-#endif
 
 
 static char** Mtchs = nullptr;
@@ -121,16 +119,11 @@ char* GetMatches(const std::string& base)
 
   Mtchs = nullptr;
 
-#if defined(READLINE_SUPPORT)
   const auto tmpval = tilde_expand(base);
-  if (!(Mtchs = rl_completion_matches(tmpval.c_str(), rl_filename_completion_function)))
+  if (!(Mtchs = filename_completion_matches(tmpval)))
   {
     return nullptr;
   }
-#else
-  return nullptr;
-#endif
-
 
   if (!(tmpval == Mtchs[0])){
     TMP=static_cast<char*>(malloc(strlen(Mtchs[0])+1));
@@ -139,13 +132,18 @@ char* GetMatches(const std::string& base)
       RetVal = TMP;
     }else{
       RetVal = nullptr;}
-    free(Mtchs);
+    free_completion_matches(Mtchs);
+    Mtchs = nullptr;
     return RetVal;
   }
 
   for (total_matches=0; Mtchs[total_matches]; total_matches++);
   if (total_matches == 1)
-  return(nullptr);
+  {
+    free_completion_matches(Mtchs);
+    Mtchs = nullptr;
+    return nullptr;
+  }
 
   disp_begin_pos = 1;
   cursor_pos     = 0;
@@ -341,7 +339,8 @@ char* GetMatches(const std::string& base)
     } /* switch */
   } while(ch != CR && ch != ESC && ch != -1);
   /* leaveok(stdscr, false); */
-  free(Mtchs);
+  free_completion_matches(Mtchs);
+  Mtchs = nullptr;
   touchwin(stdscr);
   return RetVal;
 }

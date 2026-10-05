@@ -423,11 +423,7 @@ int InputString(
 
   InsHistory(buffer);
 
-#if defined(READLINE_SUPPORT)
   const auto expanded = tilde_expand(buffer);
-#else
-  const auto expanded = buffer;
-#endif
 
   std::strncpy(s, expanded.c_str(), max_length - 1);
   s[max_length] = 0;
