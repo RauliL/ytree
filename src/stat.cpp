@@ -69,7 +69,7 @@ void DisplayDiskName(void)
 void DisplayDirStatistic(DirEntry *dir_entry)
 {
   const auto path = GetPath(dir_entry);
-  char format[10];
+  char format[32];
   char buffer[PATH_LENGTH + 1];
   char auxbuff[PATH_LENGTH + 1];
 
@@ -127,7 +127,7 @@ void DisplayDirParameter(DirEntry *dir_entry)
 {
   const auto path = GetPath(dir_entry);
   char *p, *f;
-  char format[10];
+  char format[32];
   char buffer[PATH_LENGTH + 1];
   char auxbuff[PATH_LENGTH + 1];
 
@@ -171,7 +171,7 @@ void DisplayGlobalFileParameter(FileEntry *file_entry)
   const auto path = GetPath(file_entry->dir_entry);
   char buffer1[PATH_LENGTH+1];
   char buffer2[PATH_LENGTH+1];
-  char format[10];
+  char format[32];
 
   std::snprintf(format, sizeof(format), "[%%-%ds]", COLS - 10);
   std::strcpy(buffer1, path.c_str());
@@ -211,7 +211,7 @@ void DisplayFileParameter(FileEntry *file_entry)
 
 void PrettyPrintNumber(int y, int x, long long number)
 {
-  char buffer[20];
+  char buffer[32];
   long terra, giga, mega, kilo, one;
 
   *buffer = 0;

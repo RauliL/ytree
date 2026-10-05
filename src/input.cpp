@@ -443,7 +443,7 @@ int InputChoise(const char *msg, const char *term)
 
   curs_set(1);
   leaveok(stdscr, false);
-  mvprintw( LINES - 2, 1, msg );
+  mvprintw( LINES - 2, 1, "%s", msg );
   RefreshWindow( stdscr );
   doupdate();
   do
