@@ -1,6 +1,7 @@
 #include "ytree.h"
 
 #include <filesystem>
+#include <system_error>
 
 static bool RenameDirEntry(const std::string&, const std::string&);
 static bool RenameFileEntry(const std::string&, const std::string&);
@@ -12,29 +13,20 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
   DirEntry    *ude_ptr;
   FileEntry   *fe_ptr;
   const auto from_path = GetPath(de_ptr);
-  char        to_path[PATH_LENGTH+1];
+  const std::filesystem::path from_fs_path(from_path);
+  std::string to_path;
   struct stat stat_struct;
   int         result;
-  char        *cptr;
 
   result = -1;
 
-  std::strcpy(to_path, from_path.c_str());
-  cptr = std::strrchr(to_path, '/');
-
-  if (!cptr)
-  {
-    WarningPrintf("Invalid Path!*\"%s\"", to_path);
-    ESCAPE;
-  }
-
-  if( cptr == to_path )
+  if (!from_fs_path.has_filename() || from_fs_path == FILE_SEPARATOR_STRING)
   {
     Message("Can't rename ROOT");
     ESCAPE;
   }
 
-  (void) strcpy( cptr + 1, new_name );
+  to_path = (from_fs_path.parent_path() / new_name).string();
 
   if (!IsWriteable(from_path))
   {
@@ -251,13 +243,15 @@ static bool RenameDirEntry(
     return false;
   }
 
-  if (rename(from_path.c_str(), to_path.c_str()))
+  std::error_code ec;
+  std::filesystem::rename(from_path, to_path, ec);
+  if (ec)
   {
     MessagePrintf(
       "Can't rename \"%s\"*to \"%s\"*%s",
       from_path.c_str(),
       to_path.c_str(),
-      std::strerror(errno)
+      ec.message().c_str()
     );
 
     return false;
@@ -277,24 +271,22 @@ static bool RenameFileEntry(
     return false;
   }
 
-  if (link(from_path.c_str(), to_path.c_str()))
+  if (Exists(to_path))
   {
-    MessagePrintf(
-      "Can't link \"%s\"*to \"%s\"*%s",
-      from_path.c_str(),
-      to_path.c_str(),
-      std::strerror(errno)
-    );
+    Message("Can't rename!*Destination object already exist!");
 
     return false;
   }
 
-  if (unlink(from_path.c_str()))
+  std::error_code ec;
+  std::filesystem::rename(from_path, to_path, ec);
+  if (ec)
   {
     MessagePrintf(
-      "Can't unlink*\"%s\"*%s",
+      "Can't rename \"%s\"*to \"%s\"*%s",
       from_path.c_str(),
-      std::strerror(errno)
+      to_path.c_str(),
+      ec.message().c_str()
     );
 
     return false;

@@ -10,6 +10,7 @@
 #include "ytree.h"
 
 #include <filesystem>
+#include <system_error>
 
 
 
@@ -24,7 +25,6 @@ static void UnReadSubTree(DirEntry *dir_entry);
 
 int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
 {
-  DIR           *dir;
   struct stat   stat_struct;
   DirEntry      first_dir_entry;
   DirEntry      *des_ptr;
@@ -70,7 +70,11 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
 
   statistic.disk_total_directories++;
 
-  if (!(dir = opendir(path.c_str())))
+  std::error_code ec;
+  std::filesystem::directory_iterator it(path, ec);
+  std::filesystem::directory_iterator end;
+
+  if (ec)
   {
     dir_entry->access_denied = true;
 
@@ -85,12 +89,15 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
 
   file_count = 0;
 
-  while (auto dirent = readdir(dir))
+  for (; it != end; it.increment(ec))
   {
+    if (ec)
+      break;
+
+    std::string entry_name = it->path().filename().string();
     std::string new_path;
 
-    if (!std::strcmp(dirent->d_name, ".") ||
-        !std::strcmp(dirent->d_name, ".."))
+    if (entry_name == "." || entry_name == "..")
     {
       continue;
     }
@@ -105,7 +112,7 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
       doupdate();
     }
 
-    new_path = (std::filesystem::path(path) / dirent->d_name).string();
+    new_path = it->path().string();
 
     if (STAT_(new_path.c_str(), &stat_struct))
     {
@@ -120,10 +127,10 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
     {
       /* Directory-Entry */
       /*-----------------*/
-      den_ptr = MallocOrAbort<DirEntry>(sizeof(DirEntry) + std::strlen(dirent->d_name));
+      den_ptr = MallocOrAbort<DirEntry>(sizeof(DirEntry) + entry_name.size());
       den_ptr->up_tree = dir_entry;
 
-      std::strcpy( den_ptr->name, dirent->d_name );
+      std::strcpy( den_ptr->name, entry_name.c_str() );
       std::memcpy(
         static_cast<void*>(&den_ptr->stat_struct),
         static_cast<const void*>(&stat_struct),
@@ -187,12 +194,12 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
         }
         link_path[n] = 0;
 
-        fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + std::strlen(dirent->d_name) + n + 1);
-        std::strcpy(fen_ptr->name, dirent->d_name);
+        fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + entry_name.size() + n + 1);
+        std::strcpy(fen_ptr->name, entry_name.c_str());
         std::strcpy(&fen_ptr->name[strlen(fen_ptr->name) + 1], link_path);
       } else {
-        fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + std::strlen(dirent->d_name));
-        std::strcpy(fen_ptr->name, dirent->d_name);
+        fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + entry_name.size());
+        std::strcpy(fen_ptr->name, entry_name.c_str());
       }
 
       fen_ptr->next = nullptr;
@@ -215,8 +222,6 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
       statistic.disk_total_bytes += stat_struct.st_size;
     }
   }
-
-  (void) closedir( dir );
 
   if( first_file_entry.next ) first_file_entry.next->prev = nullptr;
   if( first_dir_entry.next )  first_dir_entry.next->prev = nullptr;

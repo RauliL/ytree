@@ -1,6 +1,7 @@
 #include "ytree.h"
 
 #include <filesystem>
+#include <system_error>
 
 static int Copy(const std::string& to_path, const std::string& from_path);
 static int CopyArchiveFile(const std::string& to_path, const std::string& from_path);
@@ -17,8 +18,8 @@ int CopyFile(Statistic *statistic_ptr,
   long long file_size;
   const auto from_path = GetRealFileNamePath(fe_ptr);
   const auto from_dir = GetPath(fe_ptr->dir_entry);
-  char        to_path[PATH_LENGTH+1];
-  char        abs_path[PATH_LENGTH+1];
+  std::filesystem::path to_fs_path;
+  std::string to_path;
   char        buffer[20];
   FileEntry   *dest_file_entry;
   FileEntry   *fen_ptr;
@@ -30,67 +31,70 @@ int CopyFile(Statistic *statistic_ptr,
 
   result = -1;
 
-  *to_path = '\0';
-  if( strcmp( to_dir_path, FILE_SEPARATOR_STRING ) )
+  if (std::strcmp(to_dir_path, FILE_SEPARATOR_STRING))
   {
     /* not ROOT */
     /*----------*/
 
-    (void) strcat( to_path, to_dir_path );
+    to_fs_path = to_dir_path;
   }
   if (path_copy)
   {
-    const auto path = GetPath(fe_ptr->dir_entry);
-
-    std::strcpy(&to_path[std::strlen(to_path)], path.c_str());
+    const auto path = std::filesystem::path(GetPath(fe_ptr->dir_entry));
 
     /* Create destination folder (if neccessary) */
     /*-------------------------------------------*/
-    std::strcat(to_path, FILE_SEPARATOR_STRING);
-
-    if (*to_path != FILE_SEPARATOR_CHAR)
+    if (to_fs_path.empty())
     {
-      std::strcpy(abs_path, from_dir.c_str());
-      std::strcat(abs_path, FILE_SEPARATOR_STRING);
-      std::strcat(abs_path, to_path);
-      std::strcpy(to_path, abs_path);
+      to_fs_path = path;
+    }
+    else
+    {
+      /* strcat-style append: avoid absolute-path replacement */
+      to_fs_path /= path.is_absolute() ? path.relative_path() : path;
     }
 
-    if( MakePath( statistic_ptr->tree, to_path, &dest_dir_entry ) )
+    if (!to_fs_path.is_absolute())
+    {
+      to_fs_path = std::filesystem::path(from_dir) / to_fs_path;
+    }
+
+    to_path = to_fs_path.string();
+    if (MakePath(statistic_ptr->tree, to_path.data(), &dest_dir_entry))
     {
       MessagePrintf(
         "Can't create path*\"%s\"*%s",
-        to_path,
+        to_path.c_str(),
         std::strerror(errno)
       );
 
       return result;
     }
   }
-  (void) strcat( to_path, FILE_SEPARATOR_STRING );
   {
     std::error_code ec;
+    const auto dir_path = to_fs_path.empty()
+      ? std::filesystem::path(FILE_SEPARATOR_STRING)
+      : to_fs_path;
 
-    if (!std::filesystem::is_directory(to_path, ec) &&
-        !std::filesystem::exists(to_path, ec))
+    if (!std::filesystem::is_directory(dir_path, ec) &&
+        !std::filesystem::exists(dir_path, ec))
     {
       if ((term = InputChoise(
             "Directory does not exist; create (y/N) ? ",
             "YN\033"
           )) == 'Y')
       {
-        if (*to_path != FILE_SEPARATOR_CHAR)
+        if (!to_fs_path.empty() && !to_fs_path.is_absolute())
         {
-          std::strcpy(abs_path, from_dir.c_str());
-          std::strcat(abs_path, FILE_SEPARATOR_STRING);
-          std::strcat(abs_path, to_path);
-          std::strcpy(to_path, abs_path);
+          to_fs_path = std::filesystem::path(from_dir) / to_fs_path;
         }
-        if (MakePath(statistic_ptr->tree, to_path, &dest_dir_entry))
+        to_path = to_fs_path.string();
+        if (MakePath(statistic_ptr->tree, to_path.data(), &dest_dir_entry))
         {
           MessagePrintf(
             "Can't create path*\"%s\"*%s",
-            to_path,
+            to_path.c_str(),
             std::strerror(errno)
           );
 
@@ -107,14 +111,19 @@ int CopyFile(Statistic *statistic_ptr,
       }
     }
   }
-  (void) strcat( to_path, to_file );
+  if (to_fs_path.empty())
+  {
+    to_fs_path = FILE_SEPARATOR_STRING;
+  }
+  to_fs_path /= to_file;
+  to_path = to_fs_path.string();
 
 
 #ifdef DEBUG
-  fprintf( stderr, "Copy: \"%s\" --> \"%s\"\n", from_path, to_path );
+  fprintf( stderr, "Copy: \"%s\" --> \"%s\"\n", from_path.c_str(), to_path.c_str() );
 #endif /* DEBUG */
 
-  if (!std::strcmp( to_path, from_path.c_str()))
+  if (to_path == from_path)
   {
     Message("Can't copy file into itself");
 
@@ -168,11 +177,11 @@ int CopyFile(Statistic *statistic_ptr,
     /* File wurde kopiert */
     /*--------------------*/
 
-    if( chmod( to_path, fe_ptr->stat_struct.st_mode ) == -1 )
+    if( chmod( to_path.c_str(), fe_ptr->stat_struct.st_mode ) == -1 )
     {
       WarningPrintf(
         "Can't chmod file*\"%s\"*to mode %s*IGNORED",
-        to_path,
+        to_path.c_str(),
         GetAttributes(fe_ptr->stat_struct.st_mode, buffer)
       );
     }
@@ -276,18 +285,13 @@ int GetCopyParameter(const char *from_file, bool path_copy, char *to_file, char 
 
 static int Copy(const std::string& to_path, const std::string& from_path)
 {
-  int i;
-  int o;
-  int n;
-  char buffer[2048];
-
   if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
     return CopyArchiveFile(to_path, from_path);
   }
 
 #ifdef DEBUG
-  fprintf( stderr, "Copy: \"%s\" --> \"%s\"\n", from_path, to_path );
+  fprintf( stderr, "Copy: \"%s\" --> \"%s\"\n", from_path.c_str(), to_path.c_str() );
 #endif /* DEBUG */
 
   if (!to_path.compare(from_path))
@@ -297,48 +301,24 @@ static int Copy(const std::string& to_path, const std::string& from_path)
     return -1;
   }
 
-  if ((i = open(from_path.c_str(), O_RDONLY)) == -1)
+  std::error_code ec;
+  std::filesystem::copy_file(
+    from_path,
+    to_path,
+    std::filesystem::copy_options::overwrite_existing,
+    ec
+  );
+  if (ec)
   {
     MessagePrintf(
-      "Can't open file*\"%s\"*%s",
+      "Can't copy file*\"%s\"*to*\"%s\"*%s",
       from_path.c_str(),
-      std::strerror(errno)
+      to_path.c_str(),
+      ec.message().c_str()
     );
 
     return -1;
   }
-
-  if ((o = open(
-    to_path.c_str(),
-    O_CREAT | O_TRUNC | O_WRONLY,
-    S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH
-  )) == -1)
-  {
-    MessagePrintf(
-		  "Can't open file*\"%s\"*%s",
-		  to_path.c_str(),
-		  strerror(errno)
-		);
-    close(i);
-
-    return -1;
-  }
-
-  while (( n = read(i, buffer, sizeof(buffer))) > 0)
-  {
-    if (write(o, buffer, n) != n)
-    {
-      MessagePrintf("Write-Error!*%s", std::strerror(errno));
-      close(i);
-      close(o);
-      unlink(to_path.c_str());
-
-      return -1;
-    }
-  }
-
-  close(i);
-  close(o);
 
   return 0;
 }

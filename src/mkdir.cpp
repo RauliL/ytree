@@ -10,6 +10,7 @@
 #include "ytree.h"
 
 #include <filesystem>
+#include <system_error>
 
 
 
@@ -47,7 +48,6 @@ int MakeDirectory(DirEntry *father_dir_entry)
 int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
 {
   DirEntry *den_ptr, *des_ptr;
-  char buffer[PATH_LENGTH+1];
   struct stat stat_struct;
   int result = -1;
 
@@ -58,29 +58,35 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
   }
 
   const auto path =
-    (std::filesystem::path(GetPath(father_dir_entry)) / dir_name).string();
-  std::strncpy(buffer, path.c_str(), PATH_LENGTH);
-  buffer[PATH_LENGTH] = '\0';
+    std::filesystem::path(GetPath(father_dir_entry)) / dir_name;
+  const std::string path_str = path.string();
 
-  if( ( result = mkdir( buffer, (S_IREAD  |
-		                 S_IWRITE |
-		                 S_IEXEC  |
-		                 S_IRGRP  |
-		                 S_IWGRP  |
-		                 S_IXGRP  |
-		                 S_IROTH  |
-		                 S_IWOTH  |
-		                 S_IXOTH) & ~user_umask
-    ) ) )
+  std::error_code ec;
+  if( !std::filesystem::create_directory( path, ec ) )
   {
+    if( !ec )
+      ec = std::make_error_code( std::errc::file_exists );
     MessagePrintf(
       "Can't create Directory*\"%s\"*%s",
-		  buffer,
-      std::strerror(errno)
-		);
+      path_str.c_str(),
+      ec.message().c_str()
+    );
   }
   else
   {
+    const auto perms = static_cast<std::filesystem::perms>(
+      (S_IRWXU | S_IRWXG | S_IRWXO) & ~user_umask
+    );
+    std::filesystem::permissions( path, perms, ec );
+    if( ec )
+    {
+      WarningPrintf(
+        "Can't chmod Directory*\"%s\"*%s*IGNORED",
+        path_str.c_str(),
+        ec.message().c_str()
+      );
+    }
+
     /* Directory erstellt
      * ==> einklinken im Baum
      */
@@ -108,7 +114,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
 
     std::strcpy(den_ptr->name, dir_name);
 
-    StatOrAbort(buffer, stat_struct);
+    StatOrAbort(path_str, stat_struct);
 
     std::memcpy(
       static_cast<void*>(&den_ptr->stat_struct),
@@ -170,7 +176,6 @@ int MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry )
 {
   DirEntry *de_ptr, *sde_ptr;
   char     path[PATH_LENGTH+1];
-  char     *cptr;
   char     *token, *old;
   int      n;
   int      result = -1;
@@ -226,48 +231,20 @@ int MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry )
     /* Zielverzeichnis ist nicht im Subtree */
     /*--------------------------------------*/
 
-    (void) strcat( path, FILE_SEPARATOR_STRING );
-
-    for( cptr = strchr( path, FILE_SEPARATOR_CHAR );
-         cptr;
-         cptr = strchr( cptr + 1, FILE_SEPARATOR_CHAR )
-       )
-    {
-      if( cptr == path ) continue;
-      if( cptr[-1] == FILE_SEPARATOR_CHAR ) continue;
-      if( cptr[-1] == '.' && (cptr == path+1 || cptr[-2] == FILE_SEPARATOR_CHAR ) ) continue;
-
-      *cptr = '\0';
-
 #ifdef DEBUG
     fprintf( stderr, "MakePath: \"%s\"\n", path );
 #endif /* DEBUG */
 
-
-      if( mkdir( path, S_IREAD  |
-		       S_IWRITE |
-		       S_IEXEC  |
-		       S_IRGRP  |
-		       S_IWGRP  |
-		       S_IXGRP  |
-		       S_IROTH  |
-		       S_IWOTH  |
-		       S_IXOTH ) )
-      {
-        /* ging nicht... */
-        /*---------------*/
-
-        *cptr = FILE_SEPARATOR_CHAR;
-        if( errno == EEXIST ) continue; /* OK, weitermachen */
-        break;
-      }
-      *cptr = FILE_SEPARATOR_CHAR;
-    }
+    std::error_code ec;
+    std::filesystem::create_directories( path, ec );
+    /* Old progressive mkdir broke on non-EEXIST errors but still fell
+     * through to result = 0; preserve that return value for compatibility.
+     * create_directories treats an existing directory as success (!ec). */
+    (void)ec;
     result = 0;
   }
 
   return( result );
 }
-
 
 

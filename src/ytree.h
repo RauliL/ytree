@@ -20,6 +20,7 @@
 # include <cwchar>
 #endif
 #include <algorithm>
+#include <filesystem>
 #include <memory>
 #include <optional>
 #include <string>
@@ -776,8 +777,8 @@ extern int  FileUserMode(FileEntry* file_entry, int ch);
 std::optional<std::string> GetUserFileAction(int chkey, int* pchremap);
 std::optional<std::string> GetUserDirAction(int chkey, int* pchremap);
 bool IsUserActionDefined();
-std::optional<std::string> Getcwd();
-std::string GetcwdOrDot();
+std::optional<std::filesystem::path> Getcwd();
+std::filesystem::path GetcwdOrDot();
 extern int  RefreshDirWindow();
 std::string StrLeft(const char* str, std::size_t count);
 std::string FitVisualWidth(const char* str, std::size_t width, bool left_justify);

@@ -111,7 +111,7 @@ int GetDirEntry(DirEntry *tree,
 	       )
 {
   char dest_path[PATH_LENGTH+1];
-  std::string current_path;
+  std::filesystem::path current_path;
   char *token, *old;
   DirEntry *de_ptr, *sde_ptr;
   int n;
@@ -125,7 +125,7 @@ int GetDirEntry(DirEntry *tree,
   {
     current_path = *cwd;
   } else {
-    ErrorPrintf("Getcwd failed*%s", std::strerror(errno));
+    Error("Getcwd failed");
 
     return -1;
   }
@@ -959,7 +959,7 @@ long long AtoLL(const char *cptr)
   return(ll);
 }
 
-std::optional<std::string> Getcwd()
+std::optional<std::filesystem::path> Getcwd()
 {
   std::error_code ec;
   auto path = std::filesystem::current_path(ec);
@@ -969,10 +969,10 @@ std::optional<std::string> Getcwd()
     return std::nullopt;
   }
 
-  return path.string();
+  return path;
 }
 
-std::string GetcwdOrDot()
+std::filesystem::path GetcwdOrDot()
 {
   if (const auto cwd = Getcwd())
   {
@@ -980,7 +980,7 @@ std::string GetcwdOrDot()
   }
   Warning("Getcwd() failed*\".\" assumed");
 
-  return ".";
+  return std::filesystem::path(".");
 }
 
 static inline bool Stat(const std::string& path, struct stat& st)
