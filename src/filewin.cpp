@@ -1,5 +1,6 @@
 #include "ytree.h"
 
+#include <algorithm>
 #include <functional>
 #include <vector>
 
