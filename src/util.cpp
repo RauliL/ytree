@@ -74,21 +74,11 @@ std::string GetPath(const DirEntry* dir_entry)
 
 std::string GetFileNamePath(const FileEntry* file_entry)
 {
-  auto result = GetPath(file_entry->dir_entry);
-
-  if (!result.empty() && result.compare(FILE_SEPARATOR_STRING))
-  {
-    result.append(1, FILE_SEPARATOR_CHAR);
-  }
-  result += file_entry->name;
-
-  return result;
+  return (std::filesystem::path(GetPath(file_entry->dir_entry)) / file_entry->name).string();
 }
 
 std::string GetRealFileNamePath(const FileEntry* file_entry)
 {
-  std::string result;
-
   if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
   {
     return GetFileNamePath(file_entry);
@@ -104,17 +94,13 @@ std::string GetRealFileNamePath(const FileEntry* file_entry)
     }
   }
 
-  result = GetPath(file_entry->dir_entry);
-  if (!result.empty() && result.compare(FILE_SEPARATOR_STRING))
-  {
-    result.append(1, FILE_SEPARATOR_CHAR);
-  }
+  const auto dir = std::filesystem::path(GetPath(file_entry->dir_entry));
   if (S_ISLNK(file_entry->stat_struct.st_mode))
   {
-    return result + &file_entry->name[std::strlen(file_entry->name) + 1];
+    return (dir / &file_entry->name[std::strlen(file_entry->name) + 1]).string();
   }
 
-  return result + file_entry->name;
+  return (dir / file_entry->name).string();
 }
 
 int GetDirEntry(DirEntry *tree,
