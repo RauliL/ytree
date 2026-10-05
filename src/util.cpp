@@ -664,67 +664,22 @@ std::optional<CompressMethod> GetFileMethod(const std::string& filename)
   return std::nullopt;
 }
 
-void NormPath( const char *in_path, char *out_path )
+void NormPath(const char* in_path, char* out_path)
 {
-  const char* s;
-  char* d;
-  char *old, *opath;
-  int  level;
-  auto in_path_dup = MallocOrAbort<char>(std::strlen(in_path) + 1);
+  auto result = std::filesystem::path(in_path).lexically_normal().string();
 
-  level = 0;
-  opath = out_path;
-
-  if( *in_path == FILE_SEPARATOR_CHAR ) {
-    s = in_path + 1;
-    *opath++ = FILE_SEPARATOR_CHAR;
-  } else {
-    s = in_path;
+  // Match historic NormPath: drop a trailing separator except for root.
+  if (result.size() > 1 &&
+      (result.back() == '/' || result.back() == '\\'))
+  {
+    result.pop_back();
+  }
+  if (result.empty())
+  {
+    result = ".";
   }
 
-  for( d=in_path_dup; *s; d++ ) {
-    *d = *s++;
-    while( *d == FILE_SEPARATOR_CHAR && *s == FILE_SEPARATOR_CHAR )
-      s++;
-  }
-  *d = '\0';
-
-  d = opath;
-  s = Strtok_r( in_path_dup, FILE_SEPARATOR_STRING, &old );
-  while( s ) {
-    if( strcmp( s, "." ) ) {		/* skip "." */
-      if( !strcmp( s, ".." ) ) {	/* optimize ".." */
-        if( level > 0 ) {
-          if( level == 1 ) {
-	    d = out_path;
-	  } else {
-	    for( d -= 2; *d != FILE_SEPARATOR_CHAR; d-- )
-	      ;
-	    d++;
-	  }
-        } else {
-          /* level <= 0 */
-	  *d++ = '.';
-	  *d++ = '.';
-	  *d++ = FILE_SEPARATOR_CHAR;
-        }
-        level--;
-      } else {				/* add component */
-        strcpy( d, s );
-        d += strlen( s );
-        *d++ = FILE_SEPARATOR_CHAR;
-        level++;
-      }
-    }
-    s = Strtok_r( nullptr, FILE_SEPARATOR_STRING, &old );
-  }
-  if( level != 0 )
-    d--;
-  *d = '\0';
-  if( *out_path == '\0' )
-    strcpy(out_path, "." );
-
-  free( in_path_dup );
+  std::strcpy(out_path, result.c_str());
 }
 
 
