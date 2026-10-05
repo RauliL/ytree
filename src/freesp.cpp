@@ -224,7 +224,7 @@ int GetDiskParameter( char *path,
         /* TAR/ZOO/ZIP-FILE_MODE */
         /*-----------------------*/
 
-        if( ( p = strrchr( statistic.login_path, FILE_SEPARATOR_CHAR ) ) == NULL )
+        if( ( p = strrchr( statistic.login_path, FILE_SEPARATOR_CHAR ) ) == nullptr )
           p = statistic.login_path;
         else p++;
 
@@ -289,9 +289,9 @@ int GetDiskParameter( char *path,
 int GetAvailBytes(long long *avail_bytes)
 {
   return( GetDiskParameter( statistic.tree->name,
-			    NULL,
+			    nullptr,
 			    avail_bytes,
-			    NULL
+			    nullptr
 			  )
         );
 }

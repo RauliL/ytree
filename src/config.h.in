@@ -14,11 +14,11 @@
 #define DEFAULT_FILEMODE      "2"
 #define DEFAULT_NOSMALLWINDOW "0"
 #define DEFAULT_NUMBERSEP     "."
-#define DEFAULT_INITIALDIR    NULL
-#define DEFAULT_DIR1          NULL
-#define DEFAULT_DIR2          NULL
-#define DEFAULT_FILE1         NULL
-#define DEFAULT_FILE2         NULL
+#define DEFAULT_INITIALDIR    nullptr
+#define DEFAULT_DIR1          nullptr
+#define DEFAULT_DIR2          nullptr
+#define DEFAULT_FILE1         nullptr
+#define DEFAULT_FILE2         nullptr
 
 #define DEFAULT_HEXEDITOFFSET "HEX"
 

@@ -39,14 +39,6 @@ extern char *strcpy ();
 #define savestring(x) strcpy ((char *)xmalloc (1 + strlen (x)), (x))
 #endif /* !savestring */
 
-#if !defined (NULL)
-#  if defined (__STDC__)
-#    define NULL ((void *) 0)
-#  else
-#    define NULL 0x0
-#  endif /* !__STDC__ */
-#endif /* !NULL */
-
 /* If being compiled as part of bash, these will be satisfied from
    variables.o.  If being compiled as part of readline, they will
    be satisfied from shell.o. */
@@ -56,13 +48,13 @@ static char* sh_get_home_dir();
    whitespace preceding a tilde so that simple programs which do not
    perform any word separation get desired behaviour. */
 static const char *default_prefixes[] =
-  { " ~", "\t~", (const char *)NULL };
+  { " ~", "\t~", (const char *)nullptr };
 
 /* The default value of tilde_additional_suffixes.  This is set to
    whitespace or newline so that simple programs which do not
    perform any word separation get desired behaviour. */
 static const char *default_suffixes[] =
-  { " ", "\n", (const char *)NULL };
+  { " ", "\n", (const char *)nullptr };
 
 
 /* When non-null, this is a NULL terminated array of strings which
@@ -203,7 +195,7 @@ tilde_expand_word (const char* filename)
   int user_len;
   struct passwd *user_entry;
 
-  if (filename == 0) return ((char *)NULL);
+  if (filename == 0) return ((char *)nullptr);
   if (*filename != '~') return (savestring (filename));
 
   /* A leading `~/' or a bare `~' is *always* translated to the value of
@@ -221,7 +213,7 @@ tilde_expand_word (const char* filename)
   username = isolate_tilde_prefix(filename, &user_len);
 
   /* Look in the password database. */
-  dirname = (char *)NULL;
+  dirname = (char *)nullptr;
   user_entry = getpwnam (username);
   if (user_entry == 0) {
 	free (username);

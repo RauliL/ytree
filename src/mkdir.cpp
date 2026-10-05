@@ -131,7 +131,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
 	break;
       }
 
-      if( des_ptr->next == NULL )
+      if( des_ptr->next == nullptr )
       {
         /* Ende der Liste erreicht; ==> einfuegen */
         /*----------------------------------------*/
@@ -143,14 +143,14 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
       }
     }
 
-    if( father_dir_entry->sub_tree == NULL )
+    if( father_dir_entry->sub_tree == nullptr )
     {
       /* Erstes Element */
       /*----------------*/
 
       father_dir_entry->sub_tree = den_ptr;
-      den_ptr->prev = NULL;
-      den_ptr->next = NULL;
+      den_ptr->prev = nullptr;
+      den_ptr->next = nullptr;
     }
 
     (void) GetAvailBytes( &statistic.disk_space );
@@ -173,7 +173,7 @@ int MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry )
   int      result = -1;
 
   NormPath( dir_path, path );
-  *dest_dir_entry = NULL;
+  *dest_dir_entry = nullptr;
 
   n = strlen( tree->name );
   if( !strcmp(tree->name, FILE_SEPARATOR_STRING) ||
@@ -198,7 +198,7 @@ int MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry )
 	  break;
 	}
       }
-      if( sde_ptr == NULL )
+      if( sde_ptr == nullptr )
       {
 	/* Folgeverzeichnis nicht vorhanden */
 	/*----------------------------------*/
@@ -213,7 +213,7 @@ int MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry )
 	}
 	continue;
       }
-      token = Strtok_r( NULL, FILE_SEPARATOR_STRING, &old );
+      token = Strtok_r( nullptr, FILE_SEPARATOR_STRING, &old );
     }
     *dest_dir_entry = de_ptr;
     result = 0;

@@ -190,7 +190,7 @@ int GetRenameParameter(char *old_name, char *new_name)
 
   ClearHelp();
 
-  if( old_name == NULL )
+  if( old_name == nullptr )
   {
     MvAddStr( LINES - 2, 1, "RENAME TAGGED FILES TO:" );
     l = 25;

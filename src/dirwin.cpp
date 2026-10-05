@@ -89,7 +89,7 @@ static void PrintDirEntry(WINDOW *win,
   int  color, hi_color;
   char buffer[32*3+PATH_LENGTH+1];
   char format[60];
-  char *line_buffer = NULL;
+  char *line_buffer = nullptr;
   char attributes[11];
   char modify_time[13];
   char change_time[13];
@@ -594,7 +594,7 @@ void HandleReadSubTree(DirEntry *dir_entry, DirEntry *start_dir_entry,
 void HandleUnreadSubTree(DirEntry *dir_entry, DirEntry *de_ptr,
 			 DirEntry *start_dir_entry, bool *need_dsp_help)
 {
-    if( dir_entry->not_scanned || (dir_entry->sub_tree == NULL) ) {
+    if( dir_entry->not_scanned || (dir_entry->sub_tree == nullptr) ) {
 	beep();
     } else {
 	for( de_ptr=dir_entry->sub_tree; de_ptr; de_ptr=de_ptr->next) {
@@ -805,7 +805,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
   std::optional<std::string> home;
 
   unput_char = 0;
-  de_ptr = NULL;
+  de_ptr = nullptr;
 
   GetMaxYX(dir_window, &window_height, &window_width);
 
@@ -817,7 +817,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
   need_dsp_help = true;
 
   BuildDirEntryList( start_dir_entry );
-  if ( initial_directory != NULL )
+  if ( initial_directory != nullptr )
   {
     if ( !strcmp( initial_directory, "." ) )   /* Entry just a single "." */
     {
@@ -859,7 +859,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
         }
       }
     }
-    initial_directory = NULL;
+    initial_directory = nullptr;
   }
   dir_entry = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry;
 
@@ -1015,7 +1015,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
       case CR :      HandleSwitchWindow(dir_entry, start_dir_entry, &need_dsp_help, &ch);
 		     break;
       case 'X':
-      case 'x':      (void) Execute( dir_entry, NULL );
+      case 'x':      (void) Execute( dir_entry, nullptr );
 		     need_dsp_help = true;
 		     DisplayAvailBytes();
 		     break;

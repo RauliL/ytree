@@ -36,12 +36,12 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
   /* dir_entry initialisieren */
   /*--------------------------*/
 
-  dir_entry->file           = NULL;
+  dir_entry->file           = nullptr;
 /*
   dir_entry->next           = NULL;
   dir_entry->prev           = NULL;
 */
-  dir_entry->sub_tree       = NULL;
+  dir_entry->sub_tree       = nullptr;
   dir_entry->total_bytes    = 0L;
   dir_entry->matching_bytes = 0L;
   dir_entry->tagged_bytes   = 0L;
@@ -75,10 +75,10 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
     return 1;
   }
 
-  first_dir_entry.prev  = NULL;
-  first_dir_entry.next  = NULL;
+  first_dir_entry.prev  = nullptr;
+  first_dir_entry.next  = nullptr;
   *first_dir_entry.name = '\0';
-  first_file_entry.next = NULL;
+  first_file_entry.next = nullptr;
   fes_ptr               = &first_file_entry;
 
   file_count = 0;
@@ -154,7 +154,7 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
 	  break;
 	}
 
-	if( des_ptr->next == NULL )
+	if( des_ptr->next == nullptr )
 	{
 	  /* Ende der Liste erreicht; ==> einfuegen */
 	  /*----------------------------------------*/
@@ -221,8 +221,8 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
 
   (void) closedir( dir );
 
-  if( first_file_entry.next ) first_file_entry.next->prev = NULL;
-  if( first_dir_entry.next )  first_dir_entry.next->prev = NULL;
+  if( first_file_entry.next ) first_file_entry.next->prev = nullptr;
+  if( first_dir_entry.next )  first_dir_entry.next->prev = nullptr;
 
   dir_entry->file = first_file_entry.next;
   dir_entry->sub_tree = first_dir_entry.next;

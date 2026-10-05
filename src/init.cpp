@@ -46,10 +46,10 @@ int Init(
   ReadProfile(configuration_file);
   ReadHistory(history_file);
 
-  SetFileMode( strtod(FILEMODE, NULL) );
+  SetFileMode( strtod(FILEMODE, nullptr) );
   SetKindOfSort( SORT_BY_NAME );
   number_seperator = *(NUMBERSEP);
-  bypass_small_window = (bool)strtod(NOSMALLWINDOW, NULL );
+  bypass_small_window = (bool)strtod(NOSMALLWINDOW, nullptr );
   initial_directory = INITIALDIR;
 
   InitClock();

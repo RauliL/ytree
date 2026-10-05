@@ -1158,7 +1158,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 {
   FileEntry *fe_ptr;
   FileEntry *new_fe_ptr;
-  DirEntry  *de_ptr = NULL;
+  DirEntry  *de_ptr = nullptr;
   DirEntry  *dest_dir_entry;
   WalkingPackage walking_package;
   int ch;
@@ -1185,7 +1185,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 
   unput_char = '\0';
-  fe_ptr = NULL;
+  fe_ptr = nullptr;
 
 
   /* Cursor-Positionsmerker zuruecksetzen */
@@ -1859,7 +1859,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			/* TAR_FILE_MODE */
 			/*---------------*/
 
-			dest_dir_entry = NULL;
+			dest_dir_entry = nullptr;
 
 			if( disk_statistic.tree )
 			{
@@ -1911,7 +1911,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      {
 		        need_dsp_help = true;
 
-			if( GetCopyParameter( NULL, path_copy, to_file, to_dir ) )
+			if( GetCopyParameter( nullptr, path_copy, to_file, to_dir ) )
                         {
 			  beep();
 			  break;
@@ -1965,7 +1965,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			  /* TAR_FILE_MODE */
 			  /*---------------*/
 
-			  dest_dir_entry = NULL;
+			  dest_dir_entry = nullptr;
 
 			  if( disk_statistic.tree )
 			  {
@@ -2097,7 +2097,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      {
 		        need_dsp_help = true;
 
-			if( GetMoveParameter( NULL, to_file, to_dir ) )
+			if( GetMoveParameter( nullptr, to_file, to_dir ) )
                         {
 			  beep();
 			  break;
@@ -2268,7 +2268,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      {
 		        need_dsp_help = true;
 
-			if( GetRenameParameter( NULL, new_name ) )
+			if( GetRenameParameter( nullptr, new_name ) )
                         {
 			  beep();
 			  break;
@@ -2410,7 +2410,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 
 			if( ( walking_package.function_data.pipe_cmd.pipe_file =
-			      popen( filepath, "w" ) ) == NULL )
+			      popen( filepath, "w" ) ) == nullptr )
 			{
 			  MessagePrintf("execution of command*%s*failed", filepath);
 			  break;
@@ -2863,8 +2863,8 @@ static void ListJump( DirEntry * dir_entry, const char *str )
 
     /*  in file_window press initial char of file to jump to it */
 
-    char *newStr = NULL;
-    FileEntry * fe_ptr = NULL;
+    char *newStr = nullptr;
+    FileEntry * fe_ptr = nullptr;
     int i=0, j=0, n=0, start_x=0, ic=0, tmp2=0;
     const char * jumpmsg = "Press initial of file to jump to... ";
 

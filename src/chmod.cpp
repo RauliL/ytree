@@ -135,9 +135,9 @@ int GetNewFileModus(int y, int x, char *modus, const char *term)
       if( c == ' ' && p < 9 ) p++;
       else if( c == KEY_LEFT && p > 0 ) p--;
       else if( c == KEY_RIGHT && p < 9 ) p++;
-      else if( strrchr( term, c ) == NULL ) beep();
+      else if( strrchr( term, c ) == nullptr ) beep();
     }
-  } while( c != -1 && strrchr( term, c ) == NULL );
+  } while( c != -1 && strrchr( term, c ) == nullptr );
   leaveok(stdscr, true);
   move( y, x ); clrtoeol();
   curs_set(0);

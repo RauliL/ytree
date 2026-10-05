@@ -179,9 +179,9 @@ void DisplayDirHelp(void)
   const char *cptr;
 
   if (mode == USER_MODE) {
-    if (dir_help[mode][0] == dir_help_disk_mode_0 && (cptr = DIR1) != NULL)
+    if (dir_help[mode][0] == dir_help_disk_mode_0 && (cptr = DIR1) != nullptr)
       dir_help[mode][0] = cptr;
-    if (dir_help[mode][1] == dir_help_disk_mode_1 && (cptr = DIR2) != NULL)
+    if (dir_help[mode][1] == dir_help_disk_mode_1 && (cptr = DIR2) != nullptr)
       dir_help[mode][1] = cptr;
   }
   for( i=0; i < (int)(sizeof(dir_help[mode]) / sizeof(dir_help[mode][0])); i++) {
@@ -198,9 +198,9 @@ void DisplayFileHelp(void)
   const char *cptr;
 
   if (mode == USER_MODE) {
-    if (file_help[mode][0] == file_help_disk_mode_0 && (cptr = FILE1) != NULL)
+    if (file_help[mode][0] == file_help_disk_mode_0 && (cptr = FILE1) != nullptr)
       file_help[mode][0] = cptr;
-    if (file_help[mode][1] == file_help_disk_mode_1 && (cptr = FILE2) != NULL)
+    if (file_help[mode][1] == file_help_disk_mode_1 && (cptr = FILE2) != nullptr)
       file_help[mode][1] = cptr;
   }
   for( i=0; i < (int)(sizeof(file_help[mode]) / sizeof(file_help[mode][0])); i++) {

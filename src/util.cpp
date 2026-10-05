@@ -130,7 +130,7 @@ int GetDirEntry(DirEntry *tree,
   DirEntry *de_ptr, *sde_ptr;
   int n;
 
-  *dir_entry = NULL;
+  *dir_entry = nullptr;
   *to_path   = '\0';
 
    strcpy(to_path, dir_path);
@@ -202,14 +202,14 @@ int GetDirEntry(DirEntry *tree,
 	  break;
 	}
       }
-      if( sde_ptr == NULL )
+      if( sde_ptr == nullptr )
       {
 #ifdef DEBUG
 	ErrorPrintf("Can't find directory; token=%s", token);
 #endif
 	return( -3 );
       }
-      token = Strtok_r( NULL, FILE_SEPARATOR_STRING, &old );
+      token = Strtok_r( nullptr, FILE_SEPARATOR_STRING, &old );
     }
     *dir_entry = de_ptr;
   }
@@ -223,7 +223,7 @@ int GetFileEntry(DirEntry *de_ptr, char *file_name, FileEntry **file_entry)
 {
   FileEntry *fe_ptr;
 
-  *file_entry = NULL;
+  *file_entry = nullptr;
 
   for( fe_ptr = de_ptr->file; fe_ptr; fe_ptr = fe_ptr->next )
   {
@@ -732,7 +732,7 @@ void NormPath( const char *in_path, char *out_path )
         level++;
       }
     }
-    s = Strtok_r( NULL, FILE_SEPARATOR_STRING, &old );
+    s = Strtok_r( nullptr, FILE_SEPARATOR_STRING, &old );
   }
   if( level != 0 )
     d--;
@@ -751,22 +751,22 @@ char *Strtok_r( char *str, const char *delim, char **old )
   char *result;
   int  l, m;
 
-  if( str == NULL )
+  if( str == nullptr )
     str = *old;
 
-  if( str == NULL )
-    return( NULL );
+  if( str == nullptr )
+    return( nullptr );
 
   l = strlen( str );
-  if( ( result = strtok( str, delim ) ) != NULL ) {
+  if( ( result = strtok( str, delim ) ) != nullptr ) {
     m = strlen( result );
     if( (m + 1) >= l)
-      *old = NULL;
+      *old = nullptr;
     else
       *old = result + m + 1;
 
   } else
-    *old = NULL;
+    *old = nullptr;
 
   return( result );
 }

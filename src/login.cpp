@@ -629,9 +629,9 @@ int LoginDisk(char *path)
     }
 
     (void) strcpy( statistic.tree->name, path );
-    statistic.tree->next = statistic.tree->prev = NULL;
+    statistic.tree->next = statistic.tree->prev = nullptr;
 
-    depth = strtod(TREEDEPTH, NULL);
+    depth = strtod(TREEDEPTH, nullptr);
     if (ReadTree(statistic.tree, path, depth))
     {
       Error("ReadTree() failed");

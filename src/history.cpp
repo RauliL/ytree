@@ -15,7 +15,7 @@ static std::optional<std::string> custom_history_path;
 static int total_hist     = 0;
 static int cursor_pos     = 0;
 static int disp_begin_pos = 0;
-static History *Hist = NULL ;
+static History *Hist = nullptr ;
 
 void ReadHistory(const std::optional<std::string>& custom_path)
 {
@@ -277,7 +277,7 @@ const char* GetHistory()
 
     switch( ch )
     {
-      case -1:       RetVal = NULL;
+      case -1:       RetVal = nullptr;
                      break;
 
       case ' ':      break;  /* Quick-Key */
@@ -436,16 +436,16 @@ const char* GetHistory()
                      for(tmp = 0; (tmp != disp_begin_pos + cursor_pos); tmp++)
                      {
                         TMP = TMP -> next;
-                        if (TMP == NULL)
+                        if (TMP == nullptr)
                           break;
                      }
-                     if (TMP != NULL)
+                     if (TMP != nullptr)
                         RetVal = TMP -> hst;
                      else
-                        RetVal = NULL;
+                        RetVal = nullptr;
 		     break;
 
-      case ESC:      RetVal = NULL;
+      case ESC:      RetVal = nullptr;
                      break;
 
       default :      beep();

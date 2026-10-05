@@ -446,7 +446,7 @@ unsigned char hexval(unsigned char v) {
 void change_char(int ch)
 {
 
-    CHANGES *cambio=NULL;
+    CHANGES *cambio=nullptr;
     char pp=0;
     char mensaje[50];
 

@@ -26,7 +26,7 @@ int ReadTreeFromRAR(DirEntry *dir_entry, FILE *f)
 
   *dir_entry->name = '\0';
 
-  while( fgets( rar_line, RAR_LINE_LENGTH, f ) != NULL )
+  while( fgets( rar_line, RAR_LINE_LENGTH, f ) != nullptr )
   {
     /* \n loeschen */
     /*-------------*/
@@ -81,30 +81,30 @@ static int GetStatFromRAR(char *rar_line, char *name, struct stat *stat)
 
   stat->st_nlink = 1;
 
-  t = Strtok_r( rar_line, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( rar_line, " \t", &old ); if( t == nullptr ) return( -1 );
 
   /* Dateiname */
   /*-----------*/
 
   (void) strcpy( name, t );
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   /* Dateilaenge */
   /*-------------*/
 
   if( !isdigit( *t ) ) return( -1 );
   stat->st_size = AtoLL( t );
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   /* Packed */
   /*--------*/
 
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   /* Ratio */
   /*-------*/
 
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   /* M-Datum */
   /*---------*/
@@ -119,7 +119,7 @@ static int GetStatFromRAR(char *rar_line, char *name, struct stat *stat)
        tm_struct.tm_year += 100;
   }
 
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   /* M-time */
   /*--------*/
@@ -138,7 +138,7 @@ static int GetStatFromRAR(char *rar_line, char *name, struct stat *stat)
 
   stat->st_mtime = Mktime( &tm_struct );
 
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   /* Attributes */
   /*------------*/

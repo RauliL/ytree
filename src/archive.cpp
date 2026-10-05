@@ -45,7 +45,7 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
 
   p = strrchr( father_path, FILE_SEPARATOR_CHAR );
 
-  if( p == NULL )
+  if( p == nullptr )
   {
     df_ptr = tree;
     if( !strcmp( path, FILE_SEPARATOR_STRING ) )
@@ -80,7 +80,7 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
   /* Directory einklinken */
   /*----------------------*/
 
-  if( p == NULL )
+  if( p == nullptr )
   {
     /* in tree (=df_ptr) einklinken */
     /*------------------------------*/
@@ -103,7 +103,7 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
         break;
       }
 
-      if( ds_ptr->next == NULL )
+      if( ds_ptr->next == nullptr )
       {
         /* Ende der Liste erreicht; ==> einfuegen */
         /*----------------------------------------*/
@@ -115,7 +115,7 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
       }
     }
   }
-  else if( df_ptr->sub_tree == NULL )
+  else if( df_ptr->sub_tree == nullptr )
   {
     de_ptr->up_tree = df_ptr;
     df_ptr->sub_tree = de_ptr;
@@ -140,7 +140,7 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
         break;
       }
 
-      if( ds_ptr->next == NULL )
+      if( ds_ptr->next == nullptr )
       {
         /* Ende der Liste erreicht; ==> einfuegen */
         /*----------------------------------------*/
@@ -228,7 +228,7 @@ int InsertArchiveFileEntry(DirEntry *tree, char *path, struct stat *stat)
   /* Einklinken */
   /*------------*/
 
-  if( de_ptr->file == NULL )
+  if( de_ptr->file == nullptr )
   {
     de_ptr->file = fe_ptr;
   }
@@ -258,7 +258,7 @@ static int GetArchiveDirEntry(DirEntry *tree, char *path, DirEntry **dir_entry)
   (tree) ? tree->name : "NULL", path );
 #endif
 
-  if( strchr( path, FILE_SEPARATOR_CHAR ) != NULL )
+  if( strchr( path, FILE_SEPARATOR_CHAR ) != nullptr )
   {
     for( de_ptr = tree; de_ptr; de_ptr = de_ptr->next )
     {
@@ -348,16 +348,16 @@ int MinimizeArchiveTree(DirEntry *tree)
    * tree selbst leer ist, wird tree gestrichen
    */
 
-  if( tree->prev == NULL &&
-      tree->next != NULL &&
-      tree->file == NULL )
+  if( tree->prev == nullptr &&
+      tree->next != nullptr &&
+      tree->file == nullptr )
   {
     next_ptr = tree->next;
     (void) memcpy( (char *) tree,
 		   (char *) tree->next,
 		   sizeof( DirEntry ) + strlen( tree->next->name )
 		 );
-    tree->prev = NULL;
+    tree->prev = nullptr;
     if( tree->next ) tree->next->prev = tree;
     statistic.disk_total_directories--;
     free( next_ptr );
@@ -373,7 +373,7 @@ int MinimizeArchiveTree(DirEntry *tree)
 
   for( de_ptr = tree->sub_tree; de_ptr; de_ptr = next_ptr )
   {
-    if( de_ptr->prev == NULL && de_ptr->next == NULL && de_ptr->file == NULL )
+    if( de_ptr->prev == nullptr && de_ptr->next == nullptr && de_ptr->file == nullptr )
     {
       /* Zusammenfassung moeglich */
       /*--------------------------*/
@@ -400,12 +400,12 @@ int MinimizeArchiveTree(DirEntry *tree)
    * einen Subtree der Files hat, wird zusammengefasst
    */
 
-  if( tree->prev == NULL &&
-      tree->next == NULL &&
-      tree->file == NULL &&
+  if( tree->prev == nullptr &&
+      tree->next == nullptr &&
+      tree->file == nullptr &&
       tree->sub_tree     &&
-      tree->sub_tree->prev == NULL &&
-      tree->sub_tree->next == NULL
+      tree->sub_tree->prev == nullptr &&
+      tree->sub_tree->next == nullptr
     )
   {
     de_ptr = tree->sub_tree;
