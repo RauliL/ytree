@@ -9,9 +9,7 @@
 
 #include "ytree.h"
 
-
-
-static void UnReadSubTree(DirEntry *dir_entry);
+#include <filesystem>
 
 
 
@@ -103,12 +101,7 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
       doupdate();
     }
 
-    new_path = path;
-    if (new_path.compare(FILE_SEPARATOR_STRING))
-    {
-      new_path += FILE_SEPARATOR_CHAR;
-    }
-    new_path += dirent->d_name;
+    new_path = (std::filesystem::path(path) / dirent->d_name).string();
 
     if (STAT_(new_path.c_str(), &stat_struct))
     {

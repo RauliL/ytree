@@ -1,5 +1,7 @@
 #include "ytree.h"
 
+#include <filesystem>
+
 static bool Move(const std::string&, const std::string&);
 
 int MoveFile(FileEntry *fe_ptr,
@@ -11,7 +13,8 @@ int MoveFile(FileEntry *fe_ptr,
 	    )
 {
   const auto de_ptr = fe_ptr->dir_entry;
-  const auto from_path = GetPath(de_ptr) + FILE_SEPARATOR_CHAR + fe_ptr->name;
+  const auto from_path =
+    (std::filesystem::path(GetPath(de_ptr)) / fe_ptr->name).string();
   long long file_size;
   char        to_path[PATH_LENGTH+1];
   FileEntry   *dest_file_entry;
@@ -23,9 +26,10 @@ int MoveFile(FileEntry *fe_ptr,
   result = -1;
   *new_fe_ptr = nullptr;
 
-  (void) strcpy( to_path, to_dir_path );
-  (void) strcat( to_path, FILE_SEPARATOR_STRING );
-  (void) strcat( to_path, to_file );
+  const auto to_path_str =
+    (std::filesystem::path(to_dir_path) / to_file).string();
+  std::strncpy(to_path, to_path_str.c_str(), PATH_LENGTH);
+  to_path[PATH_LENGTH] = '\0';
 
   if (!std::strcmp(to_path, from_path.c_str()))
   {
