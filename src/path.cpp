@@ -1,5 +1,7 @@
 #include "ytree.h"
 
+#include <filesystem>
+
 #if defined(_WIN32)
 const char* FILE_SEPARATOR_STRING = "\\";
 #else
@@ -23,18 +25,14 @@ std::optional<std::string> GetHomePath()
 
 std::string PathJoin(const std::initializer_list<std::string>& parts)
 {
-  std::string result;
+  std::filesystem::path result;
 
   for (const auto& part : parts)
   {
-    if (!result.empty() && result[result.length() - 1] != FILE_SEPARATOR_CHAR)
-    {
-      result.append(1, FILE_SEPARATOR_CHAR);
-    }
-    result.append(part);
+    result /= part;
   }
 
-  return result;
+  return result.string();
 }
 
 static std::optional<std::string> GetXdgPath(
