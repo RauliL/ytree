@@ -5,7 +5,7 @@ static int CopyArchiveFile(const std::string& to_path, const std::string& from_p
 
 int CopyFile(Statistic *statistic_ptr,
              FileEntry *fe_ptr,
-             unsigned char confirm,
+             bool confirm,
              char *to_file,
              DirEntry *dest_dir_entry,
              char *to_dir_path,       /* absoluter Pfad */

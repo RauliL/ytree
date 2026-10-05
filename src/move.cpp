@@ -3,7 +3,7 @@
 static bool Move(const std::string&, const std::string&);
 
 int MoveFile(FileEntry *fe_ptr,
-	     unsigned char confirm,
+	     bool confirm,
 	     char *to_file,
 	     DirEntry *dest_dir_entry,
 	     char *to_dir_path,
