@@ -119,7 +119,7 @@ int LoginDisk(char *path)
   (void) strcpy( statistic.login_path, path );
   (void) strcpy( statistic.file_spec, DEFAULT_FILE_SPEC );
   (void) strcpy( statistic.tape_name, DEFAULT_TAPEDEV );
-  statistic.kind_of_sort = SORT_BY_NAME + SORT_ASC;
+  statistic.kind_of_sort = { SortKey::Name, SortOrder::Ascending };
   (void) memcpy( &statistic.tree->stat_struct,
 		 &stat_struct,
 		 sizeof( stat_struct )

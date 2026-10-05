@@ -47,7 +47,7 @@ int Init(
   ReadHistory(history_file);
 
   SetFileMode(static_cast<ViewMode>(static_cast<int>(strtod(FILEMODE, nullptr))));
-  SetKindOfSort( SORT_BY_NAME );
+  SetKindOfSort(SortKey::Name);
   number_seperator = *(NUMBERSEP);
   bypass_small_window = (bool)strtod(NOSMALLWINDOW, nullptr );
   initial_directory = INITIALDIR;

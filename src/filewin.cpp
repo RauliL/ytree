@@ -224,29 +224,20 @@ static void ReadGlobalFileList(const DirEntry* dir_entry)
 
 static void SortFileEntryList()
 {
-  int aux = statistic.kind_of_sort;
   std::function<bool(const FileEntry*, const FileEntry*)> compare;
 
   reverse_sort = false;
-  if (aux > SORT_DSC)
+  order = statistic.kind_of_sort.order == SortOrder::Ascending;
+  switch (statistic.kind_of_sort.key)
   {
-     order = false;
-     aux -= SORT_DSC;
-  } else {
-     order = true;
-     aux -= SORT_ASC;
-  }
-  switch (aux)
-  {
-    case SORT_BY_NAME: compare = SortByName; break;
-    case SORT_BY_MOD_TIME: compare = SortByModTime; break;
-    case SORT_BY_CHG_TIME: compare = SortByChgTime; break;
-    case SORT_BY_ACC_TIME: compare = SortByAccTime; break;
-    case SORT_BY_OWNER: compare = SortByOwner; break;
-    case SORT_BY_GROUP: compare = SortByGroup; break;
-    case SORT_BY_SIZE: compare = SortBySize; break;
-    case SORT_BY_EXTENSION: compare = SortByExtension; break;
-    default: compare = SortByName; beep();
+    case SortKey::Name: compare = SortByName; break;
+    case SortKey::ModTime: compare = SortByModTime; break;
+    case SortKey::ChgTime: compare = SortByChgTime; break;
+    case SortKey::AccTime: compare = SortByAccTime; break;
+    case SortKey::Owner: compare = SortByOwner; break;
+    case SortKey::Group: compare = SortByGroup; break;
+    case SortKey::Size: compare = SortBySize; break;
+    case SortKey::Extension: compare = SortByExtension; break;
   }
 
   std::sort(
@@ -395,9 +386,9 @@ static bool SortByGroup(const FileEntry* e1, const FileEntry* e2)
   }
 }
 
-void SetKindOfSort(int new_kind_of_sort)
+void SetKindOfSort(SortKey key, SortOrder order)
 {
-  statistic.kind_of_sort = new_kind_of_sort;
+  statistic.kind_of_sort = { key, order };
 }
 
 static void RemoveFileEntry(int entry_no)

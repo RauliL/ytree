@@ -15,10 +15,9 @@
 void GetKindOfSort(void)
 {
   int c;
-  int s;
-  int order;
-  
-  order = SORT_ASC; s=0;
+  SortKey key = SortKey::Name;
+  SortOrder order = SortOrder::Ascending;
+
   ClearHelp();
   PrintOptions( stdscr, LINES - 2, 1, 
             "Sort by (A)ccTime (C)hgTime (E)xtension (G)roup (M)odTime   (O)rder: [ascending]"
@@ -40,31 +39,31 @@ void GetKindOfSort(void)
 
         switch( c )
         {
-                case 'N': s = SORT_BY_NAME;
+                case 'N': key = SortKey::Name;
                         break;
-                case 'E': s = SORT_BY_EXTENSION;
+                case 'E': key = SortKey::Extension;
                         break;
-                case 'M': s = SORT_BY_MOD_TIME;
+                case 'M': key = SortKey::ModTime;
                         break;
-                case 'A': s = SORT_BY_ACC_TIME;
+                case 'A': key = SortKey::AccTime;
                         break;
-                case 'C': s = SORT_BY_CHG_TIME;
+                case 'C': key = SortKey::ChgTime;
                         break;
-                case 'G': s = SORT_BY_GROUP;
+                case 'G': key = SortKey::Group;
                         break;
-                case 'W': s = SORT_BY_OWNER;
+                case 'W': key = SortKey::Owner;
                         break;
-                case 'S': s = SORT_BY_SIZE;
+                case 'S': key = SortKey::Size;
                         break;
-                case 'O': if (order == SORT_ASC)
+                case 'O': if (order == SortOrder::Ascending)
                           {
                               PrintOptions( stdscr, LINES - 2, 58, "[descending]" );
-                              order = SORT_DSC;
+                              order = SortOrder::Descending;
                           }
                           else
                           {
                                 PrintOptions( stdscr, LINES - 2, 58, "[ascending] " );
-                                order = SORT_ASC;
+                                order = SortOrder::Ascending;
                           }
                         RefreshWindow( stdscr );
                         doupdate();
@@ -75,7 +74,5 @@ void GetKindOfSort(void)
                         break;
         }
   } while( ! strchr("ACEGMNWS", c));
-  SetKindOfSort(s + order);
+  SetKindOfSort(key, order);
 }
-
-

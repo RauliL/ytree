@@ -307,18 +307,29 @@ enum class CompressMethod
   RAR_COMPRESS = 18,
 };
 
-#define SORT_BY_NAME       1
-#define SORT_BY_MOD_TIME   2
-#define SORT_BY_CHG_TIME   3
-#define SORT_BY_ACC_TIME   4
-#define SORT_BY_SIZE       5
-#define SORT_BY_OWNER      6
-#define SORT_BY_GROUP      7
-#define SORT_BY_EXTENSION  8
-#define SORT_ASC           10
-#define SORT_DSC           20
-#define SORT_CASE          40
-#define SORT_ICASE         80
+enum class SortKey
+{
+  Name,
+  ModTime,
+  ChgTime,
+  AccTime,
+  Size,
+  Owner,
+  Group,
+  Extension,
+};
+
+enum class SortOrder
+{
+  Ascending,
+  Descending,
+};
+
+struct SortSpec
+{
+  SortKey key = SortKey::Name;
+  SortOrder order = SortOrder::Ascending;
+};
 
 #define DEFAULT_FILE_SPEC "*"
 
@@ -485,7 +496,7 @@ struct Statistic
   unsigned int  disk_total_directories;
   int           disp_begin_pos;
   int           cursor_pos;
-  int           kind_of_sort;
+  SortSpec      kind_of_sort;
   char          login_path[PATH_LENGTH + 1];
   char          path[PATH_LENGTH + 1];
   char          tape_name[PATH_LENGTH + 1];
@@ -656,7 +667,7 @@ extern int  Pipe(DirEntry *dir_entry, FileEntry *file_entry);
 extern int  PipeTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
 extern int  GetPipeCommand(char *pipe_command);
 extern void GetKindOfSort(void);
-extern void SetKindOfSort(int new_kind_of_sort);
+extern void SetKindOfSort(SortKey key, SortOrder order = SortOrder::Ascending);
 extern int  ChangeFileModus(FileEntry *fe_ptr);
 extern int  ChangeDirModus(DirEntry *de_ptr);
 extern int  GetNewFileModus(int y, int x, char *modus, const char *term);
