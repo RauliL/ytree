@@ -215,9 +215,9 @@ int GetDiskParameter( char *path,
 
         (void) strncpy( volume_name,
 	                fname,
-		        MINIMUM( DISK_NAME_LENGTH, strlen( fname ) )
+		        std::min(static_cast<std::size_t>(DISK_NAME_LENGTH), std::strlen(fname))
 		      );
-        volume_name[ MINIMUM( DISK_NAME_LENGTH, strlen( fname ))] = '\0';
+        volume_name[ std::min(static_cast<std::size_t>(DISK_NAME_LENGTH), std::strlen(fname))] = '\0';
       }
       else
       {

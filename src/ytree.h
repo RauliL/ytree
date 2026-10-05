@@ -19,6 +19,7 @@
 #if defined(WITH_UTF8)
 # include <cwchar>
 #endif
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <string>
@@ -42,12 +43,6 @@
 #else
 # include <curses.h>
 #endif
-
-/* Some handy macros... */
-
-#define MINIMUM( a, b ) ( ( (a) < (b) ) ? (a) : (b) )
-#define MAXIMUM( a, b ) ( ( (a) > (b) ) ? (a) : (b) )
-
 
 #ifdef WIN32
 

@@ -1,7 +1,6 @@
 #include "ytree.h"
 
 #define MAX_HST_FILE_LINES 50
-#define MAX(a,b) (((a) > (b)) ? (a):(b))
 
 struct History
 {
@@ -426,7 +425,7 @@ const char* GetHistory()
 		     }
                      break;
       case KEY_END :
-                     disp_begin_pos = MAX(0, total_hist - HISTORY_WINDOW_HEIGHT);
+                     disp_begin_pos = std::max(0, total_hist - HISTORY_WINDOW_HEIGHT);
 		     cursor_pos     = total_hist - disp_begin_pos - 1;
                      DisplayHistory();
                      break;

@@ -204,7 +204,7 @@ static void PrintDirEntry(WINDOW *win,
     l1 = strlen(buffer);
     n = window_width - aux;
     if((int)l1 > n) {
-       buffer[MAXIMUM(n-1, 0)] = '\0';
+       buffer[std::max(n-1, 0)] = '\0';
        suppress_output = true;
     }
     PrintSpecialString( win, y, aux, buffer, color );
@@ -232,7 +232,7 @@ static void PrintDirEntry(WINDOW *win,
     n = window_width - aux - l1;
     l2 = strlen(buffer);
     if((int)l2 > n)
-      buffer[MAXIMUM(n-1, 0)] = '\0';
+      buffer[std::max(n-1, 0)] = '\0';
 
 /*    waddstr( win, buffer );*/
     mvwaddstr( win, y, aux + l1, buffer);

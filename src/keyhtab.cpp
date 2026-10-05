@@ -5,8 +5,6 @@
 #endif
 
 
-#define MAX(a,b) (((a) > (b)) ? (a):(b))
-
 static char** Mtchs = nullptr;
 static int total_matches  = 0;
 static int cursor_pos     = 0;
@@ -323,7 +321,7 @@ char* GetMatches(const std::string& base)
 		     }
                      break;
       case KEY_END :
-                     disp_begin_pos = MAX(1, total_matches - MATCHES_WINDOW_HEIGHT);
+                     disp_begin_pos = std::max(1, total_matches - MATCHES_WINDOW_HEIGHT);
 		     cursor_pos     = total_matches - disp_begin_pos - 1;
                      DisplayMatches();
                      break;
