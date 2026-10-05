@@ -19,7 +19,7 @@ int DeleteDirectory(DirEntry *dir_entry)
 {
   int result = -1;
 
-  if( mode != DISK_MODE && mode != USER_MODE )
+  if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
   {
     beep();
     return( result );

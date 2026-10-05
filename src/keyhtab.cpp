@@ -5,8 +5,6 @@
 #endif
 
 
-#define MAX(a,b) (((a) > (b)) ? (a):(b))
-
 static char** Mtchs = nullptr;
 static int total_matches  = 0;
 static int cursor_pos     = 0;
@@ -117,16 +115,15 @@ char* GetMatches(const std::string& base)
 {
   int     ch;
   int     start_x;
-  char    *RetVal = NULL;
+  char    *RetVal = nullptr;
   char    *TMP;
-  char    *tmpval;
   int     hide_left, hide_right;
 
   Mtchs = nullptr;
 
 #if defined(READLINE_SUPPORT)
-  tmpval = tilde_expand(base.c_str());
-  if (!(Mtchs = rl_completion_matches(tmpval, rl_filename_completion_function)))
+  const auto tmpval = tilde_expand(base);
+  if (!(Mtchs = rl_completion_matches(tmpval.c_str(), rl_filename_completion_function)))
   {
     return nullptr;
   }
@@ -135,21 +132,20 @@ char* GetMatches(const std::string& base)
 #endif
 
 
-  if (!(strcmp(tmpval,Mtchs[0])==0)){
+  if (!(strcmp(tmpval.c_str(),Mtchs[0])==0)){
     TMP=static_cast<char*>(malloc(strlen(Mtchs[0])+1));
-    if (TMP != NULL){
+    if (TMP != nullptr){
       strcpy(TMP, Mtchs[0]);
       RetVal = TMP;
     }else{
-      RetVal = NULL;}
+      RetVal = nullptr;}
     free(Mtchs);
-    free(tmpval);
     return RetVal;
   }
 
   for (total_matches=0; Mtchs[total_matches]; total_matches++);
   if (total_matches == 1)
-  return(NULL);
+  return(nullptr);
 
   disp_begin_pos = 1;
   cursor_pos     = 0;
@@ -174,7 +170,7 @@ char* GetMatches(const std::string& base)
 
     switch( ch )
     {
-      case -1:       RetVal = NULL;
+      case -1:       RetVal = nullptr;
                      break;
 
       case ' ':      break;  /* Quick-Key */
@@ -323,21 +319,21 @@ char* GetMatches(const std::string& base)
 		     }
                      break;
       case KEY_END :
-                     disp_begin_pos = MAX(1, total_matches - MATCHES_WINDOW_HEIGHT);
+                     disp_begin_pos = std::max(1, total_matches - MATCHES_WINDOW_HEIGHT);
 		     cursor_pos     = total_matches - disp_begin_pos - 1;
                      DisplayMatches();
                      break;
       case LF :
       case CR :
                      TMP=static_cast<char*>(malloc(strlen(Mtchs[ disp_begin_pos + cursor_pos])+1));
-		     if (TMP != NULL){
+		     if (TMP != nullptr){
 		        strcpy(TMP, Mtchs[disp_begin_pos + cursor_pos]);
                         RetVal = TMP;
 		     }else
-                        RetVal = NULL;
+                        RetVal = nullptr;
 		     break;
 
-      case ESC:      RetVal = NULL;
+      case ESC:      RetVal = nullptr;
                      break;
 
       default :      beep();
@@ -346,7 +342,6 @@ char* GetMatches(const std::string& base)
   } while(ch != CR && ch != ESC && ch != -1);
   /* leaveok(stdscr, false); */
   free(Mtchs);
-  free(tmpval);
   touchwin(stdscr);
   return RetVal;
 }

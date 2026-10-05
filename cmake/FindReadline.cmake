@@ -19,7 +19,8 @@ find_library(READLINE_LIBRARY
   PATH_SUFFIXES ${CMAKE_INSTALL_LIBDIR})
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(readline
+find_package_handle_standard_args(Readline
+  FOUND_VAR READLINE_FOUND
   REQUIRED_VARS READLINE_LIBRARY READLINE_INCLUDE_DIR)
 
 mark_as_advanced(READLINE_FOUND READLINE_LIBRARY READLINE_INCLUDE_DIR)

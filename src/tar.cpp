@@ -27,7 +27,7 @@ int ReadTreeFromTAR(DirEntry *dir_entry, FILE *f)
 
   *dir_entry->name = '\0';
 
-  while( fgets( tar_line, TAR_LINE_LENGTH, f ) != NULL )
+  while( fgets( tar_line, TAR_LINE_LENGTH, f ) != nullptr )
   {
     /* \n loeschen */
     /*-------------*/
@@ -101,14 +101,14 @@ static int GetStatFromTAR(char *tar_line, char *name, struct stat *stat)
 
   stat->st_nlink = 1;
 
-  t = Strtok_r( tar_line, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( tar_line, " \t", &old ); if( t == nullptr ) return( -1 );
 
   /* Attribute */
   /*-----------*/
 
   if( strlen( t ) != 10 ) return( -1 );
   stat->st_mode = GetModus( t );
-  t = Strtok_r( NULL, " \t/", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t/", &old ); if( t == nullptr ) return( -1 );
 
 
   /* Owner */
@@ -121,7 +121,7 @@ static int GetStatFromTAR(char *tar_line, char *name, struct stat *stat)
   }
   stat->st_uid = (unsigned) id;
 
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   /* Group */
   /*-------*/
@@ -133,14 +133,14 @@ static int GetStatFromTAR(char *tar_line, char *name, struct stat *stat)
   }
   stat->st_gid = (unsigned) id;
 
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   /* Dateilaenge */
   /*-------------*/
 
   if( !isdigit( *t ) ) return( -1 );
   stat->st_size = AtoLL( t );
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   /* M-Datum */
   /*---------*/
@@ -157,29 +157,29 @@ static int GetStatFromTAR(char *tar_line, char *name, struct stat *stat)
     tm_struct.tm_mon  = atoi(&t[5]) - 1;
     tm_struct.tm_mday = atoi(&t[8]);
 
-    t = Strtok_r( NULL, " \t:", &old ); if( t == NULL ) return( -1 );
+    t = Strtok_r( nullptr, " \t:", &old ); if( t == nullptr ) return( -1 );
     tm_struct.tm_hour = atoi( t );
-    t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+    t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
     tm_struct.tm_min = atoi( t );
-    t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+    t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
     goto XDATE;
   }
 
 
   tm_struct.tm_mon = i;
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   tm_struct.tm_mday = atoi( t );
-  t = Strtok_r( NULL, " \t:", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t:", &old ); if( t == nullptr ) return( -1 );
 
   tm_struct.tm_hour = atoi( t );
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   tm_struct.tm_min = atoi( t );
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   tm_struct.tm_year = atoi( t ) - 1900;
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
 XDATE:
 
@@ -202,8 +202,8 @@ XDATE:
     /* Symbolischer Link */
     /*-------------------*/
 
-    t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
-    t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+    t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+    t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
     (void) strcpy( &name[ strlen( name ) + 1 ], t );
   }
 

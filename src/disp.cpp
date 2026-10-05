@@ -53,47 +53,47 @@ static const char dir_help_disk_mode_0[] = "DIR       (A)ttribute (D)elete  (F)i
 static const char dir_help_disk_mode_1[] = "COMMANDS  (O)wner (R)ename (S)howall (^S)how-tagged (T)ag (U)ntag e(X)ecute   (^F) dirmode";
 static const char* dir_help[MAX_MODES][2] =
   {
-    { /* DISK_MODE */
+    { /* Mode::DISK_MODE */
       dir_help_disk_mode_0,
       dir_help_disk_mode_1
     },
-    { /* LL_FILE_MODE */
+    { /* Mode::LL_FILE_MODE */
       "DIR       (F)ilespec (L)ogin (S)howall (T)ag (U)ntag e(X)ecute   (^F) dirmode  (Q)uit       ",
       "COMMANDS                                                                    "
     },
-    { /* TAR_FILE_MODE */
+    { /* Mode::TAR_FILE_MODE */
       "TAR-DIR   (F)ilespec (L)og (S)howall (T)ag (U)ntag e(X)ecute   (^F) dirmode  (Q)uit         ",
       "COMMANDS                                                                    "
     },
-    { /* ZOO_FILE_MODE */
+    { /* Mode::ZOO_FILE_MODE */
       "ZOO-DIR   (F)ilespec (L)og (S)howall (T)ag (U)ntag e(X)ecute   (^F) dirmode  (Q)uit         ",
       "COMMANDS                                                                    "
     },
-    { /* ZIP_FILE_MODE */
+    { /* Mode::ZIP_FILE_MODE */
       "ZIP-DIR   (F)ilespec (L)og (S)howall (T)ag (U)ntag e(X)ecute   (^F) dirmode  (Q)uit         ",
       "COMMANDS                                                                    "
     },
-    { /* LHA_FILE_MODE */
+    { /* Mode::LHA_FILE_MODE */
       "LHA-DIR   (F)ilespec (L)og (S)howall (T)ag (U)ntag e(X)ecute   (^F) dirmode  (Q)uit         ",
       "COMMANDS                                                                    "
     },
-    { /* ARC_FILE_MODE */
+    { /* Mode::ARC_FILE_MODE */
       "ARC-DIR   (F)ilespec (L)og (S)howall (T)ag (U)ntag e(X)ecute   (^F) dirmode  (Q)uit         ",
       "COMMANDS                                                                    "
     },
-    { /* RPM_FILE_MODE */
+    { /* Mode::RPM_FILE_MODE */
       "RPM-DIR   (F)ilespec (L)og (S)howall (T)ag (U)ntag e(X)ecute   (^F) dirmode  (Q)uit         ",
       "COMMANDS                                                                    "
     },
-    { /* RAR_FILE_MODE */
+    { /* Mode::RAR_FILE_MODE */
       "RAR-DIR   (F)ilespec (L)og (S)howall (T)ag (U)ntag e(X)ecute   (^F) dirmode  (Q)uit         ",
       "COMMANDS                                                                    "
     },
-    { /* TAPE_MODE */
+    { /* Mode::TAPE_MODE */
       "TAPE-DIR  (F)ilespec (L)og (S)howall (T)ag (U)ntag e(X)ecute   (^F) dirmode  (Q)uit         ",
       "COMMANDS                                                                    "
     },
-    { /* USER_MODE */
+    { /* Mode::USER_MODE */
       dir_help_disk_mode_0,	/* Default unless changed by user prefs */
       dir_help_disk_mode_1
     }
@@ -104,47 +104,47 @@ static const char file_help_disk_mode_0[] = "FILE      (A)ttribute (C)opy (D)ele
 static const char file_help_disk_mode_1[] = "COMMANDS  (O)wner (P)ipe (R)ename (S)ort (T)ag (U)ntag (V)iew e(X)ecute pathcop(Y) (^F)ilemode ";
 static const char* file_help[MAX_MODES][2] =
   {
-    { /* DISK_MODE */
+    { /* Mode::DISK_MODE */
       file_help_disk_mode_0,
       file_help_disk_mode_1
     },
-    { /* LL_FILE_MODE */
+    { /* Mode::LL_FILE_MODE */
       "FILE      (F)ilespec (L)ogin (S)ort (T)ag (U)ntag e(X)ecute (^F)ilemode      (Q)uit        ",
       "COMMANDS                                                                   "
     },
-    { /* TAR_FILE_MODE */
+    { /* Mode::TAR_FILE_MODE */
       "TAR-FILE  (C)opy (F)ilespec (H)ex (P)ipe (S)ort (T)ag (U)ntag (V)iew pathcop(Y) (Q)uit         ",
       "COMMANDS  (^F)ilemode                                                        "
     },
-    { /* ZOO_FILE_MODE */
+    { /* Mode::ZOO_FILE_MODE */
       "ZOO-FILE  (C)opy (F)ilespec (H)ex (P)ipe (S)ort (T)ag (U)ntag (V)iew pathcop(Y) (Q)uit         ",
       "COMMANDS  (^F)ilemode                                                        "
     },
-    { /* ZIP_FILE_MODE */
+    { /* Mode::ZIP_FILE_MODE */
       "ZIP-FILE  (C)opy (F)ilespec (H)ex (P)ipe (S)ort (T)ag (U)ntag (V)iew pathcop(Y) (Q)uit         ",
       "COMMANDS  (^F)ilemode                                                        "
     },
-    { /* LHA_FILE_MODE */
+    { /* Mode::LHA_FILE_MODE */
       "LHA-FILE  (C)opy (F)ilespec (H)ex (P)ipe (S)ort (T)ag (U)ntag (V)iew pathcop(Y) (Q)uit         ",
       "COMMANDS  (^F)ilemode                                                        "
     },
-    { /* ARC_FILE_MODE */
+    { /* Mode::ARC_FILE_MODE */
       "ARC-FILE  (C)opy (F)ilespec (H)ex (P)ipe (S)ort (T)ag (U)ntag (V)iew pathcop(Y) (Q)uit         ",
       "COMMANDS  (^F)ilemode                                                        "
     },
-    { /* RPM_FILE_MODE */
+    { /* Mode::RPM_FILE_MODE */
       "RPM-FILE  (C)opy (F)ilespec (H)ex (P)ipe (S)ort (T)ag (U)ntag (V)iew pathcop(Y) (Q)uit         ",
       "COMMANDS  (^F)ilemode                                                        "
     },
-    { /* RAR_FILE_MODE */
+    { /* Mode::RAR_FILE_MODE */
       "RAR-FILE  (C)opy (F)ilespec (H)ex (P)ipe (S)ort (T)ag (U)ntag (V)iew pathcop(Y) (Q)uit         ",
       "COMMANDS  (^F)ilemode                                                        "
     },
-    { /* TAPE_MODE */
+    { /* Mode::TAPE_MODE */
       "TAPE-FILE (C)opy (F)ilespec (H)ex (P)ipe (S)ort (T)ag (U)ntag (V)iew pathcop(Y) (Q)uit         ",
       "COMMANDS  (^F)ilemode                                                        "
     },
-    { /* USER_MODE */
+    { /* Mode::USER_MODE */
       file_help_disk_mode_0,	/* Default unless changed by user prefs */
       file_help_disk_mode_1
     }
@@ -178,14 +178,14 @@ void DisplayDirHelp(void)
   int i;
   const char *cptr;
 
-  if (mode == USER_MODE) {
-    if (dir_help[mode][0] == dir_help_disk_mode_0 && (cptr = DIR1) != NULL)
-      dir_help[mode][0] = cptr;
-    if (dir_help[mode][1] == dir_help_disk_mode_1 && (cptr = DIR2) != NULL)
-      dir_help[mode][1] = cptr;
+  if (mode == Mode::USER_MODE) {
+    if (dir_help[static_cast<int>(mode)][0] == dir_help_disk_mode_0 && (cptr = DIR1) != nullptr)
+      dir_help[static_cast<int>(mode)][0] = cptr;
+    if (dir_help[static_cast<int>(mode)][1] == dir_help_disk_mode_1 && (cptr = DIR2) != nullptr)
+      dir_help[static_cast<int>(mode)][1] = cptr;
   }
-  for( i=0; i < (int)(sizeof(dir_help[mode]) / sizeof(dir_help[mode][0])); i++) {
-    PrintOptions( stdscr, LINES - 2 + i, 0, dir_help[mode][i] );
+  for( i=0; i < (int)(sizeof(dir_help[static_cast<int>(mode)]) / sizeof(dir_help[static_cast<int>(mode)][0])); i++) {
+    PrintOptions( stdscr, LINES - 2 + i, 0, dir_help[static_cast<int>(mode)][i] );
     clrtoeol();
   }
 }
@@ -197,14 +197,14 @@ void DisplayFileHelp(void)
   int i;
   const char *cptr;
 
-  if (mode == USER_MODE) {
-    if (file_help[mode][0] == file_help_disk_mode_0 && (cptr = FILE1) != NULL)
-      file_help[mode][0] = cptr;
-    if (file_help[mode][1] == file_help_disk_mode_1 && (cptr = FILE2) != NULL)
-      file_help[mode][1] = cptr;
+  if (mode == Mode::USER_MODE) {
+    if (file_help[static_cast<int>(mode)][0] == file_help_disk_mode_0 && (cptr = FILE1) != nullptr)
+      file_help[static_cast<int>(mode)][0] = cptr;
+    if (file_help[static_cast<int>(mode)][1] == file_help_disk_mode_1 && (cptr = FILE2) != nullptr)
+      file_help[static_cast<int>(mode)][1] = cptr;
   }
-  for( i=0; i < (int)(sizeof(file_help[mode]) / sizeof(file_help[mode][0])); i++) {
-    PrintOptions( stdscr, LINES - 2 + i, 0, file_help[mode][i] );
+  for( i=0; i < (int)(sizeof(file_help[static_cast<int>(mode)]) / sizeof(file_help[static_cast<int>(mode)][0])); i++) {
+    PrintOptions( stdscr, LINES - 2 + i, 0, file_help[static_cast<int>(mode)][i] );
     clrtoeol();
   }
 }

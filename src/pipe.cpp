@@ -16,16 +16,16 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
     move(LINES - 2, 1);
     clrtoeol();
 
-    if (mode == DISK_MODE || mode == USER_MODE)
+    if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
     {
       /* Kommandozeile zusammenbasteln */
       /*-------------------------------*/
       command_line = std::string(CAT) + " \"" + file_name_p_aux + "\" " + input_buffer;
     } else {
-      /* TAR/ZOO/ZIP_FILE_MODE */
+      /* TAR/ZOO/Mode::ZIP_FILE_MODE */
       /*-----------------------*/
       command_line = MakeExtractCommandLine(
-        mode == TAPE_MODE ? statistic.tape_name : statistic.login_path,
+        mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
         file_name_p_aux,
 			  input_buffer
 			);

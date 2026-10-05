@@ -1,12 +1,13 @@
 #include "ytree.h"
 
+#include <algorithm>
 #include <functional>
 #include <vector>
 
 static bool reverse_sort;
 static bool order;
 static bool do_case = false;
-static int  file_mode;
+static ViewMode file_mode;
 static int  max_column;
 
 static int  window_height;
@@ -59,34 +60,34 @@ static void ListJump( DirEntry * dir_entry, const char *str );
 
 
 
-void SetFileMode(int new_file_mode)
+void SetFileMode(ViewMode new_file_mode)
 {
 
   GetMaxYX( file_window, &window_height, &window_width );
   file_mode = new_file_mode;
   switch( file_mode )
   {
-    case MODE_1: if( max_linkname_len)
+    case ViewMode::MODE_1: if( max_linkname_len)
 		   max_column = window_width /
 				(max_filename_len + max_linkname_len + 45);
 		 else
 		   max_column = window_width / (max_filename_len + 41);
 		 break;
-    case MODE_2: if( max_linkname_len)
+    case ViewMode::MODE_2: if( max_linkname_len)
 		   max_column = window_width /
                    (max_filename_len + max_linkname_len + 41);
 		 else
                    max_column = window_width / (max_filename_len + 37);
 		 break;
-    case MODE_3: max_column = window_width / (max_filename_len + 3);
+    case ViewMode::MODE_3: max_column = window_width / (max_filename_len + 3);
     		 break;
-    case MODE_4: if( max_linkname_len)
+    case ViewMode::MODE_4: if( max_linkname_len)
 		   max_column = window_width /
 				(max_filename_len + max_linkname_len + 44);
 		 else
 		   max_column = window_width / (max_filename_len + 40);
 		 break;
-    case MODE_5: max_userview_len = GetUserFileEntryLength(max_filename_len,
+    case ViewMode::MODE_5: max_userview_len = GetUserFileEntryLength(max_filename_len,
 					                   max_linkname_len,
 					                   USERVIEW);
                  if(max_userview_len)
@@ -106,15 +107,15 @@ void RotateFileMode(void)
 {
   switch( file_mode )
   {
-    case MODE_1: SetFileMode( MODE_3 ); break;
-    case MODE_2: SetFileMode( MODE_5 ); break;
-    case MODE_3: SetFileMode( MODE_4 ); break;
-    case MODE_4: SetFileMode( MODE_2 ); break;
-    case MODE_5: SetFileMode( MODE_1 ); break;
+    case ViewMode::MODE_1: SetFileMode( ViewMode::MODE_3 ); break;
+    case ViewMode::MODE_2: SetFileMode( ViewMode::MODE_5 ); break;
+    case ViewMode::MODE_3: SetFileMode( ViewMode::MODE_4 ); break;
+    case ViewMode::MODE_4: SetFileMode( ViewMode::MODE_2 ); break;
+    case ViewMode::MODE_5: SetFileMode( ViewMode::MODE_1 ); break;
   }
-  if( (mode != DISK_MODE && mode != USER_MODE) && file_mode == MODE_4 ) {
+  if( (mode != Mode::DISK_MODE && mode != Mode::USER_MODE) && file_mode == ViewMode::MODE_4 ) {
     RotateFileMode();
-  } else if(file_mode == MODE_5 && !strcmp(USERVIEW, "")) {
+  } else if(file_mode == ViewMode::MODE_5 && !strcmp(USERVIEW, "")) {
     RotateFileMode();
   }
 }
@@ -223,29 +224,20 @@ static void ReadGlobalFileList(const DirEntry* dir_entry)
 
 static void SortFileEntryList()
 {
-  int aux = statistic.kind_of_sort;
   std::function<bool(const FileEntry*, const FileEntry*)> compare;
 
   reverse_sort = false;
-  if (aux > SORT_DSC)
+  order = statistic.kind_of_sort.order == SortOrder::Ascending;
+  switch (statistic.kind_of_sort.key)
   {
-     order = false;
-     aux -= SORT_DSC;
-  } else {
-     order = true;
-     aux -= SORT_ASC;
-  }
-  switch (aux)
-  {
-    case SORT_BY_NAME: compare = SortByName; break;
-    case SORT_BY_MOD_TIME: compare = SortByModTime; break;
-    case SORT_BY_CHG_TIME: compare = SortByChgTime; break;
-    case SORT_BY_ACC_TIME: compare = SortByAccTime; break;
-    case SORT_BY_OWNER: compare = SortByOwner; break;
-    case SORT_BY_GROUP: compare = SortByGroup; break;
-    case SORT_BY_SIZE: compare = SortBySize; break;
-    case SORT_BY_EXTENSION: compare = SortByExtension; break;
-    default: compare = SortByName; beep();
+    case SortKey::Name: compare = SortByName; break;
+    case SortKey::ModTime: compare = SortByModTime; break;
+    case SortKey::ChgTime: compare = SortByChgTime; break;
+    case SortKey::AccTime: compare = SortByAccTime; break;
+    case SortKey::Owner: compare = SortByOwner; break;
+    case SortKey::Group: compare = SortByGroup; break;
+    case SortKey::Size: compare = SortBySize; break;
+    case SortKey::Extension: compare = SortByExtension; break;
   }
 
   std::sort(
@@ -394,9 +386,9 @@ static bool SortByGroup(const FileEntry* e1, const FileEntry* e2)
   }
 }
 
-void SetKindOfSort(int new_kind_of_sort)
+void SetKindOfSort(SortKey key, SortOrder order)
 {
-  statistic.kind_of_sort = new_kind_of_sort;
+  statistic.kind_of_sort = { key, order };
 }
 
 static void RemoveFileEntry(int entry_no)
@@ -490,7 +482,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
   switch( file_mode )
   {
-    case MODE_1 : if( fe_ptr )
+    case ViewMode::MODE_1 : if( fe_ptr )
 		  {
 		    (void) GetAttributes( fe_ptr->stat_struct.st_mode,
 		                          attributes
@@ -551,7 +543,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		    pos_x = x * (max_filename_len + 43);
 		  break;
 
-    case MODE_2 : if( fe_ptr )
+    case ViewMode::MODE_2 : if( fe_ptr )
 		  {
 		    (void) GetAttributes( fe_ptr->stat_struct.st_mode,
 		                          attributes
@@ -619,7 +611,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
                     pos_x = x * (max_filename_len + 39);
 		  break;
 
-    case MODE_3 : if( fe_ptr )
+    case ViewMode::MODE_3 : if( fe_ptr )
 		  {
 		    (void) sprintf( format, "%%c%%c%%%c%lds",
                                     justify,
@@ -643,7 +635,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		  pos_x = x * (max_filename_len + 3);
 		  break;
 
-    case MODE_4 : if( fe_ptr )
+    case ViewMode::MODE_4 : if( fe_ptr )
 		  {
 		    (void) CTime( fe_ptr->stat_struct.st_ctime, change_time );
 		    (void) CTime( fe_ptr->stat_struct.st_atime, access_time );
@@ -695,7 +687,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		    pos_x = x * (max_filename_len + 40);
 		  break;
 
-    case MODE_5 : if( fe_ptr )
+    case ViewMode::MODE_5 : if( fe_ptr )
 		  {
  		    BuildUserFileEntry(fe_ptr,  max_filename_len, max_linkname_len,
 		        USERVIEW,
@@ -1157,7 +1149,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 {
   FileEntry *fe_ptr;
   FileEntry *new_fe_ptr;
-  DirEntry  *de_ptr = NULL;
+  DirEntry  *de_ptr = nullptr;
   DirEntry  *dest_dir_entry;
   WalkingPackage walking_package;
   int ch;
@@ -1184,7 +1176,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 
   unput_char = '\0';
-  fe_ptr = NULL;
+  fe_ptr = nullptr;
 
 
   /* Cursor-Positionsmerker zuruecksetzen */
@@ -1300,7 +1292,7 @@ int HandleFileWindow(DirEntry *dir_entry)
      resize_request = false;
    }
 
-   if( file_mode == MODE_1 )
+   if( file_mode == ViewMode::MODE_1 )
    {
       if( ch == '\t' ) ch = KEY_DOWN;
       else if( ch == KEY_BTAB ) ch = KEY_UP;
@@ -1331,7 +1323,7 @@ int HandleFileWindow(DirEntry *dir_entry)
      }
    }
 
-   if (mode == USER_MODE) { /* FileUserMode returns (possibly remapped) ch, or -1 if it handles ch */
+   if (mode == Mode::USER_MODE) { /* FileUserMode returns (possibly remapped) ch, or -1 if it handles ch */
       ch = FileUserMode(file_entry_list[dir_entry->start_file + dir_entry->cursor_pos], ch);
    }
 
@@ -1432,7 +1424,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'A' & 0x1F :
-		      if( (mode != DISK_MODE && mode != USER_MODE) || !IsMatchingTaggedFiles() )
+		      if( (mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
 		      {
 			beep();
 		      }
@@ -1485,7 +1477,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'O' & 0x1F :
-		      if(( mode != DISK_MODE && mode != USER_MODE) || !IsMatchingTaggedFiles() )
+		      if(( mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
 		      {
 			beep();
 		      }
@@ -1527,7 +1519,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'G' & 0x1F :
-		      if(( mode != DISK_MODE && mode != USER_MODE) || !IsMatchingTaggedFiles() )
+		      if(( mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
 		      {
 			beep();
 		      }
@@ -1797,7 +1789,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			break;
 		      }
 
-		      if( mode == DISK_MODE || mode == USER_MODE )
+		      if( mode == Mode::DISK_MODE || mode == Mode::USER_MODE )
 		      {
                         if( (tmp2 = GetDirEntry( statistic.tree,
 				         de_ptr,
@@ -1855,10 +1847,10 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 		      else
 		      {
-			/* TAR_FILE_MODE */
+			/* Mode::TAR_FILE_MODE */
 			/*---------------*/
 
-			dest_dir_entry = NULL;
+			dest_dir_entry = nullptr;
 
 			if( disk_statistic.tree )
 			{
@@ -1910,14 +1902,14 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      {
 		        need_dsp_help = true;
 
-			if( GetCopyParameter( NULL, path_copy, to_file, to_dir ) )
+			if( GetCopyParameter( nullptr, path_copy, to_file, to_dir ) )
                         {
 			  beep();
 			  break;
 		        }
 
 
-			if( mode == DISK_MODE || mode == USER_MODE )
+			if( mode == Mode::DISK_MODE || mode == Mode::USER_MODE )
 			{
                           if( GetDirEntry( statistic.tree,
 					   de_ptr,
@@ -1961,10 +1953,10 @@ int HandleFileWindow(DirEntry *dir_entry)
 		        }
 		        else
 		        {
-			  /* TAR_FILE_MODE */
+			  /* Mode::TAR_FILE_MODE */
 			  /*---------------*/
 
-			  dest_dir_entry = NULL;
+			  dest_dir_entry = nullptr;
 
 			  if( disk_statistic.tree )
 			  {
@@ -2016,7 +2008,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'M' :
-      case 'm' :      if( mode != DISK_MODE && mode != USER_MODE )
+      case 'm' :      if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
                       {
 			beep();
 			break;
@@ -2088,7 +2080,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'N' & 0x1F :
-		      if(( mode != DISK_MODE && mode != USER_MODE) || !IsMatchingTaggedFiles() )
+		      if(( mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
 		      {
 			beep();
 		      }
@@ -2096,7 +2088,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      {
 		        need_dsp_help = true;
 
-			if( GetMoveParameter( NULL, to_file, to_dir ) )
+			if( GetMoveParameter( nullptr, to_file, to_dir ) )
                         {
 			  beep();
 			  break;
@@ -2149,7 +2141,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'D' :
-      case 'd' :      if( mode != DISK_MODE && mode != USER_MODE )
+      case 'd' :      if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
 		      {
 			beep();
 			break;
@@ -2204,7 +2196,7 @@ int HandleFileWindow(DirEntry *dir_entry)
                       break;
 
       case 'D' & 0x1F :
-		      if(( mode != DISK_MODE && mode != USER_MODE) || !IsMatchingTaggedFiles() )
+		      if(( mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
 		      {
 			beep();
 		      }
@@ -2226,7 +2218,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'R':
-      case 'r':       if( mode != DISK_MODE && mode != USER_MODE )
+      case 'r':       if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
 		      {
 			beep();
 			break;
@@ -2259,7 +2251,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'R' & 0x1F :
-		      if(( mode != DISK_MODE && mode != USER_MODE) || !IsMatchingTaggedFiles() )
+		      if(( mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
 		      {
 			beep();
 		      }
@@ -2267,7 +2259,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      {
 		        need_dsp_help = true;
 
-			if( GetRenameParameter( NULL, new_name ) )
+			if( GetRenameParameter( nullptr, new_name ) )
                         {
 			  beep();
 			  break;
@@ -2343,7 +2335,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 #endif /* VI_KEYS */
       case 'L':
         fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
-        if (mode == DISK_MODE || mode == USER_MODE)
+        if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
         {
           const auto path = GetFileNamePath(fe_ptr);
           char new_login_path[PATH_LENGTH + 1];
@@ -2392,7 +2384,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      {
 			beep();
 		      }
-		      else if( mode != DISK_MODE && mode != USER_MODE )
+		      else if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
 		      {
 			Message("i am sorry*^P not supported in Archive-mode");
 		      }
@@ -2409,7 +2401,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 
 			if( ( walking_package.function_data.pipe_cmd.pipe_file =
-			      popen( filepath, "w" ) ) == NULL )
+			      popen( filepath, "w" ) ) == nullptr )
 			{
 			  MessagePrintf("execution of command*%s*failed", filepath);
 			  break;
@@ -2452,7 +2444,7 @@ int HandleFileWindow(DirEntry *dir_entry)
                       {
                         beep();
                       }
-		      else if( mode != DISK_MODE && mode != USER_MODE )
+		      else if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
 		      {
 			Message("Feature not available in archives.");
 		      }
@@ -2493,7 +2485,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      {
 			beep();
 		      }
-		      else if( mode != DISK_MODE && mode != USER_MODE )
+		      else if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
 		      {
 			Message("I am sorry*^X not supported in Archive-mode");
 		      }
@@ -2862,8 +2854,8 @@ static void ListJump( DirEntry * dir_entry, const char *str )
 
     /*  in file_window press initial char of file to jump to it */
 
-    char *newStr = NULL;
-    FileEntry * fe_ptr = NULL;
+    char *newStr = nullptr;
+    FileEntry * fe_ptr = nullptr;
     int i=0, j=0, n=0, start_x=0, ic=0, tmp2=0;
     const char * jumpmsg = "Press initial of file to jump to... ";
 

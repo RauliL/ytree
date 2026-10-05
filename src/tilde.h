@@ -1,4 +1,4 @@
-/* tilde.h: Externally available variables and function in libtilde.a. */
+/* tilde.h: Externally available tilde expansion helpers. */
 
 /* Copyright (C) 1992 Free Software Foundation, Inc.
 
@@ -21,38 +21,13 @@
    have a copy of the license, write to the Free Software Foundation,
    59 Temple Place, Suite 330, Boston, MA 02111 USA. */
 
-#if !defined (_TILDE_H_)
-#  define _TILDE_H_
+#pragma once
 
-typedef char *tilde_hook_func_t(char *);
-
-/* If non-null, this contains the address of a function that the application
-   wants called before trying the standard tilde expansions.  The function
-   is called with the text sans tilde, and returns a malloc()'ed string
-   which is the expansion, or a NULL pointer if the expansion fails. */
-extern tilde_hook_func_t *tilde_expansion_preexpansion_hook;
-
-/* If non-null, this contains the address of a function to call if the
-   standard meaning for expanding a tilde fails.  The function is called
-   with the text (sans tilde, as in "foo"), and returns a malloc()'ed string
-   which is the expansion, or a NULL pointer if there is no expansion. */
-extern tilde_hook_func_t *tilde_expansion_failure_hook;
-
-/* When non-null, this is a NULL terminated array of strings which
-   are duplicates for a tilde prefix.  Bash uses this to expand
-   `=~' and `:~'. */
-extern char **tilde_additional_prefixes;
-
-/* When non-null, this is a NULL terminated array of strings which match
-   the end of a username, instead of just "/".  Bash sets this to
-   `:' and `=~'. */
-extern char **tilde_additional_suffixes;
+#include <string>
 
 /* Return a new string which is the result of tilde expanding STRING. */
-extern char *tilde_expand(const char *);
+std::string tilde_expand(const std::string& string);
 
 /* Do the work of tilde expansion on FILENAME.  FILENAME starts with a
-   tilde.  If there is no expansion, call tilde_expansion_failure_hook. */
-extern char *tilde_expand_word(const char *);
-
-#endif /* _TILDE_H_ */
+   tilde. */
+std::string tilde_expand_word(const std::string& filename);

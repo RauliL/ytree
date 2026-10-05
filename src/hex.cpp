@@ -7,17 +7,17 @@ int ViewHex(const std::string& file_path)
 {
   switch (mode)
   {
-    case DISK_MODE:
-    case USER_MODE:
+    case Mode::DISK_MODE:
+    case Mode::USER_MODE:
       return ViewHexFile(file_path);
 
-    case TAPE_MODE:
-    case RPM_FILE_MODE:
-    case TAR_FILE_MODE:
-    case ZOO_FILE_MODE:
-    case ZIP_FILE_MODE:
-    case LHA_FILE_MODE:
-    case ARC_FILE_MODE:
+    case Mode::TAPE_MODE:
+    case Mode::RPM_FILE_MODE:
+    case Mode::TAR_FILE_MODE:
+    case Mode::ZOO_FILE_MODE:
+    case Mode::ZIP_FILE_MODE:
+    case Mode::LHA_FILE_MODE:
+    case Mode::ARC_FILE_MODE:
       return ViewHexArchiveFile(file_path);
 
     default:
@@ -113,7 +113,7 @@ static int ViewHexFile(const std::string& file_path)
 static int ViewHexArchiveFile(const std::string& file_path)
 {
   const auto command_line = MakeExtractCommandLine(
-    mode == TAPE_MODE ? statistic.tape_name : statistic.login_path,
+    mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
 		file_path,
     std::string("| ") + HEXDUMP + " | " + PAGER
   );

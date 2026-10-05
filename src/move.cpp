@@ -3,7 +3,7 @@
 static bool Move(const std::string&, const std::string&);
 
 int MoveFile(FileEntry *fe_ptr,
-	     unsigned char confirm,
+	     bool confirm,
 	     char *to_file,
 	     DirEntry *dest_dir_entry,
 	     char *to_dir_path,
@@ -21,7 +21,7 @@ int MoveFile(FileEntry *fe_ptr,
   int         result;
 
   result = -1;
-  *new_fe_ptr = NULL;
+  *new_fe_ptr = nullptr;
 
   (void) strcpy( to_path, to_dir_path );
   (void) strcat( to_path, FILE_SEPARATOR_STRING );
@@ -139,7 +139,7 @@ int MoveFile(FileEntry *fe_ptr,
       fen_ptr->tagged      = false;
       fen_ptr->matching    = Match( fen_ptr->name );
       fen_ptr->next        = dest_dir_entry->file;
-      fen_ptr->prev        = NULL;
+      fen_ptr->prev        = nullptr;
       if( dest_dir_entry->file ) dest_dir_entry->file->prev = fen_ptr;
       dest_dir_entry->file = fen_ptr;
       *new_fe_ptr          = fen_ptr;
@@ -167,7 +167,7 @@ int GetMoveParameter(const char *from_file, char *to_file, char *to_dir)
 {
   char buffer[PATH_LENGTH * 2 +1];
 
-  if( from_file == NULL )
+  if( from_file == nullptr )
   {
     from_file = "TAGGED FILES";
     (void) strcpy( to_file, "*" );

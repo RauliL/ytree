@@ -18,7 +18,7 @@ static void ReadDirList(DirEntry* dir_entry);
 static void PrintDirEntry(WINDOW *win, int entry_no, int y, unsigned char hilight);
 static void BuildDirEntryList(DirEntry* dir_entry);
 
-static int dir_mode;
+static ViewMode dir_mode;
 
 static void BuildDirEntryList(DirEntry* dir_entry)
 {
@@ -37,13 +37,13 @@ static void RotateDirMode(void)
 {
   switch( dir_mode )
   {
-    case MODE_1: dir_mode = MODE_2 ; break;
-    case MODE_2: dir_mode = MODE_4 ; break;
-    case MODE_3: dir_mode = MODE_1 ; break;
-    case MODE_4: dir_mode = MODE_3 ; break;
+    case ViewMode::MODE_1: dir_mode = ViewMode::MODE_2 ; break;
+    case ViewMode::MODE_2: dir_mode = ViewMode::MODE_4 ; break;
+    case ViewMode::MODE_3: dir_mode = ViewMode::MODE_1 ; break;
+    case ViewMode::MODE_4: dir_mode = ViewMode::MODE_3 ; break;
   }
-  if( (mode != DISK_MODE && mode != USER_MODE ) &&
-      dir_mode == MODE_4 ) RotateDirMode();
+  if( (mode != Mode::DISK_MODE && mode != Mode::USER_MODE ) &&
+      dir_mode == ViewMode::MODE_4 ) RotateDirMode();
 }
 
 
@@ -89,7 +89,7 @@ static void PrintDirEntry(WINDOW *win,
   int  color, hi_color;
   char buffer[32*3+PATH_LENGTH+1];
   char format[60];
-  char *line_buffer = NULL;
+  char *line_buffer = nullptr;
   char attributes[11];
   char modify_time[13];
   char change_time[13];
@@ -124,7 +124,7 @@ static void PrintDirEntry(WINDOW *win,
 
   switch( dir_mode )
   {
-    case MODE_1:
+    case ViewMode::MODE_1:
       GetAttributes(de_ptr->stat_struct.st_mode, attributes);
       CTime(de_ptr->stat_struct.st_mtime, modify_time);
       line_buffer = MallocOrAbort<char>(38);
@@ -141,7 +141,7 @@ static void PrintDirEntry(WINDOW *win,
       );
       break;
 
-    case MODE_2 :
+    case ViewMode::MODE_2 :
                  (void)GetAttributes(de_ptr->stat_struct.st_mode, attributes);
                  if (const auto owner_name_ptr = GetPasswdName(de_ptr->stat_struct.st_uid))
                  {
@@ -166,8 +166,8 @@ static void PrintDirEntry(WINDOW *win,
                    group
                  );
                  break;
-    case MODE_3 : break;
-    case MODE_4 :
+    case ViewMode::MODE_3 : break;
+    case ViewMode::MODE_4 :
                  (void) CTime( de_ptr->stat_struct.st_ctime, change_time );
                  (void) CTime( de_ptr->stat_struct.st_atime, access_time );
                  std::strcpy(format, "Chg.: %12s  Acc.: %12s");
@@ -204,7 +204,7 @@ static void PrintDirEntry(WINDOW *win,
     l1 = strlen(buffer);
     n = window_width - aux;
     if((int)l1 > n) {
-       buffer[MAXIMUM(n-1, 0)] = '\0';
+       buffer[std::max(n-1, 0)] = '\0';
        suppress_output = true;
     }
     PrintSpecialString( win, y, aux, buffer, color );
@@ -232,7 +232,7 @@ static void PrintDirEntry(WINDOW *win,
     n = window_width - aux - l1;
     l2 = strlen(buffer);
     if((int)l2 > n)
-      buffer[MAXIMUM(n-1, 0)] = '\0';
+      buffer[std::max(n-1, 0)] = '\0';
 
 /*    waddstr( win, buffer );*/
     mvwaddstr( win, y, aux + l1, buffer);
@@ -594,7 +594,7 @@ void HandleReadSubTree(DirEntry *dir_entry, DirEntry *start_dir_entry,
 void HandleUnreadSubTree(DirEntry *dir_entry, DirEntry *de_ptr,
 			 DirEntry *start_dir_entry, bool *need_dsp_help)
 {
-    if( dir_entry->not_scanned || (dir_entry->sub_tree == NULL) ) {
+    if( dir_entry->not_scanned || (dir_entry->sub_tree == nullptr) ) {
 	beep();
     } else {
 	for( de_ptr=dir_entry->sub_tree; de_ptr; de_ptr=de_ptr->next) {
@@ -805,19 +805,19 @@ int HandleDirWindow(DirEntry *start_dir_entry)
   std::optional<std::string> home;
 
   unput_char = 0;
-  de_ptr = NULL;
+  de_ptr = nullptr;
 
   GetMaxYX(dir_window, &window_height, &window_width);
 
   /* Merker loeschen */
   /*-----------------*/
 
-  dir_mode = MODE_3;
+  dir_mode = ViewMode::MODE_3;
 
   need_dsp_help = true;
 
   BuildDirEntryList( start_dir_entry );
-  if ( initial_directory != NULL )
+  if ( initial_directory != nullptr )
   {
     if ( !strcmp( initial_directory, "." ) )   /* Entry just a single "." */
     {
@@ -859,7 +859,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
         }
       }
     }
-    initial_directory = NULL;
+    initial_directory = nullptr;
   }
   dir_entry = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry;
 
@@ -931,7 +931,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
        resize_request = false;
     }
 
-   if (mode == USER_MODE) { /* DirUserMode returns (possibly remapped) ch, or -1 if it handles ch */
+   if (mode == Mode::USER_MODE) { /* DirUserMode returns (possibly remapped) ch, or -1 if it handles ch */
       ch = DirUserMode(dir_entry, ch);
    }
 
@@ -1015,7 +1015,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
       case CR :      HandleSwitchWindow(dir_entry, start_dir_entry, &need_dsp_help, &ch);
 		     break;
       case 'X':
-      case 'x':      (void) Execute( dir_entry, NULL );
+      case 'x':      (void) Execute( dir_entry, nullptr );
 		     need_dsp_help = true;
 		     DisplayAvailBytes();
 		     break;
@@ -1097,7 +1097,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
       case 'l':
 #endif
       case 'L':
-        if (mode != DISK_MODE && mode != USER_MODE)
+        if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
         {
           std::strcpy(new_login_path, disk_statistic.login_path);
         } else {

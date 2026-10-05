@@ -94,7 +94,7 @@ int GetDiskParameter( char *path,
       /* Name ermitteln */
       /*----------------*/
 
-      if( mode == DISK_MODE || mode == USER_MODE )
+      if( mode == Mode::DISK_MODE || mode == Mode::USER_MODE )
       {
 
 #ifdef linux
@@ -215,16 +215,16 @@ int GetDiskParameter( char *path,
 
         (void) strncpy( volume_name,
 	                fname,
-		        MINIMUM( DISK_NAME_LENGTH, strlen( fname ) )
+		        std::min(static_cast<std::size_t>(DISK_NAME_LENGTH), std::strlen(fname))
 		      );
-        volume_name[ MINIMUM( DISK_NAME_LENGTH, strlen( fname ))] = '\0';
+        volume_name[ std::min(static_cast<std::size_t>(DISK_NAME_LENGTH), std::strlen(fname))] = '\0';
       }
       else
       {
         /* TAR/ZOO/ZIP-FILE_MODE */
         /*-----------------------*/
 
-        if( ( p = strrchr( statistic.login_path, FILE_SEPARATOR_CHAR ) ) == NULL )
+        if( ( p = strrchr( statistic.login_path, FILE_SEPARATOR_CHAR ) ) == nullptr )
           p = statistic.login_path;
         else p++;
 
@@ -289,9 +289,9 @@ int GetDiskParameter( char *path,
 int GetAvailBytes(long long *avail_bytes)
 {
   return( GetDiskParameter( statistic.tree->name,
-			    NULL,
+			    nullptr,
 			    avail_bytes,
-			    NULL
+			    nullptr
 			  )
         );
 }

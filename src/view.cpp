@@ -8,8 +8,8 @@
 
 
 #include "ytree.h"
-#include <errno.h>
-#include "xmalloc.h"
+
+#include <vector>
 
 typedef struct MODIF {
     long pos;
@@ -47,18 +47,18 @@ int View(DirEntry* dir_entry, const std::string& file_path)
 {
   switch (mode)
   {
-    case DISK_MODE:
-    case USER_MODE:
+    case Mode::DISK_MODE:
+    case Mode::USER_MODE:
       return ViewFile(dir_entry, file_path);
 
-    case TAPE_MODE:
-    case RAR_FILE_MODE:
-    case RPM_FILE_MODE:
-    case TAR_FILE_MODE:
-    case ZOO_FILE_MODE:
-    case ZIP_FILE_MODE:
-    case LHA_FILE_MODE:
-    case ARC_FILE_MODE:
+    case Mode::TAPE_MODE:
+    case Mode::RAR_FILE_MODE:
+    case Mode::RPM_FILE_MODE:
+    case Mode::TAR_FILE_MODE:
+    case Mode::ZOO_FILE_MODE:
+    case Mode::ZIP_FILE_MODE:
+    case Mode::LHA_FILE_MODE:
+    case Mode::ARC_FILE_MODE:
       return ViewArchiveFile(file_path);
 
     default:
@@ -151,7 +151,7 @@ the ytree starting cwd. new code grabbed from execute.c.
 */
 
 
-  if (mode == DISK_MODE)
+  if (mode == Mode::DISK_MODE)
   {
     const auto cwd = GetcwdOrDot();
     const auto path = GetPath(dir_entry);
@@ -223,7 +223,7 @@ static int ViewArchiveFile(const std::string& file_path)
     );
   }
   command_line = MakeExtractCommandLine(
-    mode == TAPE_MODE ? statistic.tape_name : statistic.login_path,
+    mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
     file_path,
     buffer
   );
@@ -247,9 +247,8 @@ char *strn2print(char *dest, char *src, int c)
 
 void printhexline(WINDOW *win, char *line, char *buf, int r, long offset)
 {
-    char *aux;
+    std::vector<char> aux(WCOLS);
     int i;
-    aux = (char *) xmalloc(WCOLS );
     if (r==0)
     {
 	wclrtoeol(win);
@@ -263,19 +262,19 @@ void printhexline(WINDOW *win, char *line, char *buf, int r, long offset)
     for (i = 1; i <= r; i++ )
     {
         if ((i == (BYTES / 2) ) || (i == BYTES ))
-	    sprintf(aux, "%02hhX  ", buf[i-1]);
+	    sprintf(aux.data(), "%02hhX  ", buf[i-1]);
         else
-	    sprintf(aux, "%02hhX ", buf[i-1]);
-        strcat(line, aux);
+	    sprintf(aux.data(), "%02hhX ", buf[i-1]);
+        strcat(line, aux.data());
     }
     for (i = r+1; i <= BYTES; i++)
     {
         buf[i-1]= ' ';
         if ((i == (BYTES / 2) ) || (i == BYTES ))
-	    sprintf(aux, "    ");
+	    sprintf(aux.data(), "    ");
         else
-	    sprintf(aux, "   ");
-        strcat(line, aux);
+	    sprintf(aux.data(), "   ");
+        strcat(line, aux.data());
     }
 /*    strcat(line, " ");*/
     line[strlen(line)] = ' ';
@@ -284,22 +283,19 @@ void printhexline(WINDOW *win, char *line, char *buf, int r, long offset)
     for( i=0; i< BYTES; i++)
 	isprint(buf[i]) ? waddch(win, buf[i] | THECOLOR) :
 			  waddch(win, ACS_BLOCK | COLOR_PAIR(HIDIR_COLOR));
-    free(aux);
     return;
 }
 
 void update_line(WINDOW *win, long line)
 {
     int r;
-    unsigned char *buf;
-    char *line_string;
+    std::vector<unsigned char> buf(BYTES);
+    std::vector<char> line_string(WCOLS);
     char mensaje[50];
 
-    line_string = (char *) xmalloc(WCOLS);
-    memset(line_string, ' ', WCOLS);
+    std::memset(line_string.data(), ' ', WCOLS);
     line_string[0] = '\0';
-    buf = (unsigned char *) xmalloc(BYTES);
-    memset(buf, ' ', BYTES);
+    std::memset(buf.data(), ' ', BYTES);
     if (lseek(fd, (line - 1) * BYTES, SEEK_SET)== -1 )
     {
         sprintf(mensaje, "Error %ld ", line);
@@ -307,10 +303,8 @@ void update_line(WINDOW *win, long line)
 	fflush(stdout);
 	return;
     }
-    r = read(fd, buf, BYTES);
-    printhexline(win, line_string, (char *) buf, r, (line - 1) * (BYTES));
-    xfree(line_string);
-    xfree(buf);
+    r = read(fd, buf.data(), BYTES);
+    printhexline(win, line_string.data(), reinterpret_cast<char*>(buf.data()), r, (line - 1) * (BYTES));
 }
 
 void scroll_down(WINDOW *win)
@@ -351,9 +345,7 @@ void update_all_lines(WINDOW *win, char l)
 void Change2Edit(const std::string& file_path)
 {
     int i;
-    char *str;
-
-    str = (char *)xmalloc(COLS);
+    std::vector<char> str(COLS);
 
     for(i = WLINES + 4; i < LINES; i++)
     {
@@ -363,21 +355,19 @@ void Change2Edit(const std::string& file_path)
     doupdate();
 
     Print( stdscr, 0, 0, "File: ", MENU_COLOR );
-    Print( stdscr, 0, 6, CutPathname(str,file_path,WCOLS-5), HIMENUS_COLOR );
+    Print( stdscr, 0, 6, CutPathname(str.data(),file_path,WCOLS-5), HIMENUS_COLOR );
     PrintOptions( stdscr, LINES - 3, 0, "(Edit file in hexadecimal mode)");
     PrintOptions( stdscr, LINES - 2, 0, "(Q)uit   (^L) redraw  (<TAB>) change edit mode");
     PrintOptions( stdscr, LINES - 1, 0,
 		"(NEXT)-(RIGHT)/(PREV)-(LEFT) page   (HOME)-(END) of line   (DOWN)-(UP) line");
-    free(str);
     return;
 }
 
 void Change2View(const std::string& file_path)
 {
     int i;
-    char *str;
+    std::vector<char> str(COLS);
 
-    str = (char *)xmalloc(COLS);
     for(i = WLINES + 4; i < LINES; i++)
     {
 	wmove(stdscr,i , 0);
@@ -386,21 +376,18 @@ void Change2View(const std::string& file_path)
     doupdate();
 
     Print( stdscr, 0, 0, "File: ", MENU_COLOR );
-    Print( stdscr, 0, 6, CutPathname(str, file_path, WCOLS - 5), HIMENUS_COLOR );
+    Print( stdscr, 0, 6, CutPathname(str.data(), file_path, WCOLS - 5), HIMENUS_COLOR );
     PrintOptions( stdscr, LINES - 3, 0, "View file in hexadecimal mode");
     PrintOptions( stdscr, LINES - 2, 0, "(Q)uit   (^L) redraw  (E)dit hex");
     PrintOptions( stdscr, LINES - 1, 0,
 		"(NEXT)-(RIGHT)/(PREV)-(LEFT) page   (HOME)-(END) of line   (DOWN)-(UP) line");
-    free(str);
     return;
 }
 
 void SetupViewWindow(const std::string& file_path)
 {
     int i;
-    char *str;
 
-    str = (char *)xmalloc(COLS);
     WLINES= LINES - 6;
     WCOLS= COLS - 2;
     if (BORDER)
@@ -427,7 +414,6 @@ void SetupViewWindow(const std::string& file_path)
     RefreshWindow(VIEW);
     Change2View(file_path);
     BYTES = (WCOLS - 13) / 4;
-    free(str);
     return;
 
 }
@@ -446,7 +432,7 @@ unsigned char hexval(unsigned char v) {
 void change_char(int ch)
 {
 
-    CHANGES *cambio=NULL;
+    CHANGES *cambio=nullptr;
     char pp=0;
     char mensaje[50];
 

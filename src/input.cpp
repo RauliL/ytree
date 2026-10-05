@@ -1,6 +1,5 @@
 #include "ytree.h"
 #include "tilde.h"
-#include "xmalloc.h"
 
 
 /***************************************************************************
@@ -10,104 +9,86 @@
  * Zurueckgegeben wird das Zeichen, mit dem die Eingabe beendet wurde      *
  ***************************************************************************/
 
-char *StrLeft(const char* str, std::size_t count)
+std::string StrLeft(const char* str, std::size_t count)
 {
 #if defined(WITH_UTF8)
-  std::mbstate_t state;
-  char* p;
+  std::mbstate_t state{};
 #endif
-  char* rez;
-  char* tmp;
-  std::size_t len;
+  std::size_t len = 0;
 
-#if defined(WITH_UTF8)
-  std::memset(static_cast<void*>(&state), 0, sizeof(state));
-#endif
   if (count == 0)
   {
-    return Strdup("");
+    return {};
   }
-  len = StrVisualLength(str);
-  if (count >= len)
+
+  const auto visual_len = static_cast<std::size_t>(StrVisualLength(str));
+  if (count >= visual_len)
   {
-    return Strdup(str);
+    return str;
   }
 
-  len = 0;
-  tmp = Strdup(str);
-#ifdef WITH_UTF8
-  p = tmp;
-#endif
-
+#if defined(WITH_UTF8)
+  const char* p = str;
   for (std::size_t i = 0; i < count; ++i)
   {
-#if defined(WITH_UTF8)
-    len += std::mbrlen(p, 4, &state);
-    p = tmp + len;
-#else
-    ++len;
-#endif
+    const auto n = std::mbrlen(p, 4, &state);
+    if (n == static_cast<std::size_t>(-1) || n == static_cast<std::size_t>(-2) || n == 0)
+    {
+      break;
+    }
+    len += n;
+    p += n;
   }
+#else
+  len = count;
+#endif
 
-  std::free(static_cast<void*>(tmp));
-
-  rez = Strndup(str, len);
-  rez[len] = 0;
-
-  return rez;
+  return { str, len };
 }
 
-static char* StrRight(const char* str, std::size_t count)
+static std::string StrRight(const char* str, std::size_t count)
 {
 #if defined(WITH_UTF8)
-  std::mbstate_t state;
+  std::mbstate_t state{};
 #endif
-  char* rez;
-  char* p;
-  char* tmp;
-  std::size_t byte_len;
-  std::size_t char_len;
-  std::size_t i;
+  const auto byte_len = std::strlen(str);
+  auto char_len = static_cast<std::size_t>(StrVisualLength(str));
 
-#if defined(WITH_UTF8)
-  std::memset(static_cast<void*>(&state), 0, sizeof(state));
-#endif
-
-  if (count == 0)
+  if (count == 0 || char_len == 0)
   {
-    return Strdup("");
+    return {};
   }
-
-  byte_len = std::strlen(str);
-  char_len = StrVisualLength(str);
 
   if (count > char_len)
   {
     count = char_len;
   }
 
-  tmp = Strdup(str);
-  p = tmp;
-  i = 0;
-  rez = nullptr;
+  const char* p = str;
+  std::size_t i = 0;
+  std::string result;
 
-  while ((p - tmp) < byte_len)
+  while (static_cast<std::size_t>(p - str) < byte_len)
   {
-    if (i == (char_len - count))
+    if (i == char_len - count)
     {
-      rez = Strdup(p);
+      result = p;
+      break;
     }
 #if defined(WITH_UTF8)
-    p += std::mbrlen(p, 4, &state);
+    const auto n = std::mbrlen(p, 4, &state);
+    if (n == static_cast<std::size_t>(-1) || n == static_cast<std::size_t>(-2) || n == 0)
+    {
+      break;
+    }
+    p += n;
 #else
     ++p;
 #endif
     ++i;
   }
 
-  std::free(static_cast<void*>(tmp));
-
-  return rez;
+  return result;
 }
 
 int StrVisualLength(const char* str)
@@ -160,7 +141,6 @@ int InputString(
   std::string buffer = s;
   std::size_t pos = initial_pos;
   std::string char_buffer;
-  char* pp;
 
   /* Feld gefuellt ausgeben */
   /*------------------------*/
@@ -185,20 +165,15 @@ int InputString(
           buffer.append(char_buffer);
         } else {
           // Insert / overwrite symbol at cursor position.
-          auto ls = pos > 0 ? StrLeft(ptr, pos) : Strdup("");
-          auto rs = StrRight(
+          const auto ls = pos > 0 ? StrLeft(ptr, pos) : std::string{};
+          const auto rs = StrRight(
             ptr,
             StrVisualLength(ptr) - pos - (insert_flag ? 0 : 1)
           );
 
-          buffer.assign(ls);
-          std::free(static_cast<void*>(ls));
+          buffer = ls;
           buffer.append(char_buffer);
-          if (rs)
-          {
-            buffer.append(rs);
-            std::free(static_cast<void*>(rs));
-          }
+          buffer.append(rs);
         }
         char_buffer.clear();
         ++pos;
@@ -242,13 +217,8 @@ int InputString(
           const auto ls = StrLeft(ptr, pos - 1);
           const auto rs = StrRight(ptr, StrVisualLength(ptr) - pos);
 
-          buffer.assign(ls);
-          std::free(static_cast<void*>(ls));
-          if (rs)
-          {
-            buffer.append(rs);
-            std::free(static_cast<void*>(rs));
-          }
+          buffer = ls;
+          buffer.append(rs);
           --pos;
         } else {
           beep();
@@ -262,13 +232,8 @@ int InputString(
           const auto ls = StrLeft(ptr, pos);
           const auto rs = StrRight(ptr, StrVisualLength(ptr) - pos - 1);
 
-          buffer.assign(ls);
-          std::free(static_cast<void*>(ls));
-          if (rs)
-          {
-            buffer.append(rs);
-            std::free(static_cast<void*>(rs));
-          }
+          buffer = ls;
+          buffer.append(rs);
         } else {
           beep();
         }
@@ -278,8 +243,7 @@ int InputString(
         {
           const auto ls = StrLeft(buffer.c_str(), pos);
 
-          buffer.assign(ls);
-          std::free(static_cast<void*>(ls));
+          buffer = ls;
           break;
         }
 
@@ -295,8 +259,7 @@ int InputString(
           const auto ls = StrLeft(pp, max_length);
 
           buffer = ls;
-          pos = StrVisualLength(ls);
-          std::free(static_cast<void*>(ls));
+          pos = StrVisualLength(ls.c_str());
           MvAddStr(y, x, buffer);
           for (auto i = pos; i < max_length; ++i)
           {
@@ -336,8 +299,7 @@ int InputString(
           const auto ls = StrLeft(pp, max_length);
 
           buffer = ls;
-          pos = StrVisualLength(ls);
-          std::free(static_cast<void*>(ls));
+          pos = StrVisualLength(ls.c_str());
           MvWAddStr(stdscr, y, x, buffer);
           for (auto i = pos; i < max_length; ++i)
           {
@@ -366,8 +328,7 @@ int InputString(
           const auto ls = StrLeft(path, max_length);
 
           buffer = ls;
-          pos = StrVisualLength(ls);
-          std::free(static_cast<void*>(ls));
+          pos = StrVisualLength(ls.c_str());
         }
         break;
       }
@@ -406,14 +367,13 @@ int InputString(
   InsHistory(buffer);
 
 #if defined(READLINE_SUPPORT)
-  pp = tilde_expand(buffer.c_str());
+  const auto expanded = tilde_expand(buffer);
 #else
-  pp = Strdup(buffer.c_str());
+  const auto expanded = buffer;
 #endif
 
-  std::strncpy(s, pp, max_length - 1);
+  std::strncpy(s, expanded.c_str(), max_length - 1);
   s[max_length] = 0;
-  xfree(static_cast<void*>(pp));
 
   return c;
 }

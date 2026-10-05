@@ -182,7 +182,7 @@ int GetRenameParameter(char *old_name, char *new_name)
 {
   int l;
 
-  if( mode != DISK_MODE && mode != USER_MODE )
+  if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
   {
     beep();
     return( -1 );
@@ -190,7 +190,7 @@ int GetRenameParameter(char *old_name, char *new_name)
 
   ClearHelp();
 
-  if( old_name == NULL )
+  if( old_name == nullptr )
   {
     MvAddStr( LINES - 2, 1, "RENAME TAGGED FILES TO:" );
     l = 25;

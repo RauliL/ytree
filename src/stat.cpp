@@ -133,7 +133,7 @@ void DisplayDirParameter(DirEntry *dir_entry)
 
   p = strrchr( dir_entry->name, FILE_SEPARATOR_CHAR );
 
-  if( p == NULL ) f = dir_entry->name;
+  if( p == nullptr ) f = dir_entry->name;
   else            f = p + 1;
 
   std::snprintf(format, sizeof(format), "%%-%ds", COLS - 10);

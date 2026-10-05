@@ -19,6 +19,7 @@
 #if defined(WITH_UTF8)
 # include <cwchar>
 #endif
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <string>
@@ -42,12 +43,6 @@
 #else
 # include <curses.h>
 #endif
-
-/* Some handy macros... */
-
-#define MINIMUM( a, b ) ( ( (a) < (b) ) ? (a) : (b) )
-#define MAXIMUM( a, b ) ( ( (a) > (b) ) ? (a) : (b) )
-
 
 #ifdef WIN32
 
@@ -272,18 +267,23 @@
 #define ErrorPrintf(format, ...) ErrorPrintfEx(format, __FILE__, __LINE__, __VA_ARGS__)
 
 #define TAGGED_SYMBOL '*'
-#define MAX_MODES      11
-#define DISK_MODE      0
-#define LL_FILE_MODE   1
-#define TAR_FILE_MODE  2
-#define ZOO_FILE_MODE  3
-#define ZIP_FILE_MODE  4
-#define LHA_FILE_MODE  5
-#define ARC_FILE_MODE  6
-#define RPM_FILE_MODE  7
-#define RAR_FILE_MODE  8
-#define TAPE_MODE      9
-#define USER_MODE      10
+
+enum class Mode : int
+{
+  DISK_MODE = 0,
+  LL_FILE_MODE = 1,
+  TAR_FILE_MODE = 2,
+  ZOO_FILE_MODE = 3,
+  ZIP_FILE_MODE = 4,
+  LHA_FILE_MODE = 5,
+  ARC_FILE_MODE = 6,
+  RPM_FILE_MODE = 7,
+  RAR_FILE_MODE = 8,
+  TAPE_MODE = 9,
+  USER_MODE = 10,
+};
+
+inline constexpr int MAX_MODES = 11;
 
 enum class CompressMethod
 {
@@ -307,18 +307,29 @@ enum class CompressMethod
   RAR_COMPRESS = 18,
 };
 
-#define SORT_BY_NAME       1
-#define SORT_BY_MOD_TIME   2
-#define SORT_BY_CHG_TIME   3
-#define SORT_BY_ACC_TIME   4
-#define SORT_BY_SIZE       5
-#define SORT_BY_OWNER      6
-#define SORT_BY_GROUP      7
-#define SORT_BY_EXTENSION  8
-#define SORT_ASC           10
-#define SORT_DSC           20
-#define SORT_CASE          40
-#define SORT_ICASE         80
+enum class SortKey
+{
+  Name,
+  ModTime,
+  ChgTime,
+  AccTime,
+  Size,
+  Owner,
+  Group,
+  Extension,
+};
+
+enum class SortOrder
+{
+  Ascending,
+  Descending,
+};
+
+struct SortSpec
+{
+  SortKey key = SortKey::Name;
+  SortOrder order = SortOrder::Ascending;
+};
 
 #define DEFAULT_FILE_SPEC "*"
 
@@ -406,11 +417,14 @@ extern const char FILE_SEPARATOR_CHAR;
 #define RAR_LINE_LENGTH        512
 #define MESSAGE_LENGTH         (PATH_LENGTH + 80 + 1)
 #define COMMAND_LINE_LENGTH    4096
-#define MODE_1                 0
-#define MODE_2                 1
-#define MODE_3                 2
-#define MODE_4                 3
-#define MODE_5                 4
+enum class ViewMode : int
+{
+  MODE_1 = 0,
+  MODE_2 = 1,
+  MODE_3 = 2,
+  MODE_4 = 3,
+  MODE_5 = 4,
+};
 
 
 #define QUICK_BAUD_RATE      9600
@@ -482,7 +496,7 @@ struct Statistic
   unsigned int  disk_total_directories;
   int           disp_begin_pos;
   int           cursor_pos;
-  int           kind_of_sort;
+  SortSpec      kind_of_sort;
   char          login_path[PATH_LENGTH + 1];
   char          path[PATH_LENGTH + 1];
   char          tape_name[PATH_LENGTH + 1];
@@ -566,7 +580,7 @@ extern WINDOW *time_window;
 
 extern Statistic statistic;
 extern Statistic disk_statistic;
-extern int       mode;
+extern Mode      mode;
 extern int       user_umask;
 extern bool	 print_time;
 extern bool      resize_request;
@@ -616,7 +630,7 @@ void Warning(const std::string& msg);
 void WarningPrintf(const char* format, ...);
 void Notice(const std::string& msg);
 void UnmapNoticeWindow();
-extern void SetFileMode(int new_file_mode);
+extern void SetFileMode(ViewMode new_file_mode);
 extern int  HandleFileWindow(DirEntry *dir_entry);
 extern char *GetAttributes(unsigned short modus, char *buffer);
 extern void SwitchToSmallFileWindow(void);
@@ -653,16 +667,16 @@ extern int  Pipe(DirEntry *dir_entry, FileEntry *file_entry);
 extern int  PipeTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
 extern int  GetPipeCommand(char *pipe_command);
 extern void GetKindOfSort(void);
-extern void SetKindOfSort(int new_kind_of_sort);
+extern void SetKindOfSort(SortKey key, SortOrder order = SortOrder::Ascending);
 extern int  ChangeFileModus(FileEntry *fe_ptr);
 extern int  ChangeDirModus(DirEntry *de_ptr);
 extern int  GetNewFileModus(int y, int x, char *modus, const char *term);
 extern int  GetModus(const char *modus);
 extern int  SetFileModus(FileEntry *fe_ptr, WalkingPackage *walking_package);
 extern int  CopyTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
-extern int  CopyFile(Statistic *statistic_ptr, FileEntry *fe_ptr, unsigned char confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, bool path_copy);
+extern int  CopyFile(Statistic *statistic_ptr, FileEntry *fe_ptr, bool confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, bool path_copy);
 extern int  MoveTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
-extern int  MoveFile(FileEntry *fe_ptr, unsigned char confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, FileEntry **new_fe_ptr);
+extern int  MoveFile(FileEntry *fe_ptr, bool confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, FileEntry **new_fe_ptr);
 extern int  InputChoise(const char *msg, const char *term);
 void Message(const std::string& msg);
 void MessagePrintf(const char* format, ...);
@@ -771,11 +785,9 @@ bool IsUserActionDefined();
 std::optional<std::string> Getcwd();
 std::string GetcwdOrDot();
 extern int  RefreshDirWindow();
-char* StrLeft(const char* str, std::size_t count);
+std::string StrLeft(const char* str, std::size_t count);
 extern int  StrVisualLength(const char *str);
 void WAttrAddStr(WINDOW* win, int attr, const std::string& str);
-char* Strdup(const char* src);
-char* Strndup(const char* src, const std::size_t len);
 void StatOrAbort(const std::string& path, struct stat& st);
 std::optional<std::string> GetHomePath();
 std::optional<std::string> GetXdgCachePath();

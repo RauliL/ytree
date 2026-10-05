@@ -1,5 +1,4 @@
 #include "ytree.h"
-#include "xmalloc.h"
 
 #include <unordered_map>
 
@@ -89,7 +88,7 @@ std::string GetRealFileNamePath(const FileEntry* file_entry)
 {
   std::string result;
 
-  if (mode == DISK_MODE || mode == USER_MODE)
+  if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
   {
     return GetFileNamePath(file_entry);
   }
@@ -130,7 +129,7 @@ int GetDirEntry(DirEntry *tree,
   DirEntry *de_ptr, *sde_ptr;
   int n;
 
-  *dir_entry = NULL;
+  *dir_entry = nullptr;
   *to_path   = '\0';
 
    strcpy(to_path, dir_path);
@@ -202,14 +201,14 @@ int GetDirEntry(DirEntry *tree,
 	  break;
 	}
       }
-      if( sde_ptr == NULL )
+      if( sde_ptr == nullptr )
       {
 #ifdef DEBUG
 	ErrorPrintf("Can't find directory; token=%s", token);
 #endif
 	return( -3 );
       }
-      token = Strtok_r( NULL, FILE_SEPARATOR_STRING, &old );
+      token = Strtok_r( nullptr, FILE_SEPARATOR_STRING, &old );
     }
     *dir_entry = de_ptr;
   }
@@ -223,7 +222,7 @@ int GetFileEntry(DirEntry *de_ptr, char *file_name, FileEntry **file_entry)
 {
   FileEntry *fe_ptr;
 
-  *file_entry = NULL;
+  *file_entry = nullptr;
 
   for( fe_ptr = de_ptr->file; fe_ptr; fe_ptr = fe_ptr->next )
   {
@@ -563,7 +562,6 @@ char *FormFilename(char *dest, char *src, unsigned int max_len)
 char *CutFilename(char *dest, char *src, unsigned int max_len)
 {
   unsigned int l;
-  char *tmp;
 
   l = StrVisualLength(src);
 
@@ -571,9 +569,8 @@ char *CutFilename(char *dest, char *src, unsigned int max_len)
     return( strcpy( dest, src ) );
   else
   {
-    tmp = StrLeft(src, max_len - 3);
-    sprintf(dest, "%s...", tmp);
-    free(tmp);
+    const auto tmp = StrLeft(src, max_len - 3);
+    sprintf(dest, "%s...", tmp.c_str());
     return( dest );
   }
 }
@@ -732,7 +729,7 @@ void NormPath( const char *in_path, char *out_path )
         level++;
       }
     }
-    s = Strtok_r( NULL, FILE_SEPARATOR_STRING, &old );
+    s = Strtok_r( nullptr, FILE_SEPARATOR_STRING, &old );
   }
   if( level != 0 )
     d--;
@@ -751,22 +748,22 @@ char *Strtok_r( char *str, const char *delim, char **old )
   char *result;
   int  l, m;
 
-  if( str == NULL )
+  if( str == nullptr )
     str = *old;
 
-  if( str == NULL )
-    return( NULL );
+  if( str == nullptr )
+    return( nullptr );
 
   l = strlen( str );
-  if( ( result = strtok( str, delim ) ) != NULL ) {
+  if( ( result = strtok( str, delim ) ) != nullptr ) {
     m = strlen( result );
     if( (m + 1) >= l)
-      *old = NULL;
+      *old = nullptr;
     else
       *old = result + m + 1;
 
   } else
-    *old = NULL;
+    *old = nullptr;
 
   return( result );
 }
@@ -778,56 +775,34 @@ void GetMaxYX(WINDOW *win, int *height, int *width)
 {
   if( win == dir_window )
   {
-    *height = MAXIMUM(DIR_WINDOW_HEIGHT, 1);
-    *width  = MAXIMUM(DIR_WINDOW_WIDTH, 1);
+    *height = std::max(DIR_WINDOW_HEIGHT, 1);
+    *width  = std::max(DIR_WINDOW_WIDTH, 1);
   }
   else if( win == small_file_window )
   {
-    *height = MAXIMUM(FILE_WINDOW_1_HEIGHT, 1);
-    *width  = MAXIMUM(FILE_WINDOW_1_WIDTH, 1);
+    *height = std::max(FILE_WINDOW_1_HEIGHT, 1);
+    *width  = std::max(FILE_WINDOW_1_WIDTH, 1);
   }
   else if( win == big_file_window )
   {
-    *height = MAXIMUM(FILE_WINDOW_2_HEIGHT, 1);
-    *width  = MAXIMUM(FILE_WINDOW_2_WIDTH, 1);
+    *height = std::max(FILE_WINDOW_2_HEIGHT, 1);
+    *width  = std::max(FILE_WINDOW_2_WIDTH, 1);
   }
   else if( win == f2_window )
   {
-    *height = MAXIMUM(F2_WINDOW_HEIGHT - 1, 1); /* fake for separator line */
-    *width  = MAXIMUM(F2_WINDOW_WIDTH, 1);
+    *height = std::max(F2_WINDOW_HEIGHT - 1, 1); /* fake for separator line */
+    *width  = std::max(F2_WINDOW_WIDTH, 1);
   }
   else if( win == history_window )
   {
-    *height = MAXIMUM(HISTORY_WINDOW_HEIGHT, 1);
-    *width  = MAXIMUM(HISTORY_WINDOW_WIDTH, 1);
+    *height = std::max(HISTORY_WINDOW_HEIGHT, 1);
+    *width  = std::max(HISTORY_WINDOW_WIDTH, 1);
   }
   else
   {
     Error("Unknown Window-ID*ABORT");
     std::exit(EXIT_FAILURE);
   }
-}
-
-char* Strdup(const char* src)
-{
-  const auto length = std::strlen(src);
-  auto copy = static_cast<char*>(std::malloc(length + 1));
-
-  std::memcpy(static_cast<void*>(copy), static_cast<const void*>(src), length);
-  copy[length] = 0;
-
-  return copy;
-}
-
-char* Strndup(const char* src, const std::size_t len)
-{
-  const auto n = std::min(std::strlen(src), len);
-  auto copy = static_cast<char*>(std::malloc(n + 1));
-
-  std::memcpy(static_cast<void*>(copy), static_cast<const void*>(src), n);
-  copy[n] = 0;
-
-  return copy;
 }
 
 std::optional<std::string> GetExtension(const std::string& filename)

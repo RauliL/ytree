@@ -46,10 +46,10 @@ int Init(
   ReadProfile(configuration_file);
   ReadHistory(history_file);
 
-  SetFileMode( strtod(FILEMODE, NULL) );
-  SetKindOfSort( SORT_BY_NAME );
+  SetFileMode(static_cast<ViewMode>(static_cast<int>(strtod(FILEMODE, nullptr))));
+  SetKindOfSort(SortKey::Name);
   number_seperator = *(NUMBERSEP);
-  bypass_small_window = (bool)strtod(NOSMALLWINDOW, NULL );
+  bypass_small_window = (bool)strtod(NOSMALLWINDOW, nullptr );
   initial_directory = INITIALDIR;
 
   InitClock();
@@ -195,10 +195,10 @@ static WINDOW *Subwin(WINDOW *orig, int nlines, int ncols,
   if(nlines > LINES)   nlines = LINES;
   if(ncols > COLS)     ncols = COLS;
 
-  h = MAXIMUM(nlines, 1);
-  w = MAXIMUM(ncols, 1);
-  x = MAXIMUM(begin_x, 0);
-  y = MAXIMUM(begin_y, 0);
+  h = std::max(nlines, 1);
+  w = std::max(ncols, 1);
+  x = std::max(begin_x, 0);
+  y = std::max(begin_y, 0);
 
   if(x+w > COLS)  x = COLS - w;
   if(y+h > LINES) y = LINES - h;
@@ -219,10 +219,10 @@ static WINDOW *Newwin(int nlines, int ncols,
   if(nlines > LINES)   nlines = LINES;
   if(ncols > COLS)     ncols = COLS;
 
-  h = MAXIMUM(nlines, 1);
-  w = MAXIMUM(ncols, 1);
-  x = MAXIMUM(begin_x, 0);
-  y = MAXIMUM(begin_y, 0);
+  h = std::max(nlines, 1);
+  w = std::max(ncols, 1);
+  x = std::max(begin_x, 0);
+  y = std::max(begin_y, 0);
 
   if(x+w > COLS)  x = COLS - w;
   if(y+h > LINES) y = LINES - h;

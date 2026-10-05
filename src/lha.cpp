@@ -28,7 +28,7 @@ int ReadTreeFromLHA(DirEntry *dir_entry, FILE *f)
 
   *dir_entry->name = '\0';
 
-  while( fgets( lha_line, LHA_LINE_LENGTH, f ) != NULL )
+  while( fgets( lha_line, LHA_LINE_LENGTH, f ) != nullptr )
   {
     /* \n loeschen */
     /*-------------*/
@@ -88,7 +88,7 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
 
   stat->st_nlink = 1;
 
-  t = Strtok_r( lha_line, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( lha_line, " \t", &old ); if( t == nullptr ) return( -1 );
 
   /* Attributes */
   /*------------*/
@@ -106,7 +106,7 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
   }
   else return( -1 );
 
-  t = Strtok_r( NULL, " \t/", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t/", &old ); if( t == nullptr ) return( -1 );
 
   if( dos_mode )
   {
@@ -120,45 +120,45 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
 
     id = atoi( t );
     stat->st_uid = (unsigned) id;
-    t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+    t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
     /* Group */
     /*-------*/
 
     id = atoi( t );
     stat->st_gid = (unsigned) id;
-    t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+    t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
   }
 
   /* Packed-Size */
   /*-------------*/
 
   if( !isdigit( *t ) ) return( -1 );
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   /* Dateilaenge */
   /*-------------*/
 
   if( !isdigit( *t ) ) return( -1 );
   stat->st_size = AtoLL( t );
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   /* Ratio */
   /*-------*/
 
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   /* CRC */
   /*-----*/
 
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   if( lha_line[61] == ':' )
   {
     /* ??? */
     /*-----*/
 
-    t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+    t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
   }
 
   /* M-Datum */
@@ -171,16 +171,16 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
   if( i >= 12 ) i = 0;
 
   tm_struct.tm_mon = i;
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   tm_struct.tm_mday = atoi( t );
-  t = Strtok_r( NULL, " \t:", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t:", &old ); if( t == nullptr ) return( -1 );
 
   tm_struct.tm_hour = atoi( t );
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   tm_struct.tm_min = atoi( t );
-  t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
 
   if( lha_line[41] == '-' )
   {
@@ -190,7 +190,7 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
   else
   {
     tm_struct.tm_year = atoi( t ) - 1900;
-    t = Strtok_r( NULL, " \t", &old ); if( t == NULL ) return( -1 );
+    t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
   }
 
   tm_struct.tm_sec = 0;

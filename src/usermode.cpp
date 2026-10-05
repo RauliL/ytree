@@ -10,8 +10,6 @@
 #include "ytree.h"
 
 
-#define MAX( a, b ) ( ( (a) > (b) ) ? (a) : (b) )
-
 int DirUserMode(DirEntry *dir_entry, int ch)
 {
   int chremap;

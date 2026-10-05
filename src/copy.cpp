@@ -5,7 +5,7 @@ static int CopyArchiveFile(const std::string& to_path, const std::string& from_p
 
 int CopyFile(Statistic *statistic_ptr,
              FileEntry *fe_ptr,
-             unsigned char confirm,
+             bool confirm,
              char *to_file,
              DirEntry *dest_dir_entry,
              char *to_dir_path,       /* absoluter Pfad */
@@ -23,7 +23,7 @@ int CopyFile(Statistic *statistic_ptr,
   struct stat stat_struct;
   int         term;
   int         result;
-  DIR         *tmpdir = NULL;
+  DIR         *tmpdir = nullptr;
   int	      refresh_dirwindow = false;
 
 
@@ -67,7 +67,7 @@ int CopyFile(Statistic *statistic_ptr,
     }
   }
   (void) strcat( to_path, FILE_SEPARATOR_STRING );
-  if ((tmpdir = opendir(to_path)) == NULL)
+  if ((tmpdir = opendir(to_path)) == nullptr)
     if (errno == ENOENT) {
      if ( (term =InputChoise( "Directory does not exist; create (y/N) ? ", "YN\033" ))== 'Y')
      {
@@ -202,7 +202,7 @@ int CopyFile(Statistic *statistic_ptr,
       fen_ptr->tagged      = false;
       fen_ptr->matching    = Match( fen_ptr->name );
       fen_ptr->next        = dest_dir_entry->file;
-      fen_ptr->prev        = NULL;
+      fen_ptr->prev        = nullptr;
       if( dest_dir_entry->file ) dest_dir_entry->file->prev = fen_ptr;
       dest_dir_entry->file = fen_ptr;
     }
@@ -234,7 +234,7 @@ int GetCopyParameter(const char *from_file, bool path_copy, char *to_file, char 
 {
   char buffer[PATH_LENGTH + 1];
 
-  if( from_file == NULL )
+  if( from_file == nullptr )
   {
     from_file = "TAGGED FILES";
     (void) strcpy( to_file, "*" );
@@ -276,7 +276,7 @@ static int Copy(const std::string& to_path, const std::string& from_path)
   int n;
   char buffer[2048];
 
-  if (mode != DISK_MODE && mode != USER_MODE)
+  if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
     return CopyArchiveFile(to_path, from_path);
   }
@@ -376,7 +376,7 @@ static int CopyArchiveFile(
   const auto from_p_aux = ShellEscape(to_path);
   const auto to_p_aux = ShellEscape(from_path);
   const auto command_line = MakeExtractCommandLine(
-    mode == TAPE_MODE ? statistic.tape_name : statistic.login_path,
+    mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
     from_p_aux,
     "> \"" + to_p_aux + "\""
   );

@@ -57,7 +57,7 @@ int LoginDisk(char *path)
   int    status;
   int    result = 0;
 
-  if( mode == DISK_MODE || mode == USER_MODE)
+  if( mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
   {
     /* Status retten */
     /*---------------*/
@@ -78,11 +78,11 @@ int LoginDisk(char *path)
 
       if (IsUserActionDefined())
       {
-        mode = USER_MODE;
+        mode = Mode::USER_MODE;
       }
       else
       {
-        mode = DISK_MODE;
+        mode = Mode::DISK_MODE;
       }
       (void) memcpy( (char *) &statistic,
                      (char *) &disk_statistic,
@@ -104,7 +104,7 @@ int LoginDisk(char *path)
   }
 
 
-  if( mode != DISK_MODE && mode != USER_MODE )
+  if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
   {
     DeleteTree( statistic.tree );
   }
@@ -119,7 +119,7 @@ int LoginDisk(char *path)
   (void) strcpy( statistic.login_path, path );
   (void) strcpy( statistic.file_spec, DEFAULT_FILE_SPEC );
   (void) strcpy( statistic.tape_name, DEFAULT_TAPEDEV );
-  statistic.kind_of_sort = SORT_BY_NAME + SORT_ASC;
+  statistic.kind_of_sort = { SortKey::Name, SortOrder::Ascending };
   (void) memcpy( &statistic.tree->stat_struct,
 		 &stat_struct,
 		 sizeof( stat_struct )
@@ -134,32 +134,32 @@ int LoginDisk(char *path)
     l = std::strlen(statistic.login_path);
     if (!file_method)
     {
-      mode = TAR_FILE_MODE;
+      mode = Mode::TAR_FILE_MODE;
     } else {
       switch (*file_method)
       {
         case CompressMethod::ZOO_COMPRESS:
-          mode = ZOO_FILE_MODE;
+          mode = Mode::ZOO_FILE_MODE;
           break;
 
         case CompressMethod::ARC_COMPRESS:
-          mode = ARC_FILE_MODE;
+          mode = Mode::ARC_FILE_MODE;
           break;
 
         case CompressMethod::LHA_COMPRESS:
-          mode = LHA_FILE_MODE;
+          mode = Mode::LHA_FILE_MODE;
           break;
 
         case CompressMethod::ZIP_COMPRESS:
-          mode = ZIP_FILE_MODE;
+          mode = Mode::ZIP_FILE_MODE;
           break;
 
         case CompressMethod::RPM_COMPRESS:
-          mode = RPM_FILE_MODE;
+          mode = Mode::RPM_FILE_MODE;
           break;
 
         case CompressMethod::RAR_COMPRESS:
-          mode = RAR_FILE_MODE;
+          mode = Mode::RAR_FILE_MODE;
           break;
 
         case CompressMethod::TAPE_DIR_NO_COMPRESS:
@@ -167,22 +167,22 @@ int LoginDisk(char *path)
         case CompressMethod::TAPE_DIR_FREEZE_COMPRESS:
         case CompressMethod::TAPE_DIR_GZIP_COMPRESS:
         case CompressMethod::TAPE_DIR_BZIP_COMPRESS:
-          mode = TAPE_MODE;
+          mode = Mode::TAPE_MODE;
           break;
 
         default:
-          mode = TAR_FILE_MODE;
+          mode = Mode::TAR_FILE_MODE;
           break;
       }
     }
   }
   else if (IsUserActionDefined())
   {
-    mode = USER_MODE;
+    mode = Mode::USER_MODE;
   }
   else
   {
-    mode = DISK_MODE;
+    mode = Mode::DISK_MODE;
   }
 
 
@@ -198,7 +198,7 @@ int LoginDisk(char *path)
   doupdate();
 
 
-  if( mode == TAPE_MODE )
+  if( mode == Mode::TAPE_MODE )
   {
     /* zugehoeriges tape-device ermitteln */
     /*------------------------------------*/
@@ -210,7 +210,7 @@ int LoginDisk(char *path)
   }
 
 
-  if (mode != DISK_MODE && mode != USER_MODE)
+  if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
     std::strcpy(statistic.tree->name, path);
 
@@ -540,7 +540,7 @@ int LoginDisk(char *path)
         return -1;
       }
 
-      if( mode == ZOO_FILE_MODE )
+      if( mode == Mode::ZOO_FILE_MODE )
       {
 	if( ReadTreeFromZOO( statistic.tree, f ) )
         {
@@ -550,7 +550,7 @@ int LoginDisk(char *path)
           return( -1 );
 	}
       }
-      else if( mode == RPM_FILE_MODE )
+      else if( mode == Mode::RPM_FILE_MODE )
       {
 	if( ReadTreeFromRPM( statistic.tree, f ) )
         {
@@ -560,7 +560,7 @@ int LoginDisk(char *path)
           return( -1 );
 	}
       }
-      else if( mode == LHA_FILE_MODE )
+      else if( mode == Mode::LHA_FILE_MODE )
       {
 	if( ReadTreeFromLHA( statistic.tree, f ) )
         {
@@ -570,7 +570,7 @@ int LoginDisk(char *path)
           return( -1 );
 	}
       }
-      else if( mode == ZIP_FILE_MODE )
+      else if( mode == Mode::ZIP_FILE_MODE )
       {
 	if( ReadTreeFromZIP( statistic.tree, f ) )
         {
@@ -580,7 +580,7 @@ int LoginDisk(char *path)
           return( -1 );
 	}
       }
-      else if( mode == ARC_FILE_MODE )
+      else if( mode == Mode::ARC_FILE_MODE )
       {
 	if( ReadTreeFromARC( statistic.tree, f ) )
         {
@@ -590,7 +590,7 @@ int LoginDisk(char *path)
           return( -1 );
 	}
       }
-      else if( mode == RAR_FILE_MODE )
+      else if( mode == Mode::RAR_FILE_MODE )
       {
 	if( ReadTreeFromRAR( statistic.tree, f ) )
         {
@@ -629,9 +629,9 @@ int LoginDisk(char *path)
     }
 
     (void) strcpy( statistic.tree->name, path );
-    statistic.tree->next = statistic.tree->prev = NULL;
+    statistic.tree->next = statistic.tree->prev = nullptr;
 
-    depth = strtod(TREEDEPTH, NULL);
+    depth = strtod(TREEDEPTH, nullptr);
     if (ReadTree(statistic.tree, path, depth))
     {
       Error("ReadTree() failed");
@@ -667,7 +667,7 @@ int GetNewLoginPath(char *path)
   MvAddStr( LINES - 2, 1, "NEW LOGIN-PATH:" );
 
   strcpy(aux,path);
-  if( mode == LL_FILE_MODE && *path == '<' )
+  if( mode == Mode::LL_FILE_MODE && *path == '<' )
   {
     for( cptr = aux; (*cptr = *(cptr + 1)); cptr++ )
       ;
