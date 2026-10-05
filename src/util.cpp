@@ -563,7 +563,6 @@ char *FormFilename(char *dest, char *src, unsigned int max_len)
 char *CutFilename(char *dest, char *src, unsigned int max_len)
 {
   unsigned int l;
-  char *tmp;
 
   l = StrVisualLength(src);
 
@@ -571,9 +570,8 @@ char *CutFilename(char *dest, char *src, unsigned int max_len)
     return( strcpy( dest, src ) );
   else
   {
-    tmp = StrLeft(src, max_len - 3);
-    sprintf(dest, "%s...", tmp);
-    free(tmp);
+    const auto tmp = StrLeft(src, max_len - 3);
+    sprintf(dest, "%s...", tmp.c_str());
     return( dest );
   }
 }

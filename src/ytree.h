@@ -785,7 +785,7 @@ bool IsUserActionDefined();
 std::optional<std::string> Getcwd();
 std::string GetcwdOrDot();
 extern int  RefreshDirWindow();
-char* StrLeft(const char* str, std::size_t count);
+std::string StrLeft(const char* str, std::size_t count);
 extern int  StrVisualLength(const char *str);
 void WAttrAddStr(WINDOW* win, int attr, const std::string& str);
 char* Strdup(const char* src);
