@@ -22,9 +22,7 @@ int main(int argc, char **argv)
   std::optional<std::string> config_file;
   std::optional<std::string> history_file;
 
-#if (!defined(__sun) && !defined(__DJGPP__))
   setlocale(LC_ALL, "");
-#endif
 
   p = DEFAULT_TREE;
   for (argi = 1; argi < argc; argi++)

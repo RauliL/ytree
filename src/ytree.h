@@ -77,17 +77,6 @@
 
 
 
-#ifdef __DJGPP__
-
-/* DJGPP GNU DOS Compiler                           */
-/*--------------------------------------------------*/
-
-#define  putp( str )                 puts( str )
-#define  vidattr( attr )
-#define  typeahead( file )
-
-#endif /* __DJGPP__*/
-
 #ifndef KEY_BTAB
 #define KEY_BTAB  0x1d
 #endif

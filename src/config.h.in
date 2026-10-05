@@ -66,11 +66,6 @@
 #define DEFAULT_HEXDUMP    "hd"
 #define DEFAULT_PAGER      "more"
 
-#ifdef __DJGPP__
-#undef DEFAULT_PAGER
-#define DEFAULT_PAGER      "view"
-#endif
-
 
 #ifdef __linux__
 #undef  DEFAULT_TARLIST
