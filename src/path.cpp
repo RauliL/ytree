@@ -2,6 +2,8 @@
 
 #include <filesystem>
 
+#include <peelo/xdg.hpp>
+
 #if defined(_WIN32)
 const char* FILE_SEPARATOR_STRING = "\\";
 #else
@@ -11,16 +13,12 @@ const char FILE_SEPARATOR_CHAR = FILE_SEPARATOR_STRING[0];
 
 std::optional<std::string> GetHomePath()
 {
-  const auto env_variable = std::getenv("HOME");
-
-  if (!env_variable)
+  if (const auto home = peelo::xdg::home_dir())
   {
-    const auto pw = getpwuid(getuid());
-
-    return pw ? std::make_optional<std::string>(pw->pw_dir) : std::nullopt;
+    return home->string();
   }
 
-  return env_variable;
+  return std::nullopt;
 }
 
 std::string PathJoin(const std::initializer_list<std::string>& parts)
@@ -35,29 +33,22 @@ std::string PathJoin(const std::initializer_list<std::string>& parts)
   return result.string();
 }
 
-static std::optional<std::string> GetXdgPath(
-  const char* env_variable_name,
-  const char* directory_name
-)
+std::optional<std::string> GetXdgConfigPath()
 {
-  if (const auto env_variable_value = std::getenv(env_variable_name))
+  if (const auto config_dir = peelo::xdg::config_dir())
   {
-    return PathJoin({ env_variable_value, "ytree" });
-  }
-  else if (const auto home_path = GetHomePath())
-  {
-    return PathJoin({ *home_path, directory_name, "ytree" });
+    return (*config_dir / "ytree").string();
   }
 
   return std::nullopt;
 }
 
-std::optional<std::string> GetXdgConfigPath()
-{
-  return GetXdgPath("XDG_CONFIG_HOME", ".config");
-}
-
 std::optional<std::string> GetXdgCachePath()
 {
-  return GetXdgPath("XDG_CACHE_HOME", ".cache");
+  if (const auto cache_dir = peelo::xdg::cache_dir())
+  {
+    return (*cache_dir / "ytree").string();
+  }
+
+  return std::nullopt;
 }

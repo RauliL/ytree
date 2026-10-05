@@ -15,7 +15,7 @@ Any kind of POSIX compatible system I guess.
 
 ## Building
 
-Requires a C++20 compiler, CMake 3.12+, ncurses, and GNU readline.
+Requires a C++20 compiler, CMake 3.14+, ncurses, and GNU readline.
 
 In most instances, it should be sufficient to
 
