@@ -9,14 +9,14 @@
 
 #include "ytree.h"
 
-#if ( defined( __linux__ ) || defined( __sun ) || defined(__hpux) || defined( __DJGPP__ ) || defined ( __GNU__ ) ) && !defined( SVR4 )
+#if ( defined( __linux__ ) || defined ( __GNU__ ) ) && !defined( SVR4 )
 
 #include <sys/vfs.h>
 #else
 #ifdef WIN32
 #include <dos.h>
 #else
-#if defined( SVR4 ) || defined( OSF1 ) || defined( sun56 ) || defined( __NetBSD__ )
+#if defined( SVR4 ) || defined( OSF1 ) || defined( __NetBSD__ )
 #include <sys/statvfs.h>
 #else
 #if ( defined( __OpenBSD__ ) || defined ( __FreeBSD__ ) || defined (__APPLE__) )
@@ -33,7 +33,7 @@
 #endif
 #endif /* SVR4 */
 #endif /* WIN32 */
-#endif /* sun / linux / hpux */
+#endif /* linux / gnu */
 
 #ifdef __GNU__
 #include <hurd/hurd_types.h>
@@ -76,9 +76,6 @@ int GetDiskParameter( char *path,
 #ifdef WIN32
   if( ( result = _getdiskfree( 0, &diskspace ) ) == 0 )
 #else
-#ifdef __DJGPP__
-  if( ( result = statfs( path, &statfs_struct ) ) == 0 )
-#else
 #ifdef QNX
    fd = open(path, O_RDONLY );
   if( ( result = disk_space( fd, &free_blocks, &total_blocks ) ) == 0 )
@@ -86,7 +83,6 @@ int GetDiskParameter( char *path,
 
   if( ( result = statfs( path, &statfs_struct ) ) == 0 )
 #endif /* QNX */
-#endif /* __DJGPP__ */
 #endif /* WIN32 */
   {
     if( volume_name )
@@ -185,14 +181,11 @@ int GetDiskParameter( char *path,
               fname = "HURD";
        }
 #else
-#if defined( sun56 ) || defined( __sun ) || defined( __hpux ) || defined ( __FreeBSD__ ) || defined (__APPLE__)
+#if defined ( __FreeBSD__ ) || defined (__APPLE__)
         fname = "UNIX";
 #else
 #ifdef WIN32
         fname = "WIN-NT";
-#else
-#ifdef __DJGPP__
-        fname = "DJGPP";
 #else
 #ifdef QNX
         fname = "QNX";
@@ -206,10 +199,9 @@ int GetDiskParameter( char *path,
         fname = statfs_struct.f_fname;
 #endif /* __OpenBSD__ || __NetBSD__ */
 #endif /* SVR4 */
-#endif /* __DJGPP__ */
 #endif /* QNX */
 #endif /* WIN32 */
-#endif /* sun / hpux / */
+#endif /* FreeBSD / Apple */
 #endif /* __GNU__ */
 #endif /* __linux__ */
 
@@ -246,7 +238,7 @@ int GetDiskParameter( char *path,
     *avail_bytes = bfree * statfs_struct.f_frsize;
     this_disk_space   = statfs_struct.f_blocks * statfs_struct.f_frsize;
 #else
-#if defined( __linux__ ) || defined( __sun ) || defined( __GNU__ )
+#if defined( __linux__ ) || defined( __GNU__ )
     bfree = getuid() ? statfs_struct.f_bavail : statfs_struct.f_bfree;
     if( bfree < 0L ) bfree = 0L;
     *avail_bytes = bfree * statfs_struct.f_bsize;
@@ -268,8 +260,8 @@ int GetDiskParameter( char *path,
     this_disk_space   = statfs_struct.f_blocks * statfs_struct.f_bsize;
 #endif /* QNX */
 #endif /* SVR3 */
+#endif /* linux / gnu */
 #endif /* SVR4/!__DGUX__ */
-#endif /* _IBMR2/linux/sun/__GNU__ */
 #endif /* WIN32 */
 
     if( total_disk_space )
@@ -295,6 +287,5 @@ int GetAvailBytes(long long *avail_bytes)
 			  )
         );
 }
-
 
 

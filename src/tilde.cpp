@@ -73,11 +73,7 @@ int tilde_find_suffix(const char* string)
 
   for (int i = 0; i < string_len; ++i)
   {
-#if defined (__MSDOS__)
-    if (string[i] == '/' || string[i] == '\\')
-#else
     if (string[i] == '/')
-#endif
     {
       return i;
     }
@@ -100,11 +96,7 @@ int tilde_find_suffix(const char* string)
 std::string isolate_tilde_prefix(const char* fname, int* lenp)
 {
   int i = 1;
-#if defined (__MSDOS__)
-  while (fname[i] && fname[i] != '/' && fname[i] != '\\')
-#else
   while (fname[i] && fname[i] != '/')
-#endif
   {
     ++i;
   }
