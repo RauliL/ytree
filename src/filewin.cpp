@@ -454,7 +454,6 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   char modify_time[13];
   char change_time[13];
   char access_time[13];
-  char format[60];
   char justify;
   char *line_ptr;
   int  n, pos_x = 0;
@@ -508,32 +507,28 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
                     if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
 		    {
-		      (void) sprintf( format, "%%c%%c%%s %%10s %%3d %%11lld %%12s -> %%s");
-
-		      (void) sprintf( line_buffer, format,
+		      std::strcpy(line_buffer, std::format("{}{}{} {:>10} {:3} {:11} {:>12} -> {}",
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
-				      fitted_name.c_str(),
+				      fitted_name,
 				      attributes,
 				      fe_ptr->stat_struct.st_nlink,
                                       (long long) fe_ptr->stat_struct.st_size,
 				      modify_time,
-				      fitted_link.c_str()
-				    );
+				      fitted_link
+				    ).c_str());
                     }
 		    else
 		    {
-		      (void) sprintf( format, "%%c%%c%%s %%10s %%3d %%11lld %%12s");
-
-		      (void) sprintf( line_buffer, format,
+		      std::strcpy(line_buffer, std::format("{}{}{} {:>10} {:3} {:11} {:>12}",
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
-				      fitted_name.c_str(),
+				      fitted_name,
 				      attributes,
 				      fe_ptr->stat_struct.st_nlink,
                                       (long long) fe_ptr->stat_struct.st_size,
 				      modify_time
-				    );
+				    ).c_str());
                     }
 		  }
 		  else
@@ -541,8 +536,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		    /* Empty Entry */
 		    /*-------------*/
 
-		    (void) sprintf( format, "%%-%lds", max_filename_len + 42 );
-		    (void) sprintf( line_buffer, format, "" );
+		    std::strcpy(line_buffer, std::format("{:<{}}", "", max_filename_len + 42).c_str());
 		  }
 
 		  if( max_linkname_len )
@@ -572,28 +566,26 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
                     if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
 		    {
-                      (void) sprintf( format, "%%c%%c%%s %%10lld %%-12s %%-12s -> %%s");
-		      (void) sprintf( line_buffer, format,
+                      std::strcpy(line_buffer, std::format("{}{}{} {:10} {:<12} {:<12} -> {}",
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
-				      fitted_name.c_str(),
+				      fitted_name,
 				      (long long)fe_ptr->stat_struct.st_ino,
               owner,
               group,
-				      fitted_link.c_str()
-				    );
+				      fitted_link
+				    ).c_str());
                     }
 		    else
 		    {
-                      (void) sprintf( format, "%%c%%c%%s %%10lld %%-12s %%-12s");
-		      (void) sprintf( line_buffer, format,
+                      std::strcpy(line_buffer, std::format("{}{}{} {:10} {:<12} {:<12}",
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
-				      fitted_name.c_str(),
+				      fitted_name,
 				      (long long)fe_ptr->stat_struct.st_ino,
               owner,
               group
-				    );
+				    ).c_str());
 
                     }
 	          }
@@ -602,8 +594,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		    /* Empty-Entry */
 		    /*-------------*/
 
-		    (void) sprintf( format, "%%-%lds", max_filename_len + 38 );
-		    (void) sprintf( line_buffer, format, "" );
+		    std::strcpy(line_buffer, std::format("{:<{}}", "", max_filename_len + 38).c_str());
 		  }
 
 		  if( max_linkname_len )
@@ -614,21 +605,18 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     case ViewMode::MODE_3 : if( fe_ptr )
 		  {
-		    (void) sprintf( format, "%%c%%c%%s");
-
-		    (void) sprintf( line_buffer, format,
+		    std::strcpy(line_buffer, std::format("{}{}{}",
 				    (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				    type_of_file,
-				    fitted_name.c_str()
-				  );
+				    fitted_name
+				  ).c_str());
                   }
 		  else
 		  {
 		    /* Empty-Entry */
 		    /*-------------*/
 
-		    (void) sprintf( format, "%%-%lds", max_filename_len + 2 );
-		    (void) sprintf( line_buffer, format, "" );
+		    std::strcpy(line_buffer, std::format("{:<{}}", "", max_filename_len + 2).c_str());
 		  }
 
 		  pos_x = x * (max_filename_len + 3);
@@ -641,26 +629,24 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
                     if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
 		    {
-                      (void) sprintf( format, "%%c%%c%%s Chg: %%12s  Acc: %%12s -> %%s");
-		      (void) sprintf( line_buffer, format,
+                      std::strcpy(line_buffer, std::format("{}{}{} Chg: {:>12}  Acc: {:>12} -> {}",
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
-				      fitted_name.c_str(),
+				      fitted_name,
 				      change_time,
 				      access_time,
-				      fitted_link.c_str()
-				  );
+				      fitted_link
+				  ).c_str());
                     }
 		    else
 		    {
-                      (void) sprintf( format, "%%c%%c%%s Chg: %%12s  Acc: %%12s");
-		      (void) sprintf( line_buffer, format,
+                      std::strcpy(line_buffer, std::format("{}{}{} Chg: {:>12}  Acc: {:>12}",
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
-				      fitted_name.c_str(),
+				      fitted_name,
 				      change_time,
 				      access_time
-				  );
+				  ).c_str());
                     }
 		  }
 		  else
@@ -668,8 +654,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		    /* Empty-Entry */
 		    /*-------------*/
 
-		    (void) sprintf( format, "%%-%lds", max_filename_len + 39 );
-		    (void) sprintf( line_buffer, format, "" );
+		    std::strcpy(line_buffer, std::format("{:<{}}", "", max_filename_len + 39).c_str());
 		  }
 
 
@@ -690,8 +675,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		    /* Empty-Entry */
 		    /*-------------*/
 
-		    (void) sprintf( format, "%%-%ds", max_userview_len );
-		    (void) sprintf( line_buffer, format, "" );
+		    std::strcpy(line_buffer, std::format("{:<{}}", "", max_userview_len).c_str());
 		  }
 		  pos_x = x * (max_userview_len + 1);
 		  break;
@@ -2396,7 +2380,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			if( ( walking_package.function_data.pipe_cmd.pipe_file =
 			      popen( filepath, "w" ) ) == nullptr )
 			{
-			  MessagePrintf("execution of command*%s*failed", filepath);
+			  FormatMessage("execution of command*{}*failed", filepath);
 			  break;
 			}
 

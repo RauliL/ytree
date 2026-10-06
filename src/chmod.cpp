@@ -179,7 +179,7 @@ int SetFileModus(FileEntry *fe_ptr, WalkingPackage *walking_package)
 
     result = 0;
   } else {
-    MessagePrintf("Cant't change modus:*%s", std::strerror(errno));
+    FormatMessage("Cant't change modus:*{}", std::strerror(errno));
   }
 
   return( result );
@@ -212,7 +212,7 @@ static int SetDirModus(DirEntry *de_ptr, WalkingPackage *walking_package)
 
     return 0;
   }
-  MessagePrintf("Cant't change modus:*%s", std::strerror(errno));
+  FormatMessage("Cant't change modus:*{}", std::strerror(errno));
 
   return -1;
 }

@@ -141,8 +141,7 @@ int GetDirEntry(DirEntry *tree,
   if( chdir( dir_path ) )
   {
 #ifdef DEBUG
-    (void) sprintf( message, "Invalid Path!*\"%s\"", dir_path );
-    MESSAGE( message );
+    FormatMessage("Invalid Path!*\"{}\"", dir_path);
 #endif
     return( -3 );
   }
@@ -191,7 +190,7 @@ int GetDirEntry(DirEntry *tree,
       if( sde_ptr == nullptr )
       {
 #ifdef DEBUG
-	ErrorPrintf("Can't find directory; token=%s", token);
+	FormatError("Can't find directory; token={}", token);
 #endif
 	return( -3 );
       }
@@ -557,7 +556,7 @@ char *CutFilename(char *dest, char *src, unsigned int max_len)
   else
   {
     const auto tmp = StrLeft(src, max_len - 3);
-    sprintf(dest, "%s...", tmp.c_str());
+    *std::format_to(dest, "{}...", tmp) = '\0';
     return( dest );
   }
 }
@@ -608,11 +607,7 @@ void Fnsplit(char *path, char *dir, char *name)
 
   if (i == PATH_LENGTH && *path)
   {
-    WarningPrintf(
-      "filename too long:*%s*truncating to*%s",
-		  name_begin,
-      trunc_name
-    );
+    FormatWarning("filename too long:*{}*truncating to*{}", name_begin, trunc_name);
   }
 }
 
@@ -800,8 +795,6 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
   char modify_time[13];
   char change_time[13];
   char access_time[13];
-  char format1[60];
-  char format2[60];
   int  n;
   char owner[OWNER_NAME_MAX + 1];
   char group[GROUP_NAME_MAX + 1];
@@ -838,9 +831,6 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
     std::snprintf(group, sizeof(group), "%d", fe_ptr->stat_struct.st_gid);
   }
 
-  sprintf(format1, "%%s");
-  sprintf(format2, "%%s");
-
   const auto fitted_name = FitVisualWidth(fe_ptr->name, max_filename_len, true);
   const auto fitted_link = FitVisualWidth(sym_link_name, max_linkname_len, true);
 
@@ -851,27 +841,27 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
       if(std::string_view(sptr).starts_with(TAGSYMBOL_VIEWNAME)) {
         *dptr = tag; n=1;
       } else if(std::string_view(sptr).starts_with(FILENAME_VIEWNAME)) {
-        n = sprintf(dptr, format1, fitted_name.c_str());
+        n = static_cast<int>(std::format_to(dptr, "{}", fitted_name) - dptr);
       } else if(std::string_view(sptr).starts_with(ATTRIBUTE_VIEWNAME)) {
-        n = sprintf(dptr, "%10s", attributes);
+        n = static_cast<int>(std::format_to(dptr, "{:>10}", attributes) - dptr);
       } else if(std::string_view(sptr).starts_with(LINKCOUNT_VIEWNAME)) {
-        n = sprintf(dptr, "%3d", (int)fe_ptr->stat_struct.st_nlink);
+        n = static_cast<int>(std::format_to(dptr, "{:3}", (int)fe_ptr->stat_struct.st_nlink) - dptr);
       } else if(std::string_view(sptr).starts_with(FILESIZE_VIEWNAME)) {
-        n = sprintf(dptr, "%7lld", (long long) fe_ptr->stat_struct.st_size);
+        n = static_cast<int>(std::format_to(dptr, "{:7}", (long long) fe_ptr->stat_struct.st_size) - dptr);
       } else if(std::string_view(sptr).starts_with(MODTIME_VIEWNAME)) {
-        n = sprintf(dptr, "%12s", modify_time);
+        n = static_cast<int>(std::format_to(dptr, "{:>12}", modify_time) - dptr);
       } else if(std::string_view(sptr).starts_with(SYMLINK_VIEWNAME)) {
-        n = sprintf(dptr, format2, fitted_link.c_str());
+        n = static_cast<int>(std::format_to(dptr, "{}", fitted_link) - dptr);
       } else if(std::string_view(sptr).starts_with(UID_VIEWNAME)) {
-        n = sprintf(dptr, "%-8s", owner);
+        n = static_cast<int>(std::format_to(dptr, "{:<8}", owner) - dptr);
       } else if(std::string_view(sptr).starts_with(GID_VIEWNAME)) {
-        n = sprintf(dptr, "%-8s", group);
+        n = static_cast<int>(std::format_to(dptr, "{:<8}", group) - dptr);
       } else if(std::string_view(sptr).starts_with(INODE_VIEWNAME)) {
-        n = sprintf(dptr, "%7lld", (long long)fe_ptr->stat_struct.st_ino);
+        n = static_cast<int>(std::format_to(dptr, "{:7}", (long long)fe_ptr->stat_struct.st_ino) - dptr);
       } else if(std::string_view(sptr).starts_with(ACCTIME_VIEWNAME)) {
-        n = sprintf(dptr, "%12s", access_time);
+        n = static_cast<int>(std::format_to(dptr, "{:>12}", access_time) - dptr);
       } else if(std::string_view(sptr).starts_with(CHGTIME_VIEWNAME)) {
-        n = sprintf(dptr, "%12s", change_time);
+        n = static_cast<int>(std::format_to(dptr, "{:>12}", change_time) - dptr);
       } else {
 	n = -1;
       }

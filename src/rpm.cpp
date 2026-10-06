@@ -37,7 +37,7 @@ int ReadTreeFromRPM(DirEntry *dir_entry, FILE *f)
 
     if( GetStatFromRPM( rpm_line, path_name, &stat ) )
     {
-      MessagePrintf("unknown rpminfo*%s", rpm_line);
+      FormatMessage("unknown rpminfo*{}", rpm_line);
     }
     else
     {

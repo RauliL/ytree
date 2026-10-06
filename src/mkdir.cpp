@@ -66,11 +66,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
   {
     if( !ec )
       ec = std::make_error_code( std::errc::file_exists );
-    MessagePrintf(
-      "Can't create Directory*\"%s\"*%s",
-      path_str.c_str(),
-      ec.message().c_str()
-    );
+    FormatMessage("Can't create Directory*\"{}\"*{}", path_str.c_str(), ec.message().c_str());
   }
   else
   {
@@ -80,11 +76,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
     std::filesystem::permissions( path, perms, ec );
     if( ec )
     {
-      WarningPrintf(
-        "Can't chmod Directory*\"%s\"*%s*IGNORED",
-        path_str.c_str(),
-        ec.message().c_str()
-      );
+      FormatWarning("Can't chmod Directory*\"{}\"*{}*IGNORED", path_str.c_str(), ec.message().c_str());
     }
 
     /* Directory erstellt

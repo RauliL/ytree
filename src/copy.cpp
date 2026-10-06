@@ -62,11 +62,7 @@ int CopyFile(Statistic *statistic_ptr,
     to_path = to_fs_path.string();
     if (MakePath(statistic_ptr->tree, to_path.data(), &dest_dir_entry))
     {
-      MessagePrintf(
-        "Can't create path*\"%s\"*%s",
-        to_path.c_str(),
-        std::strerror(errno)
-      );
+      FormatMessage("Can't create path*\"{}\"*{}", to_path.c_str(), std::strerror(errno));
 
       return result;
     }
@@ -92,11 +88,7 @@ int CopyFile(Statistic *statistic_ptr,
         to_path = to_fs_path.string();
         if (MakePath(statistic_ptr->tree, to_path.data(), &dest_dir_entry))
         {
-          MessagePrintf(
-            "Can't create path*\"%s\"*%s",
-            to_path.c_str(),
-            std::strerror(errno)
-          );
+          FormatMessage("Can't create path*\"{}\"*{}", to_path.c_str(), std::strerror(errno));
 
           return result;
         }
@@ -179,11 +171,7 @@ int CopyFile(Statistic *statistic_ptr,
 
     if( chmod( to_path.c_str(), fe_ptr->stat_struct.st_mode ) == -1 )
     {
-      WarningPrintf(
-        "Can't chmod file*\"%s\"*to mode %s*IGNORED",
-        to_path.c_str(),
-        GetAttributes(fe_ptr->stat_struct.st_mode, buffer)
-      );
+      FormatWarning("Can't chmod file*\"{}\"*to mode {}*IGNORED", to_path.c_str(), GetAttributes(fe_ptr->stat_struct.st_mode, buffer));
     }
 
     if( dest_dir_entry )
@@ -310,12 +298,7 @@ static int Copy(const std::string& to_path, const std::string& from_path)
   );
   if (ec)
   {
-    MessagePrintf(
-      "Can't copy file*\"%s\"*to*\"%s\"*%s",
-      from_path.c_str(),
-      to_path.c_str(),
-      ec.message().c_str()
-    );
+    FormatMessage("Can't copy file*\"{}\"*to*\"{}\"*{}", from_path.c_str(), to_path.c_str(), ec.message().c_str());
 
     return -1;
   }
@@ -369,11 +352,7 @@ static int CopyArchiveFile(
 
   if (result)
   {
-    WarningPrintf(
-      "Can't copy file*%s*to file*%s",
-      from_p_aux.c_str(),
-      to_p_aux.c_str()
-    );
+    FormatWarning("Can't copy file*{}*to file*{}", from_p_aux.c_str(), to_p_aux.c_str());
   }
 
   return result;

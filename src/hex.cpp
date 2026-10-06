@@ -35,11 +35,7 @@ static int ViewHexFile(const std::string& file_path)
 
   if (!IsReadable(file_path))
   {
-    MessagePrintf(
-      "HexView not possible!*\"%s\"*%s",
-      file_path.c_str(),
-      std::strerror(errno)
-    );
+    FormatMessage("HexView not possible!*\"{}\"*{}", file_path.c_str(), std::strerror(errno));
 
     return -1;
   }
@@ -103,7 +99,7 @@ static int ViewHexFile(const std::string& file_path)
 
   if ((result = SilentSystemCall(command_line)))
   {
-    MessagePrintf("can't execute*%s", command_line);
+    FormatMessage("can't execute*{}", command_line);
   }
 
   std::free(command_line);
@@ -122,7 +118,7 @@ static int ViewHexArchiveFile(const std::string& file_path)
 
   if (result)
   {
-    MessagePrintf("can't execute*%s", command_line.c_str());
+    FormatMessage("can't execute*{}", command_line.c_str());
   }
 
   return result;

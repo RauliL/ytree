@@ -21,6 +21,7 @@
 #endif
 #include <algorithm>
 #include <filesystem>
+#include <format>
 #include <memory>
 #include <optional>
 #include <string>
@@ -259,7 +260,9 @@
 
 
 #define Error(msg) ErrorEx(msg, __FILE__, __LINE__)
-#define ErrorPrintf(format, ...) ErrorPrintfEx(format, __FILE__, __LINE__, __VA_ARGS__)
+#define FormatError(...) ErrorEx(std::format(__VA_ARGS__), __FILE__, __LINE__)
+#define FormatWarning(...) Warning(std::format(__VA_ARGS__))
+#define FormatMessage(...) Message(std::format(__VA_ARGS__))
 
 #define TAGGED_SYMBOL '*'
 
@@ -410,7 +413,6 @@ extern const char FILE_SEPARATOR_CHAR;
 #define LHA_LINE_LENGTH        512
 #define ARC_LINE_LENGTH        512
 #define RAR_LINE_LENGTH        512
-#define MESSAGE_LENGTH         (PATH_LENGTH + 80 + 1)
 #define COMMAND_LINE_LENGTH    4096
 enum class ViewMode : int
 {
@@ -620,9 +622,7 @@ int SetMatchSpec(const std::string& new_spec);
 extern int  SetFileSpec(char *file_spec);
 extern void SetMatchingParam(DirEntry *dir_entry);
 void ErrorEx(const std::string& msg, const std::string& module, int line);
-void ErrorPrintfEx(const char* format, const char* module, int line, ...);
 void Warning(const std::string& msg);
-void WarningPrintf(const char* format, ...);
 void Notice(const std::string& msg);
 void UnmapNoticeWindow();
 extern void SetFileMode(ViewMode new_file_mode);
@@ -674,7 +674,6 @@ extern int  MoveTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
 extern int  MoveFile(FileEntry *fe_ptr, bool confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, FileEntry **new_fe_ptr);
 extern int  InputChoise(const char *msg, const char *term);
 void Message(const std::string& msg);
-void MessagePrintf(const char* format, ...);
 extern int  GetDirEntry(DirEntry *tree, DirEntry *current_dir_entry, char *dir_path, DirEntry **dir_entry, char *to_path);
 extern int  GetFileEntry(DirEntry *de_ptr, char *file_name, FileEntry **file_entry);
 extern int  GetCopyParameter(const char *from_file, bool path_copy, char *to_file, char *to_dir);

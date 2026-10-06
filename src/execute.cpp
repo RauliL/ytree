@@ -21,14 +21,14 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
 
       if (chdir(path.c_str()))
       {
-        MessagePrintf("Can't change directory to*\"%s\"", path.c_str());
+        FormatMessage("Can't change directory to*\"{}\"", path.c_str());
       } else {
         refresh();
         result = QuerySystemCall( command_line );
       }
       if (chdir(cwd.c_str()))
       {
-        MessagePrintf("Can't change directory to*\"%s\"", cwd.c_str());
+        FormatMessage("Can't change directory to*\"{}\"", cwd.c_str());
       }
     } else {
       refresh();

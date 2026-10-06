@@ -10,7 +10,7 @@ void InitClock()
 
   if (getitimer(ITIMER_REAL, &value) != 0)
   {
-    ErrorPrintf("gettimer() failed:*%s", std::strerror(errno));
+    FormatError("gettimer() failed:*{}", std::strerror(errno));
   }
 
   value.it_interval.tv_sec = CLOCK_INTERVAL;
@@ -19,7 +19,7 @@ void InitClock()
 
   if (setitimer(ITIMER_REAL, &value, &ovalue) != 0)
   {
-    ErrorPrintf("setitimer() failed:*%s", std::strerror(errno));
+    FormatError("setitimer() failed:*{}", std::strerror(errno));
   }
 
   ClockHandler(0);
