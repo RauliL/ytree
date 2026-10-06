@@ -398,6 +398,12 @@ int InputString(
         c = CR;
         break;
 
+#ifdef KEY_MOUSE
+      case KEY_MOUSE:
+        (void)DecodeMouse(MouseFocus::Overlay);
+        break;
+#endif
+
       default:
         if (c >= ' ' && c < 0xff && c != 127)
         {
@@ -449,6 +455,13 @@ int InputChoise(const char *msg, const char *term)
   do
   {
     c = Getch();
+#ifdef KEY_MOUSE
+    if (c == KEY_MOUSE)
+    {
+      (void)DecodeMouse(MouseFocus::Overlay);
+      continue;
+    }
+#endif
     if(c >= 0)
       if( islower( c ) ) c = toupper( c );
   } while( c != -1 && !strchr( term, c ) );

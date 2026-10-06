@@ -158,6 +158,7 @@ char* GetMatches(const std::string& base)
     RefreshWindow( matches_window );
     doupdate();
     ch = Getch();
+    ch = TranslateOverlayMouse(ch);
 
     if(ch != -1 && ch != KEY_RIGHT && ch != KEY_LEFT) {
       if(start_x) {

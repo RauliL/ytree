@@ -1139,8 +1139,103 @@ static void fmoveppage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
      return;
 }
 
+static void fmoveto(int target_pos, int *start_file, int *cursor_pos, int *start_x, DirEntry *dir_entry)
+{
+  if (target_pos < 0 || target_pos >= static_cast<int>(file_entry_list.size()))
+  {
+    return;
+  }
 
+  const int absolute = *start_file + *cursor_pos;
+  if (target_pos == absolute)
+  {
+    return;
+  }
 
+  if (target_pos >= *start_file && target_pos < *start_file + max_disp_files)
+  {
+    PrintFileEntry(*start_file + *cursor_pos,
+                   *cursor_pos % window_height,
+                   *cursor_pos / window_height,
+                   false,
+                   *start_x);
+    *cursor_pos = target_pos - *start_file;
+    PrintFileEntry(*start_file + *cursor_pos,
+                   *cursor_pos % window_height,
+                   *cursor_pos / window_height,
+                   true,
+                   *start_x);
+  }
+  else
+  {
+    *start_file = target_pos;
+    *cursor_pos = 0;
+    if (*start_file + max_disp_files > static_cast<int>(file_entry_list.size()))
+    {
+      *start_file = std::max(0, static_cast<int>(file_entry_list.size()) - max_disp_files);
+      *cursor_pos = target_pos - *start_file;
+    }
+    DisplayFiles(dir_entry, *start_file, *start_file + *cursor_pos, *start_x);
+  }
+}
+
+static int FileIndexFromMouse(int row, int col)
+{
+  if (row < 0 || row >= window_height || col < 0)
+  {
+    return -1;
+  }
+
+  const int column_width = std::max(1, window_width / max_column);
+  const int column = col / column_width;
+
+  if (column < 0 || column >= max_column)
+  {
+    return -1;
+  }
+
+  return column * window_height + row;
+}
+
+static int HandleFileMouse(int *start_file, int *cursor_pos, int *start_x, DirEntry *dir_entry)
+{
+  const MouseEvent event = DecodeMouse(MouseFocus::File);
+
+  switch (event.action)
+  {
+    case MouseAction::ScrollUp:
+      return KEY_UP;
+    case MouseAction::ScrollDown:
+      return KEY_DOWN;
+    case MouseAction::SwitchToDir:
+      return ESC;
+    case MouseAction::Select:
+    case MouseAction::Activate:
+    case MouseAction::Tag:
+    {
+      const int relative = FileIndexFromMouse(event.row, event.col);
+      if (relative < 0)
+      {
+        return -1;
+      }
+      fmoveto(*start_file + relative, start_file, cursor_pos, start_x, dir_entry);
+      if (event.action == MouseAction::Activate)
+      {
+        return 'v';
+      }
+      if (event.action == MouseAction::Tag)
+      {
+        return 't';
+      }
+      return -1;
+    }
+    case MouseAction::Ignore:
+    case MouseAction::None:
+    case MouseAction::SwitchToFile:
+    default:
+      return -1;
+  }
+}
 
 int HandleFileWindow(DirEntry *dir_entry)
 {
@@ -1330,6 +1425,17 @@ int HandleFileWindow(DirEntry *dir_entry)
 #ifdef KEY_RESIZE
 
       case KEY_RESIZE: resize_request = true;
+                       break;
+#endif
+
+#ifdef KEY_MOUSE
+      case KEY_MOUSE:  ch = HandleFileMouse(&dir_entry->start_file,
+                                            &dir_entry->cursor_pos,
+                                            &start_x,
+                                            dir_entry);
+                       if (ch == -1)
+                         break;
+                       unput_char = ch;
                        break;
 #endif
 

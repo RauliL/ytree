@@ -538,6 +538,60 @@ void MoveHome(DirEntry **dir_entry)
     return;
 }
 
+static void MoveToRow(int row, int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
+{
+  const int index = *disp_begin_pos + row;
+
+  if (row < 0 || row >= window_height ||
+      index < 0 || index >= static_cast<int>(dir_entry_list.size()))
+  {
+    return;
+  }
+
+  if (row == *cursor_pos)
+  {
+    return;
+  }
+
+  PrintDirEntry(dir_window, *disp_begin_pos + *cursor_pos, *cursor_pos, false);
+  *cursor_pos = row;
+  PrintDirEntry(dir_window, *disp_begin_pos + *cursor_pos, *cursor_pos, true);
+  *dir_entry = dir_entry_list[*disp_begin_pos + *cursor_pos].dir_entry.get();
+  (*dir_entry)->start_file = 0;
+  (*dir_entry)->cursor_pos = -1;
+  DisplayFileWindow(*dir_entry);
+  RefreshWindow(file_window);
+}
+
+static int HandleDirMouse(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
+{
+  const MouseEvent event = DecodeMouse(MouseFocus::Dir);
+
+  switch (event.action)
+  {
+    case MouseAction::ScrollUp:
+      return KEY_UP;
+    case MouseAction::ScrollDown:
+      return KEY_DOWN;
+    case MouseAction::SwitchToFile:
+      return CR;
+    case MouseAction::Select:
+      MoveToRow(event.row, disp_begin_pos, cursor_pos, dir_entry);
+      return -1;
+    case MouseAction::Activate:
+      MoveToRow(event.row, disp_begin_pos, cursor_pos, dir_entry);
+      return CR;
+    case MouseAction::Tag:
+      MoveToRow(event.row, disp_begin_pos, cursor_pos, dir_entry);
+      return 't';
+    case MouseAction::Ignore:
+    case MouseAction::None:
+    case MouseAction::SwitchToDir:
+    default:
+      return -1;
+  }
+}
+
 void HandlePlus(
   DirEntry* dir_entry,
   DirEntry* de_ptr,
@@ -929,6 +983,16 @@ int HandleDirWindow(DirEntry *start_dir_entry)
 #ifdef KEY_RESIZE
       case KEY_RESIZE: resize_request = true;
       		       break;
+#endif
+
+#ifdef KEY_MOUSE
+      case KEY_MOUSE:  ch = HandleDirMouse(&statistic.disp_begin_pos,
+                                           &statistic.cursor_pos,
+                                           &dir_entry);
+                       if (ch == -1)
+                         break;
+                       unput_char = ch;
+                       break;
 #endif
 
       case -1:        break;

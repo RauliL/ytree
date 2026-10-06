@@ -89,6 +89,7 @@ ADD_EXECUTABLE(
   match.cpp
   mkdir.cpp
   mktime.cpp
+  mouse.cpp
   move.cpp
   passwd.cpp
   path.cpp

@@ -549,6 +549,7 @@ void hex_edit(const std::string& file_path)
 #ifdef VI_KEYS
 	ch = ViKey(ch);
 #endif
+    ch = TranslateOverlayMouse(ch);
        if (resize_request)
        {
     	    SetupViewWindow(file_path);
@@ -751,6 +752,7 @@ int InternalView(const std::string& file_path)
 #ifdef VI_KEYS
 	ch = ViKey(ch);
 #endif
+    ch = TranslateOverlayMouse(ch);
        if (resize_request)
        {
     	    SetupViewWindow(file_path);
