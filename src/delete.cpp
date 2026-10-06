@@ -46,11 +46,7 @@ int DeleteFile(FileEntry *fe_ptr)
 
       if( term != 'Y' )
       {
-        MessagePrintf(
-          "Can't delete file*\"%s\"*%s",
-          filepath.c_str(),
-          std::strerror(errno)
-        );
+        FormatMessage("Can't delete file*\"{}\"*{}", filepath.c_str(), std::strerror(errno));
         ESCAPE;
       }
     }
@@ -59,11 +55,7 @@ int DeleteFile(FileEntry *fe_ptr)
   std::filesystem::remove(filepath, ec);
   if (ec)
   {
-    MessagePrintf(
-      "Can't delete file*\"%s\"*%s",
-      filepath.c_str(),
-      ec.message().c_str()
-    );
+    FormatMessage("Can't delete file*\"{}\"*{}", filepath.c_str(), ec.message().c_str());
     ESCAPE;
   }
 

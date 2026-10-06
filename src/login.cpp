@@ -98,7 +98,7 @@ int LoginDisk(char *path)
   {
     /* Stat failed */
     /*-------------*/
-    MessagePrintf("Can't access*\"%s\"*%s", path, std::strerror(errno));
+    FormatMessage("Can't access*\"{}\"*{}", path, std::strerror(errno));
 
     return -1;
   }
@@ -478,10 +478,7 @@ int LoginDisk(char *path)
 		    statistic.login_path
 		  );
     } else {
-      ErrorPrintf(
-        "unknown file method %d",
-        static_cast<int>(*file_method)
-      );
+      FormatError("unknown file method {}", static_cast<int>(*file_method));
       *command_line = 0;
       close(p[0]);
       close(p[1]);
@@ -613,7 +610,7 @@ int LoginDisk(char *path)
       (void) wait( &status );
       if(status)
       {
-        MessagePrintf("ReadTarFile() failed*can't execute*%s", command_line);
+        FormatMessage("ReadTarFile() failed*can't execute*{}", command_line);
       }
       (void) fclose( f );
     }

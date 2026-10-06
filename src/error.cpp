@@ -1,7 +1,5 @@
 #include "ytree.h"
 
-#include <cstdarg>
-
 static void MapErrorWindow(const std::string& header);
 static void MapNoticeWindow(const std::string& header);
 static void UnmapErrorWindow();
@@ -9,27 +7,10 @@ static inline void PrintErrorLine(int y, const std::string& str);
 static void DisplayErrorMessage(const std::string& msg);
 static void PrintErrorMessage(const std::string& msg);
 
-static char message[MESSAGE_LENGTH + 1];
-
 void Message(const std::string& msg)
 {
   MapErrorWindow("E R R O R");
   PrintErrorMessage(msg);
-}
-
-void MessagePrintf(const char* format, ...)
-{
-  std::va_list args;
-
-  va_start(args, format);
-  std::vsnprintf(
-    message,
-    MESSAGE_LENGTH,
-    format,
-    args
-  );
-  va_end(args);
-  Message(message);
 }
 
 void Notice(const std::string& msg)
@@ -46,21 +27,6 @@ void Warning(const std::string& msg)
   PrintErrorMessage(msg);
 }
 
-void WarningPrintf(const char* format, ...)
-{
-  std::va_list args;
-
-  va_start(args, format);
-  std::vsnprintf(
-    message,
-    MESSAGE_LENGTH,
-    format,
-    args
-  );
-  va_end(args);
-  Warning(message);
-}
-
 void ErrorEx(const std::string& msg, const std::string& module, int line)
 {
   MapErrorWindow("INTERNAL ERROR");
@@ -71,21 +37,6 @@ void ErrorEx(const std::string& msg, const std::string& module, int line)
     "\"*Line " +
     std::to_string(line)
   );
-}
-
-void ErrorPrintfEx(const char* format, const char* module, int line, ...)
-{
-  std::va_list args;
-
-  va_start(args, line);
-  std::vsnprintf(
-    message,
-    MESSAGE_LENGTH,
-    format,
-    args
-  );
-  va_end(args);
-  ErrorEx(message, module, line);
 }
 
 static void MapErrorWindow(const std::string& header)

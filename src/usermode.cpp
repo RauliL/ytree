@@ -42,7 +42,7 @@ int DirUserMode(DirEntry *dir_entry, int ch)
     }
     if (SilentSystemCall(command_line))
     {
-      MessagePrintf("Can't execute*%s", command_line);
+      FormatMessage("Can't execute*{}", command_line);
     }
     if (chremap == ch || chremap == 0)
     {
@@ -91,7 +91,7 @@ int FileUserMode(FileEntry* file_entry, int ch)
     }
     if (SilentSystemCall(command_line))
     {
-      MessagePrintf("Can't execute*%s", command_line);
+      FormatMessage("Can't execute*{}", command_line);
     }
     if (chremap == ch || chremap == 0)
     {

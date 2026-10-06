@@ -53,19 +53,11 @@ int DeleteDirectory(DirEntry *dir_entry)
 
     if (!IsWriteable(path))
     {
-      MessagePrintf(
-        "Can't delete directory*\"%s\"*%s",
-		    path.c_str(),
-        std::strerror(errno)
-      );
+      FormatMessage("Can't delete directory*\"{}\"*{}", path.c_str(), std::strerror(errno));
     }
     else if (rmdir(path.c_str()))
     {
-      MessagePrintf(
-        "Can't delete directory*\"%s\"*%s",
-		    path.c_str(),
-        std::strerror(errno)
-      );
+      FormatMessage("Can't delete directory*\"{}\"*{}", path.c_str(), std::strerror(errno));
     } else {
       /* Directory geloescht
        * ==> aus Baum loeschen
@@ -130,11 +122,7 @@ static int DeleteSingleDirectory( DirEntry *dir_entry )
 
   if (!IsWriteable(path))
   {
-    MessagePrintf(
-      "Can't delete directory*\"%s\"*%s",
-		  path.c_str(),
-      std::strerror(errno)
-		);
+    FormatMessage("Can't delete directory*\"{}\"*{}", path.c_str(), std::strerror(errno));
 
     return -1;
   }
@@ -150,11 +138,7 @@ static int DeleteSingleDirectory( DirEntry *dir_entry )
 
   if (rmdir(path.c_str()))
   {
-    MessagePrintf(
-      "Can't delete directory*\"%s\"*%s",
-		  path.c_str(),
-      std::strerror(errno)
-    );
+    FormatMessage("Can't delete directory*\"{}\"*{}", path.c_str(), std::strerror(errno));
 
     return -1;
   }

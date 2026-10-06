@@ -39,11 +39,7 @@ int MoveFile(FileEntry *fe_ptr,
 
   if (!IsWriteable(from_path))
   {
-    MessagePrintf(
-      "Unmoveable file*\"%s\"*%s",
-      from_path.c_str(),
-      std::strerror(errno)
-    );
+    FormatMessage("Unmoveable file*\"{}\"*{}", from_path.c_str(), std::strerror(errno));
     ESCAPE;
   }
 
@@ -92,11 +88,7 @@ int MoveFile(FileEntry *fe_ptr,
 
     if (unlink(to_path))
     {
-      MessagePrintf(
-        "Can't unlink*\"%s\"*%s",
-        to_path,
-        std::strerror(errno)
-      );
+      FormatMessage("Can't unlink*\"{}\"*{}", to_path, std::strerror(errno));
       ESCAPE;
     }
   }
@@ -211,23 +203,14 @@ static bool Move(const std::string& to_path, const std::string& from_path)
 
   if (link(from_path.c_str(), to_path.c_str()))
   {
-    MessagePrintf(
-      "Can't link \"%s\"*to \"%s\"*%s",
-      from_path.c_str(),
-      to_path.c_str(),
-      std::strerror(errno)
-    );
+    FormatMessage("Can't link \"{}\"*to \"{}\"*{}", from_path.c_str(), to_path.c_str(), std::strerror(errno));
 
     return false;
   }
 
   if (unlink(from_path.c_str()))
   {
-    MessagePrintf(
-      "Can't unlink*\"%s\"*%s",
-      from_path.c_str(),
-      std::strerror(errno)
-    );
+    FormatMessage("Can't unlink*\"{}\"*{}", from_path.c_str(), std::strerror(errno));
 
     return false;
   }

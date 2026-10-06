@@ -78,11 +78,7 @@ static int ViewFile(DirEntry* dir_entry, const std::string& file_path)
 
   if (!IsReadable(file_path))
   {
-    MessagePrintf(
-      "View not possible!*\"%s\"*%s",
-      file_path.c_str(),
-      std::strerror(errno)
-    );
+    FormatMessage("View not possible!*\"{}\"*{}", file_path.c_str(), std::strerror(errno));
     goto FNC_XIT;
   }
 
@@ -159,13 +155,13 @@ the ytree starting cwd. new code grabbed from execute.c.
 
     if (chdir(path.c_str()))
   	{
-  		MessagePrintf("Can't change directory to*\"%s\"", path.c_str());
+  		FormatMessage("Can't change directory to*\"{}\"", path.c_str());
   	} else {
   		result = SystemCall(command_line);
   	}
   	if (chdir(cwd.c_str()))
 	  {
-      MessagePrintf("Can't change directory to*\"%s\"", cwd.c_str());
+      FormatMessage("Can't change directory to*\"{}\"", cwd.c_str());
 	  }
   } else {
   	result = SystemCall(command_line);
@@ -173,7 +169,7 @@ the ytree starting cwd. new code grabbed from execute.c.
 
   if (result)
   {
-    MessagePrintf("can't execute*%s", command_line );
+    FormatMessage("can't execute*{}", command_line);
   }
 
   if (notice_mapped)
@@ -231,7 +227,7 @@ static int ViewArchiveFile(const std::string& file_path)
   result = SystemCall(command_line);
   if (result)
   {
-    MessagePrintf("can't execute*%s", command_line.c_str());
+    FormatMessage("can't execute*{}", command_line.c_str());
   }
 
   return result;
@@ -256,25 +252,25 @@ void printhexline(WINDOW *win, char *line, char *buf, int r, long offset)
 	return;
     }
     if(hexoffset) {
-      sprintf(line, "%010X  ", (int)offset);
+      *std::format_to(line, "{:010X}  ", (int)offset) = '\0';
     } else {
-      sprintf(line, "%010d  ", (int)offset);
+      *std::format_to(line, "{:010}  ", (int)offset) = '\0';
     }
     for (i = 1; i <= r; i++ )
     {
         if ((i == (BYTES / 2) ) || (i == BYTES ))
-	    sprintf(aux.data(), "%02hhX  ", buf[i-1]);
+	    *std::format_to(aux.data(), "{:02X}  ", static_cast<unsigned char>(buf[i-1])) = '\0';
         else
-	    sprintf(aux.data(), "%02hhX ", buf[i-1]);
+	    *std::format_to(aux.data(), "{:02X} ", static_cast<unsigned char>(buf[i-1])) = '\0';
         strcat(line, aux.data());
     }
     for (i = r+1; i <= BYTES; i++)
     {
         buf[i-1]= ' ';
         if ((i == (BYTES / 2) ) || (i == BYTES ))
-	    sprintf(aux.data(), "    ");
+	    std::strcpy(aux.data(), "    ");
         else
-	    sprintf(aux.data(), "   ");
+	    std::strcpy(aux.data(), "   ");
         strcat(line, aux.data());
     }
 /*    strcat(line, " ");*/
@@ -299,7 +295,7 @@ void update_line(WINDOW *win, long line)
     std::memset(buf.data(), ' ', BYTES);
     if (lseek(fd, (line - 1) * BYTES, SEEK_SET)== -1 )
     {
-        sprintf(mensaje, "Error %ld ", line);
+        *std::format_to(mensaje, "Error {} ", line) = '\0';
 	perror(mensaje);
 	fflush(stdout);
 	return;
@@ -441,7 +437,7 @@ void change_char(int ch)
     cambio -> pos = ( (cursor_pos_y + current_line - 1) * BYTES) + CURSOR_POSX;
     if (lseek(fd, cambio -> pos, SEEK_SET)== -1 )
     {
-        sprintf(mensaje,"Error %s ", strerror(errno));
+        *std::format_to(mensaje, "Error {} ", strerror(errno)) = '\0';
 	perror(mensaje);
 	fflush(stdout);
 	free(cambio);
@@ -475,7 +471,7 @@ void change_char(int ch)
 	}
     	if (write(fd, &pp, 1)!= 1)
 	{
-    	    sprintf(mensaje,"Error al grabar el cambio %s ", strerror(errno));
+    	    *std::format_to(mensaje, "Error al grabar el cambio {} ", strerror(errno)) = '\0';
 	    perror(mensaje);
 	    fflush(stdout);
 	    free(cambio);
@@ -485,14 +481,14 @@ void change_char(int ch)
 	cambio -> next = changes;
 	changes = cambio;
     }else{
-        sprintf(mensaje,"Error al posicionar %s ", strerror(errno));
+        *std::format_to(mensaje, "Error al posicionar {} ", strerror(errno)) = '\0';
         perror(mensaje);
         fflush(stdout);
         free(cambio);
         return;
     }
     else{
-        sprintf(mensaje,"Error al pre-leer %s ", strerror(errno));
+        *std::format_to(mensaje, "Error al pre-leer {} ", strerror(errno)) = '\0';
         perror(mensaje);
         fflush(stdout);
         free(cambio);
@@ -543,7 +539,7 @@ void hex_edit(const std::string& file_path)
     fd2 = fd;
     fd=open(file_path.c_str(),O_RDWR);
     if (fd == -1){
-	ErrorPrintf("Error %s", std::strerror(errno));
+	FormatError("Error {}", std::strerror(errno));
 	touchwin(VIEW);
         fd = fd2;
 	return;

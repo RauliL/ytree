@@ -41,6 +41,7 @@ static void RotateDirMode(void)
     case ViewMode::MODE_2: dir_mode = ViewMode::MODE_4 ; break;
     case ViewMode::MODE_3: dir_mode = ViewMode::MODE_1 ; break;
     case ViewMode::MODE_4: dir_mode = ViewMode::MODE_3 ; break;
+    case ViewMode::MODE_5: dir_mode = ViewMode::MODE_1 ; break; /* unused for dirs */
   }
   if( (mode != Mode::DISK_MODE && mode != Mode::USER_MODE ) &&
       dir_mode == ViewMode::MODE_4 ) RotateDirMode();
@@ -166,7 +167,9 @@ static void PrintDirEntry(WINDOW *win,
                    group
                  );
                  break;
-    case ViewMode::MODE_3 : break;
+    case ViewMode::MODE_3 :
+    case ViewMode::MODE_5 : /* unused for dirs */
+      break;
     case ViewMode::MODE_4 :
                  (void) CTime( de_ptr->stat_struct.st_ctime, change_time );
                  (void) CTime( de_ptr->stat_struct.st_atime, access_time );

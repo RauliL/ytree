@@ -118,7 +118,7 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
     {
       if (errno != EACCES)
       {
-        ErrorPrintf("stat() failed on*%s*IGNORED", new_path.c_str());
+        FormatError("stat() failed on*{}*IGNORED", new_path.c_str());
       }
       continue;
     }

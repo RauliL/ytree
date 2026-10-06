@@ -73,11 +73,7 @@ int PipeTaggedFiles(FileEntry* fe_ptr, WalkingPackage* walking_package)
 
   if ((i = open(from_path.c_str(), O_RDONLY)) == -1)
   {
-    MessagePrintf(
-      "Can't open file*\"%s\"*%s",
-      from_path.c_str(),
-      std::strerror(errno)
-    );
+    FormatMessage("Can't open file*\"{}\"*{}", from_path.c_str(), std::strerror(errno));
 
     return -1;
   }
@@ -91,7 +87,7 @@ int PipeTaggedFiles(FileEntry* fe_ptr, WalkingPackage* walking_package)
       walking_package->function_data.pipe_cmd.pipe_file
     ) != 1)
     {
-      MessagePrintf("Write-Error!*%s", std::strerror(errno));
+      FormatMessage("Write-Error!*{}", std::strerror(errno));
       close(i);
 
       return -1;

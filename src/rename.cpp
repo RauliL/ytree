@@ -30,11 +30,7 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
 
   if (!IsWriteable(from_path))
   {
-    MessagePrintf(
-      "Rename not possible!*\"%s\"*%s",
-      from_path.c_str(),
-      std::strerror(errno)
-    );
+    FormatMessage("Rename not possible!*\"{}\"*{}", from_path.c_str(), std::strerror(errno));
     ESCAPE;
   }
 
@@ -119,11 +115,7 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
 
   if (!IsWriteable(from_path))
   {
-    MessagePrintf(
-      "Rename not possible!*\"%s\"*%s",
-      from_path.c_str(),
-      std::strerror(errno)
-    );
+    FormatMessage("Rename not possible!*\"{}\"*{}", from_path.c_str(), std::strerror(errno));
 
     return -1;
   }
@@ -247,12 +239,7 @@ static bool RenameDirEntry(
   std::filesystem::rename(from_path, to_path, ec);
   if (ec)
   {
-    MessagePrintf(
-      "Can't rename \"%s\"*to \"%s\"*%s",
-      from_path.c_str(),
-      to_path.c_str(),
-      ec.message().c_str()
-    );
+    FormatMessage("Can't rename \"{}\"*to \"{}\"*{}", from_path.c_str(), to_path.c_str(), ec.message().c_str());
 
     return false;
   }
@@ -282,12 +269,7 @@ static bool RenameFileEntry(
   std::filesystem::rename(from_path, to_path, ec);
   if (ec)
   {
-    MessagePrintf(
-      "Can't rename \"%s\"*to \"%s\"*%s",
-      from_path.c_str(),
-      to_path.c_str(),
-      ec.message().c_str()
-    );
+    FormatMessage("Can't rename \"{}\"*to \"{}\"*{}", from_path.c_str(), to_path.c_str(), ec.message().c_str());
 
     return false;
   }

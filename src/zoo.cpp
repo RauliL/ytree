@@ -40,7 +40,7 @@ int ReadTreeFromZOO(DirEntry *dir_entry, FILE *f)
 
       if( GetStatFromZOO( zoo_line, path_name, &stat ) )
       {
-        MessagePrintf("unknown zooinfo*%s", zoo_line);
+        FormatMessage("unknown zooinfo*{}", zoo_line);
       }
       else
       {
