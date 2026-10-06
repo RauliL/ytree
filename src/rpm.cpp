@@ -41,9 +41,11 @@ int ReadTreeFromRPM(DirEntry *dir_entry, FILE *f)
     }
     else
     {
-      if( (path_name[strlen( path_name ) - 1] == FILE_SEPARATOR_CHAR) ||
-	  !strcmp( path_name, "." ) || S_ISDIR(stat.st_mode)
-	)
+      if (
+        (path_name[std::strlen(path_name) - 1] == std::filesystem::path::preferred_separator) ||
+	      !std::strcmp(path_name, ".") ||
+        S_ISDIR(stat.st_mode)
+	    )
       {
         /* Directory */
         /*-----------*/

@@ -216,11 +216,14 @@ int GetDiskParameter( char *path,
         /* TAR/ZOO/ZIP-FILE_MODE */
         /*-----------------------*/
 
-        if( ( p = strrchr( statistic.login_path, FILE_SEPARATOR_CHAR ) ) == nullptr )
+        if (!(p = std::strrchr(statistic.login_path, std::filesystem::path::preferred_separator)))
+        {
           p = statistic.login_path;
-        else p++;
+        } else {
+          p++;
+        }
 
-        (void) strncpy( volume_name, p, sizeof( statistic.disk_name ) );
+        std::strncpy(volume_name, p, sizeof(statistic.disk_name));
         volume_name[sizeof( statistic.disk_name )] = '\0';
       }
     } /* volume_name */

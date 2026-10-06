@@ -20,7 +20,9 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
 
   result = -1;
 
-  if (!from_fs_path.has_filename() || from_fs_path == FILE_SEPARATOR_STRING)
+  if (!from_fs_path.has_filename() ||
+      from_fs_path == std::filesystem::path(
+        std::string_view(&std::filesystem::path::preferred_separator, 1)))
   {
     Message("Can't rename ROOT");
     ESCAPE;
@@ -206,7 +208,7 @@ int GetRenameParameter(char *old_name, char *new_name)
     return -1;
   }
 
-  if (std::strrchr(new_name, FILE_SEPARATOR_CHAR))
+  if (std::strrchr(new_name, std::filesystem::path::preferred_separator))
   {
     Message("Invalid new name:*No slashes when renaming!");
 

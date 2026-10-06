@@ -176,15 +176,21 @@ int MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry )
   *dest_dir_entry = nullptr;
 
   n = strlen( tree->name );
-  if( !strcmp(tree->name, FILE_SEPARATOR_STRING) ||
+  const char preferred_separator_str[]{
+    std::filesystem::path::preferred_separator, '\0'};
+  const auto tree_is_root =
+    tree->name[0] == std::filesystem::path::preferred_separator &&
+    tree->name[1] == '\0';
+
+  if( tree_is_root ||
       ( !strncmp( tree->name, path, n ) &&
-       ( path[n] == FILE_SEPARATOR_CHAR || path[n] == '\0' ) ) )
+       ( path[n] == std::filesystem::path::preferred_separator || path[n] == '\0' ) ) )
   {
     /* Pfad befindet sich im (Sub)-Tree */
     /*----------------------------------*/
 
     de_ptr = tree;
-    token = Strtok_r( &path[n], FILE_SEPARATOR_STRING, &old );
+    token = Strtok_r( &path[n], preferred_separator_str, &old );
     while( token )
     {
       for( sde_ptr = de_ptr->sub_tree; sde_ptr; sde_ptr = sde_ptr->next )
@@ -213,7 +219,7 @@ int MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry )
 	}
 	continue;
       }
-      token = Strtok_r( nullptr, FILE_SEPARATOR_STRING, &old );
+      token = Strtok_r( nullptr, preferred_separator_str, &old );
     }
     *dest_dir_entry = de_ptr;
     result = 0;

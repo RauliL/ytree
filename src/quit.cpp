@@ -92,7 +92,7 @@ void QuitTo(DirEntry* dir_entry)
     MAXPATH,
     "%s%c.ytree-%d.chdir",
     pwp->pw_dir,
-    FILE_SEPARATOR_CHAR,
+    std::filesystem::path::preferred_separator,
     static_cast<int>(parpid)
   );
 

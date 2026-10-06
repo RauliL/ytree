@@ -845,7 +845,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
       }
       for (int i = 0; i < static_cast<int>(statistic.disk_total_directories); ++i)
       {
-        if (*new_login_path == FILE_SEPARATOR_CHAR)
+        if (*new_login_path == std::filesystem::path::preferred_separator)
         {
           const auto path = GetPath(dir_entry_list[i].dir_entry);
 
@@ -1132,7 +1132,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
         path = GetPath(dir_entry);
         std::strcpy(new_login_path, path.c_str());
 
-        if (!(p = std::strrchr(new_login_path, FILE_SEPARATOR_CHAR)))
+        if (!(p = std::strrchr(new_login_path, std::filesystem::path::preferred_separator)))
         {
           break;
         }
@@ -1144,7 +1144,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
         // Rightmost slash was first and only character?
         if (!std::strlen(new_login_path))
         {
-          new_login_path[0] = FILE_SEPARATOR_CHAR;
+          new_login_path[0] = std::filesystem::path::preferred_separator;
           new_login_path[1] = 0;
         }
 

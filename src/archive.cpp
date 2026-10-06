@@ -31,20 +31,20 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
 
   (void) strcpy( father_path, path );
 
-  if( ( p = strrchr( father_path, FILE_SEPARATOR_CHAR ) ) ) *p = '\0';
+  if( ( p = strrchr( father_path, std::filesystem::path::preferred_separator ) ) ) *p = '\0';
   else
   {
-    FormatError("patch mismatch*missing '{}' in*{}", FILE_SEPARATOR_CHAR, path);
+    FormatError("patch mismatch*missing '{}' in*{}", std::filesystem::path::preferred_separator, path);
 
     return -1;
   }
 
-  p = strrchr( father_path, FILE_SEPARATOR_CHAR );
+  p = strrchr( father_path, std::filesystem::path::preferred_separator );
 
   if( p == nullptr )
   {
     df_ptr = tree;
-    if( !strcmp( path, FILE_SEPARATOR_STRING ) )
+    if( path[0] == std::filesystem::path::preferred_separator && path[1] == '\0' )
       (void) strcpy( name, path );
     else
       (void) strcpy( name, father_path );
@@ -254,18 +254,20 @@ static int GetArchiveDirEntry(DirEntry *tree, char *path, DirEntry **dir_entry)
   (tree) ? tree->name : "NULL", path );
 #endif
 
-  if( strchr( path, FILE_SEPARATOR_CHAR ) != nullptr )
+  if( strchr( path, std::filesystem::path::preferred_separator ) != nullptr )
   {
     for( de_ptr = tree; de_ptr; de_ptr = de_ptr->next )
     {
       n = strlen( de_ptr->name );
-      if( !strcmp( de_ptr->name, FILE_SEPARATOR_STRING ) ) is_root = true;
+      if( de_ptr->name[0] == std::filesystem::path::preferred_separator &&
+          de_ptr->name[1] == '\0' )
+        is_root = true;
 
       if( n && !strncmp( de_ptr->name, path, n ) &&
-	  (is_root || path[n] == '\0' || path[n] == FILE_SEPARATOR_CHAR ) )
+	  (is_root || path[n] == '\0' || path[n] == std::filesystem::path::preferred_separator ) )
       {
 	if( ( is_root && path[n] == '\0' ) ||
-	    ( path[n] == FILE_SEPARATOR_CHAR && path[n+1] == '\0' ) )
+	    ( path[n] == std::filesystem::path::preferred_separator && path[n+1] == '\0' ) )
 	{
 	  /* Pfad abgearbeitet; ==> fertig */
 	  /*-------------------------------*/
@@ -309,7 +311,7 @@ int TryInsertArchiveDirEntry(DirEntry *tree, char *dir, struct stat *stat)
 
   for( s=dir, t=dir_path; *s; s++, t++ )
   {
-    if( (*t = *s) == FILE_SEPARATOR_CHAR )
+    if( (*t = *s) == std::filesystem::path::preferred_separator )
     {
       if( GetArchiveDirEntry( tree, dir_path, &de_ptr ) == -1 )
       {
@@ -374,8 +376,13 @@ int MinimizeArchiveTree(DirEntry *tree)
       /* Zusammenfassung moeglich */
       /*--------------------------*/
 
-      if( strcmp( tree->name, FILE_SEPARATOR_STRING ) )
-	(void) strcat( tree->name, FILE_SEPARATOR_STRING );
+      if( !(tree->name[0] == std::filesystem::path::preferred_separator &&
+            tree->name[1] == '\0') )
+      {
+        const auto len = std::strlen(tree->name);
+        tree->name[len] = std::filesystem::path::preferred_separator;
+        tree->name[len + 1] = '\0';
+      }
       (void) strcat( tree->name, de_ptr->name );
       statistic.disk_total_directories--;
       tree->sub_tree = de_ptr->sub_tree;
@@ -405,7 +412,11 @@ int MinimizeArchiveTree(DirEntry *tree)
     )
   {
     de_ptr = tree->sub_tree;
-    (void) strcat( tree->name, FILE_SEPARATOR_STRING );
+    {
+      const auto len = std::strlen(tree->name);
+      tree->name[len] = std::filesystem::path::preferred_separator;
+      tree->name[len + 1] = '\0';
+    }
     (void) strcat( tree->name, de_ptr->name );
     tree->file = de_ptr->file;
     for( fe_ptr=tree->file; fe_ptr; fe_ptr=fe_ptr->next )
@@ -502,7 +513,7 @@ std::string MakeExtractCommandLine(
         COMMAND_LINE_LENGTH,
         "(TF=/tmp/ytree.$$; mkdir $TF; rpm2cpio '%s' | (cd $TF; cpio --no-absolute-filenames -i -d '%s'); cat \"$TF/%s\"; cd /tmp; rm -rf $TF; exit 0) %s",
 		    path.c_str(),
-        !file.empty() && file[0] == FILE_SEPARATOR_CHAR ? file.substr(1).c_str() : file.c_str(),
+        !file.empty() && file[0] == std::filesystem::path::preferred_separator ? file.substr(1).c_str() : file.c_str(),
         file.c_str(),
         cmd.c_str()
 		  );

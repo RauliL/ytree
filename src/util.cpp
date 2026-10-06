@@ -59,13 +59,17 @@ std::string GetPath(const DirEntry* dir_entry)
 
   for (auto de_ptr = dir_entry; de_ptr; de_ptr = de_ptr->up_tree)
   {
-    if (std::strcmp(de_ptr->name, FILE_SEPARATOR_STRING))
+    const auto is_root =
+      de_ptr->name[0] == std::filesystem::path::preferred_separator &&
+      de_ptr->name[1] == '\0';
+
+    if (!is_root)
     {
       result.insert(0, de_ptr->name);
     }
     if (de_ptr->up_tree)
     {
-      result.insert(0, FILE_SEPARATOR_STRING);
+      result.insert(result.begin(), std::filesystem::path::preferred_separator);
     }
   }
 
@@ -88,7 +92,7 @@ std::string GetRealFileNamePath(const FileEntry* file_entry)
   {
     const auto sym_name = &file_entry->name[std::strlen(file_entry->name) + 1];
 
-    if (*sym_name == FILE_SEPARATOR_CHAR)
+    if (*sym_name == std::filesystem::path::preferred_separator)
     {
       return sym_name;
     }
@@ -130,7 +134,7 @@ int GetDirEntry(DirEntry *tree,
     return -1;
   }
 
-  if (*dir_path != FILE_SEPARATOR_CHAR &&
+  if (*dir_path != std::filesystem::path::preferred_separator &&
       chdir(GetPath(current_dir_entry).c_str()))
   {
     Error("chdir() failed");
@@ -146,7 +150,7 @@ int GetDirEntry(DirEntry *tree,
     return( -3 );
   }
 
-  if (*dir_path != FILE_SEPARATOR_CHAR)
+  if (*dir_path != std::filesystem::path::preferred_separator)
   {
     if (const auto cwd = Getcwd())
     {
@@ -165,15 +169,21 @@ int GetDirEntry(DirEntry *tree,
   }
 
   n = strlen( tree->name );
-  if( !strcmp(tree->name, FILE_SEPARATOR_STRING) ||
+  const char preferred_separator_str[]{
+    std::filesystem::path::preferred_separator, '\0'};
+  const auto tree_is_root =
+    tree->name[0] == std::filesystem::path::preferred_separator &&
+    tree->name[1] == '\0';
+
+  if( tree_is_root ||
       (!strncmp( tree->name, dest_path, n )     &&
-        ( dest_path[n] == FILE_SEPARATOR_CHAR || dest_path[n] == '\0' ) ) )
+        ( dest_path[n] == std::filesystem::path::preferred_separator || dest_path[n] == '\0' ) ) )
   {
     /* Pfad befindet sich im (Sub)-Tree */
     /*----------------------------------*/
 
     de_ptr = tree;
-    token = Strtok_r( &dest_path[n], FILE_SEPARATOR_STRING, &old );
+    token = Strtok_r( &dest_path[n], preferred_separator_str, &old );
     while( token )
     {
       for( sde_ptr = de_ptr->sub_tree; sde_ptr; sde_ptr = sde_ptr->next )
@@ -194,7 +204,7 @@ int GetDirEntry(DirEntry *tree,
 #endif
 	return( -3 );
       }
-      token = Strtok_r( nullptr, FILE_SEPARATOR_STRING, &old );
+      token = Strtok_r( nullptr, preferred_separator_str, &old );
     }
     *dir_entry = de_ptr;
   }
@@ -533,7 +543,7 @@ char *FormFilename(char *dest, char *src, unsigned int max_len)
   else
   {
     for(i=0; i < (int) max_len - 4; i++)
-      if( src[l - i] == FILE_SEPARATOR_CHAR || src[l - i] == '\\' )
+      if( src[l - i] == std::filesystem::path::preferred_separator || src[l - i] == '\\' )
         begin = l - i;
     (void) strcpy( dest, "/..." );
     return( strcat(dest, &src[begin] ) );
@@ -592,7 +602,7 @@ void Fnsplit(char *path, char *dir, char *name)
 
   while( *path == ' ' || *path == '\t' ) path++;
 
-  while( strchr(path, FILE_SEPARATOR_CHAR ) || strchr(path, '\\') )
+  while( strchr(path, std::filesystem::path::preferred_separator ) || strchr(path, '\\') )
     *(dir++) = *(path++);
 
   *dir = '\0';

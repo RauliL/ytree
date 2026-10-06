@@ -4,13 +4,6 @@
 
 #include <peelo/xdg.hpp>
 
-#if defined(_WIN32)
-const char* FILE_SEPARATOR_STRING = "\\";
-#else
-const char* FILE_SEPARATOR_STRING = "/";
-#endif
-const char FILE_SEPARATOR_CHAR = FILE_SEPARATOR_STRING[0];
-
 std::optional<std::string> GetHomePath()
 {
   if (const auto home = peelo::xdg::home_dir())

@@ -349,9 +349,6 @@ struct SortSpec
 
 #define CLOCK_INTERVAL	   1
 
-extern const char* FILE_SEPARATOR_STRING;
-extern const char FILE_SEPARATOR_CHAR;
-
 #define ERR_TO_NULL           " 2> /dev/null"
 #define ERR_TO_STDOUT         " 2>&1 "
 

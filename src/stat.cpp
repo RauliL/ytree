@@ -126,15 +126,14 @@ void DisplayDiskTagged(void)
 void DisplayDirParameter(DirEntry *dir_entry)
 {
   const auto path = GetPath(dir_entry);
-  char *p, *f;
+  auto p = std::strrchr(
+    dir_entry->name,
+    std::filesystem::path::preferred_separator
+  );
+  auto f = p ? p + 1 : dir_entry->name;
   char format[32];
   char buffer[PATH_LENGTH + 1];
   char auxbuff[PATH_LENGTH + 1];
-
-  p = strrchr( dir_entry->name, FILE_SEPARATOR_CHAR );
-
-  if( p == nullptr ) f = dir_entry->name;
-  else            f = p + 1;
 
   std::snprintf(format, sizeof(format), "%%-%ds", COLS - 10);
   std::strcpy(statistic.path, path.c_str());

@@ -31,7 +31,8 @@ int CopyFile(Statistic *statistic_ptr,
 
   result = -1;
 
-  if (std::strcmp(to_dir_path, FILE_SEPARATOR_STRING))
+  if (to_dir_path[0] != std::filesystem::path::preferred_separator ||
+      to_dir_path[1] != '\0')
   {
     /* not ROOT */
     /*----------*/
@@ -70,7 +71,8 @@ int CopyFile(Statistic *statistic_ptr,
   {
     std::error_code ec;
     const auto dir_path = to_fs_path.empty()
-      ? std::filesystem::path(FILE_SEPARATOR_STRING)
+      ? std::filesystem::path(
+          std::string_view(&std::filesystem::path::preferred_separator, 1))
       : to_fs_path;
 
     if (!std::filesystem::is_directory(dir_path, ec) &&
@@ -105,7 +107,7 @@ int CopyFile(Statistic *statistic_ptr,
   }
   if (to_fs_path.empty())
   {
-    to_fs_path = FILE_SEPARATOR_STRING;
+    to_fs_path = std::string_view(&std::filesystem::path::preferred_separator, 1);
   }
   to_fs_path /= to_file;
   to_path = to_fs_path.string();
