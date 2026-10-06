@@ -1,37 +1,40 @@
-# ytree
+# Rauli's ytree fork
 
-ytree is a [DOS-XTREE(tm)](https://en.wikipedia.org/wiki/XTree) similar file
-manager.
+This is my personal fork of [YTree], which is an open source clone of [XTree]
+file manager for *nix systems originally created by Werner Bregulla.
 
-## Author
+[YTree]: https://www.han.de/~werner/ytree.html
+[XTree]: https://en.wikipedia.org/wiki/XTree
 
-Werner Bregulla eMail: werner@frolix.han.de
+New features include:
 
-Fork by Rauli Laine
+- Cleaned up [C++20] codebase. (Work in progress.)
+- Mouse support.
+- [TOML] configuration file.
+- [Gruvbox] colorscheme.
 
-## Platforms
-
-Any kind of POSIX compatible system I guess.
+[C++20]: https://fi.wikipedia.org/wiki/C++20
+[TOML]: https://en.wikipedia.org/wiki/TOML
+[Gruvbox]: https://github.com/morhetz/gruvbox
 
 ## Building
 
 Requires a C++20 compiler, CMake 3.14+, and ncurses.
 
-In most instances, it should be sufficient to
+In most instances, it should be sufficient to:
 
-```sh
-$ mkdir build
-$ cd build
-$ cmake ..
-$ build
-$ sudo make install
-$ ytree
+```shell
+git clone https://github.com/RauliL/ytree.git
+cd ytree
+cmake -S . -B build
+cmake --build build
+sudo cmake --install build
 ```
 
-For customizing ytree edit ytree.toml and copy it to
+For customizing ytree edit `ytree.toml` and copy it to
 `$XDG_CONFIG_HOME/ytree/config.toml` (typically `~/.config/ytree/config.toml`).
 For using the "QuitTo" feature you have to add a bash wrapper to
-your ~/.bashrc. See the man page for details.
+your `~/.bashrc`. See the man page for details.
 
 ## Copyright
 
