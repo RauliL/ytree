@@ -32,6 +32,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+      - name: Install dependencies
+        run: |
+          brew install ncurses
+          # Homebrew ncurses is keg-only; expose it to CMake's FindCurses.
+          echo "CMAKE_PREFIX_PATH=$(brew --prefix ncurses)" >> "$GITHUB_ENV"
       - name: Cache FetchContent dependencies
         uses: actions/cache@v4
         with:
