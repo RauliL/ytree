@@ -17,12 +17,11 @@ int CopyFile(Statistic *statistic_ptr,
 {
   long long file_size;
   const auto from_path = GetRealFileNamePath(fe_ptr);
-  const auto from_dir = GetPath(fe_ptr->dir_entry);
+  const auto from_dir = GetPath(fe_ptr->Dir().get());
   std::filesystem::path to_fs_path;
   std::string to_path;
   char        buffer[20];
   FileEntry   *dest_file_entry;
-  FileEntry   *fen_ptr;
   struct stat stat_struct;
   int         term;
   int         result;
@@ -41,7 +40,7 @@ int CopyFile(Statistic *statistic_ptr,
   }
   if (path_copy)
   {
-    const auto path = std::filesystem::path(GetPath(fe_ptr->dir_entry));
+    const auto path = std::filesystem::path(GetPath(fe_ptr->Dir().get()));
 
     /* Create destination folder (if neccessary) */
     /*-------------------------------------------*/
@@ -61,7 +60,7 @@ int CopyFile(Statistic *statistic_ptr,
     }
 
     to_path = to_fs_path.string();
-    if (MakePath(statistic_ptr->tree, to_path.data(), &dest_dir_entry))
+    if (MakePath(statistic_ptr->tree, to_path, &dest_dir_entry))
     {
       FormatMessage("Can't create path*\"{}\"*{}", to_path.c_str(), std::strerror(errno));
 
@@ -88,7 +87,7 @@ int CopyFile(Statistic *statistic_ptr,
           to_fs_path = std::filesystem::path(from_dir) / to_fs_path;
         }
         to_path = to_fs_path.string();
-        if (MakePath(statistic_ptr->tree, to_path.data(), &dest_dir_entry))
+        if (MakePath(statistic_ptr->tree, to_path, &dest_dir_entry))
         {
           FormatMessage("Can't create path*\"{}\"*{}", to_path.c_str(), std::strerror(errno));
 
@@ -193,22 +192,12 @@ int CopyFile(Statistic *statistic_ptr,
 
       /* File eintragen */
       /*----------------*/
-      fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + std::strlen(to_file));
-
-      (void) strcpy( fen_ptr->name, to_file );
-
-      (void) memcpy( &fen_ptr->stat_struct,
-		     &stat_struct,
-		     sizeof( stat_struct )
-		   );
-
-      fen_ptr->dir_entry   = dest_dir_entry;
-      fen_ptr->tagged      = false;
+      auto fen_ptr = std::make_shared<FileEntry>();
+      fen_ptr->name = to_file;
+      fen_ptr->stat_struct = stat_struct;
+      fen_ptr->dir_entry   = dest_dir_entry->weak_from_this();
       fen_ptr->matching    = Match( fen_ptr->name );
-      fen_ptr->next        = dest_dir_entry->file;
-      fen_ptr->prev        = nullptr;
-      if( dest_dir_entry->file ) dest_dir_entry->file->prev = fen_ptr;
-      dest_dir_entry->file = fen_ptr;
+      dest_dir_entry->files.insert( dest_dir_entry->files.begin(), fen_ptr );
     }
 
     (void) GetAvailBytes( &statistic_ptr->disk_space );

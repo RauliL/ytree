@@ -6,12 +6,8 @@
 static bool RenameDirEntry(const std::string&, const std::string&);
 static bool RenameFileEntry(const std::string&, const std::string&);
 
-int RenameDirectory(DirEntry *de_ptr, char *new_name)
+int RenameDirectory(DirEntry *de_ptr, const std::string& new_name)
 {
-  DirEntry    *den_ptr;
-  DirEntry    *sde_ptr;
-  DirEntry    *ude_ptr;
-  FileEntry   *fe_ptr;
   const auto from_path = GetPath(de_ptr);
   const std::filesystem::path from_fs_path(from_path);
   std::string to_path;
@@ -43,48 +39,13 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
     /* Rename erfolgreich */
     /*--------------------*/
     StatOrAbort(to_path, stat_struct);
-    den_ptr = MallocOrAbort<DirEntry>(sizeof(DirEntry) + std::strlen(new_name));
 
-    (void) memcpy( den_ptr, de_ptr, sizeof( DirEntry ) );
-
-    (void) strcpy( den_ptr->name, new_name );
-
-    (void) memcpy( &den_ptr->stat_struct,
-		   &stat_struct,
-		   sizeof( stat_struct )
-		 );
-
-    /* Struktur einklinken */
-    /*---------------------*/
-
-    if( den_ptr->prev ) den_ptr->prev->next = den_ptr;
-    if( den_ptr->next ) den_ptr->next->prev = den_ptr;
-
-    /* Subtree */
-    /*---------*/
-
-    for( sde_ptr=den_ptr->sub_tree; sde_ptr; sde_ptr = sde_ptr->next )
-      sde_ptr->up_tree = den_ptr;
-
-    /* Files */
-    /*-------*/
-
-    for( fe_ptr=den_ptr->file; fe_ptr; fe_ptr=fe_ptr->next )
-      fe_ptr->dir_entry = den_ptr;
-
-    /* Uptree */
-    /*--------*/
-
-    for( ude_ptr=den_ptr->up_tree; ude_ptr; ude_ptr = ude_ptr->next )
-      if( ude_ptr->sub_tree == de_ptr ) ude_ptr->sub_tree = den_ptr;
-
-    /* Alte Struktur freigeben */
-    /*-------------------------*/
-
-    free( de_ptr );
-
-    /* Achtung: de_ptr ist ab jetzt ungueltig !!! */
-    /*--------------------------------------------*/
+    /* The entry is owned by shared_ptr and only holds weak back-references,
+     * so it can be renamed in place: parent, children, files, statistic.tree
+     * and disk_statistic.tree all stay valid.
+     */
+    de_ptr->name = new_name;
+    de_ptr->stat_struct = stat_struct;
 
     result = 0;
   }
@@ -101,13 +62,12 @@ FNC_XIT:
 
 
 
-int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
+int RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_fe_ptr )
 {
-  FileEntry   *fen_ptr;
-  const auto de_ptr = fe_ptr->dir_entry;
+  const auto de_ptr = fe_ptr->Dir();
   const auto from_path = GetFileNamePath(fe_ptr);
   const auto to_path =
-    (std::filesystem::path(GetPath(de_ptr)) / new_name).string();
+    (std::filesystem::path(GetPath(de_ptr.get())) / new_name).string();
   struct stat stat_struct;
   int         result;
 
@@ -127,35 +87,13 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
     /* Rename erfolgreich */
     /*--------------------*/
     StatOrAbort(to_path, stat_struct);
-    fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + std::strlen(new_name));
 
-    (void) memcpy( fen_ptr, fe_ptr, sizeof( FileEntry ) );
-
-    (void) strcpy( fen_ptr->name, new_name );
-
-    (void) memcpy( &fen_ptr->stat_struct,
-		   &stat_struct,
-		   sizeof( stat_struct )
-		 );
-
-    /* Struktur einklinken */
-    /*---------------------*/
-
-    if( fen_ptr->prev ) fen_ptr->prev->next = fen_ptr;
-    if( fen_ptr->next ) fen_ptr->next->prev = fen_ptr;
-    if( fen_ptr->dir_entry->file == fe_ptr ) fen_ptr->dir_entry->file = fen_ptr;
-
-    /* Alte Struktur freigeben */
-    /*-------------------------*/
-
-    free( fe_ptr );
-
-    /* Achtung: fe_ptr ist ab jetzt ungueltig !!! */
-    /*--------------------------------------------*/
+    /* Rename in place; see RenameDirectory(). */
+    fe_ptr->name = new_name;
+    fe_ptr->stat_struct = stat_struct;
 
     result = 0;
 
-    *new_fe_ptr = fen_ptr;
   }
 
   move( LINES - 2, 1 ); clrtoeol();
@@ -167,7 +105,7 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
 
 
 
-int GetRenameParameter(char *old_name, char *new_name)
+int GetRenameParameter(const std::string* old_name, char *new_name)
 {
   int l;
 
@@ -190,7 +128,7 @@ int GetRenameParameter(char *old_name, char *new_name)
     l = 13;
   }
 
-  *std::format_to(new_name, "{}", (old_name) ? old_name : "*") = '\0';
+  *std::format_to(new_name, "{}", old_name ? *old_name : "*") = '\0';
 
 
   if (InputString(new_name, LINES - 2, l, 0, COLS - l - 1) != CR)
@@ -201,7 +139,7 @@ int GetRenameParameter(char *old_name, char *new_name)
   if(!strlen(new_name))
     return( -1 );
 
-  if (old_name && !std::strcmp(old_name, new_name))
+  if (old_name && *old_name == new_name)
   {
     Message("Can't rename: New name same as old name.");
 

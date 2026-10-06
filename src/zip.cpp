@@ -18,14 +18,14 @@ static int GetStatFromZIP(char *zip_line, char *name, struct stat *stat);
 /* Dateibaum aus ZIP-Listing lesen */
 /*---------------------------------*/
 
-int ReadTreeFromZIP(DirEntry *dir_entry, FILE *f)
+int ReadTreeFromZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
   char zip_line[ZIP_LINE_LENGTH + 1];
   char path_name[PATH_LENGTH +1];
   struct stat stat;
   bool dir_flag = false;
 
-  *dir_entry->name = '\0';
+  dir_entry->name.clear();
 
   while( fgets( zip_line, ZIP_LINE_LENGTH, f ) != nullptr )
   {

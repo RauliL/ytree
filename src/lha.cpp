@@ -19,14 +19,14 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat);
 /* Dateibaum aus LHA-Listing lesen */
 /*---------------------------------*/
 
-int ReadTreeFromLHA(DirEntry *dir_entry, FILE *f)
+int ReadTreeFromLHA(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
   char lha_line[LHA_LINE_LENGTH + 1];
   char path_name[PATH_LENGTH +1];
   struct stat stat;
   bool   dir_flag = false;
 
-  *dir_entry->name = '\0';
+  dir_entry->name.clear();
 
   while( fgets( lha_line, LHA_LINE_LENGTH, f ) != nullptr )
   {

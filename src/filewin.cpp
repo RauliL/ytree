@@ -18,12 +18,36 @@ static int  my_x_step;
 static int  hide_left;
 static int  hide_right;
 
-static std::vector<FileEntry*> file_entry_list;
+/* Snapshot of the files shown in the file window. Shares ownership so that
+ * entries removed from the tree stay valid until the list is rebuilt. */
+static std::vector<std::shared_ptr<FileEntry>> file_entry_list;
 static unsigned      max_userview_len;
 static std::size_t max_filename_len;
 static std::size_t max_linkname_len;
 static std::size_t global_max_filename_len;
 static std::size_t global_max_linkname_len;
+
+/* Find the owning shared_ptr of a (non-owning) FileEntry in its directory. */
+static std::shared_ptr<FileEntry> FindSharedFileEntry(const FileEntry* fe_ptr)
+{
+  if (!fe_ptr)
+  {
+    return nullptr;
+  }
+
+  if (const auto dir = fe_ptr->Dir())
+  {
+    for (const auto& file : dir->files)
+    {
+      if (file.get() == fe_ptr)
+      {
+        return file;
+      }
+    }
+  }
+
+  return nullptr;
+}
 
 static void ReadFileList(const DirEntry* dir_entry);
 static void SortFileEntryList();
@@ -127,7 +151,7 @@ static void ReadTaggedList(const DirEntry* dir_entry)
   max_filename_len = 0;
   max_linkname_len = 0;
 
-  for (auto fe_ptr = dir_entry->file; fe_ptr; fe_ptr = fe_ptr->next)
+  for (const auto& fe_ptr : dir_entry->files)
   {
     if (fe_ptr->matching && fe_ptr->tagged)
     {
@@ -137,7 +161,7 @@ static void ReadTaggedList(const DirEntry* dir_entry)
       if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
       {
 	      const auto linkname_len = static_cast<std::size_t>(
-          StrVisualLength(&fe_ptr->name[std::strlen(fe_ptr->name) + 1])
+          StrVisualLength(fe_ptr->symlink_target)
         );
 
 	      max_linkname_len = std::max(max_linkname_len, linkname_len);
@@ -149,16 +173,13 @@ static void ReadTaggedList(const DirEntry* dir_entry)
 
 static void ReadTaggedFileList(const DirEntry* dir_entry)
 {
-  for (auto de_ptr = dir_entry; de_ptr; de_ptr = de_ptr->next)
+  for (const auto& child : dir_entry->children)
   {
-    if (de_ptr->sub_tree)
-    {
-      ReadTaggedFileList(de_ptr->sub_tree);
-    }
-    ReadTaggedList(de_ptr);
-    global_max_filename_len = std::max(global_max_filename_len, max_filename_len);
-    global_max_linkname_len = std::max(global_max_linkname_len, max_linkname_len);
+    ReadTaggedFileList(child.get());
   }
+  ReadTaggedList(dir_entry);
+  global_max_filename_len = std::max(global_max_filename_len, max_filename_len);
+  global_max_linkname_len = std::max(global_max_linkname_len, max_linkname_len);
   max_filename_len = global_max_filename_len;
   max_linkname_len = global_max_linkname_len;
 }
@@ -175,13 +196,13 @@ static void BuildFileEntryList(DirEntry *dir_entry)
   }  else if (!dir_entry->tagged_flag)  {
     global_max_filename_len = 0;
     global_max_linkname_len = 0;
-    ReadGlobalFileList( statistic.tree );
+    ReadGlobalFileList( statistic.tree.get() );
     SortFileEntryList();
     SetFileMode( file_mode ); /* recalc */
   } else  {
     global_max_filename_len = 0;
     global_max_linkname_len = 0;
-    ReadTaggedFileList( statistic.tree );
+    ReadTaggedFileList( statistic.tree.get() );
     SortFileEntryList();
     SetFileMode( file_mode ); /* recalc */
   }
@@ -192,7 +213,7 @@ static void ReadFileList(const DirEntry* dir_entry)
   max_filename_len = 0;
   max_linkname_len = 0;
 
-  for (auto fe_ptr = dir_entry->file; fe_ptr; fe_ptr = fe_ptr->next)
+  for (const auto& fe_ptr : dir_entry->files)
   {
     if (fe_ptr->matching)
     {
@@ -202,7 +223,7 @@ static void ReadFileList(const DirEntry* dir_entry)
       if (S_ISLNK(fe_ptr->stat_struct.st_mode))
       {
 	      const auto linkname_len = static_cast<std::size_t>(
-          StrVisualLength(&fe_ptr->name[std::strlen(fe_ptr->name) + 1])
+          StrVisualLength(fe_ptr->symlink_target)
         );
 
 	      max_linkname_len = std::max(max_linkname_len, linkname_len);
@@ -214,16 +235,13 @@ static void ReadFileList(const DirEntry* dir_entry)
 
 static void ReadGlobalFileList(const DirEntry* dir_entry)
 {
-  for (auto de_ptr = dir_entry; de_ptr; de_ptr = de_ptr->next)
+  for (const auto& child : dir_entry->children)
   {
-    if (de_ptr->sub_tree)
-    {
-      ReadGlobalFileList(de_ptr->sub_tree);
-    }
-    ReadFileList(de_ptr);
-    global_max_filename_len = std::max(global_max_filename_len, max_filename_len);
-    global_max_linkname_len = std::max(global_max_linkname_len, max_linkname_len);
+    ReadGlobalFileList(child.get());
   }
+  ReadFileList(dir_entry);
+  global_max_filename_len = std::max(global_max_filename_len, max_filename_len);
+  global_max_linkname_len = std::max(global_max_linkname_len, max_linkname_len);
   max_filename_len = global_max_filename_len;
   max_linkname_len = global_max_linkname_len;
 }
@@ -250,7 +268,10 @@ static void SortFileEntryList()
   std::sort(
     file_entry_list.begin(),
     file_entry_list.end(),
-    compare
+    [&compare](const std::shared_ptr<FileEntry>& a, const std::shared_ptr<FileEntry>& b)
+    {
+      return compare(a.get(), b.get());
+    }
   );
 }
 
@@ -258,14 +279,14 @@ static bool SortByName(const FileEntry* e1, const FileEntry* e2)
 {
   if (do_case)
      if (order)
-        return std::strcmp(e1->name, e2->name) < 0;
+        return e1->name < e2->name;
      else
-        return -std::strcmp(e1->name, e2->name) < 0;
+        return e1->name > e2->name;
   else
      if (order)
-        return strcasecmp(e1->name, e2->name) < 0;
+        return strcasecmp(e1->name.c_str(), e2->name.c_str()) < 0;
      else
-        return -strcasecmp(e1->name, e2->name) < 0;
+        return strcasecmp(e1->name.c_str(), e2->name.c_str()) > 0;
 }
 
 static bool SortByExtension(const FileEntry* e1, const FileEntry* e2)
@@ -419,9 +440,7 @@ static void ChangeFileEntry()
     {
       max_linkname_len = std::max(
         max_linkname_len,
-        static_cast<std::size_t>(
-          StrVisualLength(&entry->name[std::strlen(entry->name) + 1])
-        )
+        static_cast<std::size_t>(StrVisualLength(entry->symlink_target))
       );
     }
   }
@@ -477,10 +496,10 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
     line_buffer.resize(COLS + PATH_LENGTH);
   }
 
-  fe_ptr = file_entry_list[entry_no];
+  fe_ptr = file_entry_list[entry_no].get();
 
   if( fe_ptr && S_ISLNK( fe_ptr->stat_struct.st_mode ) )
-    sym_link_name = &fe_ptr->name[strlen(fe_ptr->name)+1];
+    sym_link_name = fe_ptr->symlink_target.c_str();
   else
     sym_link_name = "";
 
@@ -1206,7 +1225,7 @@ int HandleFileWindow(DirEntry *dir_entry)
     }
     else
     {
-      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
+      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
 
       if( dir_entry->global_flag )
         DisplayGlobalFileParameter( fe_ptr );
@@ -1302,7 +1321,7 @@ int HandleFileWindow(DirEntry *dir_entry)
    }
 
    if (mode == Mode::USER_MODE) { /* FileUserMode returns (possibly remapped) ch, or -1 if it handles ch */
-      ch = FileUserMode(file_entry_list[dir_entry->start_file + dir_entry->cursor_pos], ch);
+      ch = FileUserMode(file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get(), ch);
    }
 
    switch( ch )
@@ -1386,7 +1405,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'A' :
-      case 'a' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
+      case 'a' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
 
 	              need_dsp_help = true;
 
@@ -1441,7 +1460,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'O' :
-      case 'o' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
+      case 'o' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
 
 		      need_dsp_help = true;
 
@@ -1483,7 +1502,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'G' :
-      case 'g' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
+      case 'g' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
 
 		      need_dsp_help = true;
 
@@ -1526,8 +1545,8 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'T' :
-      case 't' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
-		      de_ptr = fe_ptr->dir_entry;
+      case 't' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
+		      de_ptr = fe_ptr->Dir().get();
 
 		      if( !fe_ptr->tagged )
 		      {
@@ -1552,8 +1571,8 @@ int HandleFileWindow(DirEntry *dir_entry)
 
                       break;
       case 'U' :
-      case 'u' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
-		      de_ptr = fe_ptr->dir_entry;
+      case 'u' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
+		      de_ptr = fe_ptr->Dir().get();
                       if( fe_ptr->tagged )
 		      {
 			fe_ptr->tagged = false;
@@ -1606,8 +1625,8 @@ int HandleFileWindow(DirEntry *dir_entry)
       case 'T' & 0x1F :
                       for(i=0; i < (int)file_entry_list.size(); i++)
                       {
-			fe_ptr = file_entry_list[i];
-			de_ptr = fe_ptr->dir_entry;
+			fe_ptr = file_entry_list[i].get();
+			de_ptr = fe_ptr->Dir().get();
 
 			if( !fe_ptr->tagged )
 			{
@@ -1637,8 +1656,8 @@ int HandleFileWindow(DirEntry *dir_entry)
       case 'U' & 0x1F :
                       for(i=0; i < (int)file_entry_list.size(); i++)
                       {
-			fe_ptr = file_entry_list[i];
-			de_ptr = fe_ptr->dir_entry;
+			fe_ptr = file_entry_list[i].get();
+			de_ptr = fe_ptr->Dir().get();
 
 			if( fe_ptr->tagged )
 			{
@@ -1670,8 +1689,8 @@ int HandleFileWindow(DirEntry *dir_entry)
       case 't' | 0x80 :
                       for(i=dir_entry->start_file + dir_entry->cursor_pos; i < (int)file_entry_list.size(); i++)
                       {
-			fe_ptr = file_entry_list[i];
-			de_ptr = fe_ptr->dir_entry;
+			fe_ptr = file_entry_list[i].get();
+			de_ptr = fe_ptr->Dir().get();
 
 			if( !fe_ptr->tagged )
 			{
@@ -1702,8 +1721,8 @@ int HandleFileWindow(DirEntry *dir_entry)
       case 'u' | 0x80 :
                       for(i=dir_entry->start_file + dir_entry->cursor_pos; i < (int)file_entry_list.size(); i++)
                       {
-			fe_ptr = file_entry_list[i];
-			de_ptr = fe_ptr->dir_entry;
+			fe_ptr = file_entry_list[i].get();
+			de_ptr = fe_ptr->Dir().get();
 
 			if( fe_ptr->tagged )
 			{
@@ -1731,39 +1750,39 @@ int HandleFileWindow(DirEntry *dir_entry)
 
       case 'V':
       case 'v':
-        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
-		    de_ptr = fe_ptr->dir_entry;
+        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
+		    de_ptr = fe_ptr->Dir().get();
         View(dir_entry, GetRealFileNamePath(fe_ptr));
         need_dsp_help = true;
         break;
 
       case 'H':
       case 'h':
-        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
-		    de_ptr = fe_ptr->dir_entry;
+        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
+		    de_ptr = fe_ptr->Dir().get();
         ViewHex(GetRealFileNamePath(fe_ptr));
         need_dsp_help = true;
         break;
 
       case 'E':
       case 'e':
-        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
-		    de_ptr = fe_ptr->dir_entry;
+        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
+		    de_ptr = fe_ptr->Dir().get();
         Edit(de_ptr, GetFileNamePath(fe_ptr));
 		    break;
 
       case 'Y' :
       case 'y' :
       case 'C' :
-      case 'c' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
-		      de_ptr = fe_ptr->dir_entry;
+      case 'c' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
+		      de_ptr = fe_ptr->Dir().get();
 
 		      path_copy = false;
 		      if( ch == 'y' || ch == 'Y' ) path_copy = true;
 
 		      need_dsp_help = true;
 
-		      if( GetCopyParameter( fe_ptr->name, path_copy, to_file, to_dir ) )
+		      if( GetCopyParameter( fe_ptr->name.c_str(), path_copy, to_file, to_dir ) )
                       {
 			beep();
 			break;
@@ -1994,12 +2013,12 @@ int HandleFileWindow(DirEntry *dir_entry)
 			break;
 		      }
 
-		      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
-		      de_ptr = fe_ptr->dir_entry;
+		      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
+		      de_ptr = fe_ptr->Dir().get();
 
 		      need_dsp_help = true;
 
-		      if( GetMoveParameter( fe_ptr->name, to_file, to_dir ) )
+		      if( GetMoveParameter( fe_ptr->name.c_str(), to_file, to_dir ) )
                       {
 			beep();
 			break;
@@ -2135,8 +2154,8 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 		      if( term != 'Y' ) break;
 
-		      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
-		      de_ptr = fe_ptr->dir_entry;
+		      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
+		      de_ptr = fe_ptr->Dir().get();
 
 		      if( !DeleteFile( fe_ptr ) )
 		      {
@@ -2204,10 +2223,10 @@ int HandleFileWindow(DirEntry *dir_entry)
 			break;
 		      }
 
-		      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
-		      de_ptr = fe_ptr->dir_entry;
+		      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
+		      de_ptr = fe_ptr->Dir().get();
 
-		      if( !GetRenameParameter( fe_ptr->name, new_name ) )
+		      if( !GetRenameParameter( &fe_ptr->name, new_name ) )
 		      {
 			if( !RenameFile( fe_ptr, new_name, &new_fe_ptr ) )
 		        {
@@ -2314,7 +2333,7 @@ int HandleFileWindow(DirEntry *dir_entry)
       case 'l':
 #endif /* VI_KEYS */
       case 'L':
-        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
+        fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
         if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
         {
           const auto path = GetFileNamePath(fe_ptr);
@@ -2351,8 +2370,8 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'P' :
-      case 'p' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
-		      de_ptr = fe_ptr->dir_entry;
+      case 'p' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
+		      de_ptr = fe_ptr->Dir().get();
 		      (void) Pipe( de_ptr, fe_ptr );
 		      need_dsp_help = true;
 		      break;
@@ -2413,8 +2432,8 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'X':
-      case 'x' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
-		      de_ptr = fe_ptr->dir_entry;
+      case 'x' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
+		      de_ptr = fe_ptr->Dir().get();
 		      (void) Execute( de_ptr, fe_ptr );
 		      need_dsp_help = true;
 		      break;
@@ -2497,8 +2516,8 @@ int HandleFileWindow(DirEntry *dir_entry)
 
       case 'Q' & 0x1F:
                       need_dsp_help = true;
-                      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
-                      de_ptr = fe_ptr->dir_entry;
+                      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
+                      de_ptr = fe_ptr->Dir().get();
                       QuitTo(de_ptr);
                       break;
 
@@ -2562,7 +2581,10 @@ static void WalkTaggedFiles(
 
   for( i=0; i < (int)file_entry_list.size() && result == 0; i++ )
   {
-    fe_ptr = file_entry_list[i];
+    /* Keep the entry alive while fkt() may remove it from the tree */
+    const auto fe_sp = file_entry_list[i];
+
+    fe_ptr = fe_sp.get();
 
     if( fe_ptr->tagged && fe_ptr->matching )
     {
@@ -2596,7 +2618,7 @@ static void WalkTaggedFiles(
 	start_file = std::max( 0, i - max_disp_files + 1 );
 	cursor_pos = i - start_file;
 
-        DisplayFiles( fe_ptr->dir_entry,
+        DisplayFiles( fe_ptr->Dir().get(),
 		      start_file,
 		      start_file + cursor_pos,
 		      start_x
@@ -2604,7 +2626,7 @@ static void WalkTaggedFiles(
 	maybe_change_x = false;
       }
 
-      if( fe_ptr->dir_entry->global_flag )
+      if( fe_ptr->Dir()->global_flag )
         DisplayGlobalFileParameter( fe_ptr );
       else
         DisplayFileParameter( fe_ptr );
@@ -2614,7 +2636,7 @@ static void WalkTaggedFiles(
       result = fkt( fe_ptr, walking_package );
       if( walking_package->new_fe_ptr != fe_ptr )
       {
-        file_entry_list[i] = walking_package->new_fe_ptr;
+        file_entry_list[i] = FindSharedFileEntry( walking_package->new_fe_ptr );
 	ChangeFileEntry();
         max_disp_files = window_height * max_column;
 	maybe_change_x = true;
@@ -2645,7 +2667,7 @@ static void SilentWalkTaggedFiles(
 
   for( i=0; i < (int)file_entry_list.size(); i++ )
   {
-    fe_ptr = file_entry_list[i];
+    fe_ptr = file_entry_list[i].get();
 
     if( fe_ptr->tagged && fe_ptr->matching )
     {
@@ -2682,7 +2704,7 @@ static void SilentTagWalkTaggedFiles(
 
   for( i=0; i < (int)file_entry_list.size(); i++ )
   {
-    fe_ptr = file_entry_list[i];
+    fe_ptr = file_entry_list[i].get();
 
     if( fe_ptr->tagged && fe_ptr->matching )
     {
@@ -2705,7 +2727,7 @@ static bool IsMatchingTaggedFiles(void)
 
   for( i=0; i < (int)file_entry_list.size(); i++)
   {
-    fe_ptr = file_entry_list[i];
+    fe_ptr = file_entry_list[i].get();
 
     if( fe_ptr->matching && fe_ptr->tagged )
       return( true );
@@ -2745,8 +2767,8 @@ static int DeleteTaggedFiles(int max_disp_files)
   {
     deleted = false;
 
-    fe_ptr = file_entry_list[i];
-    de_ptr = fe_ptr->dir_entry;
+    fe_ptr = file_entry_list[i].get();
+    de_ptr = fe_ptr->Dir().get();
 
     if( fe_ptr->tagged && fe_ptr->matching )
     {
@@ -2759,7 +2781,7 @@ static int DeleteTaggedFiles(int max_disp_files)
 		    start_x
 	          );
 
-      if( fe_ptr->dir_entry->global_flag )
+      if( fe_ptr->Dir()->global_flag )
         DisplayGlobalFileParameter( fe_ptr );
       else
         DisplayFileParameter( fe_ptr );
@@ -2877,8 +2899,8 @@ static void ListJump( DirEntry * dir_entry, const char *str )
 
     for( i=tmp2; i < static_cast<int>(file_entry_list.size()); i++ )
     {
-        fe_ptr = file_entry_list[i];
-	if(!strncasecmp(newStr.c_str(), fe_ptr->name, n+1))
+        fe_ptr = file_entry_list[i].get();
+	if(!strncasecmp(newStr.c_str(), fe_ptr->name.c_str(), n+1))
           break;
     }
 

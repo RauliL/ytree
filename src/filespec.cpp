@@ -22,7 +22,7 @@ int SetFileSpec(char *file_spec)
   statistic.disk_matching_files = 0L;
   statistic.disk_matching_bytes = 0L;
 
-  SetMatchingParam( statistic.tree );
+  SetMatchingParam( statistic.tree.get() );
 
   return( 0 );
 }
@@ -32,40 +32,32 @@ int SetFileSpec(char *file_spec)
 
 void SetMatchingParam(DirEntry *dir_entry)
 {
-  DirEntry  *de_ptr;
-  FileEntry *fe_ptr;
-  unsigned long  matching_files;
-  long long matching_bytes;
+  unsigned long matching_files = 0L;
+  long long matching_bytes = 0L;
 
-  for( de_ptr = dir_entry; de_ptr; de_ptr = de_ptr->next )
+  for( const auto& fe_ptr : dir_entry->files )
   {
-    matching_files = 0L;
-    matching_bytes = 0L;
-
-    for( fe_ptr = de_ptr->file; fe_ptr; fe_ptr = fe_ptr->next )
+    if( Match( fe_ptr->name ) )
     {
-      if( Match( fe_ptr->name ) )
-      {
-	matching_files++;
-	matching_bytes += fe_ptr->stat_struct.st_size;
-	fe_ptr->matching = true;
-      }
-      else
-      {
-	fe_ptr->matching = false;
-      }
+      matching_files++;
+      matching_bytes += fe_ptr->stat_struct.st_size;
+      fe_ptr->matching = true;
     }
-
-    de_ptr->matching_files = matching_files;
-    de_ptr->matching_bytes = matching_bytes;
-
-    statistic.disk_matching_files += matching_files;
-    statistic.disk_matching_bytes += matching_bytes;
-
-    if( de_ptr->sub_tree )
+    else
     {
-      SetMatchingParam( de_ptr->sub_tree );
+      fe_ptr->matching = false;
     }
+  }
+
+  dir_entry->matching_files = matching_files;
+  dir_entry->matching_bytes = matching_bytes;
+
+  statistic.disk_matching_files += matching_files;
+  statistic.disk_matching_bytes += matching_bytes;
+
+  for( const auto& child : dir_entry->children )
+  {
+    SetMatchingParam( child.get() );
   }
 }
 

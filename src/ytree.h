@@ -23,9 +23,12 @@
 #include <filesystem>
 #include <format>
 #include <memory>
+#include <new>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -438,47 +441,58 @@ extern void WbkgdSet(WINDOW *w, chtype c);
 
 struct DirEntry;
 
+/*
+ * Ownership model:
+ *  - Statistic::tree owns the root DirEntry.
+ *  - DirEntry::children / DirEntry::files own their entries (shared_ptr).
+ *  - DirEntry::parent and FileEntry::dir_entry are weak back-references
+ *    (no ownership, no reference cycles).
+ *  - Raw DirEntry* / FileEntry* in function signatures are short-lived,
+ *    non-owning observers obtained from a shared_ptr.
+ */
 struct FileEntry
 {
-  FileEntry* next;
-  FileEntry* prev;
-  DirEntry* dir_entry;
-  struct stat stat_struct;
-  bool tagged;
-  bool matching;
-  // Symlink name is std::strlen(name) + 1
-  char name[1];
+  std::weak_ptr<DirEntry> dir_entry; /* back-reference to owning directory */
+  struct stat stat_struct{};
+  bool tagged = false;
+  bool matching = false;
+  std::string name;
+  std::string symlink_target;
+
+  /* Owning directory, or null if it has expired. */
+  std::shared_ptr<DirEntry> Dir() const { return dir_entry.lock(); }
 };
 
-struct DirEntry
+struct DirEntry : std::enable_shared_from_this<DirEntry>
 {
-  FileEntry* file;
-  DirEntry* next;
-  DirEntry* prev;
-  DirEntry* sub_tree;
-  DirEntry* up_tree;
-  long long total_bytes;
-  long long matching_bytes;
-  long long tagged_bytes;
-  unsigned int       total_files;
-  unsigned int       matching_files;
-  unsigned int       tagged_files;
-  int                cursor_pos;
-  int                start_file;
-  struct   stat      stat_struct;
-  bool               access_denied;
-  bool               global_flag;
-  bool               tagged_flag;
-  bool               only_tagged;
-  bool               not_scanned;
-  bool               big_window;
-  bool               login_flag;
-  char               name[1];
+  std::vector<std::shared_ptr<FileEntry>> files;
+  std::vector<std::shared_ptr<DirEntry>> children;
+  std::weak_ptr<DirEntry> parent;
+  long long total_bytes = 0;
+  long long matching_bytes = 0;
+  long long tagged_bytes = 0;
+  unsigned int total_files = 0;
+  unsigned int matching_files = 0;
+  unsigned int tagged_files = 0;
+  int cursor_pos = 0;
+  int start_file = 0;
+  struct stat stat_struct{};
+  bool access_denied = false;
+  bool global_flag = false;
+  bool tagged_flag = false;
+  bool only_tagged = false;
+  bool not_scanned = false;
+  bool big_window = false;
+  bool login_flag = false;
+  std::string name;
+
+  /* Parent directory, or null for the root (or if it has expired). */
+  std::shared_ptr<DirEntry> Parent() const { return parent.lock(); }
 };
 
 struct Statistic
 {
-  DirEntry      *tree;
+  std::shared_ptr<DirEntry> tree;
   long long disk_space;
   long long disk_capacity;
   long long disk_total_files;
@@ -593,16 +607,16 @@ extern void DisplayDiskName(void);
 extern void DisplayFileParameter(FileEntry *file_entry);
 extern void DisplayGlobalFileParameter(FileEntry *file_entry);
 extern void RefreshWindow(WINDOW *win);
-int ReadTree(DirEntry* dir_entry, const std::string& path, int depth);
+int ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path, int depth);
 extern void UnReadTree(DirEntry *dir_entry);
-extern int  ReadTreeFromTAR(DirEntry *dir_entry, FILE *f);
-extern int  ReadTreeFromRPM(DirEntry *dir_entry, FILE *f);
-extern int  ReadTreeFromZOO(DirEntry *dir_entry, FILE *f);
-extern int  ReadTreeFromZIP(DirEntry *dir_entry, FILE *f);
-extern int  ReadTreeFromLHA(DirEntry *dir_entry, FILE *f);
-extern int  ReadTreeFromARC(DirEntry *dir_entry, FILE *f);
-extern int  ReadTreeFromRAR(DirEntry *dir_entry, FILE *f);
-extern int  GetDiskParameter(char *path,
+extern int  ReadTreeFromTAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
+extern int  ReadTreeFromRPM(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
+extern int  ReadTreeFromZOO(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
+extern int  ReadTreeFromZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
+extern int  ReadTreeFromLHA(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
+extern int  ReadTreeFromARC(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
+extern int  ReadTreeFromRAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
+extern int  GetDiskParameter(const std::string& path,
 			     char *volume_name,
 			     long long *avail_bytes,
 			     long long *capacity
@@ -671,7 +685,7 @@ extern int  MoveTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
 extern int  MoveFile(FileEntry *fe_ptr, bool confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, FileEntry **new_fe_ptr);
 extern int  InputChoise(const char *msg, const char *term);
 void Message(const std::string& msg);
-extern int  GetDirEntry(DirEntry *tree, DirEntry *current_dir_entry, char *dir_path, DirEntry **dir_entry, char *to_path);
+extern int  GetDirEntry(const std::shared_ptr<DirEntry>& tree, DirEntry *current_dir_entry, char *dir_path, DirEntry **dir_entry, char *to_path);
 extern int  GetFileEntry(DirEntry *de_ptr, char *file_name, FileEntry **file_entry);
 extern int  GetCopyParameter(const char *from_file, bool path_copy, char *to_file, char *to_dir);
 extern int  GetMoveParameter(const char *from_file, char *to_file, char *to_dir);
@@ -693,10 +707,10 @@ extern int  GetCommandLine(char *command_line);
 extern int  GetSearchCommandLine(char *command_line);
 extern int  DeleteFile(FileEntry *fe_ptr);
 extern int  RemoveFile(FileEntry *fe_ptr);
-extern int  RenameDirectory(DirEntry *de_ptr, char *new_name);
-extern int  RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr);
+extern int  RenameDirectory(DirEntry *de_ptr, const std::string& new_name);
+extern int  RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_fe_ptr);
 extern int  RenameTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
-extern int  GetRenameParameter(char *old_name, char *new_name);
+extern int  GetRenameParameter(const std::string* old_name, char *new_name);
 extern char *CTime(time_t f_time, char *buffer);
 extern int  LoginDisk(char *path);
 extern int  GetNewLoginPath(char *path);
@@ -705,8 +719,8 @@ void Print(WINDOW* win, int y, int x, const std::string& str, int color);
 extern void PrintOptions(WINDOW *,int, int, const char *);
 extern void PrintMenuOptions(WINDOW *,int, int, char *, int, int);
 extern char *FormFilename(char *dest, char *src, unsigned int max_len);
-extern char *CutFilename(char *dest, char *src, unsigned int max_len);
-char* CutPathname(char* dest, const std::string& src, std::size_t max_len);
+extern char *CutFilename(char *dest, const std::string& src, unsigned int max_len);
+std::string CutPathname(const std::string& src, std::size_t max_len);
 extern void   Fnsplit(char *path, char *dir, char *name);
 std::string MakeExtractCommandLine(
   const std::string& path,
@@ -715,22 +729,22 @@ std::string MakeExtractCommandLine(
 );
 extern int MakeDirectory(DirEntry *father_dir_entry);
 extern time_t Mktime(struct tm *tm);
-extern int TryInsertArchiveDirEntry(DirEntry *tree, char *dir, struct stat *stat);
-extern int InsertArchiveFileEntry(DirEntry *tree, char *path, struct stat *stat);
-extern int MinimizeArchiveTree(DirEntry *tree);
+extern int TryInsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *dir, struct stat *stat);
+extern int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, struct stat *stat);
+extern int MinimizeArchiveTree(const std::shared_ptr<DirEntry>& tree);
 extern void HitReturnToContinue(void);
 extern int  TermcapWgetch(WINDOW *win);
 extern void TermcapVidattr(int attr );
 extern void TermcapInitscr(void);
 extern void TermcapEndwin(void);
-extern int  BuildFilename( char *in_filename, char *pattern, char *out_filename);
+extern int  BuildFilename(const std::string& in_filename, const char *pattern, char *out_filename);
 extern int  ViKey( int ch );
 std::optional<CompressMethod> GetFileMethod(const std::string& filename);
 extern bool KeyPressed(void);
 extern bool EscapeKeyPressed(void);
 extern int  GetTapeDeviceName(void);
-extern int  MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry );
-extern int  MakeDirEntry( DirEntry *father_dir_entry, char *dir_name );
+extern int  MakePath( const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry );
+extern int  MakeDirEntry( DirEntry *father_dir_entry, const std::string& dir_name );
 extern void NormPath( const char *in_path, char *out_path );
 extern char *Strtok_r( char *str, const char *delim, char **old );
 int ReadProfile(const std::optional<std::string>& custom_path);
@@ -777,10 +791,10 @@ std::optional<std::filesystem::path> Getcwd();
 std::filesystem::path GetcwdOrDot();
 extern int  RefreshDirWindow();
 std::string StrLeft(const char* str, std::size_t count);
-std::string FitVisualWidth(const char* str, std::size_t width, bool left_justify);
+std::string FitVisualWidth(std::string_view str, std::size_t width, bool left_justify);
 const char* StrVisualIndex(const char* str, std::size_t index);
 void TruncateVisual(char* str, std::size_t max_len);
-extern int  StrVisualLength(const char *str);
+int StrVisualLength(std::string_view str);
 void WAttrAddStr(WINDOW* win, int attr, const std::string& str);
 void StatOrAbort(const std::string& path, struct stat& st);
 std::optional<std::string> GetHomePath();

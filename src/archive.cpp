@@ -14,9 +14,9 @@
 static int GetArchiveDirEntry(DirEntry *tree, char *path, DirEntry **dir_entry);
 
 
-static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
+static int InsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *path, struct stat *stat)
 {
-  DirEntry *df_ptr, *de_ptr, *ds_ptr;
+  DirEntry *df_ptr;
   char father_path[PATH_LENGTH + 1];
   char *p;
   char name[PATH_LENGTH + 1];
@@ -43,7 +43,7 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
 
   if( p == nullptr )
   {
-    df_ptr = tree;
+    df_ptr = tree.get();
     if( path[0] == std::filesystem::path::preferred_separator && path[1] == '\0' )
       *std::format_to(name, "{}", path) = '\0';
     else
@@ -53,7 +53,7 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
   {
     *std::format_to(name, "{}", ++p) = '\0';
     *p = '\0';
-    if( GetArchiveDirEntry( tree, father_path, &df_ptr ) )
+    if( GetArchiveDirEntry( tree.get(), father_path, &df_ptr ) )
     {
       FormatError("can't find subdir*{}", father_path);
 
@@ -61,11 +61,9 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
     }
   }
 
-  de_ptr = MallocOrAbort<DirEntry>(sizeof(DirEntry) + std::strlen(name));
-
-  (void) memset( (char *) de_ptr, 0, sizeof( DirEntry ) );
-  (void) strcpy( de_ptr->name, name );
-  (void) memcpy( (char *) &de_ptr->stat_struct, (char *) stat, sizeof( struct stat ) );
+  auto de_ptr = std::make_shared<DirEntry>();
+  de_ptr->name = name;
+  de_ptr->stat_struct = *stat;
 
 #ifdef DEBUG
   fprintf( stderr, "new dir: \"%s\"\n", name );
@@ -76,78 +74,20 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
   /* Directory einklinken */
   /*----------------------*/
 
-  if( p == nullptr )
-  {
-    /* in tree (=df_ptr) einklinken */
-    /*------------------------------*/
+  /* Entweder direkt in tree (= df_ptr) oder in dessen Unterverzeichnis
+   * (= df_ptr); die Unterverzeichnisse bleiben dabei nach Namen sortiert.
+   */
+  de_ptr->parent = df_ptr->weak_from_this();
 
-    de_ptr->up_tree = df_ptr->up_tree;
+  df_ptr->children.insert(
+    std::find_if(
+      df_ptr->children.begin(),
+      df_ptr->children.end(),
+      [&de_ptr](const std::shared_ptr<DirEntry>& ds_ptr) { return ds_ptr->name > de_ptr->name; }
+    ),
+    de_ptr
+  );
 
-    for( ds_ptr = df_ptr; ds_ptr; ds_ptr = ds_ptr->next )
-    {
-      if( strcmp( ds_ptr->name, de_ptr->name ) > 0 )
-      {
-        /* ds-Element ist groesser */
-        /*-------------------------*/
-
-        de_ptr->next = ds_ptr;
-        de_ptr->prev = ds_ptr->prev;
-        if( ds_ptr->prev) ds_ptr->prev->next = de_ptr;
-        ds_ptr->prev = de_ptr;
-	if( de_ptr->up_tree && de_ptr->up_tree->sub_tree == de_ptr->next )
-	  de_ptr->up_tree->sub_tree = de_ptr;
-        break;
-      }
-
-      if( ds_ptr->next == nullptr )
-      {
-        /* Ende der Liste erreicht; ==> einfuegen */
-        /*----------------------------------------*/
-
-        de_ptr->prev = ds_ptr;
-        de_ptr->next = ds_ptr->next;
-        ds_ptr->next = de_ptr;
-        break;
-      }
-    }
-  }
-  else if( df_ptr->sub_tree == nullptr )
-  {
-    de_ptr->up_tree = df_ptr;
-    df_ptr->sub_tree = de_ptr;
-  }
-  else
-  {
-    de_ptr->up_tree = df_ptr;
-
-    for( ds_ptr = df_ptr->sub_tree; ds_ptr; ds_ptr = ds_ptr->next )
-    {
-      if( strcmp( ds_ptr->name, de_ptr->name ) > 0 )
-      {
-        /* ds-Element ist groesser */
-        /*-------------------------*/
-
-        de_ptr->next = ds_ptr;
-        de_ptr->prev = ds_ptr->prev;
-        if( ds_ptr->prev ) ds_ptr->prev->next = de_ptr;
-        ds_ptr->prev = de_ptr;
-	if( de_ptr->up_tree->sub_tree == de_ptr->next )
-	  de_ptr->up_tree->sub_tree = de_ptr;
-        break;
-      }
-
-      if( ds_ptr->next == nullptr )
-      {
-        /* Ende der Liste erreicht; ==> einfuegen */
-        /*----------------------------------------*/
-
-        de_ptr->prev = ds_ptr;
-        de_ptr->next = ds_ptr->next;
-        ds_ptr->next = de_ptr;
-        break;
-      }
-    }
-  }
   statistic.disk_total_directories++;
   return( 0 );
 }
@@ -156,14 +96,12 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
 
 
 
-int InsertArchiveFileEntry(DirEntry *tree, char *path, struct stat *stat)
+int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, struct stat *stat)
 {
   char dir[PATH_LENGTH + 1];
   char file[PATH_LENGTH + 1];
   DirEntry *de_ptr;
-  FileEntry *fs_ptr, *fe_ptr;
   struct stat stat_struct;
-  int  n;
 
 
   if( KeyPressed() )
@@ -174,7 +112,7 @@ int InsertArchiveFileEntry(DirEntry *tree, char *path, struct stat *stat)
 
   Fnsplit( path, dir, file );
 
-  if( GetArchiveDirEntry( tree, dir, &de_ptr ) )
+  if( GetArchiveDirEntry( tree.get(), dir, &de_ptr ) )
   {
 #ifdef DEBUG
     fprintf( stderr, "can't get directory for file*%s*trying recover", path );
@@ -189,7 +127,7 @@ int InsertArchiveFileEntry(DirEntry *tree, char *path, struct stat *stat)
 
       return -1;
     }
-    if( GetArchiveDirEntry( tree, dir, &de_ptr ) )
+    if( GetArchiveDirEntry( tree.get(), dir, &de_ptr ) )
     {
       FormatError("again: can't get directory for file*{}*giving up", path);
 
@@ -197,25 +135,16 @@ int InsertArchiveFileEntry(DirEntry *tree, char *path, struct stat *stat)
     }
   }
 
-  if( S_ISLNK( stat->st_mode ) )
-    n = strlen( &path[ strlen( path ) + 1 ] ) + 1;
-  else
-    n = 0;
-
-  fe_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + std::strlen(file) + n);
-
-  (void) memset( fe_ptr, 0, sizeof( FileEntry ) );
-  (void) memcpy( (char *) &fe_ptr->stat_struct, (char *) stat, sizeof( struct stat ) );
-  (void) strcpy( fe_ptr->name, file );
+  auto fe_ptr = std::make_shared<FileEntry>();
+  fe_ptr->stat_struct = *stat;
+  fe_ptr->name = file;
 
   if( S_ISLNK( stat->st_mode ) )
   {
-    (void) strcpy( &fe_ptr->name[ strlen( fe_ptr->name ) + 1 ],
-		   &path[ strlen( path ) + 1 ]
-		 );
+    fe_ptr->symlink_target = &path[std::strlen(path) + 1];
   }
 
-  fe_ptr->dir_entry = de_ptr;
+  fe_ptr->dir_entry = de_ptr->weak_from_this();
   de_ptr->total_files++;
   de_ptr->total_bytes += stat->st_size;
   statistic.disk_total_files++;
@@ -224,18 +153,7 @@ int InsertArchiveFileEntry(DirEntry *tree, char *path, struct stat *stat)
   /* Einklinken */
   /*------------*/
 
-  if( de_ptr->file == nullptr )
-  {
-    de_ptr->file = fe_ptr;
-  }
-  else
-  {
-    for( fs_ptr = de_ptr->file; fs_ptr->next; fs_ptr = fs_ptr->next )
-      ;
-
-    fe_ptr->prev = fs_ptr;
-    fs_ptr->next = fe_ptr;
-  }
+  de_ptr->files.push_back( fe_ptr );
   return( 0 );
 }
 
@@ -246,7 +164,6 @@ int InsertArchiveFileEntry(DirEntry *tree, char *path, struct stat *stat)
 static int GetArchiveDirEntry(DirEntry *tree, char *path, DirEntry **dir_entry)
 {
   int n;
-  DirEntry *de_ptr;
   bool is_root = false;
 
 #ifdef DEBUG
@@ -256,14 +173,15 @@ static int GetArchiveDirEntry(DirEntry *tree, char *path, DirEntry **dir_entry)
 
   if( strchr( path, std::filesystem::path::preferred_separator ) != nullptr )
   {
-    for( de_ptr = tree; de_ptr; de_ptr = de_ptr->next )
+    for( const auto& child_ptr : tree->children )
     {
-      n = strlen( de_ptr->name );
-      if( de_ptr->name[0] == std::filesystem::path::preferred_separator &&
-          de_ptr->name[1] == '\0' )
+      DirEntry *de_ptr = child_ptr.get();
+      n = de_ptr->name.size();
+      if( de_ptr->name.size() == 1 &&
+          de_ptr->name[0] == std::filesystem::path::preferred_separator )
         is_root = true;
 
-      if( n && !strncmp( de_ptr->name, path, n ) &&
+      if( n && de_ptr->name.compare(0, n, path, n) == 0 &&
 	  (is_root || path[n] == '\0' || path[n] == std::filesystem::path::preferred_separator ) )
       {
 	if( ( is_root && path[n] == '\0' ) ||
@@ -277,7 +195,7 @@ static int GetArchiveDirEntry(DirEntry *tree, char *path, DirEntry **dir_entry)
 	}
 	else
         {
-	  return( GetArchiveDirEntry( de_ptr->sub_tree,
+	  return( GetArchiveDirEntry( de_ptr,
 				  ( is_root ) ? &path[n] : &path[n+1],
 				  dir_entry
 				) );
@@ -297,7 +215,7 @@ static int GetArchiveDirEntry(DirEntry *tree, char *path, DirEntry **dir_entry)
 
 
 
-int TryInsertArchiveDirEntry(DirEntry *tree, char *dir, struct stat *stat)
+int TryInsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *dir, struct stat *stat)
 {
   DirEntry *de_ptr;
   char dir_path[PATH_LENGTH + 1];
@@ -313,7 +231,7 @@ int TryInsertArchiveDirEntry(DirEntry *tree, char *dir, struct stat *stat)
   {
     if( (*t = *s) == std::filesystem::path::preferred_separator )
     {
-      if( GetArchiveDirEntry( tree, dir_path, &de_ptr ) == -1 )
+      if( GetArchiveDirEntry( tree.get(), dir_path, &de_ptr ) == -1 )
       {
 	/* Evtl. fehlender teil; ==> einfuegen */
 	/*-------------------------------------*/
@@ -335,101 +253,80 @@ int TryInsertArchiveDirEntry(DirEntry *tree, char *dir, struct stat *stat)
 
 
 
-int MinimizeArchiveTree(DirEntry *tree)
+int MinimizeArchiveTree(const std::shared_ptr<DirEntry>& tree)
 {
-  DirEntry  *de_ptr, *de1_ptr;
-  DirEntry  *next_ptr;
-  FileEntry *fe_ptr;
-
-
-  /* Falls tree einen Nachfolger hat und
-   * tree selbst leer ist, wird tree gestrichen
+  /* tree ist ein namenloser Platzhalter, dessen Unterverzeichnisse die
+   * obersten Verzeichnisse des Archivs sind.
+   *
+   * Falls tree genau ein Unterverzeichnis hat und tree selbst keine Dateien
+   * enthaelt, wird tree durch dieses Unterverzeichnis ersetzt. Bei mehreren
+   * obersten Verzeichnissen (oder Dateien in tree) bleibt der Platzhalter
+   * als Wurzel bestehen.
    */
 
-  if( tree->prev == nullptr &&
-      tree->next != nullptr &&
-      tree->file == nullptr )
+  if( tree->files.empty() && tree->children.size() == 1 )
   {
-    next_ptr = tree->next;
-    (void) memcpy( (char *) tree,
-		   (char *) tree->next,
-		   sizeof( DirEntry ) + strlen( tree->next->name )
-		 );
-    tree->prev = nullptr;
-    if( tree->next ) tree->next->prev = tree;
+    /* Keep the child alive while it is copied over its former owner. */
+    const std::shared_ptr<DirEntry> child = tree->children.front();
+
+    *tree = *child;
+    tree->parent.reset();
     statistic.disk_total_directories--;
-    free( next_ptr );
-    for( fe_ptr=tree->file; fe_ptr; fe_ptr=fe_ptr->next)
+    for( const auto& fe_ptr : tree->files )
       fe_ptr->dir_entry = tree;
-    for( de_ptr=tree->sub_tree; de_ptr; de_ptr=de_ptr->next)
-      de_ptr->up_tree = tree;
+    for( const auto& de_ptr : tree->children )
+      de_ptr->parent = tree;
+  }
+  else
+  {
+    return( 0 );
   }
 
 
-  /* Test, ob *de_ptr weder Vorgaenger noch Nachfolger noch Dateien hat */
-  /*--------------------------------------------------------------------*/
+  /* Test, ob das einzige Unterverzeichnis keine Dateien hat */
+  /*---------------------------------------------------------*/
 
-  for( de_ptr = tree->sub_tree; de_ptr; de_ptr = next_ptr )
+  while( tree->children.size() == 1 && tree->children.front()->files.empty() )
   {
-    if( de_ptr->prev == nullptr && de_ptr->next == nullptr && de_ptr->file == nullptr )
-    {
-      /* Zusammenfassung moeglich */
-      /*--------------------------*/
+    /* Zusammenfassung moeglich */
+    /*--------------------------*/
 
-      if( !(tree->name[0] == std::filesystem::path::preferred_separator &&
-            tree->name[1] == '\0') )
-      {
-        const auto len = std::strlen(tree->name);
-        tree->name[len] = std::filesystem::path::preferred_separator;
-        tree->name[len + 1] = '\0';
-      }
-      (void) strcat( tree->name, de_ptr->name );
-      statistic.disk_total_directories--;
-      tree->sub_tree = de_ptr->sub_tree;
-      for( de1_ptr = de_ptr->sub_tree; de1_ptr; de1_ptr = de1_ptr->next )
-	de1_ptr->up_tree = tree;
-      next_ptr = de_ptr->sub_tree;
-      free( de_ptr );
-#ifdef DEBUG
-  fprintf( stderr, "new root-dir: \"%s\"\n", tree->name );
-#endif
-      continue;
+    const std::shared_ptr<DirEntry> de_ptr = tree->children.front();
+
+    if( !(tree->name.size() == 1 &&
+          tree->name[0] == std::filesystem::path::preferred_separator) )
+    {
+      tree->name += std::filesystem::path::preferred_separator;
     }
-    break;
+    tree->name += de_ptr->name;
+    statistic.disk_total_directories--;
+    tree->children = std::move(de_ptr->children);
+    for( const auto& de1_ptr : tree->children )
+      de1_ptr->parent = tree;
+#ifdef DEBUG
+  fprintf( stderr, "new root-dir: \"%s\"\n", tree->name.c_str() );
+#endif
   }
 
   /* Letzter Optimierungsschritt:
-   * Falls tree weder Vorgaenger noch Nachfolger hat, aber
-   * einen Subtree der Files hat, wird zusammengefasst
+   * Falls tree keine Dateien, aber genau einen Subtree hat, wird
+   * zusammengefasst
    */
 
-  if( tree->prev == nullptr &&
-      tree->next == nullptr &&
-      tree->file == nullptr &&
-      tree->sub_tree     &&
-      tree->sub_tree->prev == nullptr &&
-      tree->sub_tree->next == nullptr
-    )
+  if( tree->files.empty() && tree->children.size() == 1 )
   {
-    de_ptr = tree->sub_tree;
-    {
-      const auto len = std::strlen(tree->name);
-      tree->name[len] = std::filesystem::path::preferred_separator;
-      tree->name[len + 1] = '\0';
-    }
-    (void) strcat( tree->name, de_ptr->name );
-    tree->file = de_ptr->file;
-    for( fe_ptr=tree->file; fe_ptr; fe_ptr=fe_ptr->next )
+    const std::shared_ptr<DirEntry> de_ptr = tree->children.front();
+
+    tree->name += std::filesystem::path::preferred_separator;
+    tree->name += de_ptr->name;
+    tree->files = std::move(de_ptr->files);
+    for( const auto& fe_ptr : tree->files )
       fe_ptr->dir_entry = tree;
-    (void) memcpy( (char *) &tree->stat_struct,
-		   (char *) &de_ptr->stat_struct,
-		   sizeof( struct stat )
-		  );
+    tree->stat_struct = de_ptr->stat_struct;
     statistic.disk_total_directories--;
-    tree->sub_tree = de_ptr->sub_tree;
-    for( de1_ptr = de_ptr->sub_tree; de1_ptr; de1_ptr = de1_ptr->next )
-      de1_ptr->up_tree = tree;
-    free( de_ptr );
+    tree->children = std::move(de_ptr->children);
+    for( const auto& de1_ptr : tree->children )
+      de1_ptr->parent = tree;
   }
   return( 0 );
 }

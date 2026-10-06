@@ -45,9 +45,8 @@ int MakeDirectory(DirEntry *father_dir_entry)
 
 
 
-int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
+int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name )
 {
-  DirEntry *den_ptr, *des_ptr;
   struct stat stat_struct;
   int result = -1;
 
@@ -82,77 +81,28 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
     /* Directory erstellt
      * ==> einklinken im Baum
      */
-    den_ptr = MallocOrAbort<DirEntry>(sizeof(DirEntry) + std::strlen(dir_name));
-    den_ptr->file = nullptr;
-    den_ptr->next = nullptr;
-    den_ptr->prev = nullptr;
-    den_ptr->sub_tree = nullptr;
-    den_ptr->total_bytes    = 0L;
-    den_ptr->matching_bytes = 0L;
-    den_ptr->tagged_bytes   = 0L;
-    den_ptr->total_files    = 0;
-    den_ptr->matching_files = 0;
-    den_ptr->tagged_files   = 0;
-    den_ptr->access_denied  = false;
-    den_ptr->cursor_pos     = 0;
-    den_ptr->start_file     = 0;
-    den_ptr->global_flag    = false;
-    den_ptr->login_flag     = false;
-    den_ptr->big_window     = false;
-    den_ptr->up_tree = father_dir_entry;
-    den_ptr->not_scanned    = false;
+    auto den_ptr = std::make_shared<DirEntry>();
+    den_ptr->parent = father_dir_entry->weak_from_this();
+    den_ptr->name = dir_name;
 
     statistic.disk_total_directories++;
 
-    std::strcpy(den_ptr->name, dir_name);
-
     StatOrAbort(path_str, stat_struct);
-
-    std::memcpy(
-      static_cast<void*>(&den_ptr->stat_struct),
-      static_cast<const void*>(&stat_struct),
-      sizeof(stat_struct)
-    );
+    den_ptr->stat_struct = stat_struct;
 
     /* Sortieren durch direktes Einfuegen */
     /*------------------------------------*/
 
-    for( des_ptr = father_dir_entry->sub_tree; des_ptr; des_ptr = des_ptr->next )
-    {
-      if( strcmp( des_ptr->name, den_ptr->name ) > 0 )
-      {
-	/* des-Element ist groesser */
-	/*--------------------------*/
+    auto& siblings = father_dir_entry->children;
 
-	den_ptr->next = des_ptr;
-	den_ptr->prev = des_ptr->prev;
-	if( des_ptr->prev) des_ptr->prev->next = den_ptr;
-	else father_dir_entry->sub_tree = den_ptr;
-	des_ptr->prev = den_ptr;
-	break;
-      }
-
-      if( des_ptr->next == nullptr )
-      {
-        /* Ende der Liste erreicht; ==> einfuegen */
-        /*----------------------------------------*/
-
-        den_ptr->prev = des_ptr;
-	den_ptr->next = des_ptr->next;
-        des_ptr->next = den_ptr;
-	break;
-      }
-    }
-
-    if( father_dir_entry->sub_tree == nullptr )
-    {
-      /* Erstes Element */
-      /*----------------*/
-
-      father_dir_entry->sub_tree = den_ptr;
-      den_ptr->prev = nullptr;
-      den_ptr->next = nullptr;
-    }
+    siblings.insert(
+      std::find_if(
+        siblings.begin(),
+        siblings.end(),
+        [&den_ptr](const std::shared_ptr<DirEntry>& des_ptr) { return des_ptr->name > den_ptr->name; }
+      ),
+      den_ptr
+    );
 
     (void) GetAvailBytes( &statistic.disk_space );
 
@@ -164,7 +114,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
 
 
 
-int MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry )
+int MakePath( const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry )
 {
   DirEntry *de_ptr, *sde_ptr;
   char     path[PATH_LENGTH+1];
@@ -172,34 +122,36 @@ int MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry )
   int      n;
   int      result = -1;
 
-  NormPath( dir_path, path );
+  NormPath( dir_path.c_str(), path );
   *dest_dir_entry = nullptr;
 
-  n = strlen( tree->name );
+  n = tree->name.size();
   const char preferred_separator_str[]{
     std::filesystem::path::preferred_separator, '\0'};
   const auto tree_is_root =
-    tree->name[0] == std::filesystem::path::preferred_separator &&
-    tree->name[1] == '\0';
+    tree->name.size() == 1 &&
+    tree->name[0] == std::filesystem::path::preferred_separator;
 
   if( tree_is_root ||
-      ( !strncmp( tree->name, path, n ) &&
+      ( tree->name.compare(0, n, path, n) == 0 &&
        ( path[n] == std::filesystem::path::preferred_separator || path[n] == '\0' ) ) )
   {
     /* Pfad befindet sich im (Sub)-Tree */
     /*----------------------------------*/
 
-    de_ptr = tree;
+    de_ptr = tree.get();
     token = Strtok_r( &path[n], preferred_separator_str, &old );
     while( token )
     {
-      for( sde_ptr = de_ptr->sub_tree; sde_ptr; sde_ptr = sde_ptr->next )
+      sde_ptr = nullptr;
+      for( const auto& child : de_ptr->children )
       {
-        if( !strcmp( sde_ptr->name, token ) )
+        if( child->name == token )
 	{
 	  /* Subtree gefunden */
 	  /*------------------*/
 
+	  sde_ptr = child.get();
 	  de_ptr = sde_ptr;
 	  break;
 	}

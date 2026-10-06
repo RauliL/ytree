@@ -13,6 +13,7 @@
 
 static int DeleteSubTree(DirEntry *dir_entry);
 static int DeleteSingleDirectory(DirEntry *dir_entry);
+static void UnlinkDirEntry(DirEntry *dir_entry);
 
 
 int DeleteDirectory(DirEntry *dir_entry)
@@ -27,16 +28,16 @@ int DeleteDirectory(DirEntry *dir_entry)
 
   ClearHelp();
 
-  if (dir_entry == statistic.tree)
+  if (dir_entry == statistic.tree.get())
   {
     Message("Can't delete ROOT");
   }
-  else if( dir_entry->file || dir_entry->sub_tree )
+  else if( !dir_entry->files.empty() || !dir_entry->children.empty() )
   {
     if( InputChoise( "Directory not empty, PRUNE ? (Y/N) ? ", "YN\033" ) == 'Y' ) {
-      if( dir_entry->sub_tree ) {
+      if( !dir_entry->children.empty() ) {
         ScanSubTree(dir_entry);
-        if( DeleteSubTree( dir_entry->sub_tree ) ) {
+        if( DeleteSubTree( dir_entry ) ) {
           ESCAPE;
         }
       }
@@ -65,12 +66,7 @@ int DeleteDirectory(DirEntry *dir_entry)
 
       statistic.disk_total_directories--;
 
-      if( dir_entry->prev ) dir_entry->prev->next = dir_entry->next;
-      else dir_entry->up_tree->sub_tree = dir_entry->next;
-
-      if( dir_entry->next ) dir_entry->next->prev = dir_entry->prev;
-
-      std::free(static_cast<void*>(dir_entry));
+      UnlinkDirEntry( dir_entry );
 
       (void) GetAvailBytes( &statistic.disk_space );
 
@@ -87,17 +83,20 @@ FNC_XIT:
 
 
 
+/* Loescht alle Unterverzeichnisse von dir_entry */
+/*-----------------------------------------------*/
+
 static int DeleteSubTree( DirEntry *dir_entry )
 {
   int result = -1;
-  DirEntry *de_ptr, *next_de_ptr;
 
+  /* Kopie, da DeleteSingleDirectory() die Eintraege austraegt */
+  const auto children = dir_entry->children;
 
-  for( de_ptr = dir_entry; de_ptr; de_ptr = next_de_ptr ) {
-    next_de_ptr = de_ptr->next;
-
-    if( de_ptr->sub_tree ) {
-      if( DeleteSubTree( de_ptr->sub_tree ) ) {
+  for( const auto& de_sp : children ) {
+    DirEntry *de_ptr = de_sp.get();
+    if( !de_ptr->children.empty() ) {
+      if( DeleteSubTree( de_ptr ) ) {
         ESCAPE;
       }
     }
@@ -118,7 +117,6 @@ FNC_XIT:
 static int DeleteSingleDirectory( DirEntry *dir_entry )
 {
   const auto path = GetPath(dir_entry);
-  FileEntry* next_fe_ptr = nullptr;
 
   if (!IsWriteable(path))
   {
@@ -127,10 +125,12 @@ static int DeleteSingleDirectory( DirEntry *dir_entry )
     return -1;
   }
 
-  for (auto fe_ptr = dir_entry->file; fe_ptr; fe_ptr = next_fe_ptr)
+  /* Kopie, da DeleteFile() die Eintraege austraegt */
+  const auto files = dir_entry->files;
+
+  for (const auto& fe_ptr : files)
   {
-    next_fe_ptr = fe_ptr->next;
-    if (DeleteFile(fe_ptr))
+    if (DeleteFile(fe_ptr.get()))
     {
       return -1;
     }
@@ -143,14 +143,37 @@ static int DeleteSingleDirectory( DirEntry *dir_entry )
     return -1;
   }
 
-  if( !dir_entry->up_tree->not_scanned )
+  const auto parent = dir_entry->Parent();
+
+  if( parent && !parent->not_scanned )
     statistic.disk_total_directories--;
 
-  if( dir_entry->prev ) dir_entry->prev->next = dir_entry->next;
-  else dir_entry->up_tree->sub_tree = dir_entry->next;
-  if( dir_entry->next ) dir_entry->next->prev = dir_entry->prev;
-
-  std::free(static_cast<void*>(dir_entry));
+  UnlinkDirEntry( dir_entry );
 
   return 0;
+}
+
+
+/* Traegt dir_entry aus der Liste der Unterverzeichnisse seines Vaters aus */
+/*-------------------------------------------------------------------------*/
+
+static void UnlinkDirEntry( DirEntry *dir_entry )
+{
+  const auto parent = dir_entry->Parent();
+
+  if( !parent )
+    return;
+
+  /* The parent no longer owns the entry afterwards; it is destroyed here
+   * unless something else (e.g. the dir window list) still shares it. */
+  auto& siblings = parent->children;
+
+  siblings.erase(
+    std::remove_if(
+      siblings.begin(),
+      siblings.end(),
+      [dir_entry]( const std::shared_ptr<DirEntry>& d ) { return d.get() == dir_entry; }
+    ),
+    siblings.end()
+  );
 }

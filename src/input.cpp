@@ -91,23 +91,23 @@ static std::string StrRight(const char* str, std::size_t count)
   return result;
 }
 
-int StrVisualLength(const char* str)
+int StrVisualLength(std::string_view str)
 {
-#if defined(WITH_UTF8)
-  std::mbstate_t state;
-  int len = 0;
+  const std::string tmp(str);
+  const char* cstr = tmp.c_str();
 
-  std::memset(static_cast<void*>(&state), 0, sizeof(state));
-  len = std::mbsrtowcs(nullptr, &str, std::strlen(str), &state);
+#if defined(WITH_UTF8)
+  std::mbstate_t state{};
+  auto len = static_cast<int>(std::mbsrtowcs(nullptr, &cstr, tmp.size(), &state));
   if (len < 0)
   {
     /* Invalid multibyte sequence */
-    len = std::strlen(str);
+    len = static_cast<int>(tmp.size());
   }
 
   return len;
 #else
-  return std::strlen(str);
+  return static_cast<int>(tmp.size());
 #endif
 }
 
@@ -134,19 +134,19 @@ const char* StrVisualIndex(const char* str, std::size_t index)
 #endif
 }
 
-std::string FitVisualWidth(const char* str, std::size_t width, bool left_justify)
+std::string FitVisualWidth(std::string_view str, std::size_t width, bool left_justify)
 {
   const auto len = static_cast<std::size_t>(StrVisualLength(str));
 
   if (len > width)
   {
-    return StrLeft(str, width);
+    return StrLeft(std::string(str).c_str(), width);
   }
 
   const auto pad = width - len;
   if (pad == 0)
   {
-    return str;
+    return std::string(str);
   }
 
   if (left_justify)
@@ -154,7 +154,7 @@ std::string FitVisualWidth(const char* str, std::size_t width, bool left_justify
     return std::string(str) + std::string(pad, ' ');
   }
 
-  return std::string(pad, ' ') + str;
+  return std::string(pad, ' ') + std::string(str);
 }
 
 void TruncateVisual(char* str, std::size_t max_len)
@@ -380,7 +380,7 @@ int InputString(
       {
         char path[PATH_LENGTH + 1];
 
-        if (KeyF2Get(statistic.tree, statistic.disp_begin_pos, statistic.cursor_pos, path))
+        if (KeyF2Get(statistic.tree.get(), statistic.disp_begin_pos, statistic.cursor_pos, path))
         {
           break;
         }

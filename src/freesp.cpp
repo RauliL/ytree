@@ -44,7 +44,7 @@
 /* Volume-Name und freien Plattenplatz ermitteln */
 /*-----------------------------------------------*/
 
-int GetDiskParameter( char *path,
+int GetDiskParameter( const std::string& path,
 		      char *volume_name,
 		      long long *avail_bytes,
 		      long long *total_disk_space
@@ -77,11 +77,11 @@ int GetDiskParameter( char *path,
   if( ( result = _getdiskfree( 0, &diskspace ) ) == 0 )
 #else
 #ifdef QNX
-   fd = open(path, O_RDONLY );
+   fd = open(path.c_str(), O_RDONLY );
   if( ( result = disk_space( fd, &free_blocks, &total_blocks ) ) == 0 )
 #else
 
-  if( ( result = statfs( path, &statfs_struct ) ) == 0 )
+  if( ( result = statfs( path.c_str(), &statfs_struct ) ) == 0 )
 #endif /* QNX */
 #endif /* WIN32 */
   {

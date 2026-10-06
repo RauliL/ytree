@@ -23,27 +23,19 @@ static void UnReadSubTree(DirEntry *dir_entry);
  */
 
 
-int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
+int ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path, int depth)
 {
   struct stat   stat_struct;
-  DirEntry      first_dir_entry;
-  DirEntry      *des_ptr;
-  DirEntry      *den_ptr;
-  FileEntry     first_file_entry;
-  FileEntry     *fes_ptr;
-  FileEntry     *fen_ptr;
   int		file_count;
+  std::vector<std::shared_ptr<DirEntry>> new_children;
+  std::vector<std::shared_ptr<FileEntry>> new_files;
 
 
   /* dir_entry initialisieren */
   /*--------------------------*/
 
-  dir_entry->file           = nullptr;
-/*
-  dir_entry->next           = NULL;
-  dir_entry->prev           = NULL;
-*/
-  dir_entry->sub_tree       = nullptr;
+  dir_entry->files.clear();
+  dir_entry->children.clear();
   dir_entry->total_bytes    = 0L;
   dir_entry->matching_bytes = 0L;
   dir_entry->tagged_bytes   = 0L;
@@ -61,11 +53,14 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
   if( S_ISBLK( dir_entry->stat_struct.st_mode ) )
     return( 0 ); /* Block-Device */
 
-  if (depth < 0 && dir_entry->up_tree)
+  if (depth < 0)
   {
-    dir_entry->up_tree->not_scanned = true;
+    if (const auto parent = dir_entry->Parent())
+    {
+      parent->not_scanned = true;
 
-    return 1;
+      return 1;
+    }
   }
 
   statistic.disk_total_directories++;
@@ -80,12 +75,6 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
 
     return 1;
   }
-
-  first_dir_entry.prev  = nullptr;
-  first_dir_entry.next  = nullptr;
-  *first_dir_entry.name = '\0';
-  first_file_entry.next = nullptr;
-  fes_ptr               = &first_file_entry;
 
   file_count = 0;
 
@@ -127,95 +116,43 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
     {
       /* Directory-Entry */
       /*-----------------*/
-      den_ptr = MallocOrAbort<DirEntry>(sizeof(DirEntry) + entry_name.size());
-      den_ptr->up_tree = dir_entry;
-
-      std::strcpy( den_ptr->name, entry_name.c_str() );
-      std::memcpy(
-        static_cast<void*>(&den_ptr->stat_struct),
-        static_cast<const void*>(&stat_struct),
-        sizeof(stat_struct)
-      );
-      den_ptr->prev = nullptr;
-      den_ptr->next = nullptr;
+      auto den_ptr = std::make_shared<DirEntry>();
+      den_ptr->parent = dir_entry;
+      den_ptr->name = entry_name;
+      den_ptr->stat_struct = stat_struct;
 
       ReadTree(den_ptr, new_path, depth - 1);
 
-      /* Sortieren durch direktes Einfuegen */
-      /*------------------------------------*/
-
-      for( des_ptr = &first_dir_entry; des_ptr; des_ptr = des_ptr->next )
-      {
-        if( strcmp( des_ptr->name, den_ptr->name ) > 0 )
-        {
-	  /* des-Element ist groesser */
-	  /*--------------------------*/
-
-	  den_ptr->next = des_ptr;
-	  den_ptr->prev = des_ptr->prev;
-	  des_ptr->prev->next = den_ptr;
-	  des_ptr->prev = den_ptr;
-	  break;
-	}
-
-	if( des_ptr->next == nullptr )
-	{
-	  /* Ende der Liste erreicht; ==> einfuegen */
-	  /*----------------------------------------*/
-
-          den_ptr->prev = des_ptr;
-	  den_ptr->next = des_ptr->next;
-          des_ptr->next = den_ptr;
-	  break;
-	}
-      }
+      new_children.push_back(den_ptr);
     }
     else
     {
       /* File-Entry */
       /*------------*/
 
-      int n;
       char link_path[PATH_LENGTH + 1];
 
       /* Test, ob Eintrag Symbolischer Link ist */
       /*----------------------------------------*/
 
-      n = 0; *link_path = '\0';
+      auto fen_ptr = std::make_shared<FileEntry>();
+      fen_ptr->name = entry_name;
+      fen_ptr->stat_struct = stat_struct;
 
       if (S_ISLNK(stat_struct.st_mode))
       {
         /* Ja, symbolischer Name wird an "echten" Namen angehaengt */
         /*---------------------------------------------------------*/
-        if ((n = readlink(new_path.c_str(), link_path, sizeof(link_path))) == -1)
+        if (const auto n = readlink(new_path.c_str(), link_path, sizeof(link_path)); n == -1)
         {
-          *std::format_to(link_path, "{}", "unknown") = '\0';
-          n = std::strlen(link_path);
+          fen_ptr->symlink_target = "unknown";
+        } else {
+          fen_ptr->symlink_target.assign(link_path, static_cast<std::size_t>(n));
         }
-        link_path[n] = 0;
-
-        fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + entry_name.size() + n + 1);
-        std::strcpy(fen_ptr->name, entry_name.c_str());
-        std::strcpy(&fen_ptr->name[strlen(fen_ptr->name) + 1], link_path);
-      } else {
-        fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + entry_name.size());
-        std::strcpy(fen_ptr->name, entry_name.c_str());
       }
 
-      fen_ptr->next = nullptr;
-      fen_ptr->prev = nullptr;
-      fen_ptr->tagged = false;
-
-      std::memcpy(
-        static_cast<void*>(&fen_ptr->stat_struct),
-        static_cast<const void*>(&stat_struct),
-        sizeof(stat_struct)
-      );
-
       fen_ptr->dir_entry = dir_entry;
-      fes_ptr->next      = fen_ptr;
-      fen_ptr->prev      = fes_ptr;
-      fes_ptr            = fen_ptr;
+      new_files.push_back(fen_ptr);
       dir_entry->total_files++;
       dir_entry->total_bytes += stat_struct.st_size;
       statistic.disk_total_files++;
@@ -223,11 +160,17 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
     }
   }
 
-  if( first_file_entry.next ) first_file_entry.next->prev = nullptr;
-  if( first_dir_entry.next )  first_dir_entry.next->prev = nullptr;
+  /* Sortieren der Unterverzeichnisse (stabil, nach Namen) */
+  /*-------------------------------------------------------*/
 
-  dir_entry->file = first_file_entry.next;
-  dir_entry->sub_tree = first_dir_entry.next;
+  std::stable_sort(
+    new_children.begin(),
+    new_children.end(),
+    [](const std::shared_ptr<DirEntry>& a, const std::shared_ptr<DirEntry>& b) { return a->name < b->name; }
+  );
+
+  dir_entry->files = std::move(new_files);
+  dir_entry->children = std::move(new_children);
 
   DisplayDiskStatistic();
   doupdate();
@@ -237,25 +180,25 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
 
 
 
+static void RemoveAllFiles(DirEntry *dir_entry)
+{
+  while( !dir_entry->files.empty() )
+  {
+    RemoveFile( dir_entry->files.back().get() );
+  }
+}
+
+
 void UnReadTree(DirEntry *dir_entry)
 {
-  FileEntry *fe_ptr, *next_fe_ptr;
-
-  if( dir_entry == statistic.tree )
+  if( dir_entry == statistic.tree.get() )
   {
     Message("Can't delete ROOT");
   }
   else
   {
-    for( fe_ptr=dir_entry->file; fe_ptr; fe_ptr=next_fe_ptr )
-    {
-      next_fe_ptr = fe_ptr->next;
-      RemoveFile( fe_ptr );
-    }
-    if( dir_entry->sub_tree )
-    {
-      UnReadSubTree( dir_entry->sub_tree );
-    }
+    RemoveAllFiles( dir_entry );
+    UnReadSubTree( dir_entry );
     statistic.disk_total_directories--;
     (void) GetAvailBytes( &statistic.disk_space );
     DisplayDiskStatistic();
@@ -264,34 +207,23 @@ void UnReadTree(DirEntry *dir_entry)
 }
 
 
-static void UnReadSubTree(DirEntry *dir_entry)
+/* Loescht alle Unterverzeichnisse von parent */
+/*--------------------------------------------*/
+
+static void UnReadSubTree(DirEntry *parent)
 {
-  DirEntry *de_ptr, *next_de_ptr;
-  FileEntry *fe_ptr, *next_fe_ptr;
+  auto children = std::move(parent->children);
 
-  for( de_ptr = dir_entry; de_ptr; de_ptr = next_de_ptr )
+  parent->children.clear();
+
+  for( const auto& de_ptr : children )
   {
-    next_de_ptr = de_ptr->next;
+    RemoveAllFiles( de_ptr.get() );
+    UnReadSubTree( de_ptr.get() );
 
-    for( fe_ptr=de_ptr->file; fe_ptr; fe_ptr=next_fe_ptr )
-    {
-      next_fe_ptr = fe_ptr->next;
-      RemoveFile( fe_ptr );
-    }
-
-    if( de_ptr->sub_tree )
-    {
-      UnReadSubTree( de_ptr->sub_tree );
-    }
-
-    if( !de_ptr->up_tree->not_scanned )
+    if( !parent->not_scanned )
       statistic.disk_total_directories--;
 
-    if( de_ptr->prev ) de_ptr->prev->next = de_ptr->next;
-    else de_ptr->up_tree->sub_tree = de_ptr->next;
-    if( de_ptr->next ) de_ptr->next->prev = de_ptr->prev;
-
-    free( de_ptr );
+    /* de_ptr is released when "children" goes out of scope */
   }
 }
-

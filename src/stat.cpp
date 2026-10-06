@@ -128,10 +128,10 @@ void DisplayDirParameter(DirEntry *dir_entry)
 {
   const auto path = GetPath(dir_entry);
   auto p = std::strrchr(
-    dir_entry->name,
+    dir_entry->name.c_str(),
     std::filesystem::path::preferred_separator
   );
-  auto f = p ? p + 1 : dir_entry->name;
+  auto f = p ? p + 1 : dir_entry->name.c_str();
   char format[32];
   char buffer[PATH_LENGTH + 1];
   char auxbuff[PATH_LENGTH + 1];
@@ -169,7 +169,7 @@ void DisplayDirParameter(DirEntry *dir_entry)
 
 void DisplayGlobalFileParameter(FileEntry *file_entry)
 {
-  const auto path = GetPath(file_entry->dir_entry);
+  const auto path = GetPath(file_entry->Dir().get());
   char buffer1[PATH_LENGTH+1];
   char buffer2[PATH_LENGTH+1];
   char format[32];
