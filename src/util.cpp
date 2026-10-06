@@ -60,8 +60,8 @@ std::string GetPath(const DirEntry* dir_entry)
   for (auto de_ptr = dir_entry; de_ptr; de_ptr = de_ptr->up_tree)
   {
     const auto is_root =
-      de_ptr->name[0] == std::filesystem::path::preferred_separator &&
-      de_ptr->name[1] == '\0';
+      de_ptr->name.size() == 1 &&
+      de_ptr->name[0] == std::filesystem::path::preferred_separator;
 
     if (!is_root)
     {
@@ -90,21 +90,20 @@ std::string GetRealFileNamePath(const FileEntry* file_entry)
 
   if (S_ISLNK(file_entry->stat_struct.st_mode))
   {
-    const auto sym_name = &file_entry->name[std::strlen(file_entry->name) + 1];
-
-    if (*sym_name == std::filesystem::path::preferred_separator)
+    if (!file_entry->symlink_target.empty() &&
+        file_entry->symlink_target[0] == std::filesystem::path::preferred_separator)
     {
-      return sym_name;
+      return file_entry->symlink_target;
     }
+
+    return (std::filesystem::path(GetPath(file_entry->dir_entry)) /
+            file_entry->symlink_target)
+      .string();
   }
 
-  const auto dir = std::filesystem::path(GetPath(file_entry->dir_entry));
-  if (S_ISLNK(file_entry->stat_struct.st_mode))
-  {
-    return (dir / &file_entry->name[std::strlen(file_entry->name) + 1]).string();
-  }
-
-  return (dir / file_entry->name).string();
+  return (std::filesystem::path(GetPath(file_entry->dir_entry)) /
+          file_entry->name)
+    .string();
 }
 
 int GetDirEntry(DirEntry *tree,
@@ -168,15 +167,15 @@ int GetDirEntry(DirEntry *tree,
     return -1;
   }
 
-  n = strlen( tree->name );
+  n = tree->name.size();
   const char preferred_separator_str[]{
     std::filesystem::path::preferred_separator, '\0'};
   const auto tree_is_root =
-    tree->name[0] == std::filesystem::path::preferred_separator &&
-    tree->name[1] == '\0';
+    tree->name.size() == 1 &&
+    tree->name[0] == std::filesystem::path::preferred_separator;
 
   if( tree_is_root ||
-      (!strncmp( tree->name, dest_path, n )     &&
+      (tree->name.compare(0, n, dest_path, n) == 0 &&
         ( dest_path[n] == std::filesystem::path::preferred_separator || dest_path[n] == '\0' ) ) )
   {
     /* Pfad befindet sich im (Sub)-Tree */
@@ -188,7 +187,7 @@ int GetDirEntry(DirEntry *tree,
     {
       for( sde_ptr = de_ptr->sub_tree; sde_ptr; sde_ptr = sde_ptr->next )
       {
-        if( !strcmp( sde_ptr->name, token ) )
+        if( sde_ptr->name == token )
 	{
 	  /* Subtree gefunden */
 	  /*------------------*/
@@ -222,7 +221,7 @@ int GetFileEntry(DirEntry *de_ptr, char *file_name, FileEntry **file_entry)
 
   for( fe_ptr = de_ptr->file; fe_ptr; fe_ptr = fe_ptr->next )
   {
-    if( !strcmp( fe_ptr->name, file_name ) )
+    if( fe_ptr->name == file_name )
     {
       /* Eintrag gefunden */
       /*------------------*/
@@ -550,7 +549,7 @@ char *FormFilename(char *dest, char *src, unsigned int max_len)
  *                              CutFilename                                  *
  *****************************************************************************/
 
-char *CutFilename(char *dest, char *src, unsigned int max_len)
+char *CutFilename(char *dest, const char *src, unsigned int max_len)
 {
   unsigned int l;
 
@@ -812,7 +811,7 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
 
 
   if( fe_ptr && S_ISLNK( fe_ptr->stat_struct.st_mode ) )
-    sym_link_name = &fe_ptr->name[strlen(fe_ptr->name)+1];
+    sym_link_name = fe_ptr->symlink_target.c_str();
   else
     sym_link_name = "";
 

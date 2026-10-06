@@ -203,9 +203,7 @@ static void PrintDirEntry(WINDOW *win,
   if(!suppress_output) {
 
     /* Output Dirname */
-    const auto dir_name = de_ptr->name;
-
-    buffer = *dir_name ? dir_name : ".";
+    buffer = de_ptr->name.empty() ? "." : de_ptr->name;
     if( de_ptr->not_scanned ) {
       buffer += "/";
     }
@@ -1040,7 +1038,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
 		     need_dsp_help = true;
 		     break;
       case 'r':
-      case 'R':      if( !GetRenameParameter( dir_entry->name, new_name ) )
+      case 'R':      if( !GetRenameParameter( dir_entry->name.data(), new_name ) )
                      {
 		       if( !RenameDirectory( dir_entry, new_name ) )
 		       {

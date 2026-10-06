@@ -137,7 +137,7 @@ static void ReadTaggedList(const DirEntry* dir_entry)
       if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
       {
 	      const auto linkname_len = static_cast<std::size_t>(
-          StrVisualLength(&fe_ptr->name[std::strlen(fe_ptr->name) + 1])
+          StrVisualLength(fe_ptr->symlink_target)
         );
 
 	      max_linkname_len = std::max(max_linkname_len, linkname_len);
@@ -202,7 +202,7 @@ static void ReadFileList(const DirEntry* dir_entry)
       if (S_ISLNK(fe_ptr->stat_struct.st_mode))
       {
 	      const auto linkname_len = static_cast<std::size_t>(
-          StrVisualLength(&fe_ptr->name[std::strlen(fe_ptr->name) + 1])
+          StrVisualLength(fe_ptr->symlink_target)
         );
 
 	      max_linkname_len = std::max(max_linkname_len, linkname_len);
@@ -258,14 +258,14 @@ static bool SortByName(const FileEntry* e1, const FileEntry* e2)
 {
   if (do_case)
      if (order)
-        return std::strcmp(e1->name, e2->name) < 0;
+        return e1->name < e2->name;
      else
-        return -std::strcmp(e1->name, e2->name) < 0;
+        return e1->name > e2->name;
   else
      if (order)
-        return strcasecmp(e1->name, e2->name) < 0;
+        return strcasecmp(e1->name.c_str(), e2->name.c_str()) < 0;
      else
-        return -strcasecmp(e1->name, e2->name) < 0;
+        return strcasecmp(e1->name.c_str(), e2->name.c_str()) > 0;
 }
 
 static bool SortByExtension(const FileEntry* e1, const FileEntry* e2)
@@ -419,9 +419,7 @@ static void ChangeFileEntry()
     {
       max_linkname_len = std::max(
         max_linkname_len,
-        static_cast<std::size_t>(
-          StrVisualLength(&entry->name[std::strlen(entry->name) + 1])
-        )
+        static_cast<std::size_t>(StrVisualLength(entry->symlink_target))
       );
     }
   }
@@ -480,7 +478,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   fe_ptr = file_entry_list[entry_no];
 
   if( fe_ptr && S_ISLNK( fe_ptr->stat_struct.st_mode ) )
-    sym_link_name = &fe_ptr->name[strlen(fe_ptr->name)+1];
+    sym_link_name = fe_ptr->symlink_target.c_str();
   else
     sym_link_name = "";
 
@@ -1763,7 +1761,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 		      need_dsp_help = true;
 
-		      if( GetCopyParameter( fe_ptr->name, path_copy, to_file, to_dir ) )
+		      if( GetCopyParameter( fe_ptr->name.c_str(), path_copy, to_file, to_dir ) )
                       {
 			beep();
 			break;
@@ -1999,7 +1997,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 		      need_dsp_help = true;
 
-		      if( GetMoveParameter( fe_ptr->name, to_file, to_dir ) )
+		      if( GetMoveParameter( fe_ptr->name.c_str(), to_file, to_dir ) )
                       {
 			beep();
 			break;
@@ -2207,7 +2205,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
 		      de_ptr = fe_ptr->dir_entry;
 
-		      if( !GetRenameParameter( fe_ptr->name, new_name ) )
+		      if( !GetRenameParameter( fe_ptr->name.data(), new_name ) )
 		      {
 			if( !RenameFile( fe_ptr, new_name, &new_fe_ptr ) )
 		        {
@@ -2878,7 +2876,7 @@ static void ListJump( DirEntry * dir_entry, const char *str )
     for( i=tmp2; i < static_cast<int>(file_entry_list.size()); i++ )
     {
         fe_ptr = file_entry_list[i];
-	if(!strncasecmp(newStr.c_str(), fe_ptr->name, n+1))
+	if(!strncasecmp(newStr.c_str(), fe_ptr->name.c_str(), n+1))
           break;
     }
 

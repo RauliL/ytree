@@ -25,12 +25,12 @@ static void DeleteTree(DirEntry *tree)
     for( fe_ptr=de_ptr->file; fe_ptr; fe_ptr=next_fe_ptr)
     {
       next_fe_ptr=fe_ptr->next;
-      free( fe_ptr );
+      delete fe_ptr;
     }
 
     if( de_ptr->sub_tree ) DeleteTree( de_ptr->sub_tree );
 
-    free( de_ptr );
+    delete de_ptr;
   }
 }
 
@@ -110,9 +110,7 @@ int LoginDisk(char *path)
 
   statistic = {};
 
-  statistic.tree = MallocOrAbort<DirEntry>(sizeof(DirEntry) + PATH_LENGTH);
-
-  (void) memset( statistic.tree, 0, sizeof( DirEntry ) + PATH_LENGTH );
+  statistic.tree = NewOrAbort<DirEntry>();
 
   *std::format_to(statistic.path, "{}", path) = '\0';
   *std::format_to(statistic.login_path, "{}", path) = '\0';
@@ -211,7 +209,7 @@ int LoginDisk(char *path)
 
   if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
-    std::strcpy(statistic.tree->name, path);
+    statistic.tree->name = path;
 
     if (pipe(p))
     {
@@ -629,7 +627,7 @@ int LoginDisk(char *path)
       DeleteTree( disk_statistic.tree );
     }
 
-    (void) strcpy( statistic.tree->name, path );
+    statistic.tree->name = path;
     statistic.tree->next = statistic.tree->prev = nullptr;
 
     depth = strtod(TREEDEPTH, nullptr);

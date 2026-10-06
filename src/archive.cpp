@@ -61,11 +61,9 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
     }
   }
 
-  de_ptr = MallocOrAbort<DirEntry>(sizeof(DirEntry) + std::strlen(name));
-
-  (void) memset( (char *) de_ptr, 0, sizeof( DirEntry ) );
-  (void) strcpy( de_ptr->name, name );
-  (void) memcpy( (char *) &de_ptr->stat_struct, (char *) stat, sizeof( struct stat ) );
+  de_ptr = NewOrAbort<DirEntry>();
+  de_ptr->name = name;
+  de_ptr->stat_struct = *stat;
 
 #ifdef DEBUG
   fprintf( stderr, "new dir: \"%s\"\n", name );
@@ -85,7 +83,7 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
 
     for( ds_ptr = df_ptr; ds_ptr; ds_ptr = ds_ptr->next )
     {
-      if( strcmp( ds_ptr->name, de_ptr->name ) > 0 )
+      if( ds_ptr->name > de_ptr->name )
       {
         /* ds-Element ist groesser */
         /*-------------------------*/
@@ -122,7 +120,7 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
 
     for( ds_ptr = df_ptr->sub_tree; ds_ptr; ds_ptr = ds_ptr->next )
     {
-      if( strcmp( ds_ptr->name, de_ptr->name ) > 0 )
+      if( ds_ptr->name > de_ptr->name )
       {
         /* ds-Element ist groesser */
         /*-------------------------*/
@@ -163,7 +161,6 @@ int InsertArchiveFileEntry(DirEntry *tree, char *path, struct stat *stat)
   DirEntry *de_ptr;
   FileEntry *fs_ptr, *fe_ptr;
   struct stat stat_struct;
-  int  n;
 
 
   if( KeyPressed() )
@@ -197,22 +194,13 @@ int InsertArchiveFileEntry(DirEntry *tree, char *path, struct stat *stat)
     }
   }
 
-  if( S_ISLNK( stat->st_mode ) )
-    n = strlen( &path[ strlen( path ) + 1 ] ) + 1;
-  else
-    n = 0;
-
-  fe_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + std::strlen(file) + n);
-
-  (void) memset( fe_ptr, 0, sizeof( FileEntry ) );
-  (void) memcpy( (char *) &fe_ptr->stat_struct, (char *) stat, sizeof( struct stat ) );
-  (void) strcpy( fe_ptr->name, file );
+  fe_ptr = NewOrAbort<FileEntry>();
+  fe_ptr->stat_struct = *stat;
+  fe_ptr->name = file;
 
   if( S_ISLNK( stat->st_mode ) )
   {
-    (void) strcpy( &fe_ptr->name[ strlen( fe_ptr->name ) + 1 ],
-		   &path[ strlen( path ) + 1 ]
-		 );
+    fe_ptr->symlink_target = &path[std::strlen(path) + 1];
   }
 
   fe_ptr->dir_entry = de_ptr;
@@ -258,12 +246,12 @@ static int GetArchiveDirEntry(DirEntry *tree, char *path, DirEntry **dir_entry)
   {
     for( de_ptr = tree; de_ptr; de_ptr = de_ptr->next )
     {
-      n = strlen( de_ptr->name );
-      if( de_ptr->name[0] == std::filesystem::path::preferred_separator &&
-          de_ptr->name[1] == '\0' )
+      n = de_ptr->name.size();
+      if( de_ptr->name.size() == 1 &&
+          de_ptr->name[0] == std::filesystem::path::preferred_separator )
         is_root = true;
 
-      if( n && !strncmp( de_ptr->name, path, n ) &&
+      if( n && de_ptr->name.compare(0, n, path, n) == 0 &&
 	  (is_root || path[n] == '\0' || path[n] == std::filesystem::path::preferred_separator ) )
       {
 	if( ( is_root && path[n] == '\0' ) ||
@@ -351,14 +339,11 @@ int MinimizeArchiveTree(DirEntry *tree)
       tree->file == nullptr )
   {
     next_ptr = tree->next;
-    (void) memcpy( (char *) tree,
-		   (char *) tree->next,
-		   sizeof( DirEntry ) + strlen( tree->next->name )
-		 );
+    *tree = *next_ptr;
     tree->prev = nullptr;
     if( tree->next ) tree->next->prev = tree;
     statistic.disk_total_directories--;
-    free( next_ptr );
+    delete next_ptr;
     for( fe_ptr=tree->file; fe_ptr; fe_ptr=fe_ptr->next)
       fe_ptr->dir_entry = tree;
     for( de_ptr=tree->sub_tree; de_ptr; de_ptr=de_ptr->next)
@@ -376,20 +361,18 @@ int MinimizeArchiveTree(DirEntry *tree)
       /* Zusammenfassung moeglich */
       /*--------------------------*/
 
-      if( !(tree->name[0] == std::filesystem::path::preferred_separator &&
-            tree->name[1] == '\0') )
+      if( !(tree->name.size() == 1 &&
+            tree->name[0] == std::filesystem::path::preferred_separator) )
       {
-        const auto len = std::strlen(tree->name);
-        tree->name[len] = std::filesystem::path::preferred_separator;
-        tree->name[len + 1] = '\0';
+        tree->name += std::filesystem::path::preferred_separator;
       }
-      (void) strcat( tree->name, de_ptr->name );
+      tree->name += de_ptr->name;
       statistic.disk_total_directories--;
       tree->sub_tree = de_ptr->sub_tree;
       for( de1_ptr = de_ptr->sub_tree; de1_ptr; de1_ptr = de1_ptr->next )
 	de1_ptr->up_tree = tree;
       next_ptr = de_ptr->sub_tree;
-      free( de_ptr );
+      delete de_ptr;
 #ifdef DEBUG
   fprintf( stderr, "new root-dir: \"%s\"\n", tree->name );
 #endif
@@ -412,24 +395,17 @@ int MinimizeArchiveTree(DirEntry *tree)
     )
   {
     de_ptr = tree->sub_tree;
-    {
-      const auto len = std::strlen(tree->name);
-      tree->name[len] = std::filesystem::path::preferred_separator;
-      tree->name[len + 1] = '\0';
-    }
-    (void) strcat( tree->name, de_ptr->name );
+    tree->name += std::filesystem::path::preferred_separator;
+    tree->name += de_ptr->name;
     tree->file = de_ptr->file;
     for( fe_ptr=tree->file; fe_ptr; fe_ptr=fe_ptr->next )
       fe_ptr->dir_entry = tree;
-    (void) memcpy( (char *) &tree->stat_struct,
-		   (char *) &de_ptr->stat_struct,
-		   sizeof( struct stat )
-		  );
+    tree->stat_struct = de_ptr->stat_struct;
     statistic.disk_total_directories--;
     tree->sub_tree = de_ptr->sub_tree;
     for( de1_ptr = de_ptr->sub_tree; de1_ptr; de1_ptr = de1_ptr->next )
       de1_ptr->up_tree = tree;
-    free( de_ptr );
+    delete de_ptr;
   }
   return( 0 );
 }

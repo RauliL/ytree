@@ -70,7 +70,7 @@ int DeleteDirectory(DirEntry *dir_entry)
 
       if( dir_entry->next ) dir_entry->next->prev = dir_entry->prev;
 
-      std::free(static_cast<void*>(dir_entry));
+      delete dir_entry;
 
       (void) GetAvailBytes( &statistic.disk_space );
 
@@ -150,7 +150,7 @@ static int DeleteSingleDirectory( DirEntry *dir_entry )
   else dir_entry->up_tree->sub_tree = dir_entry->next;
   if( dir_entry->next ) dir_entry->next->prev = dir_entry->prev;
 
-  std::free(static_cast<void*>(dir_entry));
+  delete dir_entry;
 
   return 0;
 }

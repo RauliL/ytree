@@ -39,7 +39,7 @@ int DeleteFile(FileEntry *fe_ptr)
         sizeof(buffer),
         "overriding mode %04o for \"%s\" (Y/N) ? ",
         fe_ptr->stat_struct.st_mode & 0777,
-        fe_ptr->name
+        fe_ptr->name.c_str()
       );
 
       term = InputChoise( buffer, "YN\033" );
@@ -111,7 +111,7 @@ int RemoveFile(FileEntry *fe_ptr)
   else
     de_ptr->file = fe_ptr->next;
 
-  free( (char *) fe_ptr );
+  delete fe_ptr;
 
   return( 0 );
 }

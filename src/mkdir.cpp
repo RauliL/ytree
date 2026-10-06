@@ -82,44 +82,21 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
     /* Directory erstellt
      * ==> einklinken im Baum
      */
-    den_ptr = MallocOrAbort<DirEntry>(sizeof(DirEntry) + std::strlen(dir_name));
-    den_ptr->file = nullptr;
-    den_ptr->next = nullptr;
-    den_ptr->prev = nullptr;
-    den_ptr->sub_tree = nullptr;
-    den_ptr->total_bytes    = 0L;
-    den_ptr->matching_bytes = 0L;
-    den_ptr->tagged_bytes   = 0L;
-    den_ptr->total_files    = 0;
-    den_ptr->matching_files = 0;
-    den_ptr->tagged_files   = 0;
-    den_ptr->access_denied  = false;
-    den_ptr->cursor_pos     = 0;
-    den_ptr->start_file     = 0;
-    den_ptr->global_flag    = false;
-    den_ptr->login_flag     = false;
-    den_ptr->big_window     = false;
+    den_ptr = NewOrAbort<DirEntry>();
     den_ptr->up_tree = father_dir_entry;
-    den_ptr->not_scanned    = false;
+    den_ptr->name = dir_name;
 
     statistic.disk_total_directories++;
 
-    std::strcpy(den_ptr->name, dir_name);
-
     StatOrAbort(path_str, stat_struct);
-
-    std::memcpy(
-      static_cast<void*>(&den_ptr->stat_struct),
-      static_cast<const void*>(&stat_struct),
-      sizeof(stat_struct)
-    );
+    den_ptr->stat_struct = stat_struct;
 
     /* Sortieren durch direktes Einfuegen */
     /*------------------------------------*/
 
     for( des_ptr = father_dir_entry->sub_tree; des_ptr; des_ptr = des_ptr->next )
     {
-      if( strcmp( des_ptr->name, den_ptr->name ) > 0 )
+      if( des_ptr->name > den_ptr->name )
       {
 	/* des-Element ist groesser */
 	/*--------------------------*/
@@ -175,15 +152,15 @@ int MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry )
   NormPath( dir_path, path );
   *dest_dir_entry = nullptr;
 
-  n = strlen( tree->name );
+  n = tree->name.size();
   const char preferred_separator_str[]{
     std::filesystem::path::preferred_separator, '\0'};
   const auto tree_is_root =
-    tree->name[0] == std::filesystem::path::preferred_separator &&
-    tree->name[1] == '\0';
+    tree->name.size() == 1 &&
+    tree->name[0] == std::filesystem::path::preferred_separator;
 
   if( tree_is_root ||
-      ( !strncmp( tree->name, path, n ) &&
+      ( tree->name.compare(0, n, path, n) == 0 &&
        ( path[n] == std::filesystem::path::preferred_separator || path[n] == '\0' ) ) )
   {
     /* Pfad befindet sich im (Sub)-Tree */
@@ -195,7 +172,7 @@ int MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry )
     {
       for( sde_ptr = de_ptr->sub_tree; sde_ptr; sde_ptr = sde_ptr->next )
       {
-        if( !strcmp( sde_ptr->name, token ) )
+        if( sde_ptr->name == token )
 	{
 	  /* Subtree gefunden */
 	  /*------------------*/

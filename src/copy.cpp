@@ -193,17 +193,10 @@ int CopyFile(Statistic *statistic_ptr,
 
       /* File eintragen */
       /*----------------*/
-      fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + std::strlen(to_file));
-
-      (void) strcpy( fen_ptr->name, to_file );
-
-      (void) memcpy( &fen_ptr->stat_struct,
-		     &stat_struct,
-		     sizeof( stat_struct )
-		   );
-
+      fen_ptr = NewOrAbort<FileEntry>();
+      fen_ptr->name = to_file;
+      fen_ptr->stat_struct = stat_struct;
       fen_ptr->dir_entry   = dest_dir_entry;
-      fen_ptr->tagged      = false;
       fen_ptr->matching    = Match( fen_ptr->name );
       fen_ptr->next        = dest_dir_entry->file;
       fen_ptr->prev        = nullptr;
@@ -315,7 +308,7 @@ int CopyTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
 
   walking_package->new_fe_ptr = fe_ptr;  /* unchanged */
 
-  if( BuildFilename( fe_ptr->name,
+  if( BuildFilename( fe_ptr->name.data(),
 		     walking_package->function_data.copy.to_file,
 		     new_name
 		   ) == 0 )

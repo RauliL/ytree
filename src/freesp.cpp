@@ -283,7 +283,7 @@ int GetDiskParameter( char *path,
 
 int GetAvailBytes(long long *avail_bytes)
 {
-  return( GetDiskParameter( statistic.tree->name,
+  return( GetDiskParameter( statistic.tree->name.data(),
 			    nullptr,
 			    avail_bytes,
 			    nullptr

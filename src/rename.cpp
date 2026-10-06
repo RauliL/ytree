@@ -43,16 +43,9 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
     /* Rename erfolgreich */
     /*--------------------*/
     StatOrAbort(to_path, stat_struct);
-    den_ptr = MallocOrAbort<DirEntry>(sizeof(DirEntry) + std::strlen(new_name));
-
-    (void) memcpy( den_ptr, de_ptr, sizeof( DirEntry ) );
-
-    (void) strcpy( den_ptr->name, new_name );
-
-    (void) memcpy( &den_ptr->stat_struct,
-		   &stat_struct,
-		   sizeof( stat_struct )
-		 );
+    den_ptr = NewOrAbort<DirEntry>(*de_ptr);
+    den_ptr->name = new_name;
+    den_ptr->stat_struct = stat_struct;
 
     /* Struktur einklinken */
     /*---------------------*/
@@ -81,7 +74,7 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
     /* Alte Struktur freigeben */
     /*-------------------------*/
 
-    free( de_ptr );
+    delete de_ptr;
 
     /* Achtung: de_ptr ist ab jetzt ungueltig !!! */
     /*--------------------------------------------*/
@@ -127,16 +120,9 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
     /* Rename erfolgreich */
     /*--------------------*/
     StatOrAbort(to_path, stat_struct);
-    fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + std::strlen(new_name));
-
-    (void) memcpy( fen_ptr, fe_ptr, sizeof( FileEntry ) );
-
-    (void) strcpy( fen_ptr->name, new_name );
-
-    (void) memcpy( &fen_ptr->stat_struct,
-		   &stat_struct,
-		   sizeof( stat_struct )
-		 );
+    fen_ptr = NewOrAbort<FileEntry>(*fe_ptr);
+    fen_ptr->name = new_name;
+    fen_ptr->stat_struct = stat_struct;
 
     /* Struktur einklinken */
     /*---------------------*/
@@ -148,7 +134,7 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
     /* Alte Struktur freigeben */
     /*-------------------------*/
 
-    free( fe_ptr );
+    delete fe_ptr;
 
     /* Achtung: fe_ptr ist ab jetzt ungueltig !!! */
     /*--------------------------------------------*/
@@ -285,7 +271,7 @@ int RenameTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
   char new_name[PATH_LENGTH+1];
 
 
-  if( BuildFilename( fe_ptr->name,
+  if( BuildFilename( fe_ptr->name.data(),
                      walking_package->function_data.rename.new_name,
 		     new_name
 		   ) == 0 )

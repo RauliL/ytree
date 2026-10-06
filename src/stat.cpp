@@ -128,10 +128,10 @@ void DisplayDirParameter(DirEntry *dir_entry)
 {
   const auto path = GetPath(dir_entry);
   auto p = std::strrchr(
-    dir_entry->name,
+    dir_entry->name.c_str(),
     std::filesystem::path::preferred_separator
   );
-  auto f = p ? p + 1 : dir_entry->name;
+  auto f = p ? p + 1 : dir_entry->name.c_str();
   char format[32];
   char buffer[PATH_LENGTH + 1];
   char auxbuff[PATH_LENGTH + 1];
@@ -181,7 +181,7 @@ void DisplayGlobalFileParameter(FileEntry *file_entry)
   wmove( stdscr, 0, 6);
   wclrtoeol( stdscr);
   PrintMenuOptions( stdscr, 0, 6, buffer1, GLOBAL_COLOR, HIGLOBAL_COLOR);
-  CutFilename( buffer1, file_entry->name, 20 );
+  CutFilename( buffer1, file_entry->name.data(), 20 );
   if (snprintf( buffer2, PATH_LENGTH, "[%-20s]", buffer1 ))
     ;
   PrintMenuOptions( stdscr, 18, COLS - 22, buffer2, GLOBAL_COLOR, HIGLOBAL_COLOR);
@@ -201,7 +201,7 @@ void DisplayFileParameter(FileEntry *file_entry)
     auxbuff,
     sizeof(auxbuff),
     "[%-20s]",
-    CutFilename( buffer, file_entry->name, 20)
+    CutFilename( buffer, file_entry->name.data(), 20)
   );
   PrintMenuOptions( stdscr, 18, COLS - 22, auxbuff, MENU_COLOR, HIMENUS_COLOR);
   PrettyPrintNumber( 19, COLS - 17, (long long)file_entry->stat_struct.st_size );

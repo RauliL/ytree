@@ -24,7 +24,7 @@ int ReadTreeFromZOO(DirEntry *dir_entry, FILE *f)
   struct stat stat;
   bool   dir_flag = false;
 
-  *dir_entry->name = '\0';
+  dir_entry->name.clear();
 
   while( fgets( zoo_line, ZOO_LINE_LENGTH, f ) != nullptr )
   {

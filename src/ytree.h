@@ -23,9 +23,11 @@
 #include <filesystem>
 #include <format>
 #include <memory>
+#include <new>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -440,40 +442,40 @@ struct DirEntry;
 
 struct FileEntry
 {
-  FileEntry* next;
-  FileEntry* prev;
-  DirEntry* dir_entry;
-  struct stat stat_struct;
-  bool tagged;
-  bool matching;
-  // Symlink name is std::strlen(name) + 1
-  char name[1];
+  FileEntry* next = nullptr;
+  FileEntry* prev = nullptr;
+  DirEntry* dir_entry = nullptr;
+  struct stat stat_struct{};
+  bool tagged = false;
+  bool matching = false;
+  std::string name;
+  std::string symlink_target;
 };
 
 struct DirEntry
 {
-  FileEntry* file;
-  DirEntry* next;
-  DirEntry* prev;
-  DirEntry* sub_tree;
-  DirEntry* up_tree;
-  long long total_bytes;
-  long long matching_bytes;
-  long long tagged_bytes;
-  unsigned int       total_files;
-  unsigned int       matching_files;
-  unsigned int       tagged_files;
-  int                cursor_pos;
-  int                start_file;
-  struct   stat      stat_struct;
-  bool               access_denied;
-  bool               global_flag;
-  bool               tagged_flag;
-  bool               only_tagged;
-  bool               not_scanned;
-  bool               big_window;
-  bool               login_flag;
-  char               name[1];
+  FileEntry* file = nullptr;
+  DirEntry* next = nullptr;
+  DirEntry* prev = nullptr;
+  DirEntry* sub_tree = nullptr;
+  DirEntry* up_tree = nullptr;
+  long long total_bytes = 0;
+  long long matching_bytes = 0;
+  long long tagged_bytes = 0;
+  unsigned int total_files = 0;
+  unsigned int matching_files = 0;
+  unsigned int tagged_files = 0;
+  int cursor_pos = 0;
+  int start_file = 0;
+  struct stat stat_struct{};
+  bool access_denied = false;
+  bool global_flag = false;
+  bool tagged_flag = false;
+  bool only_tagged = false;
+  bool not_scanned = false;
+  bool big_window = false;
+  bool login_flag = false;
+  std::string name;
 };
 
 struct Statistic
@@ -705,7 +707,7 @@ void Print(WINDOW* win, int y, int x, const std::string& str, int color);
 extern void PrintOptions(WINDOW *,int, int, const char *);
 extern void PrintMenuOptions(WINDOW *,int, int, char *, int, int);
 extern char *FormFilename(char *dest, char *src, unsigned int max_len);
-extern char *CutFilename(char *dest, char *src, unsigned int max_len);
+extern char *CutFilename(char *dest, const char *src, unsigned int max_len);
 char* CutPathname(char* dest, const std::string& src, std::size_t max_len);
 extern void   Fnsplit(char *path, char *dir, char *name);
 std::string MakeExtractCommandLine(
@@ -777,10 +779,10 @@ std::optional<std::filesystem::path> Getcwd();
 std::filesystem::path GetcwdOrDot();
 extern int  RefreshDirWindow();
 std::string StrLeft(const char* str, std::size_t count);
-std::string FitVisualWidth(const char* str, std::size_t width, bool left_justify);
+std::string FitVisualWidth(std::string_view str, std::size_t width, bool left_justify);
 const char* StrVisualIndex(const char* str, std::size_t index);
 void TruncateVisual(char* str, std::size_t max_len);
-extern int  StrVisualLength(const char *str);
+int StrVisualLength(std::string_view str);
 void WAttrAddStr(WINDOW* win, int attr, const std::string& str);
 void StatOrAbort(const std::string& path, struct stat& st);
 std::optional<std::string> GetHomePath();
@@ -800,6 +802,20 @@ inline T* MallocOrAbort(const std::size_t size)
   }
 
   return ptr;
+}
+
+template<class T, class... Args>
+inline T* NewOrAbort(Args&&... args)
+{
+  try
+  {
+    return new T(std::forward<Args>(args)...);
+  }
+  catch (const std::bad_alloc&)
+  {
+    Error("new() failed*ABORT");
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 inline bool Exists(const std::string& path)

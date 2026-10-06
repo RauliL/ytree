@@ -83,7 +83,7 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
 
   first_dir_entry.prev  = nullptr;
   first_dir_entry.next  = nullptr;
-  *first_dir_entry.name = '\0';
+  first_dir_entry.name.clear();
   first_file_entry.next = nullptr;
   fes_ptr               = &first_file_entry;
 
@@ -127,17 +127,10 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
     {
       /* Directory-Entry */
       /*-----------------*/
-      den_ptr = MallocOrAbort<DirEntry>(sizeof(DirEntry) + entry_name.size());
+      den_ptr = NewOrAbort<DirEntry>();
       den_ptr->up_tree = dir_entry;
-
-      std::strcpy( den_ptr->name, entry_name.c_str() );
-      std::memcpy(
-        static_cast<void*>(&den_ptr->stat_struct),
-        static_cast<const void*>(&stat_struct),
-        sizeof(stat_struct)
-      );
-      den_ptr->prev = nullptr;
-      den_ptr->next = nullptr;
+      den_ptr->name = entry_name;
+      den_ptr->stat_struct = stat_struct;
 
       ReadTree(den_ptr, new_path, depth - 1);
 
@@ -146,7 +139,7 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
 
       for( des_ptr = &first_dir_entry; des_ptr; des_ptr = des_ptr->next )
       {
-        if( strcmp( des_ptr->name, den_ptr->name ) > 0 )
+        if( des_ptr->name > den_ptr->name )
         {
 	  /* des-Element ist groesser */
 	  /*--------------------------*/
@@ -175,42 +168,26 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
       /* File-Entry */
       /*------------*/
 
-      int n;
       char link_path[PATH_LENGTH + 1];
 
       /* Test, ob Eintrag Symbolischer Link ist */
       /*----------------------------------------*/
 
-      n = 0; *link_path = '\0';
+      fen_ptr = NewOrAbort<FileEntry>();
+      fen_ptr->name = entry_name;
+      fen_ptr->stat_struct = stat_struct;
 
       if (S_ISLNK(stat_struct.st_mode))
       {
         /* Ja, symbolischer Name wird an "echten" Namen angehaengt */
         /*---------------------------------------------------------*/
-        if ((n = readlink(new_path.c_str(), link_path, sizeof(link_path))) == -1)
+        if (const auto n = readlink(new_path.c_str(), link_path, sizeof(link_path)); n == -1)
         {
-          *std::format_to(link_path, "{}", "unknown") = '\0';
-          n = std::strlen(link_path);
+          fen_ptr->symlink_target = "unknown";
+        } else {
+          fen_ptr->symlink_target.assign(link_path, static_cast<std::size_t>(n));
         }
-        link_path[n] = 0;
-
-        fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + entry_name.size() + n + 1);
-        std::strcpy(fen_ptr->name, entry_name.c_str());
-        std::strcpy(&fen_ptr->name[strlen(fen_ptr->name) + 1], link_path);
-      } else {
-        fen_ptr = MallocOrAbort<FileEntry>(sizeof(FileEntry) + entry_name.size());
-        std::strcpy(fen_ptr->name, entry_name.c_str());
       }
-
-      fen_ptr->next = nullptr;
-      fen_ptr->prev = nullptr;
-      fen_ptr->tagged = false;
-
-      std::memcpy(
-        static_cast<void*>(&fen_ptr->stat_struct),
-        static_cast<const void*>(&stat_struct),
-        sizeof(stat_struct)
-      );
 
       fen_ptr->dir_entry = dir_entry;
       fes_ptr->next      = fen_ptr;
@@ -291,7 +268,7 @@ static void UnReadSubTree(DirEntry *dir_entry)
     else de_ptr->up_tree->sub_tree = de_ptr->next;
     if( de_ptr->next ) de_ptr->next->prev = de_ptr->prev;
 
-    free( de_ptr );
+    delete de_ptr;
   }
 }
 
