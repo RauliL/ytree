@@ -23,14 +23,12 @@ static void UnReadSubTree(DirEntry *dir_entry);
  */
 
 
-int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
+int ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path, int depth)
 {
   struct stat   stat_struct;
-  DirEntry      *den_ptr;
-  FileEntry     *fen_ptr;
   int		file_count;
-  std::vector<DirEntry*> new_children;
-  std::vector<FileEntry*> new_files;
+  std::vector<std::shared_ptr<DirEntry>> new_children;
+  std::vector<std::shared_ptr<FileEntry>> new_files;
 
 
   /* dir_entry initialisieren */
@@ -55,11 +53,14 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
   if( S_ISBLK( dir_entry->stat_struct.st_mode ) )
     return( 0 ); /* Block-Device */
 
-  if (depth < 0 && dir_entry->parent)
+  if (depth < 0)
   {
-    dir_entry->parent->not_scanned = true;
+    if (const auto parent = dir_entry->Parent())
+    {
+      parent->not_scanned = true;
 
-    return 1;
+      return 1;
+    }
   }
 
   statistic.disk_total_directories++;
@@ -115,7 +116,7 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
     {
       /* Directory-Entry */
       /*-----------------*/
-      den_ptr = NewOrAbort<DirEntry>();
+      auto den_ptr = std::make_shared<DirEntry>();
       den_ptr->parent = dir_entry;
       den_ptr->name = entry_name;
       den_ptr->stat_struct = stat_struct;
@@ -134,7 +135,7 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
       /* Test, ob Eintrag Symbolischer Link ist */
       /*----------------------------------------*/
 
-      fen_ptr = NewOrAbort<FileEntry>();
+      auto fen_ptr = std::make_shared<FileEntry>();
       fen_ptr->name = entry_name;
       fen_ptr->stat_struct = stat_struct;
 
@@ -165,7 +166,7 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
   std::stable_sort(
     new_children.begin(),
     new_children.end(),
-    [](const DirEntry* a, const DirEntry* b) { return a->name < b->name; }
+    [](const std::shared_ptr<DirEntry>& a, const std::shared_ptr<DirEntry>& b) { return a->name < b->name; }
   );
 
   dir_entry->files = std::move(new_files);
@@ -183,14 +184,14 @@ static void RemoveAllFiles(DirEntry *dir_entry)
 {
   while( !dir_entry->files.empty() )
   {
-    RemoveFile( dir_entry->files.back() );
+    RemoveFile( dir_entry->files.back().get() );
   }
 }
 
 
 void UnReadTree(DirEntry *dir_entry)
 {
-  if( dir_entry == statistic.tree )
+  if( dir_entry == statistic.tree.get() )
   {
     Message("Can't delete ROOT");
   }
@@ -215,14 +216,14 @@ static void UnReadSubTree(DirEntry *parent)
 
   parent->children.clear();
 
-  for( DirEntry *de_ptr : children )
+  for( const auto& de_ptr : children )
   {
-    RemoveAllFiles( de_ptr );
-    UnReadSubTree( de_ptr );
+    RemoveAllFiles( de_ptr.get() );
+    UnReadSubTree( de_ptr.get() );
 
     if( !parent->not_scanned )
       statistic.disk_total_directories--;
 
-    delete de_ptr;
+    /* de_ptr is released when "children" goes out of scope */
   }
 }

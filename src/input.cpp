@@ -380,7 +380,7 @@ int InputString(
       {
         char path[PATH_LENGTH + 1];
 
-        if (KeyF2Get(statistic.tree, statistic.disp_begin_pos, statistic.cursor_pos, path))
+        if (KeyF2Get(statistic.tree.get(), statistic.disp_begin_pos, statistic.cursor_pos, path))
         {
           break;
         }

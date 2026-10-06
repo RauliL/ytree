@@ -18,7 +18,7 @@ static int GetStatFromTAR(char *tar_line, char *name, struct stat *stat);
 /* Dateibaum aus TAR-Listing lesen */
 /*---------------------------------*/
 
-int ReadTreeFromTAR(DirEntry *dir_entry, FILE *f)
+int ReadTreeFromTAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
   char tar_line[TAR_LINE_LENGTH + 1];
   char path_name[PATH_LENGTH +1];

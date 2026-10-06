@@ -28,7 +28,7 @@ int DeleteDirectory(DirEntry *dir_entry)
 
   ClearHelp();
 
-  if (dir_entry == statistic.tree)
+  if (dir_entry == statistic.tree.get())
   {
     Message("Can't delete ROOT");
   }
@@ -68,8 +68,6 @@ int DeleteDirectory(DirEntry *dir_entry)
 
       UnlinkDirEntry( dir_entry );
 
-      delete dir_entry;
-
       (void) GetAvailBytes( &statistic.disk_space );
 
       result = 0;
@@ -95,7 +93,8 @@ static int DeleteSubTree( DirEntry *dir_entry )
   /* Kopie, da DeleteSingleDirectory() die Eintraege austraegt */
   const auto children = dir_entry->children;
 
-  for( DirEntry *de_ptr : children ) {
+  for( const auto& de_sp : children ) {
+    DirEntry *de_ptr = de_sp.get();
     if( !de_ptr->children.empty() ) {
       if( DeleteSubTree( de_ptr ) ) {
         ESCAPE;
@@ -129,9 +128,9 @@ static int DeleteSingleDirectory( DirEntry *dir_entry )
   /* Kopie, da DeleteFile() die Eintraege austraegt */
   const auto files = dir_entry->files;
 
-  for (const auto fe_ptr : files)
+  for (const auto& fe_ptr : files)
   {
-    if (DeleteFile(fe_ptr))
+    if (DeleteFile(fe_ptr.get()))
     {
       return -1;
     }
@@ -144,12 +143,12 @@ static int DeleteSingleDirectory( DirEntry *dir_entry )
     return -1;
   }
 
-  if( !dir_entry->parent->not_scanned )
+  const auto parent = dir_entry->Parent();
+
+  if( parent && !parent->not_scanned )
     statistic.disk_total_directories--;
 
   UnlinkDirEntry( dir_entry );
-
-  delete dir_entry;
 
   return 0;
 }
@@ -160,10 +159,21 @@ static int DeleteSingleDirectory( DirEntry *dir_entry )
 
 static void UnlinkDirEntry( DirEntry *dir_entry )
 {
-  auto& siblings = dir_entry->parent->children;
+  const auto parent = dir_entry->Parent();
+
+  if( !parent )
+    return;
+
+  /* The parent no longer owns the entry afterwards; it is destroyed here
+   * unless something else (e.g. the dir window list) still shares it. */
+  auto& siblings = parent->children;
 
   siblings.erase(
-    std::remove( siblings.begin(), siblings.end(), dir_entry ),
+    std::remove_if(
+      siblings.begin(),
+      siblings.end(),
+      [dir_entry]( const std::shared_ptr<DirEntry>& d ) { return d.get() == dir_entry; }
+    ),
     siblings.end()
   );
 }

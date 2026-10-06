@@ -17,7 +17,7 @@ static int GetStatFromZOO(char *zoo_line, char *name, struct stat *stat);
 /* Dateibaum aus ZOO-Listing lesen */
 /*---------------------------------*/
 
-int ReadTreeFromZOO(DirEntry *dir_entry, FILE *f)
+int ReadTreeFromZOO(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
   char zoo_line[ZOO_LINE_LENGTH + 1];
   char path_name[PATH_LENGTH +1];

@@ -78,10 +78,14 @@ FNC_XIT:
 
 int RemoveFile(FileEntry *fe_ptr)
 {
-  DirEntry *de_ptr;
   long long file_size;
 
-  de_ptr = fe_ptr->dir_entry;
+  const auto de_ptr = fe_ptr->Dir();
+
+  if (!de_ptr)
+  {
+    return -1;
+  }
 
   file_size = fe_ptr->stat_struct.st_size;
 
@@ -106,12 +110,15 @@ int RemoveFile(FileEntry *fe_ptr)
   /* File austragen */
   /*----------------*/
 
+  /* The entry is destroyed here unless something else still shares it. */
   de_ptr->files.erase(
-    std::remove(de_ptr->files.begin(), de_ptr->files.end(), fe_ptr),
+    std::remove_if(
+      de_ptr->files.begin(),
+      de_ptr->files.end(),
+      [fe_ptr](const std::shared_ptr<FileEntry>& f) { return f.get() == fe_ptr; }
+    ),
     de_ptr->files.end()
   );
-
-  delete fe_ptr;
 
   return( 0 );
 }

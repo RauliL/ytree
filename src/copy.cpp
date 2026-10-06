@@ -17,12 +17,11 @@ int CopyFile(Statistic *statistic_ptr,
 {
   long long file_size;
   const auto from_path = GetRealFileNamePath(fe_ptr);
-  const auto from_dir = GetPath(fe_ptr->dir_entry);
+  const auto from_dir = GetPath(fe_ptr->Dir().get());
   std::filesystem::path to_fs_path;
   std::string to_path;
   char        buffer[20];
   FileEntry   *dest_file_entry;
-  FileEntry   *fen_ptr;
   struct stat stat_struct;
   int         term;
   int         result;
@@ -41,7 +40,7 @@ int CopyFile(Statistic *statistic_ptr,
   }
   if (path_copy)
   {
-    const auto path = std::filesystem::path(GetPath(fe_ptr->dir_entry));
+    const auto path = std::filesystem::path(GetPath(fe_ptr->Dir().get()));
 
     /* Create destination folder (if neccessary) */
     /*-------------------------------------------*/
@@ -193,10 +192,10 @@ int CopyFile(Statistic *statistic_ptr,
 
       /* File eintragen */
       /*----------------*/
-      fen_ptr = NewOrAbort<FileEntry>();
+      auto fen_ptr = std::make_shared<FileEntry>();
       fen_ptr->name = to_file;
       fen_ptr->stat_struct = stat_struct;
-      fen_ptr->dir_entry   = dest_dir_entry;
+      fen_ptr->dir_entry   = dest_dir_entry->weak_from_this();
       fen_ptr->matching    = Match( fen_ptr->name );
       dest_dir_entry->files.insert( dest_dir_entry->files.begin(), fen_ptr );
     }

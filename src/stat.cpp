@@ -169,7 +169,7 @@ void DisplayDirParameter(DirEntry *dir_entry)
 
 void DisplayGlobalFileParameter(FileEntry *file_entry)
 {
-  const auto path = GetPath(file_entry->dir_entry);
+  const auto path = GetPath(file_entry->Dir().get());
   char buffer1[PATH_LENGTH+1];
   char buffer2[PATH_LENGTH+1];
   char format[32];

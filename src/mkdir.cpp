@@ -47,7 +47,6 @@ int MakeDirectory(DirEntry *father_dir_entry)
 
 int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
 {
-  DirEntry *den_ptr;
   struct stat stat_struct;
   int result = -1;
 
@@ -82,8 +81,8 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
     /* Directory erstellt
      * ==> einklinken im Baum
      */
-    den_ptr = NewOrAbort<DirEntry>();
-    den_ptr->parent = father_dir_entry;
+    auto den_ptr = std::make_shared<DirEntry>();
+    den_ptr->parent = father_dir_entry->weak_from_this();
     den_ptr->name = dir_name;
 
     statistic.disk_total_directories++;
@@ -100,7 +99,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
       std::find_if(
         siblings.begin(),
         siblings.end(),
-        [den_ptr](const DirEntry* des_ptr) { return des_ptr->name > den_ptr->name; }
+        [&den_ptr](const std::shared_ptr<DirEntry>& des_ptr) { return des_ptr->name > den_ptr->name; }
       ),
       den_ptr
     );
@@ -115,7 +114,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
 
 
 
-int MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry )
+int MakePath( const std::shared_ptr<DirEntry>& tree, char *dir_path, DirEntry **dest_dir_entry )
 {
   DirEntry *de_ptr, *sde_ptr;
   char     path[PATH_LENGTH+1];
@@ -140,19 +139,19 @@ int MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry )
     /* Pfad befindet sich im (Sub)-Tree */
     /*----------------------------------*/
 
-    de_ptr = tree;
+    de_ptr = tree.get();
     token = Strtok_r( &path[n], preferred_separator_str, &old );
     while( token )
     {
       sde_ptr = nullptr;
-      for( DirEntry *child : de_ptr->children )
+      for( const auto& child : de_ptr->children )
       {
         if( child->name == token )
 	{
 	  /* Subtree gefunden */
 	  /*------------------*/
 
-	  sde_ptr = child;
+	  sde_ptr = child.get();
 	  de_ptr = sde_ptr;
 	  break;
 	}

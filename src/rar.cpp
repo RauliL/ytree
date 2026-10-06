@@ -17,7 +17,7 @@ static int GetStatFromRAR(char *rar_line, char *name, struct stat *stat);
 /* Dateibaum aus RAR-Listing lesen */
 /*---------------------------------*/
 
-int ReadTreeFromRAR(DirEntry *dir_entry, FILE *f)
+int ReadTreeFromRAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
   char rar_line[RAR_LINE_LENGTH + 1];
   char path_name[PATH_LENGTH +1];

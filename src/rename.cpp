@@ -8,7 +8,6 @@ static bool RenameFileEntry(const std::string&, const std::string&);
 
 int RenameDirectory(DirEntry *de_ptr, char *new_name)
 {
-  DirEntry    *den_ptr;
   const auto from_path = GetPath(de_ptr);
   const std::filesystem::path from_fs_path(from_path);
   std::string to_path;
@@ -40,48 +39,13 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
     /* Rename erfolgreich */
     /*--------------------*/
     StatOrAbort(to_path, stat_struct);
-    den_ptr = NewOrAbort<DirEntry>(*de_ptr);
-    den_ptr->name = new_name;
-    den_ptr->stat_struct = stat_struct;
 
-    /* Struktur einklinken */
-    /*---------------------*/
-
-    if( den_ptr->parent )
-    {
-      std::replace(
-        den_ptr->parent->children.begin(),
-        den_ptr->parent->children.end(),
-        de_ptr,
-        den_ptr
-      );
-    }
-
-    /* Subtree */
-    /*---------*/
-
-    for( DirEntry *sde_ptr : den_ptr->children )
-      sde_ptr->parent = den_ptr;
-
-    /* Files */
-    /*-------*/
-
-    for( FileEntry *fe_ptr : den_ptr->files )
-      fe_ptr->dir_entry = den_ptr;
-
-    /* Wurzel */
-    /*--------*/
-
-    if( statistic.tree == de_ptr ) statistic.tree = den_ptr;
-    if( disk_statistic.tree == de_ptr ) disk_statistic.tree = den_ptr;
-
-    /* Alte Struktur freigeben */
-    /*-------------------------*/
-
-    delete de_ptr;
-
-    /* Achtung: de_ptr ist ab jetzt ungueltig !!! */
-    /*--------------------------------------------*/
+    /* The entry is owned by shared_ptr and only holds weak back-references,
+     * so it can be renamed in place: parent, children, files, statistic.tree
+     * and disk_statistic.tree all stay valid.
+     */
+    de_ptr->name = new_name;
+    de_ptr->stat_struct = stat_struct;
 
     result = 0;
   }
@@ -100,11 +64,10 @@ FNC_XIT:
 
 int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
 {
-  FileEntry   *fen_ptr;
-  const auto de_ptr = fe_ptr->dir_entry;
+  const auto de_ptr = fe_ptr->Dir();
   const auto from_path = GetFileNamePath(fe_ptr);
   const auto to_path =
-    (std::filesystem::path(GetPath(de_ptr)) / new_name).string();
+    (std::filesystem::path(GetPath(de_ptr.get())) / new_name).string();
   struct stat stat_struct;
   int         result;
 
@@ -124,31 +87,13 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
     /* Rename erfolgreich */
     /*--------------------*/
     StatOrAbort(to_path, stat_struct);
-    fen_ptr = NewOrAbort<FileEntry>(*fe_ptr);
-    fen_ptr->name = new_name;
-    fen_ptr->stat_struct = stat_struct;
 
-    /* Struktur einklinken */
-    /*---------------------*/
-
-    std::replace(
-      fen_ptr->dir_entry->files.begin(),
-      fen_ptr->dir_entry->files.end(),
-      fe_ptr,
-      fen_ptr
-    );
-
-    /* Alte Struktur freigeben */
-    /*-------------------------*/
-
-    delete fe_ptr;
-
-    /* Achtung: fe_ptr ist ab jetzt ungueltig !!! */
-    /*--------------------------------------------*/
+    /* Rename in place; see RenameDirectory(). */
+    fe_ptr->name = new_name;
+    fe_ptr->stat_struct = stat_struct;
 
     result = 0;
 
-    *new_fe_ptr = fen_ptr;
   }
 
   move( LINES - 2, 1 ); clrtoeol();

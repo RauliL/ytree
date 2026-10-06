@@ -22,7 +22,7 @@ int SetFileSpec(char *file_spec)
   statistic.disk_matching_files = 0L;
   statistic.disk_matching_bytes = 0L;
 
-  SetMatchingParam( statistic.tree );
+  SetMatchingParam( statistic.tree.get() );
 
   return( 0 );
 }
@@ -35,7 +35,7 @@ void SetMatchingParam(DirEntry *dir_entry)
   unsigned long matching_files = 0L;
   long long matching_bytes = 0L;
 
-  for( FileEntry *fe_ptr : dir_entry->files )
+  for( const auto& fe_ptr : dir_entry->files )
   {
     if( Match( fe_ptr->name ) )
     {
@@ -55,9 +55,9 @@ void SetMatchingParam(DirEntry *dir_entry)
   statistic.disk_matching_files += matching_files;
   statistic.disk_matching_bytes += matching_bytes;
 
-  for( DirEntry *child : dir_entry->children )
+  for( const auto& child : dir_entry->children )
   {
-    SetMatchingParam( child );
+    SetMatchingParam( child.get() );
   }
 }
 

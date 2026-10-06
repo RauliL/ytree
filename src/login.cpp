@@ -13,27 +13,6 @@
 
 
 
-static void DeleteTree(DirEntry *tree)
-{
-  if( tree == nullptr )
-    return;
-
-  for( FileEntry *fe_ptr : tree->files )
-  {
-    delete fe_ptr;
-  }
-
-  for( DirEntry *de_ptr : tree->children )
-  {
-    DeleteTree( de_ptr );
-  }
-
-  delete tree;
-}
-
-
-
-
 /* Login Disk liefert
  * -1 bei Fehler
  * 0  bei fehlerfreiem lesen eines neuen Baumes
@@ -57,10 +36,7 @@ int LoginDisk(char *path)
   {
     /* Status retten */
     /*---------------*/
-    (void) memcpy( (char *) &disk_statistic,
-		   (char *) &statistic,
-		   sizeof( Statistic )
-		 );
+    disk_statistic = statistic;
   }
 
   if ( disk_statistic.login_path[0] != 0) {
@@ -69,8 +45,7 @@ int LoginDisk(char *path)
       /* Tree is in memory! Use it! */
       /*----------------------------*/
 
-      if( statistic.tree != disk_statistic.tree )
-        DeleteTree( statistic.tree );
+      /* The previous tree (if different) is released by the assignment below. */
 
       if (IsUserActionDefined())
       {
@@ -80,10 +55,7 @@ int LoginDisk(char *path)
       {
         mode = Mode::DISK_MODE;
       }
-      (void) memcpy( (char *) &statistic,
-                     (char *) &disk_statistic,
-                     sizeof( Statistic )
-                     );
+      statistic = disk_statistic;
       (void) SetFileSpec( statistic.file_spec );
       return( 1 );   /* Return-Wert fuer "alten Baum" */
     }
@@ -100,24 +72,17 @@ int LoginDisk(char *path)
   }
 
 
-  if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
-  {
-    DeleteTree( statistic.tree );
-  }
-
+  /* Assigning a fresh Statistic releases the previous tree (shared_ptr). */
   statistic = {};
 
-  statistic.tree = NewOrAbort<DirEntry>();
+  statistic.tree = std::make_shared<DirEntry>();
 
   *std::format_to(statistic.path, "{}", path) = '\0';
   *std::format_to(statistic.login_path, "{}", path) = '\0';
   *std::format_to(statistic.file_spec, "{}", DEFAULT_FILE_SPEC) = '\0';
   *std::format_to(statistic.tape_name, "{}", DEFAULT_TAPEDEV) = '\0';
   statistic.kind_of_sort = { SortKey::Name, SortOrder::Ascending };
-  (void) memcpy( &statistic.tree->stat_struct,
-		 &stat_struct,
-		 sizeof( stat_struct )
-	       );
+  statistic.tree->stat_struct = stat_struct;
 
 
   if( !S_ISDIR(stat_struct.st_mode ) )
@@ -621,7 +586,7 @@ int LoginDisk(char *path)
       /* Alten Baum loeschen */
       /*---------------------*/
       *disk_statistic.login_path = '\0';
-      DeleteTree( disk_statistic.tree );
+      disk_statistic.tree.reset();
     }
 
     statistic.tree->name = path;
@@ -633,10 +598,7 @@ int LoginDisk(char *path)
 
       return -1;
     }
-    (void) memcpy( (char *) &disk_statistic,
-		   (char *) &statistic,
-		   sizeof( Statistic )
-		 );
+    disk_statistic = statistic;
   }
 
   (void) SetFileSpec( statistic.file_spec );

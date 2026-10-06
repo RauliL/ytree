@@ -17,7 +17,7 @@ static int GetStatFromARC(char *arc_line, char *name, struct stat *stat);
 /* Dateibaum aus ARC-Listing lesen */
 /*---------------------------------*/
 
-int ReadTreeFromARC(DirEntry *dir_entry, FILE *f)
+int ReadTreeFromARC(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
   char arc_line[ARC_LINE_LENGTH + 1];
   char path_name[PATH_LENGTH +1];

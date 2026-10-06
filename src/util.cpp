@@ -57,8 +57,12 @@ std::string GetPath(const DirEntry* dir_entry)
 {
   std::string result;
 
-  for (auto de_ptr = dir_entry; de_ptr; de_ptr = de_ptr->parent)
+  /* Parents are owned by the tree, so the raw cursor stays valid while the
+   * temporary shared_ptr returned by Parent() goes away. */
+  for (const DirEntry* de_ptr = dir_entry; de_ptr; )
   {
+    const auto parent = de_ptr->Parent();
+
     const auto is_root =
       de_ptr->name.size() == 1 &&
       de_ptr->name[0] == std::filesystem::path::preferred_separator;
@@ -68,10 +72,12 @@ std::string GetPath(const DirEntry* dir_entry)
       result.insert(0, de_ptr->name);
     }
     /* A nameless root (archive placeholder) doesn't contribute a separator */
-    if (de_ptr->parent && !de_ptr->parent->name.empty())
+    if (parent && !parent->name.empty())
     {
       result.insert(result.begin(), std::filesystem::path::preferred_separator);
     }
+
+    de_ptr = parent.get();
   }
 
   return result;
@@ -79,7 +85,7 @@ std::string GetPath(const DirEntry* dir_entry)
 
 std::string GetFileNamePath(const FileEntry* file_entry)
 {
-  return (std::filesystem::path(GetPath(file_entry->dir_entry)) / file_entry->name).string();
+  return (std::filesystem::path(GetPath(file_entry->Dir().get())) / file_entry->name).string();
 }
 
 std::string GetRealFileNamePath(const FileEntry* file_entry)
@@ -97,17 +103,17 @@ std::string GetRealFileNamePath(const FileEntry* file_entry)
       return file_entry->symlink_target;
     }
 
-    return (std::filesystem::path(GetPath(file_entry->dir_entry)) /
+    return (std::filesystem::path(GetPath(file_entry->Dir().get())) /
             file_entry->symlink_target)
       .string();
   }
 
-  return (std::filesystem::path(GetPath(file_entry->dir_entry)) /
+  return (std::filesystem::path(GetPath(file_entry->Dir().get())) /
           file_entry->name)
     .string();
 }
 
-int GetDirEntry(DirEntry *tree,
+int GetDirEntry(const std::shared_ptr<DirEntry>& tree,
                 DirEntry *current_dir_entry,
                 char *dir_path,
                 DirEntry **dir_entry,
@@ -182,19 +188,19 @@ int GetDirEntry(DirEntry *tree,
     /* Pfad befindet sich im (Sub)-Tree */
     /*----------------------------------*/
 
-    de_ptr = tree;
+    de_ptr = tree.get();
     token = Strtok_r( &dest_path[n], preferred_separator_str, &old );
     while( token )
     {
       sde_ptr = nullptr;
-      for( DirEntry *child : de_ptr->children )
+      for( const auto& child : de_ptr->children )
       {
         if( child->name == token )
 	{
 	  /* Subtree gefunden */
 	  /*------------------*/
 
-	  sde_ptr = child;
+	  sde_ptr = child.get();
 	  de_ptr = sde_ptr;
 	  break;
 	}
@@ -220,14 +226,14 @@ int GetFileEntry(DirEntry *de_ptr, char *file_name, FileEntry **file_entry)
 {
   *file_entry = nullptr;
 
-  for( FileEntry *fe_ptr : de_ptr->files )
+  for( const auto& fe_ptr : de_ptr->files )
   {
     if( fe_ptr->name == file_name )
     {
       /* Eintrag gefunden */
       /*------------------*/
 
-      *file_entry = fe_ptr;
+      *file_entry = fe_ptr.get();
       break;
     }
   }

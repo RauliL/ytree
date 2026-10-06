@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 
   while( 1 )
   {
-    if( HandleDirWindow(statistic.tree) == 'q' ) Quit();
+    if( HandleDirWindow(statistic.tree.get()) == 'q' ) Quit();
   }
 }
 
