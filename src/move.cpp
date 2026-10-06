@@ -213,7 +213,7 @@ int MoveTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
   char new_name[PATH_LENGTH+1];
 
 
-  if( BuildFilename( fe_ptr->name.data(),
+  if( BuildFilename( fe_ptr->name,
                      walking_package->function_data.mv.to_file,
 		     new_name
 		   ) == 0 )

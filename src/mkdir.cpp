@@ -45,7 +45,7 @@ int MakeDirectory(DirEntry *father_dir_entry)
 
 
 
-int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
+int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name )
 {
   struct stat stat_struct;
   int result = -1;
@@ -114,7 +114,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
 
 
 
-int MakePath( const std::shared_ptr<DirEntry>& tree, char *dir_path, DirEntry **dest_dir_entry )
+int MakePath( const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry )
 {
   DirEntry *de_ptr, *sde_ptr;
   char     path[PATH_LENGTH+1];
@@ -122,7 +122,7 @@ int MakePath( const std::shared_ptr<DirEntry>& tree, char *dir_path, DirEntry **
   int      n;
   int      result = -1;
 
-  NormPath( dir_path, path );
+  NormPath( dir_path.c_str(), path );
   *dest_dir_entry = nullptr;
 
   n = tree->name.size();

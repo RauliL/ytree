@@ -556,7 +556,7 @@ char *FormFilename(char *dest, char *src, unsigned int max_len)
  *                              CutFilename                                  *
  *****************************************************************************/
 
-char *CutFilename(char *dest, const char *src, unsigned int max_len)
+char *CutFilename(char *dest, const std::string& src, unsigned int max_len)
 {
   unsigned int l;
 
@@ -568,7 +568,7 @@ char *CutFilename(char *dest, const char *src, unsigned int max_len)
     return dest;
   }
 
-  const auto tmp = StrLeft(src, max_len - 3);
+  const auto tmp = StrLeft(src.c_str(), max_len - 3);
   *std::format_to(dest, "{}...", tmp) = '\0';
   return dest;
 }
@@ -576,18 +576,16 @@ char *CutFilename(char *dest, const char *src, unsigned int max_len)
 /*****************************************************************************
  *                              CutPathname                                  *
  *****************************************************************************/
-char* CutPathname(char* dest, const std::string& src, std::size_t max_len)
+std::string CutPathname(const std::string& src, std::size_t max_len)
 {
   const auto l = src.length();
 
   if (l <= max_len)
   {
-    *std::format_to(dest, "{}", src) = '\0';
-    return dest;
+    return src;
   }
-  *std::format_to(dest, "...{}", src.substr(l - max_len + 3)) = '\0';
 
-  return dest;
+  return "..." + src.substr(l - max_len + 3);
 }
 
 /*****************************************************************************
@@ -625,12 +623,12 @@ void Fnsplit(char *path, char *dir, char *name)
 
 
 
-int BuildFilename( char *in_filename,
-		   char *pattern,
+int BuildFilename(const std::string& in_filename,
+		   const char *pattern,
 		   char *out_filename
 		 )
 {
-  char *cptr;
+  const char *cptr;
   int  result = 0;
 
 
@@ -638,7 +636,7 @@ int BuildFilename( char *in_filename,
   {
     if( *pattern == '*' )
     {
-      cptr = in_filename;
+      cptr = in_filename.c_str();
       for( ; (*out_filename = *cptr); out_filename++, cptr++ );
     }
     else

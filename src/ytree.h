@@ -616,7 +616,7 @@ extern int  ReadTreeFromZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 extern int  ReadTreeFromLHA(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
 extern int  ReadTreeFromARC(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
 extern int  ReadTreeFromRAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
-extern int  GetDiskParameter(char *path,
+extern int  GetDiskParameter(const std::string& path,
 			     char *volume_name,
 			     long long *avail_bytes,
 			     long long *capacity
@@ -707,10 +707,10 @@ extern int  GetCommandLine(char *command_line);
 extern int  GetSearchCommandLine(char *command_line);
 extern int  DeleteFile(FileEntry *fe_ptr);
 extern int  RemoveFile(FileEntry *fe_ptr);
-extern int  RenameDirectory(DirEntry *de_ptr, char *new_name);
-extern int  RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr);
+extern int  RenameDirectory(DirEntry *de_ptr, const std::string& new_name);
+extern int  RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_fe_ptr);
 extern int  RenameTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
-extern int  GetRenameParameter(char *old_name, char *new_name);
+extern int  GetRenameParameter(const std::string* old_name, char *new_name);
 extern char *CTime(time_t f_time, char *buffer);
 extern int  LoginDisk(char *path);
 extern int  GetNewLoginPath(char *path);
@@ -719,8 +719,8 @@ void Print(WINDOW* win, int y, int x, const std::string& str, int color);
 extern void PrintOptions(WINDOW *,int, int, const char *);
 extern void PrintMenuOptions(WINDOW *,int, int, char *, int, int);
 extern char *FormFilename(char *dest, char *src, unsigned int max_len);
-extern char *CutFilename(char *dest, const char *src, unsigned int max_len);
-char* CutPathname(char* dest, const std::string& src, std::size_t max_len);
+extern char *CutFilename(char *dest, const std::string& src, unsigned int max_len);
+std::string CutPathname(const std::string& src, std::size_t max_len);
 extern void   Fnsplit(char *path, char *dir, char *name);
 std::string MakeExtractCommandLine(
   const std::string& path,
@@ -737,14 +737,14 @@ extern int  TermcapWgetch(WINDOW *win);
 extern void TermcapVidattr(int attr );
 extern void TermcapInitscr(void);
 extern void TermcapEndwin(void);
-extern int  BuildFilename( char *in_filename, char *pattern, char *out_filename);
+extern int  BuildFilename(const std::string& in_filename, const char *pattern, char *out_filename);
 extern int  ViKey( int ch );
 std::optional<CompressMethod> GetFileMethod(const std::string& filename);
 extern bool KeyPressed(void);
 extern bool EscapeKeyPressed(void);
 extern int  GetTapeDeviceName(void);
-extern int  MakePath( const std::shared_ptr<DirEntry>& tree, char *dir_path, DirEntry **dest_dir_entry );
-extern int  MakeDirEntry( DirEntry *father_dir_entry, char *dir_name );
+extern int  MakePath( const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry );
+extern int  MakeDirEntry( DirEntry *father_dir_entry, const std::string& dir_name );
 extern void NormPath( const char *in_path, char *out_path );
 extern char *Strtok_r( char *str, const char *delim, char **old );
 int ReadProfile(const std::optional<std::string>& custom_path);

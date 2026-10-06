@@ -337,7 +337,6 @@ void update_all_lines(WINDOW *win, char l)
 void Change2Edit(const std::string& file_path)
 {
     int i;
-    std::vector<char> str(COLS);
 
     for(i = WLINES + 4; i < LINES; i++)
     {
@@ -347,7 +346,7 @@ void Change2Edit(const std::string& file_path)
     doupdate();
 
     Print( stdscr, 0, 0, "File: ", MENU_COLOR );
-    Print( stdscr, 0, 6, CutPathname(str.data(),file_path,WCOLS-5), HIMENUS_COLOR );
+    Print( stdscr, 0, 6, CutPathname(file_path, WCOLS-5), HIMENUS_COLOR );
     PrintOptions( stdscr, LINES - 3, 0, "(Edit file in hexadecimal mode)");
     PrintOptions( stdscr, LINES - 2, 0, "(Q)uit   (^L) redraw  (<TAB>) change edit mode");
     PrintOptions( stdscr, LINES - 1, 0,
@@ -358,7 +357,6 @@ void Change2Edit(const std::string& file_path)
 void Change2View(const std::string& file_path)
 {
     int i;
-    std::vector<char> str(COLS);
 
     for(i = WLINES + 4; i < LINES; i++)
     {
@@ -368,7 +366,7 @@ void Change2View(const std::string& file_path)
     doupdate();
 
     Print( stdscr, 0, 0, "File: ", MENU_COLOR );
-    Print( stdscr, 0, 6, CutPathname(str.data(), file_path, WCOLS - 5), HIMENUS_COLOR );
+    Print( stdscr, 0, 6, CutPathname(file_path, WCOLS - 5), HIMENUS_COLOR );
     PrintOptions( stdscr, LINES - 3, 0, "View file in hexadecimal mode");
     PrintOptions( stdscr, LINES - 2, 0, "(Q)uit   (^L) redraw  (E)dit hex");
     PrintOptions( stdscr, LINES - 1, 0,

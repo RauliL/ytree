@@ -2226,7 +2226,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
 		      de_ptr = fe_ptr->Dir().get();
 
-		      if( !GetRenameParameter( fe_ptr->name.data(), new_name ) )
+		      if( !GetRenameParameter( &fe_ptr->name, new_name ) )
 		      {
 			if( !RenameFile( fe_ptr, new_name, &new_fe_ptr ) )
 		        {

@@ -181,7 +181,7 @@ void DisplayGlobalFileParameter(FileEntry *file_entry)
   wmove( stdscr, 0, 6);
   wclrtoeol( stdscr);
   PrintMenuOptions( stdscr, 0, 6, buffer1, GLOBAL_COLOR, HIGLOBAL_COLOR);
-  CutFilename( buffer1, file_entry->name.data(), 20 );
+  CutFilename( buffer1, file_entry->name, 20 );
   if (snprintf( buffer2, PATH_LENGTH, "[%-20s]", buffer1 ))
     ;
   PrintMenuOptions( stdscr, 18, COLS - 22, buffer2, GLOBAL_COLOR, HIGLOBAL_COLOR);
@@ -201,7 +201,7 @@ void DisplayFileParameter(FileEntry *file_entry)
     auxbuff,
     sizeof(auxbuff),
     "[%-20s]",
-    CutFilename( buffer, file_entry->name.data(), 20)
+    CutFilename( buffer, file_entry->name, 20)
   );
   PrintMenuOptions( stdscr, 18, COLS - 22, auxbuff, MENU_COLOR, HIMENUS_COLOR);
   PrettyPrintNumber( 19, COLS - 17, (long long)file_entry->stat_struct.st_size );

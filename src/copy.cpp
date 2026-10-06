@@ -60,7 +60,7 @@ int CopyFile(Statistic *statistic_ptr,
     }
 
     to_path = to_fs_path.string();
-    if (MakePath(statistic_ptr->tree, to_path.data(), &dest_dir_entry))
+    if (MakePath(statistic_ptr->tree, to_path, &dest_dir_entry))
     {
       FormatMessage("Can't create path*\"{}\"*{}", to_path.c_str(), std::strerror(errno));
 
@@ -87,7 +87,7 @@ int CopyFile(Statistic *statistic_ptr,
           to_fs_path = std::filesystem::path(from_dir) / to_fs_path;
         }
         to_path = to_fs_path.string();
-        if (MakePath(statistic_ptr->tree, to_path.data(), &dest_dir_entry))
+        if (MakePath(statistic_ptr->tree, to_path, &dest_dir_entry))
         {
           FormatMessage("Can't create path*\"{}\"*{}", to_path.c_str(), std::strerror(errno));
 
@@ -304,7 +304,7 @@ int CopyTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
 
   walking_package->new_fe_ptr = fe_ptr;  /* unchanged */
 
-  if( BuildFilename( fe_ptr->name.data(),
+  if( BuildFilename( fe_ptr->name,
 		     walking_package->function_data.copy.to_file,
 		     new_name
 		   ) == 0 )

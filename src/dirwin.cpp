@@ -1040,7 +1040,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
 		     need_dsp_help = true;
 		     break;
       case 'r':
-      case 'R':      if( !GetRenameParameter( dir_entry->name.data(), new_name ) )
+      case 'R':      if( !GetRenameParameter( &dir_entry->name, new_name ) )
                      {
 		       if( !RenameDirectory( dir_entry, new_name ) )
 		       {

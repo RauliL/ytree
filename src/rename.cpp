@@ -6,7 +6,7 @@
 static bool RenameDirEntry(const std::string&, const std::string&);
 static bool RenameFileEntry(const std::string&, const std::string&);
 
-int RenameDirectory(DirEntry *de_ptr, char *new_name)
+int RenameDirectory(DirEntry *de_ptr, const std::string& new_name)
 {
   const auto from_path = GetPath(de_ptr);
   const std::filesystem::path from_fs_path(from_path);
@@ -62,7 +62,7 @@ FNC_XIT:
 
 
 
-int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
+int RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_fe_ptr )
 {
   const auto de_ptr = fe_ptr->Dir();
   const auto from_path = GetFileNamePath(fe_ptr);
@@ -105,7 +105,7 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
 
 
 
-int GetRenameParameter(char *old_name, char *new_name)
+int GetRenameParameter(const std::string* old_name, char *new_name)
 {
   int l;
 
@@ -128,7 +128,7 @@ int GetRenameParameter(char *old_name, char *new_name)
     l = 13;
   }
 
-  *std::format_to(new_name, "{}", (old_name) ? old_name : "*") = '\0';
+  *std::format_to(new_name, "{}", old_name ? *old_name : "*") = '\0';
 
 
   if (InputString(new_name, LINES - 2, l, 0, COLS - l - 1) != CR)
@@ -139,7 +139,7 @@ int GetRenameParameter(char *old_name, char *new_name)
   if(!strlen(new_name))
     return( -1 );
 
-  if (old_name && !std::strcmp(old_name, new_name))
+  if (old_name && *old_name == new_name)
   {
     Message("Can't rename: New name same as old name.");
 
@@ -223,7 +223,7 @@ int RenameTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
   char new_name[PATH_LENGTH+1];
 
 
-  if( BuildFilename( fe_ptr->name.data(),
+  if( BuildFilename( fe_ptr->name,
                      walking_package->function_data.rename.new_name,
 		     new_name
 		   ) == 0 )
