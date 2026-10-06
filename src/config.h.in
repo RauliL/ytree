@@ -6,6 +6,7 @@
 #cmakedefine CURSES_HAVE_NCURSES_CURSES_H
 
 #cmakedefine COLOR_SUPPORT
+#cmakedefine COLOR_THEME_GRUVBOX
 #cmakedefine CLOCK_SUPPORT
 #cmakedefine WITH_UTF8
 

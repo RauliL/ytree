@@ -5,6 +5,26 @@ OPTION(
   "Whether colors should be enabled or not."
   ON
 )
+SET(
+  COLOR_THEME
+  "gruvbox"
+  CACHE STRING
+  "Color theme when COLOR_SUPPORT is ON (original or gruvbox)."
+)
+SET_PROPERTY(
+  CACHE COLOR_THEME
+  PROPERTY STRINGS
+    original
+    gruvbox
+)
+STRING(TOLOWER "${COLOR_THEME}" COLOR_THEME_LOWER)
+IF(COLOR_THEME_LOWER STREQUAL "gruvbox")
+  SET(COLOR_THEME_GRUVBOX TRUE)
+ELSEIF(COLOR_THEME_LOWER STREQUAL "original")
+  SET(COLOR_THEME_GRUVBOX FALSE)
+ELSE()
+  MESSAGE(FATAL_ERROR "COLOR_THEME must be 'original' or 'gruvbox' (got '${COLOR_THEME}')")
+ENDIF()
 OPTION(
   CLOCK_SUPPORT
   "Whether experimental clock should be enabled or not."
