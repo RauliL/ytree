@@ -1,7 +1,6 @@
 #include "ytree.h"
 
 static void MapErrorWindow(const std::string& header);
-static void MapNoticeWindow(const std::string& header);
 static void UnmapErrorWindow();
 static inline void PrintErrorLine(int y, const std::string& str);
 static void DisplayErrorMessage(const std::string& msg);
@@ -11,14 +10,6 @@ void Message(const std::string& msg)
 {
   MapErrorWindow("E R R O R");
   PrintErrorMessage(msg);
-}
-
-void Notice(const std::string& msg)
-{
-  MapNoticeWindow("N O T I C E");
-  DisplayErrorMessage(msg);
-  RefreshWindow(error_window);
-  refresh();
 }
 
 void Warning(const std::string& msg)
@@ -57,29 +48,6 @@ static void MapErrorWindow(const std::string& header)
     ERROR_WINDOW_HEIGHT - 2,
     1,
     "             PRESS ENTER              "
-);
-  wattrset(error_window, 0);
-  PrintErrorLine(1, header);
-}
-
-static void MapNoticeWindow(const std::string& header)
-{
-  werase(error_window);
-  box(error_window, 0, 0);
-
-  PrintSpecialString(
-    error_window,
-    ERROR_WINDOW_HEIGHT - 3,
-    0,
-    "6--------------------------------------7",
-    WINERR_COLOR
-);
-  wattrset(error_window, A_REVERSE | A_BLINK);
-  MvWAddStr(
-    error_window,
-    ERROR_WINDOW_HEIGHT - 2,
-    1,
-    "             PLEASE WAIT              "
 );
   wattrset(error_window, 0);
   PrintErrorLine(1, header);

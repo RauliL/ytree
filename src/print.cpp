@@ -36,18 +36,6 @@ void WAddStr(WINDOW* win, const std::string& str)
 #endif
 }
 
-void AddStr(const std::string& str)
-{
-#if defined(WITH_UTF8)
-  addstr(str.c_str());
-#else
-  for (const auto& c : str)
-  {
-    addch(PRINT(c));
-  }
-#endif
-}
-
 void WAttrAddStr(WINDOW* win, int attr, const std::string& str)
 {
   wattrset(win, attr);

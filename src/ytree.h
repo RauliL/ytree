@@ -634,7 +634,6 @@ extern int  SetFileSpec(char *file_spec);
 extern void SetMatchingParam(DirEntry *dir_entry);
 void ErrorEx(const std::string& msg, const std::string& module, int line);
 void Warning(const std::string& msg);
-void Notice(const std::string& msg);
 void UnmapNoticeWindow();
 extern void SetFileMode(ViewMode new_file_mode);
 extern int  HandleFileWindow(DirEntry *dir_entry);
@@ -733,10 +732,6 @@ extern int TryInsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char 
 extern int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, struct stat *stat);
 extern int MinimizeArchiveTree(const std::shared_ptr<DirEntry>& tree);
 extern void HitReturnToContinue();
-extern int  TermcapWgetch(WINDOW *win);
-extern void TermcapVidattr(int attr);
-extern void TermcapInitscr();
-extern void TermcapEndwin();
 extern int  BuildFilename(const std::string& in_filename, const char *pattern, char *out_filename);
 extern int  ViKey(int ch);
 std::optional<CompressMethod> GetFileMethod(const std::string& filename);
@@ -760,13 +755,11 @@ extern int  KeyF2Get(DirEntry *start_dir_entry,
                int disp_begin_pos,
                int cursor_pos,
                char *path);
-extern void Switch2F2Window();
 extern void MapF2Window();
 extern void UnmapF2Window();
 void MvAddStr(int y, int x, const std::string& str);
 void MvWAddStr(WINDOW* win, int y, int x, const std::string& str);
 void WAddStr(WINDOW* win, const std::string& str);
-void AddStr(const std::string& str);
 extern void ClockHandler(int);
 std::optional<std::string> GetExtViewer(const std::string& filename);
 extern void InitClock();

@@ -233,15 +233,6 @@ static int ViewArchiveFile(const std::string& file_path)
   return result;
 }
 
-char *strn2print(char *dest, char *src, int c)
-{
-    dest[c]='\0';
-    for( ;c >= 0;c--)
-	dest[c] = (std::isprint(src[c]) ? src[c] : '.');
-    return dest;
-}
-
-
 void printhexline(WINDOW *win, char *line, char *buf, int r, long offset)
 {
     int i;
