@@ -189,7 +189,7 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
         /*---------------------------------------------------------*/
         if ((n = readlink(new_path.c_str(), link_path, sizeof(link_path))) == -1)
         {
-          std::strcpy(link_path, "unknown");
+          *std::format_to(link_path, "{}", "unknown") = '\0';
           n = std::strlen(link_path);
         }
         link_path[n] = 0;

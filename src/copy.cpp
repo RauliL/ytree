@@ -241,11 +241,11 @@ int GetCopyParameter(const char *from_file, bool path_copy, char *to_file, char 
   if( from_file == nullptr )
   {
     from_file = "TAGGED FILES";
-    (void) strcpy( to_file, "*" );
+    *std::format_to(to_file, "{}", "*") = '\0';
   }
   else
   {
-    (void) strcpy( to_file, from_file );
+    *std::format_to(to_file, "{}", from_file) = '\0';
   }
 
   if( path_copy )

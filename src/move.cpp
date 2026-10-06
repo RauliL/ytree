@@ -166,11 +166,11 @@ int GetMoveParameter(const char *from_file, char *to_file, char *to_dir)
   if( from_file == nullptr )
   {
     from_file = "TAGGED FILES";
-    (void) strcpy( to_file, "*" );
+    *std::format_to(to_file, "{}", "*") = '\0';
   }
   else
   {
-    (void) strcpy( to_file, from_file );
+    *std::format_to(to_file, "{}", from_file) = '\0';
   }
 
   std::snprintf(buffer, sizeof(buffer), "MOVE %s", from_file);

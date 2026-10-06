@@ -75,9 +75,10 @@ void DisplayDirStatistic(DirEntry *dir_entry)
 
   *auxbuff = *buffer = '\0';
   std::snprintf(format, sizeof(format), "%%-%ds", COLS - 10);
-  std::strcpy(statistic.path, path.c_str());
-  if (dir_entry -> not_scanned)
-     strcat(statistic.path,"*");
+  {
+    const auto p = path + (dir_entry->not_scanned ? "*" : "");
+    *std::format_to(statistic.path, "{}", p) = '\0';
+  }
   std::snprintf(
     auxbuff,
     sizeof(auxbuff),
@@ -136,9 +137,10 @@ void DisplayDirParameter(DirEntry *dir_entry)
   char auxbuff[PATH_LENGTH + 1];
 
   std::snprintf(format, sizeof(format), "%%-%ds", COLS - 10);
-  std::strcpy(statistic.path, path.c_str());
-  if (dir_entry -> not_scanned)
-     strcat(statistic.path,"*");
+  {
+    const auto p = path + (dir_entry->not_scanned ? "*" : "");
+    *std::format_to(statistic.path, "{}", p) = '\0';
+  }
   std::snprintf(
     auxbuff,
     sizeof(auxbuff),
@@ -173,7 +175,7 @@ void DisplayGlobalFileParameter(FileEntry *file_entry)
   char format[32];
 
   std::snprintf(format, sizeof(format), "[%%-%ds]", COLS - 10);
-  std::strcpy(buffer1, path.c_str());
+  *std::format_to(buffer1, "{}", path) = '\0';
   FormFilename( buffer2, buffer1, COLS - 10 );
   std::snprintf(buffer1, sizeof(buffer1), format, buffer2);
   wmove( stdscr, 0, 6);

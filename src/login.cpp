@@ -48,7 +48,6 @@ int LoginDisk(char *path)
 {
   struct stat stat_struct;
   char   command_line[COMMAND_LINE_LENGTH + 1];
-  char   cat_file_name[PATH_LENGTH+1];
   std::optional<CompressMethod> file_method;
   int    pid;
   int    p[2];
@@ -115,10 +114,10 @@ int LoginDisk(char *path)
 
   (void) memset( statistic.tree, 0, sizeof( DirEntry ) + PATH_LENGTH );
 
-  (void) strcpy( statistic.path, path );
-  (void) strcpy( statistic.login_path, path );
-  (void) strcpy( statistic.file_spec, DEFAULT_FILE_SPEC );
-  (void) strcpy( statistic.tape_name, DEFAULT_TAPEDEV );
+  *std::format_to(statistic.path, "{}", path) = '\0';
+  *std::format_to(statistic.login_path, "{}", path) = '\0';
+  *std::format_to(statistic.file_spec, "{}", DEFAULT_FILE_SPEC) = '\0';
+  *std::format_to(statistic.tape_name, "{}", DEFAULT_TAPEDEV) = '\0';
   statistic.kind_of_sort = { SortKey::Name, SortOrder::Ascending };
   (void) memcpy( &statistic.tree->stat_struct,
 		 &stat_struct,
@@ -324,8 +323,7 @@ int LoginDisk(char *path)
     }
     else if (*file_method == CompressMethod::MULTIPLE_FREEZE_COMPRESS)
     {
-      std::strncpy(cat_file_name, statistic.login_path, l - 2);
-      std::strcpy(&cat_file_name[l - 2], "*");
+      const auto cat_file = std::string(statistic.login_path, l - 2) + "*";
 
       /* cat TAR_FILE | melt | gtar tvf - */
       /*----------------------------------*/
@@ -334,7 +332,7 @@ int LoginDisk(char *path)
         COMMAND_LINE_LENGTH,
         "%s '%s' %s | %s | %s",
 		    CAT,
-		    cat_file_name,
+		    cat_file.c_str(),
 		    ERR_TO_STDOUT,
 		    MELT,
 		    TARLIST
@@ -356,8 +354,7 @@ int LoginDisk(char *path)
     }
     else if (*file_method == CompressMethod::MULTIPLE_COMPRESS_COMPRESS)
     {
-      std::strncpy(cat_file_name, statistic.login_path, l - 2);
-      std::strcpy(&cat_file_name[l - 2], "*");
+      const auto cat_file = std::string(statistic.login_path, l - 2) + "*";
 
       /* cat TAR_FILE.X* | uncompress | gtar tvf - */
       /*-------------------------------------------*/
@@ -366,7 +363,7 @@ int LoginDisk(char *path)
         COMMAND_LINE_LENGTH,
         "%s %s | %s %s | %s",
 		    CAT,
-		    cat_file_name,
+		    cat_file.c_str(),
 		    UNCOMPRESS,
 		    ERR_TO_STDOUT,
 		    TARLIST
@@ -388,8 +385,7 @@ int LoginDisk(char *path)
     }
     else if (*file_method == CompressMethod::MULTIPLE_GZIP_COMPRESS)
     {
-      std::strncpy(cat_file_name, statistic.login_path, l - 2);
-      std::strcpy(&cat_file_name[l - 2], "*");
+      const auto cat_file = std::string(statistic.login_path, l - 2) + "*";
 
       /* cat TAR_FILE.X* | gunzip | gtar tvf - */
       /*---------------------------------------*/
@@ -398,7 +394,7 @@ int LoginDisk(char *path)
         COMMAND_LINE_LENGTH,
         "%s %s | %s %s | %s",
 		    CAT,
-		    cat_file_name,
+		    cat_file.c_str(),
 		    GNUUNZIP,
 		    ERR_TO_STDOUT,
 		    TARLIST
@@ -486,7 +482,15 @@ int LoginDisk(char *path)
       return -1;
     }
 
-    std::strcat(command_line, ERR_TO_NULL);
+    {
+      const auto n = std::strlen(command_line);
+      *std::format_to_n(
+        command_line + n,
+        COMMAND_LINE_LENGTH - n,
+        "{}",
+        ERR_TO_NULL
+      ).out = '\0';
+    }
 
 #ifdef DEBUG
   fprintf( stderr, "system( \"%s\" )\n", command_line );
@@ -663,7 +667,7 @@ int GetNewLoginPath(char *path)
 
   MvAddStr( LINES - 2, 1, "NEW LOGIN-PATH:" );
 
-  strcpy(aux,path);
+  *std::format_to(aux, "{}", path) = '\0';
   if( mode == Mode::LL_FILE_MODE && *path == '<' )
   {
     for( cptr = aux; (*cptr = *(cptr + 1)); cptr++ )

@@ -376,7 +376,7 @@ static void PrintLine(WINDOW *win, int y, int x, const char *line, int len)
     buffer[0] = line[0];
     for(i=1; i < (len); i++)
         buffer[i] = line[1];
-    (void) strcpy( &buffer[i], &line[2] );
+    *std::format_to(&buffer[i], "{}", &line[2]) = '\0';
     PrintOptions( stdscr, y, x , buffer );
     free( buffer );
   }

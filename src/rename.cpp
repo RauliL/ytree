@@ -190,7 +190,7 @@ int GetRenameParameter(char *old_name, char *new_name)
     l = 13;
   }
 
-  (void) strcpy( new_name, (old_name) ? old_name : "*" );
+  *std::format_to(new_name, "{}", (old_name) ? old_name : "*") = '\0';
 
 
   if (InputString(new_name, LINES - 2, l, 0, COLS - l - 1) != CR)

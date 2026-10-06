@@ -7,7 +7,12 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
 
   if (file_entry && (file_entry->stat_struct.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
   {
-    std::strcpy(command_line, ("\"" + ShellEscape(file_entry->name) + "\"").c_str());
+    *std::format_to_n(
+      command_line,
+      COMMAND_LINE_LENGTH,
+      "\"{}\"",
+      ShellEscape(file_entry->name)
+    ).out = '\0';
   }
 
   MvAddStr(LINES - 2, 1, "Command:");
@@ -72,7 +77,7 @@ int GetSearchCommandLine(char *command_line)
   ClearHelp();
 
   MvAddStr( LINES - 2, 1, "Search untag command: " );
-  strcpy( command_line, SEARCHCOMMAND );
+  *std::format_to_n(command_line, COMMAND_LINE_LENGTH, "{}", SEARCHCOMMAND).out = '\0';
 
   cptr = strstr( command_line, "{}" );
   if(cptr) {

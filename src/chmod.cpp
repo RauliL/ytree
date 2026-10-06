@@ -34,7 +34,7 @@ int ChangeFileModus(FileEntry *fe_ptr)
 
   if( GetNewFileModus( LINES - 2, 1, modus, "\r\033" ) == CR )
   {
-    (void) strcpy( walking_package.function_data.change_modus.new_modus, modus );
+    *std::format_to(walking_package.function_data.change_modus.new_modus, "{}", modus) = '\0';
     result = SetFileModus( fe_ptr, &walking_package );
   }
 
@@ -65,7 +65,7 @@ int ChangeDirModus(DirEntry *de_ptr)
 
   if( GetNewFileModus( LINES - 2, 1, modus, "\r\033" ) == CR )
   {
-    (void) strcpy( walking_package.function_data.change_modus.new_modus, modus );
+    *std::format_to(walking_package.function_data.change_modus.new_modus, "{}", modus) = '\0';
     result = SetDirModus( de_ptr, &walking_package );
   }
 

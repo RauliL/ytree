@@ -163,8 +163,10 @@ static void PrintHstEntry(int entry_no, int y, int color,
   }
 
 #ifdef NO_HIGHLIGHT
-  strcat(line_ptr, (color == HIHST_COLOR) ? " <" : "  ");
-  WAddStr( history_window, line_ptr );
+  {
+    const auto display = std::string(line_ptr) + ((color == HIHST_COLOR) ? " <" : "  ");
+    WAddStr( history_window, display );
+  }
 #else
 #ifdef COLOR_SUPPORT
   WbkgdSet(history_window, COLOR_PAIR(color)|A_BOLD);

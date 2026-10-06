@@ -244,37 +244,32 @@ char *strn2print(char *dest, char *src, int c)
 
 void printhexline(WINDOW *win, char *line, char *buf, int r, long offset)
 {
-    std::vector<char> aux(WCOLS);
     int i;
     if (r==0)
     {
 	wclrtoeol(win);
 	return;
     }
-    if(hexoffset) {
-      *std::format_to(line, "{:010X}  ", (int)offset) = '\0';
-    } else {
-      *std::format_to(line, "{:010}  ", (int)offset) = '\0';
-    }
+    std::string out = hexoffset
+      ? std::format("{:010X}  ", static_cast<int>(offset))
+      : std::format("{:010}  ", static_cast<int>(offset));
     for (i = 1; i <= r; i++ )
     {
         if ((i == (BYTES / 2) ) || (i == BYTES ))
-	    *std::format_to(aux.data(), "{:02X}  ", static_cast<unsigned char>(buf[i-1])) = '\0';
+	    out += std::format("{:02X}  ", static_cast<unsigned char>(buf[i-1]));
         else
-	    *std::format_to(aux.data(), "{:02X} ", static_cast<unsigned char>(buf[i-1])) = '\0';
-        strcat(line, aux.data());
+	    out += std::format("{:02X} ", static_cast<unsigned char>(buf[i-1]));
     }
     for (i = r+1; i <= BYTES; i++)
     {
         buf[i-1]= ' ';
         if ((i == (BYTES / 2) ) || (i == BYTES ))
-	    std::strcpy(aux.data(), "    ");
+	    out += "    ";
         else
-	    std::strcpy(aux.data(), "   ");
-        strcat(line, aux.data());
+	    out += "   ";
     }
-/*    strcat(line, " ");*/
-    line[strlen(line)] = ' ';
+    out += ' ';
+    *std::format_to(line, "{}", out) = '\0';
     for (i=0; i< WCOLS-BYTES; i++)
 	waddch(win, line[i]| THECOLOR);
     for( i=0; i< BYTES; i++)

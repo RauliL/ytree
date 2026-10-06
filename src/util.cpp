@@ -123,7 +123,7 @@ int GetDirEntry(DirEntry *tree,
   *dir_entry = nullptr;
   *to_path   = '\0';
 
-   strcpy(to_path, dir_path);
+  std::snprintf(to_path, PATH_LENGTH + 1, "%s", dir_path);
 
   if (const auto cwd = Getcwd())
   {
@@ -154,11 +154,11 @@ int GetDirEntry(DirEntry *tree,
   {
     if (const auto cwd = Getcwd())
     {
-      std::strcpy(dest_path, cwd->c_str());
+      std::snprintf(dest_path, sizeof(dest_path), "%s", cwd->c_str());
     }
-    std::strcpy(to_path, dest_path);
+    std::snprintf(to_path, PATH_LENGTH + 1, "%s", dest_path);
   } else {
-    std::strcpy(dest_path, dir_path);
+    std::snprintf(dest_path, sizeof(dest_path), "%s", dir_path);
   }
 
   if (chdir(current_path.c_str()))
@@ -453,11 +453,7 @@ void PrintMenuOptions(WINDOW *win,int y, int x, char *str, int ncolor, int hcolo
 {
   int ch;
   int color, hi_color, lo_color;
-  char *sbuf, buf[2];
-
-  sbuf = (char *)malloc(strlen(str)+1);
-  sbuf[0] = '\0';
-  buf[1] = '\0';
+  std::string sbuf;
 
   if(x < 0 || y < 0) {
      /* screen too small */
@@ -486,7 +482,7 @@ void PrintMenuOptions(WINDOW *win,int y, int x, char *str, int ncolor, int hcolo
 #else
                   WAttrAddStr( win, color, sbuf);
 #endif
-		  strcpy(sbuf, "");
+		  sbuf.clear();
 	          continue;
 
 	case ')': color = lo_color;
@@ -495,24 +491,23 @@ void PrintMenuOptions(WINDOW *win,int y, int x, char *str, int ncolor, int hcolo
 #else
                   WAttrAddStr( win, color, sbuf);
 #endif
-		  strcpy(sbuf, "");
+		  sbuf.clear();
 	          continue;
 
 #ifdef COLOR_SUPPORT
 	case ']': color = lo_color;
                   WAttrAddStr( win, COLOR_PAIR(color) | A_BOLD, sbuf);
-		  strcpy(sbuf, "");
+		  sbuf.clear();
 	          continue;
 	case '[': color = hi_color;
                   WAttrAddStr( win, COLOR_PAIR(color) | A_BOLD, sbuf);
-		  strcpy(sbuf, "");
+		  sbuf.clear();
 	          continue;
 #else
 	case ']':
 	case '[': /* ignore */ continue;
 #endif
-        default : buf[0] = PRINT(*str);
-		  strcat(sbuf, buf);
+        default : sbuf += static_cast<char>(PRINT(*str));
     }
   }
 
@@ -521,7 +516,6 @@ void PrintMenuOptions(WINDOW *win,int y, int x, char *str, int ncolor, int hcolo
 #else
   WAttrAddStr( win, color, sbuf);
 #endif
-  free(sbuf);
 }
 
 
@@ -539,15 +533,16 @@ char *FormFilename(char *dest, char *src, unsigned int max_len)
   begin = 0;
 
   if( l <= max_len )
-    return( strcpy( dest, src ) );
-  else
   {
-    for(i=0; i < (int) max_len - 4; i++)
-      if( src[l - i] == std::filesystem::path::preferred_separator || src[l - i] == '\\' )
-        begin = l - i;
-    (void) strcpy( dest, "/..." );
-    return( strcat(dest, &src[begin] ) );
+    *std::format_to(dest, "{}", src) = '\0';
+    return dest;
   }
+
+  for(i=0; i < (int) max_len - 4; i++)
+    if( src[l - i] == std::filesystem::path::preferred_separator || src[l - i] == '\\' )
+      begin = l - i;
+  *std::format_to(dest, "/...{}", &src[begin]) = '\0';
+  return dest;
 }
 
 
@@ -562,13 +557,14 @@ char *CutFilename(char *dest, char *src, unsigned int max_len)
   l = StrVisualLength(src);
 
   if( l <= max_len )
-    return( strcpy( dest, src ) );
-  else
   {
-    const auto tmp = StrLeft(src, max_len - 3);
-    *std::format_to(dest, "{}...", tmp) = '\0';
-    return( dest );
+    *std::format_to(dest, "{}", src) = '\0';
+    return dest;
   }
+
+  const auto tmp = StrLeft(src, max_len - 3);
+  *std::format_to(dest, "{}...", tmp) = '\0';
+  return dest;
 }
 
 /*****************************************************************************
@@ -580,10 +576,10 @@ char* CutPathname(char* dest, const std::string& src, std::size_t max_len)
 
   if (l <= max_len)
   {
-    return std::strcpy(dest, src.c_str());
+    *std::format_to(dest, "{}", src) = '\0';
+    return dest;
   }
-  std::strcpy(dest, "...");
-  std::strncat(dest, src.substr(l - max_len + 3).c_str(), max_len - 3);
+  *std::format_to(dest, "...{}", src.substr(l - max_len + 3)) = '\0';
 
   return dest;
 }
@@ -684,7 +680,7 @@ void NormPath(const char* in_path, char* out_path)
     result = ".";
   }
 
-  std::strcpy(out_path, result.c_str());
+  std::snprintf(out_path, PATH_LENGTH + 1, "%s", result.c_str());
 }
 
 

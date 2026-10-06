@@ -476,13 +476,13 @@ int GetTapeDeviceName( void )
 
   ClearHelp();
 
-  (void) strcpy( path, statistic.tape_name );
+  *std::format_to(path, "{}", statistic.tape_name) = '\0';
 
   MvAddStr( LINES - 2, 1, "Tape-Device:" );
   if (InputString( path, LINES - 2, 14, 0, COLS - 15) == CR)
   {
     result = 0;
-    (void) strcpy( statistic.tape_name, path );
+    *std::format_to(statistic.tape_name, "{}", path) = '\0';
   }
 
   move( LINES - 2, 1 ); clrtoeol();

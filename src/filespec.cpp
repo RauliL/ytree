@@ -87,7 +87,7 @@ int ReadFileSpec(void)
 
   ClearHelp();
 
-  (void) strcpy( buffer, "*" );
+  *std::format_to(buffer, "{}", "*") = '\0';
   MvAddStr( LINES - 2, 1, "New filespec:" );
   if (InputString( buffer, LINES - 2, 15, 0, FILE_SPEC_LENGTH) == CR)
   {
@@ -97,7 +97,7 @@ int ReadFileSpec(void)
     }
     else
     {
-      (void) strcpy( statistic.file_spec, buffer );
+      *std::format_to(statistic.file_spec, "{}", buffer) = '\0';
       result = 0;
     }
   }

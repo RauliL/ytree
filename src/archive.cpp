@@ -29,7 +29,7 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
   /* Format: .../dir/ */
   /*------------------*/
 
-  (void) strcpy( father_path, path );
+  *std::format_to(father_path, "{}", path) = '\0';
 
   if( ( p = strrchr( father_path, std::filesystem::path::preferred_separator ) ) ) *p = '\0';
   else
@@ -45,13 +45,13 @@ static int InsertArchiveDirEntry(DirEntry *tree, char *path, struct stat *stat)
   {
     df_ptr = tree;
     if( path[0] == std::filesystem::path::preferred_separator && path[1] == '\0' )
-      (void) strcpy( name, path );
+      *std::format_to(name, "{}", path) = '\0';
     else
-      (void) strcpy( name, father_path );
+      *std::format_to(name, "{}", father_path) = '\0';
   }
   else
   {
-    (void) strcpy( name, ++p );
+    *std::format_to(name, "{}", ++p) = '\0';
     *p = '\0';
     if( GetArchiveDirEntry( tree, father_path, &df_ptr ) )
     {
@@ -443,7 +443,6 @@ std::string MakeExtractCommandLine(
   char command_line[COMMAND_LINE_LENGTH + 1];
   const auto compress_method = GetFileMethod(path);
   const auto l = path.length();
-  char cat_path[PATH_LENGTH + 1];
 
   if (compress_method && *compress_method == CompressMethod::ZOO_COMPRESS)
   {
@@ -562,14 +561,13 @@ std::string MakeExtractCommandLine(
   {
     /* CAT TAR_FILEs | melt | gtar xOf - FILE ?? */
     /*-------------------------------------------*/
-    std::strncpy(cat_path, path.c_str(), l - 2 );
-    std::strcpy(&cat_path[l - 2], "*" );
+    const auto cat = path.substr(0, l - 2) + "*";
     std::snprintf(
       command_line,
       COMMAND_LINE_LENGTH,
       "%s %s | %s | %s '%s' %s",
 		  CAT,
-		  cat_path,
+		  cat.c_str(),
 		  MELT,
 		  TAREXPAND,
 		  file.c_str(),
@@ -595,14 +593,13 @@ std::string MakeExtractCommandLine(
   {
     /* CAT TAR_FILEs | uncompress | gtar xOf - FILE ?? */
     /*-------------------------------------------------*/
-    std::strncpy(cat_path, path.c_str(), l - 2);
-    std::strcpy(&cat_path[l-2], "*");
+    const auto cat = path.substr(0, l - 2) + "*";
     std::snprintf(
       command_line,
       COMMAND_LINE_LENGTH,
       "%s %s | %s | %s '%s' %s",
 		  CAT,
-		  cat_path,
+		  cat.c_str(),
 		  UNCOMPRESS,
 		  TAREXPAND,
 		  file.c_str(),
@@ -628,14 +625,13 @@ std::string MakeExtractCommandLine(
   {
     /* CAT TAR_FILEs | gunzip | gtar xOf - FILE ?? */
     /*---------------------------------------------*/
-    std::strncpy(cat_path, path.c_str(), l - 2);
-    std::strcpy(&cat_path[l-2], "*");
+    const auto cat = path.substr(0, l - 2) + "*";
     std::snprintf(
       command_line,
       COMMAND_LINE_LENGTH,
       "%s %s | %s | %s '%s' %s",
 		  CAT,
-		  cat_path,
+		  cat.c_str(),
 		  GNUUNZIP,
 		  TAREXPAND,
 		  file.c_str(),

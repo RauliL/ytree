@@ -61,8 +61,10 @@ void PrintMtchEntry(int entry_no, int y, int color,
     }
 
 #ifdef NO_HIGHLIGHT
-    strcat(line_ptr, (color == HIMTCH_COLOR) ? " <" : "  ");
-    WAddStr( matches_window, line_ptr );
+    {
+      const auto display = std::string(line_ptr) + ((color == HIMTCH_COLOR) ? " <" : "  ");
+      WAddStr( matches_window, display );
+    }
 #else
 #ifdef COLOR_SUPPORT
     WbkgdSet(matches_window, COLOR_PAIR(color)|A_BOLD);
@@ -128,7 +130,7 @@ char* GetMatches(const std::string& base)
   if (!(tmpval == Mtchs[0])){
     TMP=static_cast<char*>(malloc(strlen(Mtchs[0])+1));
     if (TMP != nullptr){
-      strcpy(TMP, Mtchs[0]);
+      *std::format_to(TMP, "{}", Mtchs[0]) = '\0';
       RetVal = TMP;
     }else{
       RetVal = nullptr;}
@@ -325,7 +327,7 @@ char* GetMatches(const std::string& base)
       case CR :
                      TMP=static_cast<char*>(malloc(strlen(Mtchs[ disp_begin_pos + cursor_pos])+1));
 		     if (TMP != nullptr){
-		        strcpy(TMP, Mtchs[disp_begin_pos + cursor_pos]);
+		        *std::format_to(TMP, "{}", Mtchs[disp_begin_pos + cursor_pos]) = '\0';
                         RetVal = TMP;
 		     }else
                         RetVal = nullptr;

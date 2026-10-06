@@ -458,7 +458,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   char *line_ptr;
   int  n, pos_x = 0;
   FileEntry *fe_ptr;
-  static char* line_buffer = nullptr;
+  static std::string line_buffer;
   static int  old_cols = -1;
   char owner[OWNER_NAME_MAX + 1];
   char group[GROUP_NAME_MAX + 1];
@@ -474,8 +474,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   if( old_cols != COLS )
   {
     old_cols = COLS;
-    if( line_buffer ) free( line_buffer );
-    line_buffer = MallocOrAbort<char>(COLS + PATH_LENGTH);
+    line_buffer.resize(COLS + PATH_LENGTH);
   }
 
   fe_ptr = file_entry_list[entry_no];
@@ -507,7 +506,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
                     if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
 		    {
-		      std::strcpy(line_buffer, std::format("{}{}{} {:>10} {:3} {:11} {:>12} -> {}",
+		      line_buffer = std::format("{}{}{} {:>10} {:3} {:11} {:>12} -> {}",
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
 				      fitted_name,
@@ -516,11 +515,11 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
                                       (long long) fe_ptr->stat_struct.st_size,
 				      modify_time,
 				      fitted_link
-				    ).c_str());
+				    );
                     }
 		    else
 		    {
-		      std::strcpy(line_buffer, std::format("{}{}{} {:>10} {:3} {:11} {:>12}",
+		      line_buffer = std::format("{}{}{} {:>10} {:3} {:11} {:>12}",
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
 				      fitted_name,
@@ -528,7 +527,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      fe_ptr->stat_struct.st_nlink,
                                       (long long) fe_ptr->stat_struct.st_size,
 				      modify_time
-				    ).c_str());
+				    );
                     }
 		  }
 		  else
@@ -536,7 +535,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		    /* Empty Entry */
 		    /*-------------*/
 
-		    std::strcpy(line_buffer, std::format("{:<{}}", "", max_filename_len + 42).c_str());
+		    line_buffer = std::format("{:<{}}", "", max_filename_len + 42);
 		  }
 
 		  if( max_linkname_len )
@@ -566,7 +565,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
                     if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
 		    {
-                      std::strcpy(line_buffer, std::format("{}{}{} {:10} {:<12} {:<12} -> {}",
+                      line_buffer = std::format("{}{}{} {:10} {:<12} {:<12} -> {}",
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
 				      fitted_name,
@@ -574,18 +573,18 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
               owner,
               group,
 				      fitted_link
-				    ).c_str());
+				    );
                     }
 		    else
 		    {
-                      std::strcpy(line_buffer, std::format("{}{}{} {:10} {:<12} {:<12}",
+                      line_buffer = std::format("{}{}{} {:10} {:<12} {:<12}",
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
 				      fitted_name,
 				      (long long)fe_ptr->stat_struct.st_ino,
               owner,
               group
-				    ).c_str());
+				    );
 
                     }
 	          }
@@ -594,7 +593,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		    /* Empty-Entry */
 		    /*-------------*/
 
-		    std::strcpy(line_buffer, std::format("{:<{}}", "", max_filename_len + 38).c_str());
+		    line_buffer = std::format("{:<{}}", "", max_filename_len + 38);
 		  }
 
 		  if( max_linkname_len )
@@ -605,18 +604,18 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     case ViewMode::MODE_3 : if( fe_ptr )
 		  {
-		    std::strcpy(line_buffer, std::format("{}{}{}",
+		    line_buffer = std::format("{}{}{}",
 				    (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				    type_of_file,
 				    fitted_name
-				  ).c_str());
+				  );
                   }
 		  else
 		  {
 		    /* Empty-Entry */
 		    /*-------------*/
 
-		    std::strcpy(line_buffer, std::format("{:<{}}", "", max_filename_len + 2).c_str());
+		    line_buffer = std::format("{:<{}}", "", max_filename_len + 2);
 		  }
 
 		  pos_x = x * (max_filename_len + 3);
@@ -629,24 +628,24 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
                     if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
 		    {
-                      std::strcpy(line_buffer, std::format("{}{}{} Chg: {:>12}  Acc: {:>12} -> {}",
+                      line_buffer = std::format("{}{}{} Chg: {:>12}  Acc: {:>12} -> {}",
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
 				      fitted_name,
 				      change_time,
 				      access_time,
 				      fitted_link
-				  ).c_str());
+				  );
                     }
 		    else
 		    {
-                      std::strcpy(line_buffer, std::format("{}{}{} Chg: {:>12}  Acc: {:>12}",
+                      line_buffer = std::format("{}{}{} Chg: {:>12}  Acc: {:>12}",
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
 				      fitted_name,
 				      change_time,
 				      access_time
-				  ).c_str());
+				  );
                     }
 		  }
 		  else
@@ -654,7 +653,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		    /* Empty-Entry */
 		    /*-------------*/
 
-		    std::strcpy(line_buffer, std::format("{:<{}}", "", max_filename_len + 39).c_str());
+		    line_buffer = std::format("{:<{}}", "", max_filename_len + 39);
 		  }
 
 
@@ -666,16 +665,18 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     case ViewMode::MODE_5 : if( fe_ptr )
 		  {
+		    line_buffer.assign(std::max(old_cols + PATH_LENGTH, 200), '\0');
  		    BuildUserFileEntry(fe_ptr,  max_filename_len, max_linkname_len,
 		        USERVIEW,
-		        200, line_buffer);
+		        200, line_buffer.data());
+		    line_buffer.resize(std::strlen(line_buffer.c_str()));
 		  }
 		  else
 		  {
 		    /* Empty-Entry */
 		    /*-------------*/
 
-		    std::strcpy(line_buffer, std::format("{:<{}}", "", max_userview_len).c_str());
+		    line_buffer = std::format("{:<{}}", "", max_userview_len);
 		  }
 		  pos_x = x * (max_userview_len + 1);
 		  break;
@@ -685,7 +686,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   /* display line */
   /*--------------*/
 
-  n = StrVisualLength( line_buffer );
+  n = StrVisualLength( line_buffer.c_str() );
 
   if( n <= ef_window_width )
   {
@@ -694,7 +695,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     hide_left = 0;
     hide_right = 0;
-    line_ptr = line_buffer;
+    line_ptr = line_buffer.data();
   }
   else
   {
@@ -705,7 +706,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
       ? start_x
       : n - ef_window_width;
 
-    line_ptr = const_cast<char*>(StrVisualIndex(line_buffer, offset));
+    line_ptr = const_cast<char*>(StrVisualIndex(line_buffer.c_str(), offset));
     *const_cast<char*>(StrVisualIndex(line_ptr, ef_window_width)) = '\0';
     hide_left = start_x;
     hide_right = n - start_x - ef_window_width;
@@ -1415,9 +1416,11 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 		        if( GetNewFileModus( LINES - 2, 1, modus, "\r\033" ) == CR )
 			{
-			  (void) strcpy( walking_package.function_data.change_modus.new_modus,
-					 modus
-				       );
+			  *std::format_to(
+			    walking_package.function_data.change_modus.new_modus,
+			    "{}",
+			    modus
+			  ) = '\0';
                           WalkTaggedFiles( dir_entry->start_file,
 					   dir_entry->cursor_pos,
 					   SetFileModus,
@@ -1844,7 +1847,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		        }
 			else
 			{
-			  (void) strcpy( to_path, to_dir );
+			  *std::format_to(to_path, "{}", to_dir) = '\0';
 			}
 		        if( !CopyFile( &disk_statistic,
 				       fe_ptr,
@@ -1950,7 +1953,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 	                  }
 			  else
 			  {
-			    (void) strcpy( to_path, to_dir );
+			    *std::format_to(to_path, "{}", to_dir) = '\0';
 			  }
 
 			  term = InputChoise( "Confirm overwrite existing files (Y/N) ? ", "YN\033" );
@@ -2317,7 +2320,7 @@ int HandleFileWindow(DirEntry *dir_entry)
           const auto path = GetFileNamePath(fe_ptr);
           char new_login_path[PATH_LENGTH + 1];
 
-          std::strcpy(new_login_path, path.c_str());
+          *std::format_to(new_login_path, "{}", path) = '\0';
           if (!GetNewLoginPath(new_login_path))
           {
             dir_entry->login_flag = true;
@@ -2831,7 +2834,6 @@ static void ListJump( DirEntry * dir_entry, const char *str )
 
     /*  in file_window press initial char of file to jump to it */
 
-    char *newStr = nullptr;
     FileEntry * fe_ptr = nullptr;
     int i=0, j=0, n=0, start_x=0, ic=0, tmp2=0;
     const char * jumpmsg = "Press initial of file to jump to... ";
@@ -2855,10 +2857,8 @@ static void ListJump( DirEntry * dir_entry, const char *str )
     }
 
     n = std::strlen(str);
-    newStr = MallocOrAbort<char>(n + 2);
-    std::strcpy(newStr, str);
-    newStr[n] = ic;
-    newStr[n + 1] = 0;
+    std::string newStr(str);
+    newStr += static_cast<char>(ic);
 
     /* index of current entry in list */
     tmp2 = (incremental && n == 0) ? 0 : dir_entry->start_file + dir_entry->cursor_pos;
@@ -2872,14 +2872,13 @@ static void ListJump( DirEntry * dir_entry, const char *str )
         RefreshWindow( file_window );
         doupdate();
         sleep(1);
-        free(newStr);
         return;
     }
 
     for( i=tmp2; i < static_cast<int>(file_entry_list.size()); i++ )
     {
         fe_ptr = file_entry_list[i];
-	if(!strncasecmp(newStr, fe_ptr->name, n+1))
+	if(!strncasecmp(newStr.c_str(), fe_ptr->name, n+1))
           break;
     }
 
@@ -2892,7 +2891,6 @@ static void ListJump( DirEntry * dir_entry, const char *str )
         RefreshWindow( file_window );
         doupdate();
         sleep(1);
-        free(newStr);
         return;
     }
 
@@ -2918,8 +2916,7 @@ static void ListJump( DirEntry * dir_entry, const char *str )
     RefreshWindow( stdscr );
     RefreshWindow( file_window );
     doupdate();
-    ListJump( dir_entry, (incremental) ? newStr : "" );
-    free(newStr);
+    ListJump( dir_entry, (incremental) ? newStr.c_str() : "" );
 }
 
 

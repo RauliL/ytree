@@ -88,9 +88,8 @@ static void PrintDirEntry(WINDOW *win,
   int  n;
   int  aux=0;
   int  color, hi_color;
-  char buffer[32*3+PATH_LENGTH+1];
-  char format[60];
-  char *line_buffer = nullptr;
+  std::string buffer;
+  std::string line_buffer;
   char attributes[11];
   char modify_time[13];
   char change_time[13];
@@ -108,33 +107,27 @@ static void PrintDirEntry(WINDOW *win,
     color     = DIR_COLOR;
     hi_color  = HIDIR_COLOR;
   }
-  buffer[0] = '\0';
 
   for(j=0; j < dir_entry_list[entry_no].level; j++)
   {
     if( dir_entry_list[entry_no].indent & ( 1L << j ) )
-      (void) strcat( buffer, "| " );
+      buffer += "| ";
     else
-      (void) strcat( buffer, "  " );
+      buffer += "  ";
   }
   de_ptr = dir_entry_list[entry_no].dir_entry;
   if( de_ptr->next )
-    (void) strcat( buffer, "6-" );
+    buffer += "6-";
   else
-    (void) strcat( buffer, "3-" );
+    buffer += "3-";
 
   switch( dir_mode )
   {
     case ViewMode::MODE_1:
       GetAttributes(de_ptr->stat_struct.st_mode, attributes);
       CTime(de_ptr->stat_struct.st_mtime, modify_time);
-      line_buffer = MallocOrAbort<char>(38);
-      std::strcpy(format, "%10s %3d %8lld %12s");
-
-      std::snprintf(
-        line_buffer,
-        38,
-        format,
+      line_buffer = std::format(
+        "{:>10} {:3} {:8} {:>12}",
         attributes,
         de_ptr->stat_struct.st_nlink,
         static_cast<long long>(de_ptr->stat_struct.st_size),
@@ -156,12 +149,8 @@ static void PrintDirEntry(WINDOW *win,
                  } else {
                    std::snprintf(group, sizeof(group), "%d", de_ptr->stat_struct.st_gid);
                  }
-                 line_buffer = MallocOrAbort<char>(40);
-                 std::strcpy(format, "%12u  %-12s %-12s");
-                 std::snprintf(
-                   line_buffer,
-                   40,
-                   format,
+                 line_buffer = std::format(
+                   "{:12}  {:<12} {:<12}",
                    de_ptr->stat_struct.st_ino,
                    owner,
                    group
@@ -173,12 +162,8 @@ static void PrintDirEntry(WINDOW *win,
     case ViewMode::MODE_4 :
                  (void) CTime( de_ptr->stat_struct.st_ctime, change_time );
                  (void) CTime( de_ptr->stat_struct.st_atime, access_time );
-                 std::strcpy(format, "Chg.: %12s  Acc.: %12s");
-                 line_buffer = MallocOrAbort<char>(40);
-                 std::snprintf(
-                   line_buffer,
-                   40,
-                   format,
+                 line_buffer = std::format(
+                   "Chg.: {:>12}  Acc.: {:>12}",
                    change_time,
                    access_time
                  );
@@ -192,22 +177,24 @@ static void PrintDirEntry(WINDOW *win,
   /* Output optional Attributes */
   if (!suppress_output) {
      WbkgdSet(win, COLOR_PAIR(color)| A_BOLD );
-     if(line_buffer) {
-       aux = StrVisualLength(line_buffer);
+     if(!line_buffer.empty()) {
+       aux = StrVisualLength(line_buffer.c_str());
        if(window_width <= aux) {
-         TruncateVisual(line_buffer, window_width - 1);
+         TruncateVisual(line_buffer.data(), window_width - 1);
+         line_buffer.resize(std::strlen(line_buffer.c_str()));
          suppress_output = true;
        }
-       mvwaddstr(win, y, 0, line_buffer );
+       mvwaddstr(win, y, 0, line_buffer.c_str() );
     }
   }
 
   if(!suppress_output) {
     /* Output Graph */
-    l1 = StrVisualLength(buffer);
+    l1 = StrVisualLength(buffer.c_str());
     n = window_width - aux;
     if((int)l1 > n) {
-       TruncateVisual(buffer, std::max(n - 1, 0));
+       TruncateVisual(buffer.data(), std::max(n - 1, 0));
+       buffer.resize(std::strlen(buffer.c_str()));
        suppress_output = true;
     }
     PrintSpecialString( win, y, aux, buffer, color );
@@ -218,13 +205,13 @@ static void PrintDirEntry(WINDOW *win,
     /* Output Dirname */
     const auto dir_name = de_ptr->name;
 
-    std::strcpy(buffer, *dir_name ? dir_name : ".");
+    buffer = *dir_name ? dir_name : ".";
     if( de_ptr->not_scanned ) {
-      (void) strcat( buffer, "/" );
+      buffer += "/";
     }
 
 #ifdef NO_HIGHLIGHT
-    (void) strcat( buffer, (hilight) ? " <" : "  " );
+    buffer += (hilight) ? " <" : "  ";
 #else /* NO_HIGHLIGHT */
 #ifdef COLOR_SUPPORT
     if( hilight )
@@ -233,26 +220,25 @@ static void PrintDirEntry(WINDOW *win,
       WbkgdSet(win, COLOR_PAIR(color));
 
     n = window_width - aux - l1;
-    l2 = StrVisualLength(buffer);
-    if((int)l2 > n)
-      TruncateVisual(buffer, std::max(n - 1, 0));
+    l2 = StrVisualLength(buffer.c_str());
+    if((int)l2 > n) {
+      TruncateVisual(buffer.data(), std::max(n - 1, 0));
+      buffer.resize(std::strlen(buffer.c_str()));
+    }
 
 /*    waddstr( win, buffer );*/
-    mvwaddstr( win, y, aux + l1, buffer);
+    mvwaddstr( win, y, aux + l1, buffer.c_str());
     WbkgdSet(win, COLOR_PAIR(color)|A_BOLD);
 
 #else
     if( hilight ) wattrset( win, A_REVERSE );
 /*    waddstr( win, buffer );*/
-    mvwaddstr( win, y, aux + l1, buffer);
+    mvwaddstr( win, y, aux + l1, buffer.c_str());
 
     if( hilight ) wattrset( win, 0 );
 #endif /* COLOR_SUPPORT */
 #endif /* NO_HIGHLIGHT */
   }
-
-  if (line_buffer)
-     free(line_buffer);
 }
 
 
@@ -566,7 +552,7 @@ void HandlePlus(
   {
     const auto path = GetPath(de_ptr);
 
-    std::strcpy(new_login_path, path.c_str());
+    std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", path.c_str());
     ReadTree(de_ptr, new_login_path, 0);
     SetMatchingParam(de_ptr);
   }
@@ -831,29 +817,28 @@ int HandleDirWindow(DirEntry *start_dir_entry)
     else
     {
       if ( *initial_directory == '.' ) {   /* Entry of form "./alpha/beta" */
-        strcpy( new_login_path, start_dir_entry->name );
-        strcat( new_login_path, initial_directory+1 );
+        const auto login = std::string(start_dir_entry->name) + (initial_directory + 1);
+        std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", login.c_str());
       }
       else if (*initial_directory == '~' && (home = GetHomePath()))
       {
         /* Entry of form "~/alpha/beta" */
-        std::strcpy(new_login_path, home->c_str());
-        std::strcat(new_login_path, initial_directory + 1);
+        const auto login = *home + (initial_directory + 1);
+        std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", login.c_str());
       }
       else {            /* Entry of form "beta" or "/full/path/alpha/beta" */
-        strcpy(new_login_path, initial_directory);
+        std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", initial_directory);
       }
       for (int i = 0; i < static_cast<int>(statistic.disk_total_directories); ++i)
       {
+        std::string name;
         if (*new_login_path == std::filesystem::path::preferred_separator)
         {
-          const auto path = GetPath(dir_entry_list[i].dir_entry);
-
-          std::strcpy(new_name, path.c_str());
+          name = GetPath(dir_entry_list[i].dir_entry);
         } else {
-          std::strcpy(new_name, dir_entry_list[i].dir_entry->name);
+          name = dir_entry_list[i].dir_entry->name;
         }
-        if (!std::strcmp(new_login_path, new_name))
+        if (name == new_login_path)
         {
           statistic.disp_begin_pos = i;
           statistic.cursor_pos = 0;
@@ -1102,11 +1087,11 @@ int HandleDirWindow(DirEntry *start_dir_entry)
       case 'L':
         if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
         {
-          std::strcpy(new_login_path, disk_statistic.login_path);
+          std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", disk_statistic.login_path);
         } else {
           const auto path = GetPath(dir_entry);
 
-          std::strcpy(new_login_path, path.c_str());
+          std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", path.c_str());
         }
         if (!GetNewLoginPath(new_login_path))
         {
@@ -1130,7 +1115,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
 
         MoveHome(&dir_entry);
         path = GetPath(dir_entry);
-        std::strcpy(new_login_path, path.c_str());
+        std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", path.c_str());
 
         if (!(p = std::strrchr(new_login_path, std::filesystem::path::preferred_separator)))
         {
@@ -1358,7 +1343,7 @@ int KeyF2Get(DirEntry *start_dir_entry,
       {
         const auto tmp_path = GetPath(dir_entry_list[cursor_pos + disp_begin_pos].dir_entry);
 
-        std::strcpy(path, tmp_path.c_str());
+        std::snprintf(path, PATH_LENGTH + 1, "%s", tmp_path.c_str());
         result = 0;
         break;
       }
