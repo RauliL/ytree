@@ -59,7 +59,7 @@ static int ViewHexFile(const std::string& file_path)
 		  ERR_TO_STDOUT,
 		  HEXDUMP,
 		  PAGER
-		);
+);
   }
   else if (compress_method && *compress_method == CompressMethod::COMPRESS_COMPRESS)
   {
@@ -72,7 +72,7 @@ static int ViewHexFile(const std::string& file_path)
 		  ERR_TO_STDOUT,
 		  HEXDUMP,
 		  PAGER
-		);
+);
   }
   else if (compress_method && *compress_method == CompressMethod::GZIP_COMPRESS)
   {
@@ -85,7 +85,7 @@ static int ViewHexFile(const std::string& file_path)
 		  ERR_TO_STDOUT,
 		  HEXDUMP,
 		  PAGER
-		);
+);
   } else {
     std::snprintf(
       command_line,
@@ -94,7 +94,7 @@ static int ViewHexFile(const std::string& file_path)
 		  HEXDUMP,
 		  file_path.c_str(),
 		  PAGER
-		);
+);
   }
 
   if ((result = SilentSystemCall(command_line)))
@@ -113,7 +113,7 @@ static int ViewHexArchiveFile(const std::string& file_path)
     mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
 		file_path,
     std::string("| ") + HEXDUMP + " | " + PAGER
-  );
+);
   const auto result = SilentSystemCall(command_line);
 
   if (result)

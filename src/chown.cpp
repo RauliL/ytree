@@ -29,10 +29,10 @@ int ChangeFileOwner(FileEntry *fe_ptr)
     return( result );
   }
 
-  if( ( owner_id = GetNewOwner( fe_ptr->stat_struct.st_uid ) ) >= 0 )
+  if( ( owner_id = GetNewOwner(fe_ptr->stat_struct.st_uid) ) >= 0 )
   {
     walking_package.function_data.change_owner.new_owner_id = owner_id;
-    result = SetFileOwner( fe_ptr, &walking_package );
+    result = SetFileOwner(fe_ptr, &walking_package);
   }
   return( result );
 }
@@ -59,9 +59,9 @@ int GetNewOwner(int st_uid)
 
   ClearHelp();
 
-  MvAddStr( LINES - 2, 1, "New Owner:" );
+  MvAddStr(LINES - 2, 1, "New Owner:");
 
-  if (InputString( owner, LINES - 2, 12, 0, OWNER_NAME_MAX))
+  if (InputString(owner, LINES - 2, 12, 0, OWNER_NAME_MAX))
   {
     if (const auto owner_id_ptr = GetPasswdUid(owner))
     {
@@ -71,7 +71,7 @@ int GetNewOwner(int st_uid)
     }
   }
 
-  move( LINES - 2, 1 ); clrtoeol();
+  move(LINES - 2, 1); clrtoeol();
 
   return( owner_id );
 }
@@ -127,9 +127,9 @@ int ChangeDirOwner(DirEntry *de_ptr)
     return( result );
   }
 
-  if( ( owner_id = GetNewOwner( de_ptr->stat_struct.st_uid ) ) >= 0 )
+  if( ( owner_id = GetNewOwner(de_ptr->stat_struct.st_uid) ) >= 0 )
   {
-    result = SetDirOwner( de_ptr, owner_id );
+    result = SetDirOwner(de_ptr, owner_id);
   }
   return( result );
 }

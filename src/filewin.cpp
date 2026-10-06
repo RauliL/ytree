@@ -80,14 +80,14 @@ static void SilentTagWalkTaggedFiles(
   WalkingPackage*
 );
 static void RereadWindowSize(DirEntry *dir_entry);
-static void ListJump( DirEntry * dir_entry, const char *str );
+static void ListJump(DirEntry * dir_entry, const char *str);
 
 
 
 void SetFileMode(ViewMode new_file_mode)
 {
 
-  GetMaxYX( file_window, &window_height, &window_width );
+  GetMaxYX(file_window, &window_height, &window_width);
   file_mode = new_file_mode;
   switch( file_mode )
   {
@@ -133,15 +133,15 @@ void RotateFileMode()
   switch( file_mode )
   {
     using enum ViewMode;
-    case MODE_1: SetFileMode( MODE_3 ); break;
-    case MODE_2: SetFileMode( MODE_5 ); break;
-    case MODE_3: SetFileMode( MODE_4 ); break;
-    case MODE_4: SetFileMode( MODE_2 ); break;
-    case MODE_5: SetFileMode( MODE_1 ); break;
+    case MODE_1: SetFileMode(MODE_3); break;
+    case MODE_2: SetFileMode(MODE_5); break;
+    case MODE_3: SetFileMode(MODE_4); break;
+    case MODE_4: SetFileMode(MODE_2); break;
+    case MODE_5: SetFileMode(MODE_1); break;
   }
   if( (mode != Mode::DISK_MODE && mode != Mode::USER_MODE) && file_mode == ViewMode::MODE_4 ) {
     RotateFileMode();
-  } else if(file_mode == ViewMode::MODE_5 && !strcmp(USERVIEW, "")) {
+  } else if(file_mode == ViewMode::MODE_5 && !std::strcmp(USERVIEW, "")) {
     RotateFileMode();
   }
 }
@@ -158,7 +158,7 @@ static void ReadTaggedList(const DirEntry* dir_entry)
       const auto name_len = static_cast<std::size_t>(StrVisualLength(fe_ptr->name));
 
       file_entry_list.push_back(fe_ptr);
-      if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
+      if( S_ISLNK(fe_ptr->stat_struct.st_mode) )
       {
 	      const auto linkname_len = static_cast<std::size_t>(
           StrVisualLength(fe_ptr->symlink_target)
@@ -190,21 +190,21 @@ static void BuildFileEntryList(DirEntry *dir_entry)
   if( !dir_entry->global_flag )  {
      /* ... for !ANSI-Systeme ... */
      /*----------------------------*/
-     ReadFileList( dir_entry );
+     ReadFileList(dir_entry);
      SortFileEntryList();
-     SetFileMode( file_mode ); /* recalc */
+     SetFileMode(file_mode); /* recalc */
   }  else if (!dir_entry->tagged_flag)  {
     global_max_filename_len = 0;
     global_max_linkname_len = 0;
-    ReadGlobalFileList( statistic.tree.get() );
+    ReadGlobalFileList(statistic.tree.get());
     SortFileEntryList();
-    SetFileMode( file_mode ); /* recalc */
+    SetFileMode(file_mode); /* recalc */
   } else  {
     global_max_filename_len = 0;
     global_max_linkname_len = 0;
-    ReadTaggedFileList( statistic.tree.get() );
+    ReadTaggedFileList(statistic.tree.get());
     SortFileEntryList();
-    SetFileMode( file_mode ); /* recalc */
+    SetFileMode(file_mode); /* recalc */
   }
 }
 
@@ -272,7 +272,7 @@ static void SortFileEntryList()
     {
       return compare(a.get(), b.get());
     }
-  );
+);
 }
 
 static bool SortByName(const FileEntry* e1, const FileEntry* e2)
@@ -441,7 +441,7 @@ static void ChangeFileEntry()
       max_linkname_len = std::max(
         max_linkname_len,
         static_cast<std::size_t>(StrVisualLength(entry->symlink_target))
-      );
+);
     }
   }
 
@@ -498,7 +498,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
   fe_ptr = file_entry_list[entry_no].get();
 
-  if( fe_ptr && S_ISLNK( fe_ptr->stat_struct.st_mode ) )
+  if( fe_ptr && S_ISLNK(fe_ptr->stat_struct.st_mode) )
     sym_link_name = fe_ptr->symlink_target.c_str();
   else
     sym_link_name = "";
@@ -515,15 +515,15 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   {
     case ViewMode::MODE_1 : if( fe_ptr )
 		  {
-		    GetAttributes( fe_ptr->stat_struct.st_mode,
+		    GetAttributes(fe_ptr->stat_struct.st_mode,
 		                          attributes
-				        );
+);
 
-		    CTime( fe_ptr->stat_struct.st_mtime, modify_time );
+		    CTime(fe_ptr->stat_struct.st_mtime, modify_time);
 
 
 
-                    if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
+                    if( S_ISLNK(fe_ptr->stat_struct.st_mode) )
 		    {
 		      line_buffer = std::format("{}{}{} {:>10} {:3} {:11} {:>12} -> {}",
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
@@ -534,7 +534,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
                                       (long long) fe_ptr->stat_struct.st_size,
 				      modify_time,
 				      fitted_link
-				    );
+);
                     }
 		    else
 		    {
@@ -546,7 +546,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      fe_ptr->stat_struct.st_nlink,
                                       (long long) fe_ptr->stat_struct.st_size,
 				      modify_time
-				    );
+);
                     }
 		  }
 		  else
@@ -565,9 +565,9 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     case ViewMode::MODE_2 : if( fe_ptr )
 		  {
-		    GetAttributes( fe_ptr->stat_struct.st_mode,
+		    GetAttributes(fe_ptr->stat_struct.st_mode,
 		                          attributes
-				        );
+);
 
         if (const auto owner_name_ptr = GetPasswdName(fe_ptr->stat_struct.st_uid))
         {
@@ -582,7 +582,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
           std::snprintf(group, sizeof(group), "%d", fe_ptr->stat_struct.st_gid);
         }
 
-                    if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
+                    if( S_ISLNK(fe_ptr->stat_struct.st_mode) )
 		    {
                       line_buffer = std::format("{}{}{} {:10} {:<12} {:<12} -> {}",
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
@@ -592,7 +592,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
               owner,
               group,
 				      fitted_link
-				    );
+);
                     }
 		    else
 		    {
@@ -603,7 +603,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      (long long)fe_ptr->stat_struct.st_ino,
               owner,
               group
-				    );
+);
 
                     }
 	          }
@@ -627,7 +627,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				    (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				    type_of_file,
 				    fitted_name
-				  );
+);
                   }
 		  else
 		  {
@@ -642,10 +642,10 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     case ViewMode::MODE_4 : if( fe_ptr )
 		  {
-		    CTime( fe_ptr->stat_struct.st_ctime, change_time );
-		    CTime( fe_ptr->stat_struct.st_atime, access_time );
+		    CTime(fe_ptr->stat_struct.st_ctime, change_time);
+		    CTime(fe_ptr->stat_struct.st_atime, access_time);
 
-                    if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
+                    if( S_ISLNK(fe_ptr->stat_struct.st_mode) )
 		    {
                       line_buffer = std::format("{}{}{} Chg: {:>12}  Acc: {:>12} -> {}",
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
@@ -654,7 +654,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      change_time,
 				      access_time,
 				      fitted_link
-				  );
+);
                     }
 		    else
 		    {
@@ -664,7 +664,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      fitted_name,
 				      change_time,
 				      access_time
-				  );
+);
                     }
 		  }
 		  else
@@ -705,7 +705,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   /* display line */
   /*--------------*/
 
-  n = StrVisualLength( line_buffer.c_str() );
+  n = StrVisualLength(line_buffer.c_str());
 
   if( n <= ef_window_width )
   {
@@ -733,7 +733,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
 #ifdef NO_HIGHLIGHT
   line_ptr[1] = (hilight) ? '>' : ' ';
-  mvwaddstr( file_window, y, pos_x + 1, line_ptr );
+  mvwaddstr(file_window, y, pos_x + 1, line_ptr);
 #else
 #ifdef COLOR_SUPPORT
   if( hilight )
@@ -741,14 +741,14 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   else
     WbkgdSet(file_window, COLOR_PAIR(FILE_COLOR));
 
-  mvwaddstr(file_window, y, pos_x + 1, line_ptr );
+  mvwaddstr(file_window, y, pos_x + 1, line_ptr);
   WbkgdSet(file_window, COLOR_PAIR(FILE_COLOR)|A_BOLD);
 
 #else
 #endif /* COLOR_SUPPORT */
-  if( hilight ) wattrset( file_window, A_REVERSE );
-  mvwaddstr( file_window, y, pos_x + 1, line_ptr );
-  if( hilight ) wattrset( file_window, 0 );
+  if( hilight ) wattrset(file_window, A_REVERSE);
+  mvwaddstr(file_window, y, pos_x + 1, line_ptr);
+  if( hilight ) wattrset(file_window, 0);
 #endif /* NO_HIGHLIGHT */
 
 
@@ -760,9 +760,9 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
 void DisplayFileWindow(DirEntry *dir_entry)
 {
-  GetMaxYX( file_window, &window_height, &window_width );
-  BuildFileEntryList( dir_entry );
-  DisplayFiles( dir_entry, dir_entry->start_file,
+  GetMaxYX(file_window, &window_height, &window_width);
+  BuildFileEntryList(dir_entry);
+  DisplayFiles(dir_entry, dir_entry->start_file,
                 dir_entry->start_file + dir_entry->cursor_pos, 0);
 }
 
@@ -773,15 +773,15 @@ static void DisplayFiles(DirEntry *de_ptr, int start_file_no, int hilight_no, in
 {
   int  x, y, p_x, p_y, j;
 
-  werase( file_window );
+  werase(file_window);
 
   if( file_entry_list.size() == 0 )
   {
-    mvwaddstr( file_window,
+    mvwaddstr(file_window,
 	       0,
 	       3,
 	       (de_ptr->access_denied) ? "Permission Denied!" : "No Files!"
-	      );
+);
   }
 
   j = start_file_no; p_x = -1; p_y = 0;
@@ -798,7 +798,7 @@ static void DisplayFiles(DirEntry *de_ptr, int start_file_no, int hilight_no, in
 	}
 	else
 	{
-	  PrintFileEntry( j, y, x, false, start_x);
+	  PrintFileEntry(j, y, x, false, start_x);
 	}
       }
       j++;
@@ -806,7 +806,7 @@ static void DisplayFiles(DirEntry *de_ptr, int start_file_no, int hilight_no, in
   }
 
   if( p_x >= 0 )
-    PrintFileEntry( hilight_no, p_y, p_x, true, start_x);
+    PrintFileEntry(hilight_no, p_y, p_x, true, start_x);
 
 }
 
@@ -825,30 +825,30 @@ static void fmovedown(int *start_file, int *cursor_pos, int *start_x, DirEntry *
       {
           /* DOWN ohne scroll moeglich */
           /*---------------------------*/
-          PrintFileEntry( *start_file + *cursor_pos,
+          PrintFileEntry(*start_file + *cursor_pos,
                           *cursor_pos % window_height,
                           *cursor_pos / window_height,
                           false,
                           *start_x
-                          );
+);
           (*cursor_pos)++;
-          PrintFileEntry( *start_file + *cursor_pos,
+          PrintFileEntry(*start_file + *cursor_pos,
                           *cursor_pos % window_height,
                           *cursor_pos / window_height,
                           true ,
                           *start_x
-                          );
+);
       }
       else
       {
           /* Scrollen */
           /*----------*/
           (*start_file)++;
-          DisplayFiles( dir_entry,
+          DisplayFiles(dir_entry,
                         *start_file,
                         *start_file + *cursor_pos,
                         *start_x
-                        );
+);
       }
    }
    return;
@@ -868,30 +868,30 @@ static void fmoveup(int *start_file, int *cursor_pos, int *start_x, DirEntry *di
       {
          /* UP ohne scroll moeglich */
          /*-------------------------*/
-         PrintFileEntry( *start_file + *cursor_pos,
+         PrintFileEntry(*start_file + *cursor_pos,
                          *cursor_pos % window_height,
                          *cursor_pos / window_height,
                          false,
                          *start_x
-                         );
+);
          (*cursor_pos)--;
-         PrintFileEntry( *start_file + *cursor_pos,
+         PrintFileEntry(*start_file + *cursor_pos,
                          *cursor_pos % window_height,
                          *cursor_pos / window_height,
                          true,
                          *start_x
-                         );
+);
       }
       else
       {
          /* Scrollen */
          /*----------*/
          (*start_file)--;
-         DisplayFiles( dir_entry,
+         DisplayFiles(dir_entry,
                        *start_file,
                        *start_file + *cursor_pos,
                        *start_x
-                       );
+);
       }
    }
    return;
@@ -904,12 +904,12 @@ static void fmoveright(int *start_file, int *cursor_pos, int *start_x,DirEntry *
       /* Sonderfall: ganzes Filewindow scrollen */
       /*----------------------------------------*/
       (*start_x)++;
-      PrintFileEntry( *start_file + *cursor_pos,
+      PrintFileEntry(*start_file + *cursor_pos,
                       *cursor_pos % window_height,
                       *cursor_pos / window_height,
                       true ,
                       *start_x
-                      );
+);
       if( hide_right < 0 ) (*start_x)--;
    }
    else if( *start_file + *cursor_pos >= (int)file_entry_list.size() - 1 )
@@ -935,19 +935,19 @@ static void fmoveright(int *start_file, int *cursor_pos, int *start_x,DirEntry *
       {
           /* RIGHT ohne scroll moeglich */
           /*----------------------------*/
-          PrintFileEntry( *start_file + *cursor_pos,
+          PrintFileEntry(*start_file + *cursor_pos,
                           *cursor_pos % window_height,
                           *cursor_pos / window_height,
                           false,
                           *start_x
-                          );
+);
           *cursor_pos += my_x_step;
-          PrintFileEntry( *start_file + *cursor_pos,
+          PrintFileEntry(*start_file + *cursor_pos,
                           *cursor_pos % window_height,
                           *cursor_pos / window_height,
                           true ,
                           *start_x
-                          );
+);
       }
       else
       {
@@ -955,11 +955,11 @@ static void fmoveright(int *start_file, int *cursor_pos, int *start_x,DirEntry *
           /*----------*/
           *start_file += x_step;
           *cursor_pos -= x_step - my_x_step;
-          DisplayFiles( dir_entry,
+          DisplayFiles(dir_entry,
                         *start_file,
                         *start_file + *cursor_pos,
                         *start_x
-                        );
+);
       }
    }
    return;
@@ -973,12 +973,12 @@ static void fmoveleft(int *start_file, int *cursor_pos, int *start_x, DirEntry *
          /* Sonderfall: ganzes Filewindow scrollen */
          /*----------------------------------------*/
          if( *start_x > 0 ) (*start_x)--;
-            PrintFileEntry( *start_file + *cursor_pos,
+            PrintFileEntry(*start_file + *cursor_pos,
                             *cursor_pos % window_height,
                             *cursor_pos / window_height,
                             true ,
                             *start_x
-                            );
+);
      }
      else if( *start_file + *cursor_pos <= 0 )
      {
@@ -1003,19 +1003,19 @@ static void fmoveleft(int *start_file, int *cursor_pos, int *start_x, DirEntry *
          {
              /* LEFT ohne scroll moeglich */
              /*---------------------------*/
-             PrintFileEntry( *start_file + *cursor_pos,
+             PrintFileEntry(*start_file + *cursor_pos,
                              *cursor_pos % window_height,
                              *cursor_pos / window_height,
                              false,
                              *start_x
-                             );
+);
              *cursor_pos -= my_x_step;
-             PrintFileEntry( *start_file + *cursor_pos,
+             PrintFileEntry(*start_file + *cursor_pos,
                              *cursor_pos % window_height,
                              *cursor_pos / window_height,
                              true,
                              *start_x
-                             );
+);
          }
          else
          {
@@ -1023,11 +1023,11 @@ static void fmoveleft(int *start_file, int *cursor_pos, int *start_x, DirEntry *
              /*----------*/
              if( ( *start_file -= x_step ) < 0 )
                 *start_file = 0;
-             DisplayFiles( dir_entry,
+             DisplayFiles(dir_entry,
                            *start_file,
                            *start_file + *cursor_pos,
                            *start_x
-                           );
+);
          }
      }
      return;
@@ -1050,22 +1050,22 @@ static void fmovenpage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
          * Eintrag
          * ==> setzen
          */
-         PrintFileEntry( *start_file + *cursor_pos,
+         PrintFileEntry(*start_file + *cursor_pos,
                          *cursor_pos % window_height,
                          *cursor_pos / window_height,
                          false,
                          *start_x
-                         );
+);
          if( *start_file + max_disp_files <= (int)file_entry_list.size() - 1 )
             *cursor_pos = max_disp_files - 1;
          else
             *cursor_pos = file_entry_list.size() - *start_file - 1;
-         PrintFileEntry( *start_file + *cursor_pos,
+         PrintFileEntry(*start_file + *cursor_pos,
                          *cursor_pos % window_height,
                          *cursor_pos / window_height,
                          true,
                          *start_x
-                         );
+);
       }
       else
       {
@@ -1079,11 +1079,11 @@ static void fmovenpage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
            *cursor_pos = max_disp_files - 1;
         else
            *cursor_pos = file_entry_list.size() - *start_file - 1;
-        DisplayFiles( dir_entry,
+        DisplayFiles(dir_entry,
                       *start_file,
                       *start_file + *cursor_pos,
                       *start_x
-                      );
+);
       }
    }
    return;
@@ -1107,19 +1107,19 @@ static void fmoveppage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
              * Eintrag
              * ==> setzen
              */
-             PrintFileEntry( *start_file + *cursor_pos,
+             PrintFileEntry(*start_file + *cursor_pos,
                              *cursor_pos % window_height,
                              *cursor_pos / window_height,
                              false,
                              *start_x
-                             );
+);
              *cursor_pos = 0;
-             PrintFileEntry( *start_file + *cursor_pos,
+             PrintFileEntry(*start_file + *cursor_pos,
                              *cursor_pos % window_height,
                              *cursor_pos / window_height,
                              true,
                              *start_x
-                             );
+);
         }
         else
         {
@@ -1129,11 +1129,11 @@ static void fmoveppage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
                *start_file -= max_disp_files;
             else
                *start_file = 0;
-            DisplayFiles( dir_entry,
+            DisplayFiles(dir_entry,
                           *start_file,
                           *start_file + *cursor_pos,
                           *start_x
-                          );
+);
         }
      }
      return;
@@ -1277,25 +1277,25 @@ int HandleFileWindow(DirEntry *dir_entry)
   need_dsp_help = true;
   maybe_change_x_step = true;
 
-  BuildFileEntryList( dir_entry );
+  BuildFileEntryList(dir_entry);
 
   if( dir_entry->global_flag || dir_entry->big_window || dir_entry->tagged_flag)
   {
     SwitchToBigFileWindow();
-    GetMaxYX( file_window, &window_height, &window_width );
+    GetMaxYX(file_window, &window_height, &window_width);
     DisplayDiskStatistic();
   }
   else
   {
-    GetMaxYX( file_window, &window_height, &window_width );
-    DisplayDirStatistic( dir_entry );
+    GetMaxYX(file_window, &window_height, &window_width);
+    DisplayDirStatistic(dir_entry);
   }
 
-  DisplayFiles( dir_entry,
+  DisplayFiles(dir_entry,
 		dir_entry->start_file,
 		dir_entry->start_file + dir_entry->cursor_pos,
 		start_x
-	      );
+);
 
   do
   {
@@ -1323,12 +1323,12 @@ int HandleFileWindow(DirEntry *dir_entry)
       fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
 
       if( dir_entry->global_flag )
-        DisplayGlobalFileParameter( fe_ptr );
+        DisplayGlobalFileParameter(fe_ptr);
       else
-        DisplayFileParameter( fe_ptr );
+        DisplayFileParameter(fe_ptr);
 
-      RefreshWindow( dir_window ); /* needed: ncurses-bug ? */
-      RefreshWindow( file_window );
+      RefreshWindow(dir_window); /* needed: ncurses-bug ? */
+      RefreshWindow(file_window);
       doupdate();
       ch = (resize_request) ? -1 : Getch();
       if( ch == LF ) ch = CR;
@@ -1336,7 +1336,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 #ifdef VI_KEYS
 
-    ch = ViKey( ch );
+    ch = ViKey(ch);
 
 #endif /* VI_KEYS */
 
@@ -1370,9 +1370,9 @@ int HandleFileWindow(DirEntry *dir_entry)
        /* small window active */
 
        SwitchToSmallFileWindow();
-       DisplayTree( dir_window, statistic.disp_begin_pos,
+       DisplayTree(dir_window, statistic.disp_begin_pos,
 		  statistic.disp_begin_pos + statistic.cursor_pos
-		);
+);
        DisplayFileWindow(dir_entry);
        DisplayDirStatistic(dir_entry);
        DisplayFileParameter(fe_ptr);
@@ -1406,12 +1406,12 @@ int HandleFileWindow(DirEntry *dir_entry)
       {
 	start_x = 0;
 
-	PrintFileEntry( dir_entry->start_file + dir_entry->cursor_pos,
+	PrintFileEntry(dir_entry->start_file + dir_entry->cursor_pos,
 	 	        dir_entry->cursor_pos % window_height,
 		        dir_entry->cursor_pos / window_height,
 		        true ,
 		        start_x
-	              );
+);
      }
    }
 
@@ -1481,11 +1481,11 @@ int HandleFileWindow(DirEntry *dir_entry)
 			  dir_entry->cursor_pos = file_entry_list.size() - dir_entry->start_file - 1;
 		        }
 
-			DisplayFiles( dir_entry,
+			DisplayFiles(dir_entry,
 				      dir_entry->start_file,
 				      dir_entry->start_file + dir_entry->cursor_pos,
 				      start_x
-				    );
+);
 		      }
 		      break;
 
@@ -1501,11 +1501,11 @@ int HandleFileWindow(DirEntry *dir_entry)
                         dir_entry->start_file = 0;
 			dir_entry->cursor_pos = 0;
 
-			DisplayFiles( dir_entry,
+			DisplayFiles(dir_entry,
 				      dir_entry->start_file,
 				      dir_entry->start_file + dir_entry->cursor_pos,
 				      start_x
-				    );
+);
 
 		      }
 		      break;
@@ -1515,14 +1515,14 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 	              need_dsp_help = true;
 
-		      if( !ChangeFileModus( fe_ptr ) )
+		      if( !ChangeFileModus(fe_ptr) )
 		      {
-			PrintFileEntry( dir_entry->start_file + dir_entry->cursor_pos,
+			PrintFileEntry(dir_entry->start_file + dir_entry->cursor_pos,
 				        dir_entry->cursor_pos % window_height,
 				        dir_entry->cursor_pos / window_height,
 				        true,
 					start_x
-			              );
+);
 		      }
 		      break;
 
@@ -1537,26 +1537,26 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 		   	mask = S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 
-			GetAttributes( mask, modus );
+			GetAttributes(mask, modus);
 
-		        if( GetNewFileModus( LINES - 2, 1, modus, "\r\033" ) == CR )
+		        if( GetNewFileModus(LINES - 2, 1, modus, "\r\033") == CR )
 			{
 			  *std::format_to(
 			    walking_package.function_data.change_modus.new_modus,
 			    "{}",
 			    modus
-			  ) = '\0';
-                          WalkTaggedFiles( dir_entry->start_file,
+) = '\0';
+                          WalkTaggedFiles(dir_entry->start_file,
 					   dir_entry->cursor_pos,
 					   SetFileModus,
 					   &walking_package
-					 );
+);
 
-			  DisplayFiles( dir_entry,
+			  DisplayFiles(dir_entry,
 					dir_entry->start_file,
 					dir_entry->start_file + dir_entry->cursor_pos,
 					start_x
-				      );
+);
 			}
 			else
 			{
@@ -1570,14 +1570,14 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 		      need_dsp_help = true;
 
-		      if( !ChangeFileOwner( fe_ptr ) )
+		      if( !ChangeFileOwner(fe_ptr) )
 		      {
-			PrintFileEntry( dir_entry->start_file + dir_entry->cursor_pos,
+			PrintFileEntry(dir_entry->start_file + dir_entry->cursor_pos,
 				        dir_entry->cursor_pos % window_height,
 				        dir_entry->cursor_pos / window_height,
 				        true ,
 					start_x
-			              );
+);
 		      }
 		      break;
 
@@ -1589,20 +1589,20 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      else
 		      {
 			need_dsp_help = true;
-		        if( ( owner_id = GetNewOwner( -1 ) ) >= 0 )
+		        if( ( owner_id = GetNewOwner(-1) ) >= 0 )
 			{
 			  walking_package.function_data.change_owner.new_owner_id = owner_id;
-                          WalkTaggedFiles( dir_entry->start_file,
+                          WalkTaggedFiles(dir_entry->start_file,
 					   dir_entry->cursor_pos,
 					   SetFileOwner,
 					   &walking_package
-					 );
+);
 
-			  DisplayFiles( dir_entry,
+			  DisplayFiles(dir_entry,
 					dir_entry->start_file,
 					dir_entry->start_file + dir_entry->cursor_pos,
 					start_x
-				      );
+);
 			}
 		      }
 		      break;
@@ -1612,14 +1612,14 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 		      need_dsp_help = true;
 
-		      if( !ChangeFileGroup( fe_ptr ) )
+		      if( !ChangeFileGroup(fe_ptr) )
 		      {
-			PrintFileEntry( dir_entry->start_file + dir_entry->cursor_pos,
+			PrintFileEntry(dir_entry->start_file + dir_entry->cursor_pos,
 				        dir_entry->cursor_pos % window_height,
 				        dir_entry->cursor_pos / window_height,
 				        true,
 					start_x
-			              );
+);
 		      }
 		      break;
 
@@ -1632,20 +1632,20 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      {
 			need_dsp_help = true;
 
-		        if( ( group_id = GetNewGroup( -1 ) ) >= 0 )
+		        if( ( group_id = GetNewGroup(-1) ) >= 0 )
 			{
 			  walking_package.function_data.change_group.new_group_id = group_id;
-                          WalkTaggedFiles( dir_entry->start_file,
+                          WalkTaggedFiles(dir_entry->start_file,
 					   dir_entry->cursor_pos,
 					   SetFileGroup,
 					   &walking_package
-					 );
+);
 
-			  DisplayFiles( dir_entry,
+			  DisplayFiles(dir_entry,
 					dir_entry->start_file,
 					dir_entry->start_file + dir_entry->cursor_pos,
 					start_x
-				      );
+);
 			}
 		      }
 		      break;
@@ -1658,12 +1658,12 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      {
                         fe_ptr->tagged = true;
 
-			PrintFileEntry( dir_entry->start_file + dir_entry->cursor_pos,
+			PrintFileEntry(dir_entry->start_file + dir_entry->cursor_pos,
 				        dir_entry->cursor_pos % window_height,
 				        dir_entry->cursor_pos / window_height,
 				        true,
 					start_x
-			              );
+);
 	       	        de_ptr->tagged_files++;
 		        de_ptr->tagged_bytes += fe_ptr->stat_struct.st_size;
 	       	        statistic.disk_tagged_files++;
@@ -1671,7 +1671,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			if( dir_entry->global_flag )
 			  DisplayDiskTagged();
 			else
-			  DisplayDirTagged( de_ptr );
+			  DisplayDirTagged(de_ptr);
 		      }
 		      unput_char = KEY_DOWN;
 
@@ -1683,12 +1683,12 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      {
 			fe_ptr->tagged = false;
 
-			PrintFileEntry( dir_entry->start_file + dir_entry->cursor_pos,
+			PrintFileEntry(dir_entry->start_file + dir_entry->cursor_pos,
 				        dir_entry->cursor_pos % window_height,
 				        dir_entry->cursor_pos / window_height,
 				        true,
 					start_x
-			              );
+);
 
 			de_ptr->tagged_files--;
 			de_ptr->tagged_bytes -= fe_ptr->stat_struct.st_size;
@@ -1697,7 +1697,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			if( dir_entry->global_flag )
 			  DisplayDiskTagged();
 			else
-			  DisplayDirTagged( de_ptr );
+			  DisplayDirTagged(de_ptr);
 		      }
 
 		      unput_char = KEY_DOWN;
@@ -1721,11 +1721,11 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 
 		      dir_entry->start_file = list_pos - dir_entry->cursor_pos;
-		      DisplayFiles( dir_entry,
+		      DisplayFiles(dir_entry,
 				    dir_entry->start_file,
 				    dir_entry->start_file + dir_entry->cursor_pos,
 				    start_x
-			          );
+);
 		      break;
 
       case 'T' & 0x1F :
@@ -1749,13 +1749,13 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      if( dir_entry->global_flag )
 		        DisplayDiskTagged();
 		      else
-		        DisplayDirTagged( dir_entry );
+		        DisplayDirTagged(dir_entry);
 
-		      DisplayFiles( dir_entry,
+		      DisplayFiles(dir_entry,
 				    dir_entry->start_file,
 				    dir_entry->start_file + dir_entry->cursor_pos,
 				    start_x
-			          );
+);
 		      break;
 
 
@@ -1780,13 +1780,13 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      if( dir_entry->global_flag )
 		        DisplayDiskTagged();
 		      else
-		        DisplayDirTagged( dir_entry );
+		        DisplayDirTagged(dir_entry);
 
-		      DisplayFiles( dir_entry,
+		      DisplayFiles(dir_entry,
 				    dir_entry->start_file,
 				    dir_entry->start_file + dir_entry->cursor_pos,
 				    start_x
-			          );
+);
 		      break;
 
 
@@ -1813,13 +1813,13 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      if( dir_entry->global_flag )
 		        DisplayDiskTagged();
 		      else
-		        DisplayDirTagged( dir_entry );
+		        DisplayDirTagged(dir_entry);
 
-		      DisplayFiles( dir_entry,
+		      DisplayFiles(dir_entry,
 				    dir_entry->start_file,
 				    dir_entry->start_file + dir_entry->cursor_pos,
 				    start_x
-			          );
+);
 		      break;
 
 
@@ -1845,13 +1845,13 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      if( dir_entry->global_flag )
 		        DisplayDiskTagged();
 		      else
-		        DisplayDirTagged( dir_entry );
+		        DisplayDirTagged(dir_entry);
 
-		      DisplayFiles( dir_entry,
+		      DisplayFiles(dir_entry,
 				    dir_entry->start_file,
 				    dir_entry->start_file + dir_entry->cursor_pos,
 				    start_x
-			          );
+);
 		      break;
 
       case 'V':
@@ -1888,7 +1888,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 		      need_dsp_help = true;
 
-		      if( GetCopyParameter( fe_ptr->name.c_str(), path_copy, to_file, to_dir ) )
+		      if( GetCopyParameter(fe_ptr->name.c_str(), path_copy, to_file, to_dir) )
                       {
 			beep();
 			break;
@@ -1896,12 +1896,12 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 		      if( mode == Mode::DISK_MODE || mode == Mode::USER_MODE )
 		      {
-                        if( (tmp2 = GetDirEntry( statistic.tree,
+                        if( (tmp2 = GetDirEntry(statistic.tree,
 				         de_ptr,
 				         to_dir,
 				         &dest_dir_entry,
 				         to_path
-				       )) == -3)
+)) == -3)
                         {
                         }
                         else if (tmp2 != 0)
@@ -1910,14 +1910,14 @@ int HandleFileWindow(DirEntry *dir_entry)
 			  break;
 		        }
 
-		        if( !CopyFile( &statistic,
+		        if( !CopyFile(&statistic,
 				       fe_ptr,
 				       true,
 				       to_file,
 				       dest_dir_entry,
 				       to_path,
 				       path_copy
-				     ) )
+) )
 		        {
 			  /* File wurde kopiert */
 			  /*--------------------*/
@@ -1932,20 +1932,20 @@ int HandleFileWindow(DirEntry *dir_entry)
 			    if( dir_entry->global_flag )
 			      DisplayDiskStatistic();
 			    else
-			      DisplayDirStatistic( de_ptr );
+			      DisplayDirStatistic(de_ptr);
 
 			    if( dest_dir_entry == de_ptr )
 			    {
 			      /* Ziel ist aktuelles Verzeichnis */
 			      /*--------------------------------*/
 
-			      BuildFileEntryList( dir_entry );
+			      BuildFileEntryList(dir_entry);
 
-			      DisplayFiles( dir_entry,
+			      DisplayFiles(dir_entry,
 					    dir_entry->start_file,
 					    dir_entry->start_file + dir_entry->cursor_pos,
 					    start_x
-				          );
+);
 			    }
 			  }
 		        }
@@ -1959,12 +1959,12 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 			if( disk_statistic.tree )
 			{
-			  if( GetDirEntry( disk_statistic.tree,
+			  if( GetDirEntry(disk_statistic.tree,
 				           de_ptr,
 				           to_dir,
 				           &dest_dir_entry,
 				           to_path
-				         ) )
+) )
 		          {
 			    beep();
 			    break;
@@ -1974,14 +1974,14 @@ int HandleFileWindow(DirEntry *dir_entry)
 			{
 			  *std::format_to(to_path, "{}", to_dir) = '\0';
 			}
-		        if( !CopyFile( &disk_statistic,
+		        if( !CopyFile(&disk_statistic,
 				       fe_ptr,
 				       true,
 				       to_file,
 				       dest_dir_entry,
 				       to_path,
 				       path_copy
-				     ) )
+) )
 		        {
 			  /* File wurde kopiert */
 			  /*--------------------*/
@@ -2007,7 +2007,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      {
 		        need_dsp_help = true;
 
-			if( GetCopyParameter( nullptr, path_copy, to_file, to_dir ) )
+			if( GetCopyParameter(nullptr, path_copy, to_file, to_dir) )
                         {
 			  beep();
 			  break;
@@ -2016,18 +2016,18 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 			if( mode == Mode::DISK_MODE || mode == Mode::USER_MODE )
 			{
-                          if( GetDirEntry( statistic.tree,
+                          if( GetDirEntry(statistic.tree,
 					   de_ptr,
 				           to_dir,
 				           &dest_dir_entry,
 				           to_path
-				         ) )
+) )
 		          {
 			    beep();
 			    break;
 		          }
 
-			  term = InputChoise( "Confirm overwrite existing files (Y/N) ? ", "YN\033" );
+			  term = InputChoise("Confirm overwrite existing files (Y/N) ? ", "YN\033");
                           if( term == ESC )
 		          {
 			    beep();
@@ -2041,20 +2041,20 @@ int HandleFileWindow(DirEntry *dir_entry)
 			  walking_package.function_data.copy.path_copy      = path_copy;
 			  walking_package.function_data.copy.confirm = (term == 'Y') ? true : false;
 
-			  WalkTaggedFiles( dir_entry->start_file,
+			  WalkTaggedFiles(dir_entry->start_file,
 					   dir_entry->cursor_pos,
 					   CopyTaggedFiles,
 					   &walking_package
-				         );
+);
 
                           DisplayAvailBytes();
 
 
-			  DisplayFiles( dir_entry,
+			  DisplayFiles(dir_entry,
 					dir_entry->start_file,
 					dir_entry->start_file + dir_entry->cursor_pos,
 					start_x
-				      );
+);
 		        }
 		        else
 		        {
@@ -2065,12 +2065,12 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 			  if( disk_statistic.tree )
 			  {
-                            if( GetDirEntry( disk_statistic.tree,
+                            if( GetDirEntry(disk_statistic.tree,
 					     de_ptr,
 				             to_dir,
 				             &dest_dir_entry,
 				             to_path
-				           ) )
+) )
 		            {
 			      beep();
 			      break;
@@ -2081,7 +2081,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			    *std::format_to(to_path, "{}", to_dir) = '\0';
 			  }
 
-			  term = InputChoise( "Confirm overwrite existing files (Y/N) ? ", "YN\033" );
+			  term = InputChoise("Confirm overwrite existing files (Y/N) ? ", "YN\033");
                           if( term == ESC )
 		          {
 			    beep();
@@ -2095,19 +2095,19 @@ int HandleFileWindow(DirEntry *dir_entry)
 			  walking_package.function_data.copy.path_copy      = path_copy;
 			  walking_package.function_data.copy.confirm = (term == 'Y') ? true : false;
 
-			  WalkTaggedFiles( dir_entry->start_file,
+			  WalkTaggedFiles(dir_entry->start_file,
 					   dir_entry->cursor_pos,
 					   CopyTaggedFiles,
 					   &walking_package
-				         );
+);
 
                           DisplayAvailBytes();
 
-			  DisplayFiles( dir_entry,
+			  DisplayFiles(dir_entry,
 					dir_entry->start_file,
 					dir_entry->start_file + dir_entry->cursor_pos,
 					start_x
-				      );
+);
 		        }
 		      }
 		      break;
@@ -2124,30 +2124,30 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 		      need_dsp_help = true;
 
-		      if( GetMoveParameter( fe_ptr->name.c_str(), to_file, to_dir ) )
+		      if( GetMoveParameter(fe_ptr->name.c_str(), to_file, to_dir) )
                       {
 			beep();
 			break;
 		      }
 
-                      if( GetDirEntry( statistic.tree,
+                      if( GetDirEntry(statistic.tree,
 				       de_ptr,
 				       to_dir,
 				       &dest_dir_entry,
 				       to_path
-				     ) )
+) )
 		      {
 			beep();
 			break;
 		      }
 
-		      if( !MoveFile( fe_ptr,
+		      if( !MoveFile(fe_ptr,
 				     true,
 				     to_file,
 				     dest_dir_entry,
 				     to_path,
 				     &new_fe_ptr
-				   ) )
+) )
 		      {
 			/* File wurde bewegt */
 			/*-------------------*/
@@ -2157,9 +2157,9 @@ int HandleFileWindow(DirEntry *dir_entry)
 			if( dir_entry->global_flag )
 			  DisplayDiskStatistic();
 			else
-			  DisplayDirStatistic( de_ptr );
+			  DisplayDirStatistic(de_ptr);
 
-			BuildFileEntryList( dir_entry );
+			BuildFileEntryList(dir_entry);
 
 			if( file_entry_list.size() == 0 ) unput_char = ESC;
 
@@ -2175,11 +2175,11 @@ int HandleFileWindow(DirEntry *dir_entry)
 			  }
 			}
 
-			DisplayFiles( dir_entry,
+			DisplayFiles(dir_entry,
 				      dir_entry->start_file,
 				      dir_entry->start_file + dir_entry->cursor_pos,
 				      start_x
-			            );
+);
 			maybe_change_x_step = true;
 		      }
 		      break;
@@ -2193,25 +2193,25 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      {
 		        need_dsp_help = true;
 
-			if( GetMoveParameter( nullptr, to_file, to_dir ) )
+			if( GetMoveParameter(nullptr, to_file, to_dir) )
                         {
 			  beep();
 			  break;
 		        }
 
 
-                        if( GetDirEntry( statistic.tree,
+                        if( GetDirEntry(statistic.tree,
 					 de_ptr,
 				         to_dir,
 				         &dest_dir_entry,
 				         to_path
-				       ) )
+) )
 		        {
 			  beep();
 			  break;
 		        }
 
-			term = InputChoise( "Confirm overwrite existing files (Y/N) ? ", "YN\033" );
+			term = InputChoise("Confirm overwrite existing files (Y/N) ? ", "YN\033");
                         if( term == ESC )
 		        {
 			  beep();
@@ -2223,24 +2223,24 @@ int HandleFileWindow(DirEntry *dir_entry)
 			walking_package.function_data.mv.to_path = to_path;
 			walking_package.function_data.mv.confirm = (term == 'Y') ? true : false;
 
-			WalkTaggedFiles( dir_entry->start_file,
+			WalkTaggedFiles(dir_entry->start_file,
 					 dir_entry->cursor_pos,
 					 MoveTaggedFiles,
 					 &walking_package
-				       );
+);
 
-			BuildFileEntryList( dir_entry );
+			BuildFileEntryList(dir_entry);
 
 			if( file_entry_list.size() == 0 ) unput_char = ESC;
 
 			dir_entry->start_file = 0;
 			dir_entry->cursor_pos = 0;
 
-			DisplayFiles( dir_entry,
+			DisplayFiles(dir_entry,
 				      dir_entry->start_file,
 				      dir_entry->start_file + dir_entry->cursor_pos,
 				      start_x
-			            );
+);
 			maybe_change_x_step = true;
 		      }
 		      break;
@@ -2252,9 +2252,9 @@ int HandleFileWindow(DirEntry *dir_entry)
 			break;
 		      }
 
-		      term = InputChoise( "Delete this file (Y/N) ? ",
+		      term = InputChoise("Delete this file (Y/N) ? ",
 					  "YN\033"
-					);
+);
 
 		      need_dsp_help = true;
 
@@ -2263,7 +2263,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
 		      de_ptr = fe_ptr->Dir().get();
 
-		      if( !DeleteFile( fe_ptr ) )
+		      if( !DeleteFile(fe_ptr) )
 		      {
 		        /* File wurde geloescht */
 			/*----------------------*/
@@ -2271,11 +2271,11 @@ int HandleFileWindow(DirEntry *dir_entry)
 			if( dir_entry->global_flag )
 			  DisplayDiskStatistic();
 			else
-			  DisplayDirStatistic( de_ptr );
+			  DisplayDirStatistic(de_ptr);
 
 			DisplayAvailBytes();
 
-                        RemoveFileEntry( dir_entry->start_file + dir_entry->cursor_pos );
+                        RemoveFileEntry(dir_entry->start_file + dir_entry->cursor_pos);
 
 			if( file_entry_list.size() == 0 ) unput_char = ESC;
 
@@ -2291,11 +2291,11 @@ int HandleFileWindow(DirEntry *dir_entry)
 			  }
 			}
 
-			DisplayFiles( dir_entry,
+			DisplayFiles(dir_entry,
 				      dir_entry->start_file,
 				      dir_entry->start_file + dir_entry->cursor_pos,
 				      start_x
-			            );
+);
 			maybe_change_x_step = true;
 		      }
                       break;
@@ -2308,16 +2308,16 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      else
 		      {
 		        need_dsp_help = true;
-			DeleteTaggedFiles( max_disp_files );
+			DeleteTaggedFiles(max_disp_files);
 			if( file_entry_list.size() == 0 ) unput_char = ESC;
 			dir_entry->start_file = 0;
 			dir_entry->cursor_pos = 0;
                         DisplayAvailBytes();
-			DisplayFiles( dir_entry,
+			DisplayFiles(dir_entry,
 				      dir_entry->start_file,
 				      dir_entry->start_file + dir_entry->cursor_pos,
 				      start_x
-			            );
+);
 			maybe_change_x_step = true;
 		      }
 		      break;
@@ -2332,9 +2332,9 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
 		      de_ptr = fe_ptr->Dir().get();
 
-		      if( !GetRenameParameter( &fe_ptr->name, new_name ) )
+		      if( !GetRenameParameter(&fe_ptr->name, new_name) )
 		      {
-			if( !RenameFile( fe_ptr, new_name, &new_fe_ptr ) )
+			if( !RenameFile(fe_ptr, new_name, &new_fe_ptr) )
 		        {
 			  /* Rename OK */
 			  /*-----------*/
@@ -2342,13 +2342,13 @@ int HandleFileWindow(DirEntry *dir_entry)
 			  /* Maybe structure has changed... */
 			  /*--------------------------------*/
 
-			  BuildFileEntryList( de_ptr );
+			  BuildFileEntryList(de_ptr);
 
-			  DisplayFiles( de_ptr,
+			  DisplayFiles(de_ptr,
 				        dir_entry->start_file,
 				        dir_entry->start_file + dir_entry->cursor_pos,
 				        start_x
-			              );
+);
 			  maybe_change_x_step = true;
                         }
 		      }
@@ -2364,7 +2364,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      {
 		        need_dsp_help = true;
 
-			if( GetRenameParameter( nullptr, new_name ) )
+			if( GetRenameParameter(nullptr, new_name) )
                         {
 			  beep();
 			  break;
@@ -2373,21 +2373,21 @@ int HandleFileWindow(DirEntry *dir_entry)
 			walking_package.function_data.rename.new_name = new_name;
 			walking_package.function_data.rename.confirm  = false;
 
-			WalkTaggedFiles( dir_entry->start_file,
+			WalkTaggedFiles(dir_entry->start_file,
 					 dir_entry->cursor_pos,
 					 RenameTaggedFiles,
 					 &walking_package
-				       );
+);
 
-			BuildFileEntryList( dir_entry );
+			BuildFileEntryList(dir_entry);
 
 			if( file_entry_list.size() == 0 ) unput_char = ESC;
 
-			DisplayFiles( dir_entry,
+			DisplayFiles(dir_entry,
 				      dir_entry->start_file,
 				      dir_entry->start_file + dir_entry->cursor_pos,
 				      start_x
-			            );
+);
 
 			maybe_change_x_step = true;
 		      }
@@ -2401,11 +2401,11 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 		      SortFileEntryList();
 
-		      DisplayFiles( dir_entry,
+		      DisplayFiles(dir_entry,
 				    dir_entry->start_file,
 				    dir_entry->start_file + dir_entry->cursor_pos,
 				    start_x
-			          );
+);
 		      need_dsp_help = true;
 		      break;
 
@@ -2415,19 +2415,19 @@ int HandleFileWindow(DirEntry *dir_entry)
 		        dir_entry->start_file = 0;
 		        dir_entry->cursor_pos = 0;
 
-		        BuildFileEntryList( dir_entry );
+		        BuildFileEntryList(dir_entry);
 
 		        DisplayFileSpec();
-		        DisplayFiles( dir_entry,
+		        DisplayFiles(dir_entry,
 				      dir_entry->start_file,
 				      dir_entry->start_file + dir_entry->cursor_pos,
 				      start_x
-			            );
+);
 
 		        if( dir_entry->global_flag )
 		          DisplayDiskStatistic();
 		        else
-		          DisplayDirStatistic( dir_entry );
+		          DisplayDirStatistic(dir_entry);
 
                         if( file_entry_list.size() == 0 ) unput_char = ESC;
 		        maybe_change_x_step = true;
@@ -2463,22 +2463,22 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      dir_entry->big_window = true;
 		      ch = '\0';
 		      SwitchToBigFileWindow();
-                      GetMaxYX( file_window, &window_height, &window_width );
+                      GetMaxYX(file_window, &window_height, &window_width);
 
 		      x_step =  (max_column > 1) ? window_height : 1;
                       max_disp_files = window_height * max_column;
 
-		      DisplayFiles( dir_entry,
+		      DisplayFiles(dir_entry,
 				    dir_entry->start_file,
 				    dir_entry->start_file + dir_entry->cursor_pos,
 				    start_x
-			          );
+);
 		      break;
 
       case 'P' :
       case 'p' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
 		      de_ptr = fe_ptr->Dir().get();
-		      Pipe( de_ptr, fe_ptr );
+		      Pipe(de_ptr, fe_ptr);
 		      need_dsp_help = true;
 		      break;
 
@@ -2497,7 +2497,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      {
 		        need_dsp_help = true;
 
-			if( GetPipeCommand( filepath ) )
+			if( GetPipeCommand(filepath) )
                         {
 			  beep();
 			  break;
@@ -2506,41 +2506,41 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 
 			if( ( walking_package.function_data.pipe_cmd.pipe_file =
-			      popen( filepath, "w" ) ) == nullptr )
+			      popen(filepath, "w") ) == nullptr )
 			{
 			  FormatMessage("execution of command*{}*failed", filepath);
 			  break;
 			}
 
 
-			WalkTaggedFiles( dir_entry->start_file,
+			WalkTaggedFiles(dir_entry->start_file,
 					 dir_entry->cursor_pos,
 					 PipeTaggedFiles,
 					 &walking_package
-				       );
+);
 
-		        clearok( stdscr, true );
+		        clearok(stdscr, true);
 
-			if( pclose( walking_package.function_data.pipe_cmd.pipe_file ) )
+			if( pclose(walking_package.function_data.pipe_cmd.pipe_file) )
 			{
 			  Warning("pclose() failed");
 			}
 
-                        GetAvailBytes( &statistic.disk_space );
+                        GetAvailBytes(&statistic.disk_space);
                         DisplayAvailBytes();
 
-			DisplayFiles( dir_entry,
+			DisplayFiles(dir_entry,
 				      dir_entry->start_file,
 				      dir_entry->start_file + dir_entry->cursor_pos,
 				      start_x
-			            );
+);
 		      }
 		      break;
 
       case 'X':
       case 'x' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
 		      de_ptr = fe_ptr->Dir().get();
-		      Execute( de_ptr, fe_ptr );
+		      Execute(de_ptr, fe_ptr);
 		      need_dsp_help = true;
 		      break;
 
@@ -2559,29 +2559,29 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 			need_dsp_help = true;
 			*command_line = '\0';
-		        if( !GetSearchCommandLine( command_line ) )
+		        if( !GetSearchCommandLine(command_line) )
 			{
 			  refresh();
 			  endwin();
 			  SuspendClock();
 
 			  walking_package.function_data.execute.command = command_line;
-                          SilentTagWalkTaggedFiles( ExecuteCommand,
+                          SilentTagWalkTaggedFiles(ExecuteCommand,
 					            &walking_package
-					          );
-			  RefreshWindow( file_window );
+);
+			  RefreshWindow(file_window);
 
 			  HitReturnToContinue();
 
 			  InitClock();
 
-			  DisplayFiles( dir_entry,
+			  DisplayFiles(dir_entry,
 					dir_entry->start_file,
 					dir_entry->start_file + dir_entry->cursor_pos,
 					start_x
-				      );
+);
 			}
-			free( command_line );
+			std::free(command_line);
 		      }
 		      break;
 
@@ -2600,23 +2600,23 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 			need_dsp_help = true;
 			*command_line = '\0';
-		        if( !GetCommandLine( command_line ) )
+		        if( !GetCommandLine(command_line) )
 			{
 			  refresh();
 			  endwin();
 			  walking_package.function_data.execute.command = command_line;
-                          SilentWalkTaggedFiles( ExecuteCommand,
+                          SilentWalkTaggedFiles(ExecuteCommand,
 					         &walking_package
-					       );
+);
 			  HitReturnToContinue();
 
-			  DisplayFiles( dir_entry,
+			  DisplayFiles(dir_entry,
 					dir_entry->start_file,
 					dir_entry->start_file + dir_entry->cursor_pos,
 					start_x
-				      );
+);
 			}
-			free( command_line );
+			std::free(command_line);
 		      }
 		      break;
 
@@ -2633,7 +2633,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      break;
 
       case 'L' & 0x1F:
-		      clearok( stdscr, true );
+		      clearok(stdscr, true);
 		      break;
 
       case '\033':    break;
@@ -2679,7 +2679,7 @@ static void WalkTaggedFiles(
   int       result = 0;
   bool      maybe_change_x = false;
 
-  if( baudrate() >= QUICK_BAUD_RATE ) typeahead( 0 );
+  if( baudrate() >= QUICK_BAUD_RATE ) typeahead(0);
 
 /*  GetMaxYX( file_window, &window_height, &window_width );*/
 
@@ -2700,49 +2700,49 @@ static void WalkTaggedFiles(
 	/* Walk ohne scroll moeglich */
 	/*---------------------------*/
 
-  	PrintFileEntry( start_file + cursor_pos,
+  	PrintFileEntry(start_file + cursor_pos,
 			cursor_pos % window_height,
 			cursor_pos / window_height,
 			false,
 		        start_x
-	 	      );
+);
 
         cursor_pos = i - start_file;
 
-	PrintFileEntry( start_file + cursor_pos,
+	PrintFileEntry(start_file + cursor_pos,
 		 	cursor_pos % window_height,
 			cursor_pos / window_height,
 			true,
 		        start_x
-		      );
+);
       }
       else
       {
 	/* Scroll noetig */
 	/*---------------*/
 
-	start_file = std::max( 0, i - max_disp_files + 1 );
+	start_file = std::max(0, i - max_disp_files + 1);
 	cursor_pos = i - start_file;
 
-        DisplayFiles( fe_ptr->Dir().get(),
+        DisplayFiles(fe_ptr->Dir().get(),
 		      start_file,
 		      start_file + cursor_pos,
 		      start_x
-	            );
+);
 	maybe_change_x = false;
       }
 
       if( fe_ptr->Dir()->global_flag )
-        DisplayGlobalFileParameter( fe_ptr );
+        DisplayGlobalFileParameter(fe_ptr);
       else
-        DisplayFileParameter( fe_ptr );
+        DisplayFileParameter(fe_ptr);
 
-      RefreshWindow( file_window );
+      RefreshWindow(file_window);
       doupdate();
-      result = fkt( fe_ptr, walking_package );
+      result = fkt(fe_ptr, walking_package);
       if( walking_package->new_fe_ptr != fe_ptr )
       {
-        file_entry_list[i] = FindSharedFileEntry( walking_package->new_fe_ptr );
+        file_entry_list[i] = FindSharedFileEntry(walking_package->new_fe_ptr);
 	ChangeFileEntry();
         max_disp_files = window_height * max_column;
 	maybe_change_x = true;
@@ -2750,7 +2750,7 @@ static void WalkTaggedFiles(
     }
   }
 
-  if( baudrate() >= QUICK_BAUD_RATE ) typeahead( -1 );
+  if( baudrate() >= QUICK_BAUD_RATE ) typeahead(-1);
 }
 
 /*
@@ -2777,7 +2777,7 @@ static void SilentWalkTaggedFiles(
 
     if( fe_ptr->tagged && fe_ptr->matching )
     {
-      fkt( fe_ptr, walking_package );
+      fkt(fe_ptr, walking_package);
     }
   }
 }
@@ -2814,7 +2814,7 @@ static void SilentTagWalkTaggedFiles(
 
     if( fe_ptr->tagged && fe_ptr->matching )
     {
-      result = fkt( fe_ptr, walking_package );
+      result = fkt(fe_ptr, walking_package);
 
       if( result == 0 ) {
       	fe_ptr->tagged = false;
@@ -2860,14 +2860,14 @@ static int DeleteTaggedFiles(int max_disp_files)
   int       start_x = 0;
   int       result = 0;
 
-  term = InputChoise( "Confirm delete each file (Y/N) ? ", "YN\033" );
+  term = InputChoise("Confirm delete each file (Y/N) ? ", "YN\033");
 
   if( term == ESC ) return( -1 );
 
   if( term == 'Y' ) confirm = true;
   else confirm = false;
 
-  if( baudrate() >= QUICK_BAUD_RATE ) typeahead( 0 );
+  if( baudrate() >= QUICK_BAUD_RATE ) typeahead(0);
 
   for( i=0; i < (int)file_entry_list.size() && result == 0; )
   {
@@ -2878,36 +2878,36 @@ static int DeleteTaggedFiles(int max_disp_files)
 
     if( fe_ptr->tagged && fe_ptr->matching )
     {
-      start_file = std::max( 0, i - max_disp_files + 1 );
+      start_file = std::max(0, i - max_disp_files + 1);
       cursor_pos = i - start_file;
 
-      DisplayFiles( de_ptr,
+      DisplayFiles(de_ptr,
 		    start_file,
 		    start_file + cursor_pos,
 		    start_x
-	          );
+);
 
       if( fe_ptr->Dir()->global_flag )
-        DisplayGlobalFileParameter( fe_ptr );
+        DisplayGlobalFileParameter(fe_ptr);
       else
-        DisplayFileParameter( fe_ptr );
+        DisplayFileParameter(fe_ptr);
 
-      RefreshWindow( file_window );
+      RefreshWindow(file_window);
       doupdate();
 
-      if( confirm ) term = InputChoise( "Delete this file (Y/N) ? ", "YN\033" );
+      if( confirm ) term = InputChoise("Delete this file (Y/N) ? ", "YN\033");
       else term = 'Y';
 
       if( term == ESC )
       {
-        if( baudrate() >= QUICK_BAUD_RATE ) typeahead( -1 );
+        if( baudrate() >= QUICK_BAUD_RATE ) typeahead(-1);
 	result = -1;
 	break;
       }
 
       if( term == 'Y' )
       {
-        if( ( result = DeleteFile( fe_ptr ) ) == 0 )
+        if( ( result = DeleteFile(fe_ptr) ) == 0 )
         {
 	  /* File wurde geloescht */
 	  /*----------------------*/
@@ -2917,17 +2917,17 @@ static int DeleteTaggedFiles(int max_disp_files)
   	  if( de_ptr->global_flag )
 	    DisplayDiskStatistic();
 	  else
-	    DisplayDirStatistic( de_ptr );
+	    DisplayDirStatistic(de_ptr);
 
 	  DisplayAvailBytes();
 
-          RemoveFileEntry( start_file + cursor_pos );
+          RemoveFileEntry(start_file + cursor_pos);
         }
       }
     }
     if( !deleted ) i++;
   }
-  if( baudrate() >= QUICK_BAUD_RATE ) typeahead( -1 );
+  if( baudrate() >= QUICK_BAUD_RATE ) typeahead(-1);
 
   return( result );
 }
@@ -2956,9 +2956,9 @@ static void RereadWindowSize(DirEntry *dir_entry)
 
 
 
-static void ListJump( DirEntry * dir_entry, const char *str )
+static void ListJump(DirEntry * dir_entry, const char *str)
 {
-   int incremental = (!strcmp(LISTJUMPSEARCH, "1")) ? 1 : 0; /* from config.toml */
+   int incremental = (!std::strcmp(LISTJUMPSEARCH, "1")) ? 1 : 0; /* from config.toml */
 
     /*  in file_window press initial char of file to jump to it */
 
@@ -2967,7 +2967,7 @@ static void ListJump( DirEntry * dir_entry, const char *str )
     const char * jumpmsg = "Press initial of file to jump to... ";
 
     ClearHelp();
-    MvAddStr( LINES - 2, 1, jumpmsg );
+    MvAddStr(LINES - 2, 1, jumpmsg);
     PrintOptions
     (
         stdscr,
@@ -2976,9 +2976,9 @@ static void ListJump( DirEntry * dir_entry, const char *str )
         "(Escape) cancel"
     );
 
-    ic = tolower(getch());
+    ic = std::tolower(getch());
 
-    if( !isprint(ic) )
+    if( !std::isprint(ic) )
     {
         beep();
         return;
@@ -2994,10 +2994,10 @@ static void ListJump( DirEntry * dir_entry, const char *str )
     if( tmp2 == static_cast<int>(file_entry_list.size() - 1))
     {
         ClearHelp();
-        MvAddStr( LINES - 2, 1, "Last entry!");
+        MvAddStr(LINES - 2, 1, "Last entry!");
         beep();
-        RefreshWindow( stdscr );
-        RefreshWindow( file_window );
+        RefreshWindow(stdscr);
+        RefreshWindow(file_window);
         doupdate();
         sleep(1);
         return;
@@ -3013,10 +3013,10 @@ static void ListJump( DirEntry * dir_entry, const char *str )
     if ( i == static_cast<int>(file_entry_list.size()) )
     {
         ClearHelp();
-        MvAddStr( LINES - 2, 1, "No match!");
+        MvAddStr(LINES - 2, 1, "No match!");
         beep();
-        RefreshWindow( stdscr );
-        RefreshWindow( file_window );
+        RefreshWindow(stdscr);
+        RefreshWindow(file_window);
         doupdate();
         sleep(1);
         return;
@@ -3027,11 +3027,11 @@ static void ListJump( DirEntry * dir_entry, const char *str )
       	/* first search start on top */
       	dir_entry->start_file = 0;
       	dir_entry->cursor_pos = 0;
-      	DisplayFiles( dir_entry,
+      	DisplayFiles(dir_entry,
             	dir_entry->start_file,
             	dir_entry->start_file + dir_entry->cursor_pos,
             	start_x
-          	);
+);
     }
     for ( j=tmp2; j < i; j++ )
         fmovedown
@@ -3041,10 +3041,10 @@ static void ListJump( DirEntry * dir_entry, const char *str )
             &start_x,
             dir_entry
         );
-    RefreshWindow( stdscr );
-    RefreshWindow( file_window );
+    RefreshWindow(stdscr);
+    RefreshWindow(file_window);
     doupdate();
-    ListJump( dir_entry, (incremental) ? newStr.c_str() : "" );
+    ListJump(dir_entry, (incremental) ? newStr.c_str() : "");
 }
 
 

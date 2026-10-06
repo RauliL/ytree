@@ -14,7 +14,7 @@
 
 int SetFileSpec(char *file_spec)
 {
-  if( SetMatchSpec( file_spec ) )
+  if( SetMatchSpec(file_spec) )
   {
     return( 1 );
   }
@@ -22,7 +22,7 @@ int SetFileSpec(char *file_spec)
   statistic.disk_matching_files = 0L;
   statistic.disk_matching_bytes = 0L;
 
-  SetMatchingParam( statistic.tree.get() );
+  SetMatchingParam(statistic.tree.get());
 
   return( 0 );
 }
@@ -37,7 +37,7 @@ void SetMatchingParam(DirEntry *dir_entry)
 
   for( const auto& fe_ptr : dir_entry->files )
   {
-    if( Match( fe_ptr->name ) )
+    if( Match(fe_ptr->name) )
     {
       matching_files++;
       matching_bytes += fe_ptr->stat_struct.st_size;
@@ -57,7 +57,7 @@ void SetMatchingParam(DirEntry *dir_entry)
 
   for( const auto& child : dir_entry->children )
   {
-    SetMatchingParam( child.get() );
+    SetMatchingParam(child.get());
   }
 }
 
@@ -80,10 +80,10 @@ int ReadFileSpec()
   ClearHelp();
 
   *std::format_to(buffer, "{}", "*") = '\0';
-  MvAddStr( LINES - 2, 1, "New filespec:" );
-  if (InputString( buffer, LINES - 2, 15, 0, FILE_SPEC_LENGTH) == CR)
+  MvAddStr(LINES - 2, 1, "New filespec:");
+  if (InputString(buffer, LINES - 2, 15, 0, FILE_SPEC_LENGTH) == CR)
   {
-    if( SetFileSpec( buffer ) )
+    if( SetFileSpec(buffer) )
     {
       Message("Invalid Filespec");
     }
@@ -93,7 +93,7 @@ int ReadFileSpec()
       result = 0;
     }
   }
-  move( LINES - 2, 1 ); clrtoeol();
+  move(LINES - 2, 1); clrtoeol();
   return(result);
 }
 

@@ -23,7 +23,7 @@ int main(int argc, char **argv)
   std::optional<std::string> config_file;
   std::optional<std::string> history_file;
 
-  setlocale(LC_ALL, "");
+  std::setlocale(LC_ALL, "");
 
   p = DEFAULT_TREE;
   for (argi = 1; argi < argc; argi++)
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
         std::printf(
           "Usage: %s [-p profile_file] [-h hist_file] [initial_dir]\n",
           argv[0]
-        );
+);
         std::exit(EXIT_FAILURE);
         break;
     }
@@ -90,10 +90,10 @@ int main(int argc, char **argv)
   statistic.login_path[0] = '\0';
   statistic.path[0] = '0';
 
-  if( LoginDisk( path ) == -1 )
+  if( LoginDisk(path) == -1 )
   {
     endwin();
-    exit( 1 );
+    std::exit(1);
   }
 
   while( 1 )

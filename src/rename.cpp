@@ -52,7 +52,7 @@ int RenameDirectory(DirEntry *de_ptr, const std::string& new_name)
 
 FNC_XIT:
 
-  move( LINES - 2, 1 ); clrtoeol();
+  move(LINES - 2, 1); clrtoeol();
 
   return( result );
 }
@@ -62,7 +62,7 @@ FNC_XIT:
 
 
 
-int RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_fe_ptr )
+int RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_fe_ptr)
 {
   const auto de_ptr = fe_ptr->Dir();
   const auto from_path = GetFileNamePath(fe_ptr);
@@ -96,7 +96,7 @@ int RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_f
 
   }
 
-  move( LINES - 2, 1 ); clrtoeol();
+  move(LINES - 2, 1); clrtoeol();
 
   return( result );
 }
@@ -119,12 +119,12 @@ int GetRenameParameter(const std::string* old_name, char *new_name)
 
   if( old_name == nullptr )
   {
-    MvAddStr( LINES - 2, 1, "RENAME TAGGED FILES TO:" );
+    MvAddStr(LINES - 2, 1, "RENAME TAGGED FILES TO:");
     l = 25;
   }
   else
   {
-    MvAddStr( LINES - 2, 1, "RENAME TO:" );
+    MvAddStr(LINES - 2, 1, "RENAME TO:");
     l = 13;
   }
 
@@ -136,7 +136,7 @@ int GetRenameParameter(const std::string* old_name, char *new_name)
     return -1;
   }
 
-  if(!strlen(new_name))
+  if(!std::strlen(new_name))
     return( -1 );
 
   if (old_name && *old_name == new_name)
@@ -223,10 +223,10 @@ int RenameTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
   char new_name[PATH_LENGTH+1];
 
 
-  if( BuildFilename( fe_ptr->name,
+  if( BuildFilename(fe_ptr->name,
                      walking_package->function_data.rename.new_name,
 		     new_name
-		   ) == 0 )
+) == 0 )
   {
     if( *new_name == '\0' )
     {
@@ -234,7 +234,7 @@ int RenameTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
     }
     else
     {
-      result = RenameFile( fe_ptr, new_name, &walking_package->new_fe_ptr );
+      result = RenameFile(fe_ptr, new_name, &walking_package->new_fe_ptr);
     }
   }
   return( result );

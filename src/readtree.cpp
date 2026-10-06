@@ -50,7 +50,7 @@ int ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path
   dir_entry->big_window     = false;
   dir_entry->not_scanned    = false;
 
-  if( S_ISBLK( dir_entry->stat_struct.st_mode ) )
+  if( S_ISBLK(dir_entry->stat_struct.st_mode) )
     return( 0 ); /* Block-Device */
 
   if (depth < 0)
@@ -112,7 +112,7 @@ int ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path
       continue;
     }
 
-    if( S_ISDIR( stat_struct.st_mode ) )
+    if( S_ISDIR(stat_struct.st_mode) )
     {
       /* Directory-Entry */
       /*-----------------*/
@@ -167,7 +167,7 @@ int ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path
     new_children.begin(),
     new_children.end(),
     [](const std::shared_ptr<DirEntry>& a, const std::shared_ptr<DirEntry>& b) { return a->name < b->name; }
-  );
+);
 
   dir_entry->files = std::move(new_files);
   dir_entry->children = std::move(new_children);
@@ -184,7 +184,7 @@ static void RemoveAllFiles(DirEntry *dir_entry)
 {
   while( !dir_entry->files.empty() )
   {
-    RemoveFile( dir_entry->files.back().get() );
+    RemoveFile(dir_entry->files.back().get());
   }
 }
 
@@ -197,10 +197,10 @@ void UnReadTree(DirEntry *dir_entry)
   }
   else
   {
-    RemoveAllFiles( dir_entry );
-    UnReadSubTree( dir_entry );
+    RemoveAllFiles(dir_entry);
+    UnReadSubTree(dir_entry);
     statistic.disk_total_directories--;
-    GetAvailBytes( &statistic.disk_space );
+    GetAvailBytes(&statistic.disk_space);
     DisplayDiskStatistic();
     doupdate();
   }
@@ -218,8 +218,8 @@ static void UnReadSubTree(DirEntry *parent)
 
   for( const auto& de_ptr : children )
   {
-    RemoveAllFiles( de_ptr.get() );
-    UnReadSubTree( de_ptr.get() );
+    RemoveAllFiles(de_ptr.get());
+    UnReadSubTree(de_ptr.get());
 
     if( !parent->not_scanned )
       statistic.disk_total_directories--;

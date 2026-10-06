@@ -10,7 +10,7 @@ int MoveFile(FileEntry *fe_ptr,
 	     DirEntry *dest_dir_entry,
 	     char *to_dir_path,
 	     FileEntry **new_fe_ptr
-	    )
+)
 {
   const auto de_ptr = fe_ptr->Dir();
   const auto from_path =
@@ -48,7 +48,7 @@ int MoveFile(FileEntry *fe_ptr,
     /* Ziel befindet sich im Sub-Tree */
     /*--------------------------------*/
 
-    GetFileEntry( dest_dir_entry, to_file, &dest_file_entry );
+    GetFileEntry(dest_dir_entry, to_file, &dest_file_entry);
 
     if( dest_file_entry )
     {
@@ -57,7 +57,7 @@ int MoveFile(FileEntry *fe_ptr,
 
       if( confirm )
       {
-	term = InputChoise( "file exist; overwrite (Y/N) ? ", "YN\033" );
+	term = InputChoise("file exist; overwrite (Y/N) ? ", "YN\033");
 
         if( term != 'Y' ) {
 	  result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
@@ -65,7 +65,7 @@ int MoveFile(FileEntry *fe_ptr,
 	}
       }
 
-      DeleteFile( dest_file_entry );
+      DeleteFile(dest_file_entry);
     }
   }
   /* access benutzen */
@@ -77,7 +77,7 @@ int MoveFile(FileEntry *fe_ptr,
 
     if( confirm )
     {
-      term = InputChoise( "file exist; overwrite (Y/N) ? ", "YN\033" );
+      term = InputChoise("file exist; overwrite (Y/N) ? ", "YN\033");
       if (term != 'Y')
       {
         result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
@@ -101,7 +101,7 @@ int MoveFile(FileEntry *fe_ptr,
     /* Original aus Baum austragen */
     /*-----------------------------*/
 
-    RemoveFile( fe_ptr );
+    RemoveFile(fe_ptr);
 
 
     if( dest_dir_entry )
@@ -125,21 +125,21 @@ int MoveFile(FileEntry *fe_ptr,
       fen_ptr->name = to_file;
       fen_ptr->stat_struct = stat_struct;
       fen_ptr->dir_entry   = dest_dir_entry->weak_from_this();
-      fen_ptr->matching    = Match( fen_ptr->name );
-      dest_dir_entry->files.insert( dest_dir_entry->files.begin(), fen_ptr );
+      fen_ptr->matching    = Match(fen_ptr->name);
+      dest_dir_entry->files.insert(dest_dir_entry->files.begin(), fen_ptr);
       *new_fe_ptr          = fen_ptr.get();
     }
 
-    GetAvailBytes( &statistic.disk_space );
+    GetAvailBytes(&statistic.disk_space);
 
     result = 0;
   }
 
 FNC_XIT:
 
-  move( LINES - 3, 1 ); clrtoeol();
-  move( LINES - 2, 1 ); clrtoeol();
-  move( LINES - 1, 1 ); clrtoeol();
+  move(LINES - 3, 1); clrtoeol();
+  move(LINES - 2, 1); clrtoeol();
+  move(LINES - 1, 1); clrtoeol();
 
   return( result );
 }
@@ -166,12 +166,12 @@ int GetMoveParameter(const char *from_file, char *to_file, char *to_dir)
 
   ClearHelp();
 
-  MvAddStr( LINES - 3, 1, buffer );
-  MvAddStr( LINES - 2, 1, "AS  " );
-  if (InputString( to_file, LINES - 2, 6, 0, COLS - 6) == CR)
+  MvAddStr(LINES - 3, 1, buffer);
+  MvAddStr(LINES - 2, 1, "AS  ");
+  if (InputString(to_file, LINES - 2, 6, 0, COLS - 6) == CR)
   {
-    MvAddStr( LINES - 1, 1, "TO   " );
-    if (InputString( to_dir, LINES - 1, 6, 0, COLS - 6) == CR)
+    MvAddStr(LINES - 1, 1, "TO   ");
+    if (InputString(to_dir, LINES - 1, 6, 0, COLS - 6) == CR)
     {
       return 0;
     }
@@ -213,10 +213,10 @@ int MoveTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
   char new_name[PATH_LENGTH+1];
 
 
-  if( BuildFilename( fe_ptr->name,
+  if( BuildFilename(fe_ptr->name,
                      walking_package->function_data.mv.to_file,
 		     new_name
-		   ) == 0 )
+) == 0 )
 
   {
     if (!*new_name)
@@ -225,13 +225,13 @@ int MoveTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
     }
     else
     {
-      result = MoveFile( fe_ptr,
+      result = MoveFile(fe_ptr,
 		         walking_package->function_data.mv.confirm,
 		         new_name,
 		         walking_package->function_data.mv.dest_dir_entry,
 		         walking_package->function_data.mv.to_path,
 		         &walking_package->new_fe_ptr
-		       );
+);
     }
   }
 

@@ -67,20 +67,20 @@
 /* Diese Funktionen koennen direkt umgesetzt werden */
 /*--------------------------------------------------*/
 
-#define  echochar( ch )              { addch( ch ); refresh(); }
-#define  putp( str )                 puts( str )
+#define  echochar(ch)              { addch(ch); refresh(); }
+#define  putp(str)                 std::puts(str)
 
 
 /* ... hier ist ein wenig mehr Arbeit noetig ... */
 /*-----------------------------------------------*/
 
-#define  vidattr( attr )
+#define  vidattr(attr)
 
 
 /* ... und hier gibt's keine entsprechende Funktion. */
 /*---------------------------------------------------*/
 
-#define  typeahead( file )
+#define  typeahead(file)
 
 #endif /* WIN32 */
 
@@ -98,42 +98,42 @@
 #define STAT_(a, b) lstat(a, b)
 #else
 #define STAT_(a, b) stat(a, b)
-#define readlink( a, b, c )  (-1)
+#define readlink(a, b, c)  (-1)
 #endif /* S_IFLNK */
 
 #ifndef S_ISREG
-#define S_ISREG( mode )   (((mode) & S_IFMT) == S_IFREG)
+#define S_ISREG(mode)   (((mode) & S_IFMT) == S_IFREG)
 #endif /* S_ISREG */
 
 #ifndef S_ISDIR
-#define S_ISDIR( mode )   (((mode) & S_IFMT) == S_IFDIR)
+#define S_ISDIR(mode)   (((mode) & S_IFMT) == S_IFDIR)
 #endif /* S_ISDIR */
 
 #ifndef S_ISCHR
-#define S_ISCHR( mode )   (((mode) & S_IFMT) == S_IFCHR)
+#define S_ISCHR(mode)   (((mode) & S_IFMT) == S_IFCHR)
 #endif /* S_ISCHR */
 
 #ifndef S_ISBLK
-#define S_ISBLK( mode )   (((mode) & S_IFMT) == S_IFBLK)
+#define S_ISBLK(mode)   (((mode) & S_IFMT) == S_IFBLK)
 #endif /* S_ISBLK */
 
 #ifndef S_ISFIFO
-#define S_ISFIFO( mode )   (((mode) & S_IFMT) == S_IFIFO)
+#define S_ISFIFO(mode)   (((mode) & S_IFMT) == S_IFIFO)
 #endif /* S_ISFIFO */
 
 #ifndef S_ISLNK
 #ifdef  S_IFLNK
-#define S_ISLNK( mode )   (((mode) & S_IFMT) == S_IFLNK)
+#define S_ISLNK(mode)   (((mode) & S_IFMT) == S_IFLNK)
 #else
-#define S_ISLNK( mode )   FALSE
+#define S_ISLNK(mode)   FALSE
 #endif /* S_IFLNK */
 #endif /* S_ISLNK */
 
 #ifndef S_ISSOCK
 #ifdef  S_IFSOCK
-#define S_ISSOCK( mode )   (((mode) & S_IFMT) == S_IFSOCK)
+#define S_ISSOCK(mode)   (((mode) & S_IFMT) == S_IFSOCK)
 #else
-#define S_ISSOCK( mode )   FALSE
+#define S_ISSOCK(mode)   FALSE
 #endif /* S_IFSOCK */
 #endif /* S_ISSOCK */
 
@@ -221,42 +221,42 @@
 /* Auswahl der benutzten UNIX-Kommandos */
 /*--------------------------------------*/
 
-#define CAT             GetProfileValue( "CAT" )
-#define HEXDUMP         GetProfileValue( "HEXDUMP" )
-#define EDITOR          GetProfileValue( "EDITOR" )
-#define PAGER           GetProfileValue( "PAGER" )
-#define MELT            GetProfileValue( "MELT" )
-#define UNCOMPRESS      GetProfileValue( "UNCOMPRESS" )
-#define GNUUNZIP        GetProfileValue( "GNUUNZIP" )
-#define BUNZIP          GetProfileValue( "BUNZIP" )
-#define MANROFF         GetProfileValue( "MANROFF" )
-#define TARLIST         GetProfileValue( "TARLIST" )
-#define TAREXPAND       GetProfileValue( "TAREXPAND" )
-#define RPMLIST         GetProfileValue( "RPMLIST" )
-#define RPMEXPAND       GetProfileValue( "RPMEXPAND" )
-#define ZOOLIST         GetProfileValue( "ZOOLIST" )
-#define ZOOEXPAND       GetProfileValue( "ZOOEXPAND" )
-#define ZIPLIST         GetProfileValue( "ZIPLIST" )
-#define ZIPEXPAND       GetProfileValue( "ZIPEXPAND" )
-#define LHALIST         GetProfileValue( "LHALIST" )
-#define LHAEXPAND       GetProfileValue( "LHAEXPAND" )
-#define ARCLIST         GetProfileValue( "ARCLIST" )
-#define ARCEXPAND       GetProfileValue( "ARCEXPAND" )
-#define TREEDEPTH       GetProfileValue( "TREEDEPTH" )
-#define USERVIEW        GetProfileValue( "USERVIEW" )
-#define RARLIST         GetProfileValue( "RARLIST" )
-#define RAREXPAND       GetProfileValue( "RAREXPAND" )
-#define FILEMODE        GetProfileValue( "FILEMODE" )
-#define NUMBERSEP       GetProfileValue( "NUMBERSEP" )
-#define NOSMALLWINDOW   GetProfileValue( "NOSMALLWINDOW" )
-#define INITIALDIR      GetProfileValue( "INITIALDIR" )
-#define DIR1            GetProfileValue( "DIR1" )
-#define DIR2            GetProfileValue( "DIR2" )
-#define FILE1           GetProfileValue( "FILE1" )
-#define FILE2           GetProfileValue( "FILE2" )
-#define SEARCHCOMMAND   GetProfileValue( "SEARCHCOMMAND" )
-#define HEXEDITOFFSET   GetProfileValue( "HEXEDITOFFSET" )
-#define LISTJUMPSEARCH  GetProfileValue( "LISTJUMPSEARCH" )
+#define CAT             GetProfileValue("CAT")
+#define HEXDUMP         GetProfileValue("HEXDUMP")
+#define EDITOR          GetProfileValue("EDITOR")
+#define PAGER           GetProfileValue("PAGER")
+#define MELT            GetProfileValue("MELT")
+#define UNCOMPRESS      GetProfileValue("UNCOMPRESS")
+#define GNUUNZIP        GetProfileValue("GNUUNZIP")
+#define BUNZIP          GetProfileValue("BUNZIP")
+#define MANROFF         GetProfileValue("MANROFF")
+#define TARLIST         GetProfileValue("TARLIST")
+#define TAREXPAND       GetProfileValue("TAREXPAND")
+#define RPMLIST         GetProfileValue("RPMLIST")
+#define RPMEXPAND       GetProfileValue("RPMEXPAND")
+#define ZOOLIST         GetProfileValue("ZOOLIST")
+#define ZOOEXPAND       GetProfileValue("ZOOEXPAND")
+#define ZIPLIST         GetProfileValue("ZIPLIST")
+#define ZIPEXPAND       GetProfileValue("ZIPEXPAND")
+#define LHALIST         GetProfileValue("LHALIST")
+#define LHAEXPAND       GetProfileValue("LHAEXPAND")
+#define ARCLIST         GetProfileValue("ARCLIST")
+#define ARCEXPAND       GetProfileValue("ARCEXPAND")
+#define TREEDEPTH       GetProfileValue("TREEDEPTH")
+#define USERVIEW        GetProfileValue("USERVIEW")
+#define RARLIST         GetProfileValue("RARLIST")
+#define RAREXPAND       GetProfileValue("RAREXPAND")
+#define FILEMODE        GetProfileValue("FILEMODE")
+#define NUMBERSEP       GetProfileValue("NUMBERSEP")
+#define NOSMALLWINDOW   GetProfileValue("NOSMALLWINDOW")
+#define INITIALDIR      GetProfileValue("INITIALDIR")
+#define DIR1            GetProfileValue("DIR1")
+#define DIR2            GetProfileValue("DIR2")
+#define FILE1           GetProfileValue("FILE1")
+#define FILE2           GetProfileValue("FILE2")
+#define SEARCHCOMMAND   GetProfileValue("SEARCHCOMMAND")
+#define HEXEDITOFFSET   GetProfileValue("HEXEDITOFFSET")
+#define LISTJUMPSEARCH  GetProfileValue("LISTJUMPSEARCH")
 
 
 #define DEFAULT_TREE       "."
@@ -428,7 +428,7 @@ enum class ViewMode : int
 
 #define ESCAPE               goto FNC_XIT
 
-#define PRINT(ch) (iscntrl(ch) && (((unsigned char)(ch)) < ' ')) ? (ACS_BLOCK) : ((unsigned char)(ch))
+#define PRINT(ch) (std::iscntrl(ch) && (((unsigned char)(ch)) < ' ')) ? (ACS_BLOCK) : ((unsigned char)(ch))
 /* #define PRINT(ch) (ch) */
 
 #ifdef COLOR_SUPPORT
@@ -620,7 +620,7 @@ extern int  GetDiskParameter(const std::string& path,
 			     char *volume_name,
 			     long long *avail_bytes,
 			     long long *capacity
-			    );
+);
 extern int  HandleDirWindow(DirEntry *start_dir_entry);
 extern void DisplayFileWindow(DirEntry *dir_entry);
 int Init(
@@ -734,21 +734,21 @@ extern int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *p
 extern int MinimizeArchiveTree(const std::shared_ptr<DirEntry>& tree);
 extern void HitReturnToContinue();
 extern int  TermcapWgetch(WINDOW *win);
-extern void TermcapVidattr(int attr );
+extern void TermcapVidattr(int attr);
 extern void TermcapInitscr();
 extern void TermcapEndwin();
 extern int  BuildFilename(const std::string& in_filename, const char *pattern, char *out_filename);
-extern int  ViKey( int ch );
+extern int  ViKey(int ch);
 std::optional<CompressMethod> GetFileMethod(const std::string& filename);
 extern bool KeyPressed();
 extern bool EscapeKeyPressed();
 extern int  GetTapeDeviceName();
-extern int  MakePath( const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry );
-extern int  MakeDirEntry( DirEntry *father_dir_entry, const std::string& dir_name );
-extern void NormPath( const char *in_path, char *out_path );
-extern char *Strtok_r( char *str, const char *delim, char **old );
+extern int  MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry);
+extern int  MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name);
+extern void NormPath(const char *in_path, char *out_path);
+extern char *Strtok_r(char *str, const char *delim, char **old);
 int ReadProfile(const std::optional<std::string>& custom_path);
-extern const char *GetProfileValue( const char *key );
+extern const char *GetProfileValue(const char *key);
 void ScanSubTree(DirEntry* dir_entry);
 extern void GetMaxYX(WINDOW *win, int *height, int *width);
 const char* GetHistory();

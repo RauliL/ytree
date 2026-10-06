@@ -40,7 +40,7 @@ int LoginDisk(char *path)
   }
 
   if ( disk_statistic.login_path[0] != 0) {
-    if( !strcmp( disk_statistic.login_path, path ) )
+    if( !std::strcmp(disk_statistic.login_path, path) )
     {
       /* Tree is in memory! Use it! */
       /*----------------------------*/
@@ -56,13 +56,13 @@ int LoginDisk(char *path)
         mode = Mode::DISK_MODE;
       }
       statistic = disk_statistic;
-      SetFileSpec( statistic.file_spec );
+      SetFileSpec(statistic.file_spec);
       return( 1 );   /* Return-Wert fuer "alten Baum" */
     }
   }
 
 
-  if( STAT_( path, &stat_struct ) )
+  if( STAT_(path, &stat_struct) )
   {
     /* Stat failed */
     /*-------------*/
@@ -85,7 +85,7 @@ int LoginDisk(char *path)
   statistic.tree->stat_struct = stat_struct;
 
 
-  if( !S_ISDIR(stat_struct.st_mode ) )
+  if( !S_ISDIR(stat_struct.st_mode) )
   {
     /* No Directory ==> TAR_FILE/RPM/ZOO/ZIP/LHA/ARC_FILE */
     /*----------------------------------------------------*/
@@ -145,14 +145,14 @@ int LoginDisk(char *path)
   }
 
 
-  GetDiskParameter( path,
+  GetDiskParameter(path,
 			   statistic.disk_name,
 			   &statistic.disk_space,
 			   &statistic.disk_capacity
-			 );
+);
 
-  RefreshWindow( stdscr );
-  RefreshWindow( dir_window );
+  RefreshWindow(stdscr);
+  RefreshWindow(dir_window);
   DisplayMenu();
   doupdate();
 
@@ -193,7 +193,7 @@ int LoginDisk(char *path)
         "%s < '%s'",
         TARLIST,
         statistic.login_path
-      );
+);
     }
     else if (*file_method == CompressMethod::ZOO_COMPRESS)
     {
@@ -205,7 +205,7 @@ int LoginDisk(char *path)
         "%s '%s'",
         ZOOLIST,
         statistic.login_path
-      );
+);
     }
     else if (*file_method == CompressMethod::RPM_COMPRESS)
     {
@@ -217,7 +217,7 @@ int LoginDisk(char *path)
         "%s '%s'",
         RPMLIST,
         statistic.login_path
-      );
+);
     }
     else if (*file_method == CompressMethod::LHA_COMPRESS)
     {
@@ -229,7 +229,7 @@ int LoginDisk(char *path)
         "%s '%s'",
 		    LHALIST,
 		    statistic.login_path
-		  );
+);
     }
     else if (*file_method == CompressMethod::ZIP_COMPRESS)
     {
@@ -241,7 +241,7 @@ int LoginDisk(char *path)
         "%s '%s'",
 		    ZIPLIST,
 		    statistic.login_path
-		  );
+);
     }
     else if (*file_method == CompressMethod::ARC_COMPRESS)
     {
@@ -253,7 +253,7 @@ int LoginDisk(char *path)
         "%s '%s'",
 		    ARCLIST,
 		    statistic.login_path
-		  );
+);
     }
     else if (*file_method == CompressMethod::RAR_COMPRESS)
     {
@@ -265,7 +265,7 @@ int LoginDisk(char *path)
         "%s '%s'",
 		    RARLIST,
 		    statistic.login_path
-		  );
+);
     }
     else if (*file_method == CompressMethod::FREEZE_COMPRESS)
     {
@@ -279,7 +279,7 @@ int LoginDisk(char *path)
 		    statistic.login_path,
 		    ERR_TO_STDOUT,
 		    TARLIST
-		  );
+);
     }
     else if (*file_method == CompressMethod::MULTIPLE_FREEZE_COMPRESS)
     {
@@ -296,7 +296,7 @@ int LoginDisk(char *path)
 		    ERR_TO_STDOUT,
 		    MELT,
 		    TARLIST
-		  );
+);
     }
     else if (*file_method == CompressMethod::COMPRESS_COMPRESS)
     {
@@ -310,7 +310,7 @@ int LoginDisk(char *path)
 		    statistic.login_path,
 		    ERR_TO_STDOUT,
 		    TARLIST
-		  );
+);
     }
     else if (*file_method == CompressMethod::MULTIPLE_COMPRESS_COMPRESS)
     {
@@ -327,7 +327,7 @@ int LoginDisk(char *path)
 		    UNCOMPRESS,
 		    ERR_TO_STDOUT,
 		    TARLIST
-		  );
+);
     }
     else if (*file_method == CompressMethod::GZIP_COMPRESS)
     {
@@ -341,7 +341,7 @@ int LoginDisk(char *path)
 		    statistic.login_path,
 		    ERR_TO_STDOUT,
 		    TARLIST
-		  );
+);
     }
     else if (*file_method == CompressMethod::MULTIPLE_GZIP_COMPRESS)
     {
@@ -358,7 +358,7 @@ int LoginDisk(char *path)
 		    GNUUNZIP,
 		    ERR_TO_STDOUT,
 		    TARLIST
-		  );
+);
     }
     else if (*file_method == CompressMethod::BZIP_COMPRESS)
     {
@@ -372,7 +372,7 @@ int LoginDisk(char *path)
 		    statistic.login_path,
 		    ERR_TO_STDOUT,
 		    TARLIST
-		  );
+);
     }
     else if (*file_method == CompressMethod::TAPE_DIR_FREEZE_COMPRESS)
     {
@@ -384,7 +384,7 @@ int LoginDisk(char *path)
         "%s < '%s'",
 		    MELT,
 		    statistic.login_path
-		  );
+);
     }
     else if (*file_method == CompressMethod::TAPE_DIR_COMPRESS_COMPRESS)
     {
@@ -396,7 +396,7 @@ int LoginDisk(char *path)
         "%s < '%s'",
 		    UNCOMPRESS,
 		    statistic.login_path
-		  );
+);
     }
     else if (*file_method == CompressMethod::TAPE_DIR_GZIP_COMPRESS)
     {
@@ -408,7 +408,7 @@ int LoginDisk(char *path)
         "%s < '%s'",
 		    GNUUNZIP,
 		    statistic.login_path
-		  );
+);
     }
     else if (*file_method == CompressMethod::TAPE_DIR_BZIP_COMPRESS)
     {
@@ -420,7 +420,7 @@ int LoginDisk(char *path)
         "%s < '%s'",
 		    BUNZIP,
 		    statistic.login_path
-		  );
+);
     }
     else if (*file_method == CompressMethod::TAPE_DIR_NO_COMPRESS)
     {
@@ -432,7 +432,7 @@ int LoginDisk(char *path)
         "%s < '%s'",
 		    CAT,
 		    statistic.login_path
-		  );
+);
     } else {
       FormatError("unknown file method {}", static_cast<int>(*file_method));
       *command_line = 0;
@@ -449,11 +449,11 @@ int LoginDisk(char *path)
         COMMAND_LINE_LENGTH - n,
         "{}",
         ERR_TO_NULL
-      ).out = '\0';
+).out = '\0';
     }
 
 #ifdef DEBUG
-  fprintf( stderr, "system( \"%s\" )\n", command_line );
+  std::fprintf(stderr, "system( \"%s\" )\n", command_line);
 #endif
 
     pid = fork();
@@ -471,27 +471,27 @@ int LoginDisk(char *path)
       /* Sohn */
       /*------*/
 
-      close( p[0] );
-      close( 1 );
-      if(dup( p[1] ) == -1)
+      close(p[0]);
+      close(1);
+      if(dup(p[1]) == -1)
       {
 	/* fprintf(stderr, "dup failed\n" ); */
       }
-      close( p[1] );
+      close(p[1]);
 
-      if( result == 0 && SilentSystemCallEx( command_line, false ) )
+      if( result == 0 && SilentSystemCallEx(command_line, false) )
       {
         result = 1;
 	/* fprintf(stderr, "system(%s)*failed\n", command_line ); */
       }
-      exit( result );
+      std::exit(result);
     }
     else
     {
       /* Vater */
       /*-------*/
 
-      close( p[1] );
+      close(p[1]);
       status = 0;
 
       if (!(f = fdopen(p[0], "r")))
@@ -503,80 +503,80 @@ int LoginDisk(char *path)
 
       if( mode == Mode::ZOO_FILE_MODE )
       {
-	if( ReadTreeFromZOO( statistic.tree, f ) )
+	if( ReadTreeFromZOO(statistic.tree, f) )
         {
 	  Error("ReadTreeFromZOO() failed");
-          fclose( f );
-	  wait( &status );
+          std::fclose(f);
+	  wait(&status);
           return( -1 );
 	}
       }
       else if( mode == Mode::RPM_FILE_MODE )
       {
-	if( ReadTreeFromRPM( statistic.tree, f ) )
+	if( ReadTreeFromRPM(statistic.tree, f) )
         {
 	  Error("ReadTreeFromRPM() failed");
-          fclose( f );
-	  wait( &status );
+          std::fclose(f);
+	  wait(&status);
           return( -1 );
 	}
       }
       else if( mode == Mode::LHA_FILE_MODE )
       {
-	if( ReadTreeFromLHA( statistic.tree, f ) )
+	if( ReadTreeFromLHA(statistic.tree, f) )
         {
 	  Error("ReadTreeFromLHA() failed");
-          fclose( f );
-	  wait( &status );
+          std::fclose(f);
+	  wait(&status);
           return( -1 );
 	}
       }
       else if( mode == Mode::ZIP_FILE_MODE )
       {
-	if( ReadTreeFromZIP( statistic.tree, f ) )
+	if( ReadTreeFromZIP(statistic.tree, f) )
         {
 	  Error("ReadTreeFromZIP() failed");
-          fclose( f );
-	  wait( &status );
+          std::fclose(f);
+	  wait(&status);
           return( -1 );
 	}
       }
       else if( mode == Mode::ARC_FILE_MODE )
       {
-	if( ReadTreeFromARC( statistic.tree, f ) )
+	if( ReadTreeFromARC(statistic.tree, f) )
         {
 	  Error("ReadTreeFromARC() failed");
-          fclose( f );
-	  wait( &status );
+          std::fclose(f);
+	  wait(&status);
           return( -1 );
 	}
       }
       else if( mode == Mode::RAR_FILE_MODE )
       {
-	if( ReadTreeFromRAR( statistic.tree, f ) )
+	if( ReadTreeFromRAR(statistic.tree, f) )
         {
 	  Error("ReadTreeFromRAR() failed");
-          fclose( f );
-	  wait( &status );
+          std::fclose(f);
+	  wait(&status);
           return( -1 );
 	}
       }
       else
       {
-        if( ReadTreeFromTAR( statistic.tree, f ) )
+        if( ReadTreeFromTAR(statistic.tree, f) )
         {
           Error("ReadTreeFromTAR() failed");
-          fclose( f );
-	  wait( &status );
+          std::fclose(f);
+	  wait(&status);
           return( -1 );
         }
       }
-      wait( &status );
+      wait(&status);
       if(status)
       {
         FormatMessage("ReadTarFile() failed*can't execute*{}", command_line);
       }
-      fclose( f );
+      std::fclose(f);
     }
   }
   else
@@ -591,7 +591,7 @@ int LoginDisk(char *path)
 
     statistic.tree->name = path;
 
-    depth = strtod(TREEDEPTH, nullptr);
+    depth = std::strtod(TREEDEPTH, nullptr);
     if (ReadTree(statistic.tree, path, depth))
     {
       Error("ReadTree() failed");
@@ -601,7 +601,7 @@ int LoginDisk(char *path)
     disk_statistic = statistic;
   }
 
-  SetFileSpec( statistic.file_spec );
+  SetFileSpec(statistic.file_spec);
 /*  SetKindOfSort( statistic.kind_of_sort ); */
 
   return( 0 );
@@ -621,17 +621,17 @@ int GetNewLoginPath(char *path)
 
   ClearHelp();
 
-  MvAddStr( LINES - 2, 1, "NEW LOGIN-PATH:" );
+  MvAddStr(LINES - 2, 1, "NEW LOGIN-PATH:");
 
   *std::format_to(aux, "{}", path) = '\0';
   if( mode == Mode::LL_FILE_MODE && *path == '<' )
   {
     for( cptr = aux; (*cptr = *(cptr + 1)); cptr++ )
       ;
-    if( aux[strlen(aux) - 1] == '>' ) aux[strlen(aux) - 1 ] = '\0';
+    if( aux[std::strlen(aux) - 1] == '>' ) aux[std::strlen(aux) - 1 ] = '\0';
   }
 
-  if (InputString( aux, LINES - 2, 17, 0, COLS - 24) == CR)
+  if (InputString(aux, LINES - 2, 17, 0, COLS - 24) == CR)
   {
     NormPath(aux, path);
     result = 0;

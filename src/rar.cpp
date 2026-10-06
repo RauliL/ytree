@@ -26,19 +26,19 @@ int ReadTreeFromRAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 
   dir_entry->name.clear();
 
-  while( fgets( rar_line, RAR_LINE_LENGTH, f ) != nullptr )
+  while( std::fgets(rar_line, RAR_LINE_LENGTH, f) != nullptr )
   {
     /* \n loeschen */
     /*-------------*/
 
-    rar_line[ strlen( rar_line ) - 1 ] = '\0';
+    rar_line[ std::strlen(rar_line) - 1 ] = '\0';
 
-    if( strlen( rar_line ) > (unsigned) 48 && rar_line[48] == ':' )
+    if( std::strlen(rar_line) > (unsigned) 48 && rar_line[48] == ':' )
     {
       /* gueltiger Eintrag */
       /*-------------------*/
 
-      if( GetStatFromRAR( rar_line, path_name, &stat ) )
+      if( GetStatFromRAR(rar_line, path_name, &stat) )
       {
         FormatMessage("unknown rarinfo*{}", rar_line);
       }
@@ -48,9 +48,9 @@ int ReadTreeFromRAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
         /*------*/
 
 #ifdef DEBUG
-  fprintf( stderr, "FILE: \"%s\"\n", path_name );
+  std::fprintf(stderr, "FILE: \"%s\"\n", path_name);
 #endif
-        InsertArchiveFileEntry( dir_entry, path_name, &stat );
+        InsertArchiveFileEntry(dir_entry, path_name, &stat);
       }
     }
   }
@@ -59,10 +59,10 @@ int ReadTreeFromRAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
   if( dir_flag == false )
   {
     statistic.disk_total_directories++;
-    memset( (char *) &dir_entry->stat_struct, 0, sizeof( struct stat ) );
+    std::memset((char *) &dir_entry->stat_struct, 0, sizeof( struct stat ));
     dir_entry->stat_struct.st_mode = S_IFDIR;
   }
-  return( MinimizeArchiveTree( dir_entry ) );
+  return( MinimizeArchiveTree(dir_entry) );
 }
 
 
@@ -77,57 +77,57 @@ static int GetStatFromRAR(char *rar_line, char *name, struct stat *stat)
   struct tm tm_struct;
 
 
-  memset( stat, 0, sizeof( struct stat ) );
+  std::memset(stat, 0, sizeof( struct stat ));
 
   stat->st_nlink = 1;
 
-  t = Strtok_r( rar_line, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(rar_line, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Dateiname */
   /*-----------*/
 
-  strcpy( name, t );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  std::strcpy(name, t);
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Dateilaenge */
   /*-------------*/
 
-  if( !isdigit( *t ) ) return( -1 );
-  stat->st_size = AtoLL( t );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  if( !std::isdigit(*t) ) return( -1 );
+  stat->st_size = AtoLL(t);
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Packed */
   /*--------*/
 
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Ratio */
   /*-------*/
 
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* M-Datum */
   /*---------*/
 
-  if(strlen(t) == 8) {
+  if(std::strlen(t) == 8) {
     t[2] = t[5] = '\0';
-    tm_struct.tm_mday = atoi( &t[0] );
-    tm_struct.tm_mon  = atoi( &t[3] );
-    tm_struct.tm_year = atoi( &t[6] );
+    tm_struct.tm_mday = std::atoi(&t[0]);
+    tm_struct.tm_mon  = std::atoi(&t[3]);
+    tm_struct.tm_year = std::atoi(&t[6]);
 
     if(tm_struct.tm_year < 70)
        tm_struct.tm_year += 100;
   }
 
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* M-time */
   /*--------*/
 
-  if(strlen(t) == 5) {
+  if(std::strlen(t) == 5) {
     t[2] = '\0';
-    tm_struct.tm_hour = atoi( &t[0] );
-    tm_struct.tm_min  = atoi( &t[2] );
+    tm_struct.tm_hour = std::atoi(&t[0]);
+    tm_struct.tm_min  = std::atoi(&t[2]);
   }
 
   tm_struct.tm_sec = 0;
@@ -136,9 +136,9 @@ static int GetStatFromRAR(char *rar_line, char *name, struct stat *stat)
   stat->st_atime = 0;
   stat->st_ctime = 0;
 
-  stat->st_mtime = Mktime( &tm_struct );
+  stat->st_mtime = Mktime(&tm_struct);
 
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Attributes */
   /*------------*/
@@ -149,7 +149,7 @@ static int GetStatFromRAR(char *rar_line, char *name, struct stat *stat)
   /*-------*/
 
   id = getuid();
-  if( id == -1 ) id = atoi( t );
+  if( id == -1 ) id = std::atoi(t);
   stat->st_uid = (unsigned) id;
 
   /* Group */

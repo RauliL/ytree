@@ -28,14 +28,14 @@ int ReadTreeFromRPM(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 
   dir_entry->name.clear();
 
-  while( fgets( rpm_line, RPM_LINE_LENGTH, f ) != nullptr )
+  while( std::fgets(rpm_line, RPM_LINE_LENGTH, f) != nullptr )
   {
     /* \n loeschen */
     /*-------------*/
 
-    rpm_line[ strlen( rpm_line ) - 1 ] = '\0';
+    rpm_line[ std::strlen(rpm_line) - 1 ] = '\0';
 
-    if( GetStatFromRPM( rpm_line, path_name, &stat ) )
+    if( GetStatFromRPM(rpm_line, path_name, &stat) )
     {
       FormatMessage("unknown rpminfo*{}", rpm_line);
     }
@@ -51,15 +51,15 @@ int ReadTreeFromRPM(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
         /*-----------*/
 
 #ifdef DEBUG
-  fprintf( stderr, "DIR: %s\n", path_name );
+  std::fprintf(stderr, "DIR: %s\n", path_name);
 #endif
 
-	if( strcmp( path_name, "./" ) )
+	if( std::strcmp(path_name, "./") )
 	{
 	  /* "./" wird ignoriert */
 	  /*---------------------*/
 
-          TryInsertArchiveDirEntry( dir_entry, path_name, &stat );
+          TryInsertArchiveDirEntry(dir_entry, path_name, &stat);
 	  DisplayDiskStatistic();
 	  doupdate();
 	}
@@ -70,9 +70,9 @@ int ReadTreeFromRPM(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
         /*------*/
 
 #ifdef DEBUG
-  fprintf( stderr, "FILE: \"%s\"\n", path_name );
+  std::fprintf(stderr, "FILE: \"%s\"\n", path_name);
 #endif
-        InsertArchiveFileEntry( dir_entry, path_name, &stat );
+        InsertArchiveFileEntry(dir_entry, path_name, &stat);
       }
     }
   }
@@ -80,10 +80,10 @@ int ReadTreeFromRPM(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
   if( dir_flag == false )
   {
     statistic.disk_total_directories++;
-    memset( (char *) &dir_entry->stat_struct, 0, sizeof( struct stat ) );
+    std::memset((char *) &dir_entry->stat_struct, 0, sizeof( struct stat ));
     dir_entry->stat_struct.st_mode = S_IFDIR;
   }
-  return( MinimizeArchiveTree( dir_entry ) );
+  return( MinimizeArchiveTree(dir_entry) );
 }
 
 
@@ -97,24 +97,24 @@ static int GetStatFromRPM(char *rpm_line, char *name, struct stat *stat)
   int  id;
 
 
-  memset( stat, 0, sizeof( struct stat ) );
+  std::memset(stat, 0, sizeof( struct stat ));
 
   stat->st_nlink = 1;
 
-  t = Strtok_r( rpm_line, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(rpm_line, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Dateiname */
   /*-----------*/
 
-  strcpy( name, t );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  std::strcpy(name, t);
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Dateilaenge */
   /*-------------*/
 
-  if( !isdigit( *t ) ) return( -1 );
-  stat->st_size = AtoLL( t );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  if( !std::isdigit(*t) ) return( -1 );
+  stat->st_size = AtoLL(t);
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* M-Datum */
   /*---------*/
@@ -122,19 +122,19 @@ static int GetStatFromRPM(char *rpm_line, char *name, struct stat *stat)
   stat->st_atime = 0;
   stat->st_ctime = 0;
 
-  stat->st_mtime = atoi( t );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  stat->st_mtime = std::atoi(t);
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* M5 */
-  if(strlen(t) > 20) {
-    t = Strtok_r( nullptr, " \t/", &old ); if( t == nullptr ) return( -1 );
+  if(std::strlen(t) > 20) {
+    t = Strtok_r(nullptr, " \t/", &old); if( t == nullptr ) return( -1 );
   }
 
   /* Attribute */
   /*-----------*/
 
-  stat->st_mode = strtoul(t, nullptr, 8);
-  t = Strtok_r( nullptr, " \t/", &old ); if( t == nullptr ) return( -1 );
+  stat->st_mode = std::strtoul(t, nullptr, 8);
+  t = Strtok_r(nullptr, " \t/", &old); if( t == nullptr ) return( -1 );
 
 
   /* Owner */
@@ -147,7 +147,7 @@ static int GetStatFromRPM(char *rpm_line, char *name, struct stat *stat)
   }
   stat->st_uid = (unsigned) id;
 
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Group */
   /*-------*/
@@ -160,13 +160,13 @@ static int GetStatFromRPM(char *rpm_line, char *name, struct stat *stat)
   stat->st_gid = (unsigned) id;
 
 
-  if( S_ISLNK( stat->st_mode ) )
+  if( S_ISLNK(stat->st_mode) )
   {
     /* Symbolischer Link */
     /*-------------------*/
 
     t = "symlink";
-    strcpy( &name[ strlen( name ) + 1 ], t );
+    std::strcpy(&name[ std::strlen(name) + 1 ], t);
   }
 
   return( 0 );

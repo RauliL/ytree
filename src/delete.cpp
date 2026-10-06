@@ -24,7 +24,7 @@ int DeleteFile(FileEntry *fe_ptr)
 
   result = -1;
 
-  if (!S_ISLNK( fe_ptr->stat_struct.st_mode))
+  if (!S_ISLNK(fe_ptr->stat_struct.st_mode))
   {
     if (!IsWriteable(filepath))
     {
@@ -40,9 +40,9 @@ int DeleteFile(FileEntry *fe_ptr)
         "overriding mode %04o for \"%s\" (Y/N) ? ",
         fe_ptr->stat_struct.st_mode & 0777,
         fe_ptr->name.c_str()
-      );
+);
 
-      term = InputChoise( buffer, "YN\033" );
+      term = InputChoise(buffer, "YN\033");
 
       if( term != 'Y' )
       {
@@ -64,8 +64,8 @@ UNLINK_DONE:
   /* File austragen */
   /*----------------*/
 
-  result = RemoveFile( fe_ptr );
-  GetAvailBytes( &statistic.disk_space );
+  result = RemoveFile(fe_ptr);
+  GetAvailBytes(&statistic.disk_space);
 
 FNC_XIT:
 
@@ -116,9 +116,9 @@ int RemoveFile(FileEntry *fe_ptr)
       de_ptr->files.begin(),
       de_ptr->files.end(),
       [fe_ptr](const std::shared_ptr<FileEntry>& f) { return f.get() == fe_ptr; }
-    ),
+),
     de_ptr->files.end()
-  );
+);
 
   return( 0 );
 }

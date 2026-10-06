@@ -12,7 +12,7 @@
 
 
 static int SetDirModus(DirEntry *de_ptr, WalkingPackage *walking_package);
-static int GetNewModus(int old_modus, const char *new_modus );
+static int GetNewModus(int old_modus, const char *new_modus);
 
 
 
@@ -30,15 +30,15 @@ int ChangeFileModus(FileEntry *fe_ptr)
     return( result );
   }
 
-  GetAttributes( fe_ptr->stat_struct.st_mode, modus );
+  GetAttributes(fe_ptr->stat_struct.st_mode, modus);
 
-  if( GetNewFileModus( LINES - 2, 1, modus, "\r\033" ) == CR )
+  if( GetNewFileModus(LINES - 2, 1, modus, "\r\033") == CR )
   {
     *std::format_to(walking_package.function_data.change_modus.new_modus, "{}", modus) = '\0';
-    result = SetFileModus( fe_ptr, &walking_package );
+    result = SetFileModus(fe_ptr, &walking_package);
   }
 
-  move( LINES - 2, 1 ); clrtoeol();
+  move(LINES - 2, 1); clrtoeol();
 
   return( result );
 }
@@ -61,15 +61,15 @@ int ChangeDirModus(DirEntry *de_ptr)
     return( result );
   }
 
-  GetAttributes( de_ptr->stat_struct.st_mode, modus );
+  GetAttributes(de_ptr->stat_struct.st_mode, modus);
 
-  if( GetNewFileModus( LINES - 2, 1, modus, "\r\033" ) == CR )
+  if( GetNewFileModus(LINES - 2, 1, modus, "\r\033") == CR )
   {
     *std::format_to(walking_package.function_data.change_modus.new_modus, "{}", modus) = '\0';
-    result = SetDirModus( de_ptr, &walking_package );
+    result = SetDirModus(de_ptr, &walking_package);
   }
 
-  move( LINES - 2, 1 ); clrtoeol();
+  move(LINES - 2, 1); clrtoeol();
 
   return( result );
 }
@@ -84,23 +84,23 @@ int GetNewFileModus(int y, int x, char *modus, const char *term)
 
   ClearHelp();
   curs_set(1);
-  MvAddStr( y, x, "New Filemodus:" );
+  MvAddStr(y, x, "New Filemodus:");
 
   x += 16;
 
   p = 0;
-  MvAddStr(y, x, modus );
+  MvAddStr(y, x, modus);
   leaveok(stdscr, false);
   do
   {
-    move( y, x + p );
-    RefreshWindow( stdscr );
+    move(y, x + p);
+    RefreshWindow(stdscr);
     doupdate();
 
     c = Getch();
 
 #ifdef VI_KEYS
-    c = ViKey( c );
+    c = ViKey(c);
 #endif /* VI_KEYS */
 
     if( c == LF ) c = CR;
@@ -111,7 +111,7 @@ int GetNewFileModus(int y, int x, char *modus, const char *term)
       /*------------------*/
 
       modus[p] = (char) c;
-      addch( c );
+      addch(c);
       if( p < 9 ) p++;
     }
     else if( c == 's' && ( p == 3 || p == 6 ) )
@@ -126,7 +126,7 @@ int GetNewFileModus(int y, int x, char *modus, const char *term)
       else
       {
         modus[p] = (char) c;
-        addch( c );
+        addch(c);
         if( p < 9 ) p++;
       }
     }
@@ -135,11 +135,11 @@ int GetNewFileModus(int y, int x, char *modus, const char *term)
       if( c == ' ' && p < 9 ) p++;
       else if( c == KEY_LEFT && p > 0 ) p--;
       else if( c == KEY_RIGHT && p < 9 ) p++;
-      else if( strrchr( term, c ) == nullptr ) beep();
+      else if( std::strrchr(term, c) == nullptr ) beep();
     }
-  } while( c != -1 && strrchr( term, c ) == nullptr );
+  } while( c != -1 && std::strrchr(term, c) == nullptr );
   leaveok(stdscr, true);
-  move( y, x ); clrtoeol();
+  move(y, x); clrtoeol();
   curs_set(0);
 
   return( c );
@@ -159,9 +159,9 @@ int SetFileModus(FileEntry *fe_ptr, WalkingPackage *walking_package)
 
   walking_package->new_fe_ptr = fe_ptr; /* unchanged */
 
-  new_modus = GetNewModus( fe_ptr->stat_struct.st_mode,
+  new_modus = GetNewModus(fe_ptr->stat_struct.st_mode,
 			   walking_package->function_data.change_modus.new_modus
-			 );
+);
 
   new_modus = new_modus | ( fe_ptr->stat_struct.st_mode &
 	      ~( S_IRWXO | S_IRWXG | S_IRWXU | S_ISGID | S_ISUID ) );
@@ -191,7 +191,7 @@ static int SetDirModus(DirEntry *de_ptr, WalkingPackage *walking_package)
   auto new_modus = GetNewModus(
     de_ptr->stat_struct.st_mode,
     walking_package->function_data.change_modus.new_modus
-  );
+);
 
   new_modus = new_modus | (de_ptr->stat_struct.st_mode & ~(
     S_IRWXO | S_IRWXG | S_IRWXU | S_ISGID | S_ISUID
@@ -217,7 +217,7 @@ static int SetDirModus(DirEntry *de_ptr, WalkingPackage *walking_package)
   return -1;
 }
 
-static int GetNewModus(int old_modus, const char *modus )
+static int GetNewModus(int old_modus, const char *modus)
 {
   int new_modus;
 
@@ -262,7 +262,7 @@ static int GetNewModus(int old_modus, const char *modus )
 
 int GetModus(const char *modus)
 {
-  return( GetNewModus( 0, modus ) );
+  return( GetNewModus(0, modus) );
 }
 
 

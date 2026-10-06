@@ -23,7 +23,7 @@ static int InsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *pa
 
 
 #ifdef DEBUG
-  fprintf( stderr, "Insert Dir \"%s\"\n", path );
+  std::fprintf(stderr, "Insert Dir \"%s\"\n", path);
 #endif
 
   /* Format: .../dir/ */
@@ -31,7 +31,7 @@ static int InsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *pa
 
   *std::format_to(father_path, "{}", path) = '\0';
 
-  if( ( p = strrchr( father_path, std::filesystem::path::preferred_separator ) ) ) *p = '\0';
+  if( ( p = std::strrchr(father_path, std::filesystem::path::preferred_separator) ) ) *p = '\0';
   else
   {
     FormatError("patch mismatch*missing '{}' in*{}", std::filesystem::path::preferred_separator, path);
@@ -39,7 +39,7 @@ static int InsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *pa
     return -1;
   }
 
-  p = strrchr( father_path, std::filesystem::path::preferred_separator );
+  p = std::strrchr(father_path, std::filesystem::path::preferred_separator);
 
   if( p == nullptr )
   {
@@ -53,7 +53,7 @@ static int InsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *pa
   {
     *std::format_to(name, "{}", ++p) = '\0';
     *p = '\0';
-    if( GetArchiveDirEntry( tree.get(), father_path, &df_ptr ) )
+    if( GetArchiveDirEntry(tree.get(), father_path, &df_ptr) )
     {
       FormatError("can't find subdir*{}", father_path);
 
@@ -66,7 +66,7 @@ static int InsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *pa
   de_ptr->stat_struct = *stat;
 
 #ifdef DEBUG
-  fprintf( stderr, "new dir: \"%s\"\n", name );
+  std::fprintf(stderr, "new dir: \"%s\"\n", name);
 #endif
 
 
@@ -84,9 +84,9 @@ static int InsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *pa
       df_ptr->children.begin(),
       df_ptr->children.end(),
       [&de_ptr](const std::shared_ptr<DirEntry>& ds_ptr) { return ds_ptr->name > de_ptr->name; }
-    ),
+),
     de_ptr
-  );
+);
 
   statistic.disk_total_directories++;
   return( 0 );
@@ -110,24 +110,24 @@ int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, st
   }
 
 
-  Fnsplit( path, dir, file );
+  Fnsplit(path, dir, file);
 
-  if( GetArchiveDirEntry( tree.get(), dir, &de_ptr ) )
+  if( GetArchiveDirEntry(tree.get(), dir, &de_ptr) )
   {
 #ifdef DEBUG
-    fprintf( stderr, "can't get directory for file*%s*trying recover", path );
+    std::fprintf(stderr, "can't get directory for file*%s*trying recover", path);
 #endif
 
-    memset( (char *) &stat_struct, 0, sizeof( struct stat ) );
+    std::memset((char *) &stat_struct, 0, sizeof( struct stat ));
     stat_struct.st_mode = S_IFDIR;
 
-    if( TryInsertArchiveDirEntry( tree, dir, &stat_struct ) )
+    if( TryInsertArchiveDirEntry(tree, dir, &stat_struct) )
     {
       Error("Inserting directory failed");
 
       return -1;
     }
-    if( GetArchiveDirEntry( tree.get(), dir, &de_ptr ) )
+    if( GetArchiveDirEntry(tree.get(), dir, &de_ptr) )
     {
       FormatError("again: can't get directory for file*{}*giving up", path);
 
@@ -139,7 +139,7 @@ int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, st
   fe_ptr->stat_struct = *stat;
   fe_ptr->name = file;
 
-  if( S_ISLNK( stat->st_mode ) )
+  if( S_ISLNK(stat->st_mode) )
   {
     fe_ptr->symlink_target = &path[std::strlen(path) + 1];
   }
@@ -153,7 +153,7 @@ int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, st
   /* Einklinken */
   /*------------*/
 
-  de_ptr->files.push_back( fe_ptr );
+  de_ptr->files.push_back(fe_ptr);
   return( 0 );
 }
 
@@ -167,11 +167,11 @@ static int GetArchiveDirEntry(DirEntry *tree, char *path, DirEntry **dir_entry)
   bool is_root = false;
 
 #ifdef DEBUG
-  fprintf( stderr, "GetArchiveDirEntry: tree=%s, path=%s\n",
-  (tree) ? tree->name : "NULL", path );
+  std::fprintf(stderr, "GetArchiveDirEntry: tree=%s, path=%s\n",
+  (tree) ? tree->name : "NULL", path);
 #endif
 
-  if( strchr( path, std::filesystem::path::preferred_separator ) != nullptr )
+  if( std::strchr(path, std::filesystem::path::preferred_separator) != nullptr )
   {
     for( const auto& child_ptr : tree->children )
     {
@@ -195,10 +195,10 @@ static int GetArchiveDirEntry(DirEntry *tree, char *path, DirEntry **dir_entry)
 	}
 	else
         {
-	  return( GetArchiveDirEntry( de_ptr,
+	  return( GetArchiveDirEntry(de_ptr,
 				  ( is_root ) ? &path[n] : &path[n+1],
 				  dir_entry
-				) );
+) );
 	}
       }
     }
@@ -221,28 +221,28 @@ int TryInsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *dir, s
   char dir_path[PATH_LENGTH + 1];
   char *s, *t;
 
-  memset( dir_path, 0, sizeof( dir_path ) );
+  std::memset(dir_path, 0, sizeof( dir_path ));
 
 #ifdef DEBUG
-  fprintf( stderr, "Try install start \n" );
+  std::fprintf(stderr, "Try install start \n");
 #endif
 
   for( s=dir, t=dir_path; *s; s++, t++ )
   {
     if( (*t = *s) == std::filesystem::path::preferred_separator )
     {
-      if( GetArchiveDirEntry( tree.get(), dir_path, &de_ptr ) == -1 )
+      if( GetArchiveDirEntry(tree.get(), dir_path, &de_ptr) == -1 )
       {
 	/* Evtl. fehlender teil; ==> einfuegen */
 	/*-------------------------------------*/
 
-	if( InsertArchiveDirEntry( tree, dir_path, stat ) ) return( -1 );
+	if( InsertArchiveDirEntry(tree, dir_path, stat) ) return( -1 );
       }
     }
   }
 
 #ifdef DEBUG
-  fprintf( stderr, "Try install end\n" );
+  std::fprintf(stderr, "Try install end\n");
 #endif
 
   return( 0 );
@@ -304,7 +304,7 @@ int MinimizeArchiveTree(const std::shared_ptr<DirEntry>& tree)
     for( const auto& de1_ptr : tree->children )
       de1_ptr->parent = tree;
 #ifdef DEBUG
-  fprintf( stderr, "new root-dir: \"%s\"\n", tree->name.c_str() );
+  std::fprintf(stderr, "new root-dir: \"%s\"\n", tree->name.c_str());
 #endif
   }
 
@@ -353,7 +353,7 @@ std::string MakeExtractCommandLine(
       path.c_str(),
       file.c_str(),
       cmd.c_str()
-    );
+);
   }
   else if (compress_method && *compress_method == CompressMethod::LHA_COMPRESS)
   {
@@ -367,7 +367,7 @@ std::string MakeExtractCommandLine(
 		  path.c_str(),
 		  file.c_str(),
 		  cmd.c_str()
-		);
+);
   }
   else if (compress_method && *compress_method == CompressMethod::ZIP_COMPRESS)
   {
@@ -381,7 +381,7 @@ std::string MakeExtractCommandLine(
 		  path.c_str(),
 		  file.c_str(),
 		  cmd.c_str()
-		);
+);
   }
   else if (compress_method && *compress_method == CompressMethod::ARC_COMPRESS)
   {
@@ -395,7 +395,7 @@ std::string MakeExtractCommandLine(
 		  path.c_str(),
 		  file.c_str(),
 		  cmd.c_str()
-		);
+);
   }
   else if (compress_method && *compress_method == CompressMethod::RPM_COMPRESS)
   {
@@ -412,7 +412,7 @@ std::string MakeExtractCommandLine(
         !file.empty() && file[0] == std::filesystem::path::preferred_separator ? file.substr(1).c_str() : file.c_str(),
         file.c_str(),
         cmd.c_str()
-		  );
+);
     } else {
       std::snprintf(
         command_line,
@@ -422,7 +422,7 @@ std::string MakeExtractCommandLine(
 		    path.c_str(),
 		    file.c_str(),
 		    cmd.c_str()
-		  );
+);
     }
   }
   else if (compress_method && *compress_method == CompressMethod::RAR_COMPRESS)
@@ -437,7 +437,7 @@ std::string MakeExtractCommandLine(
 		  path.c_str(),
 		  file.c_str(),
 		  cmd.c_str()
-		);
+);
   }
   else if (compress_method && *compress_method == CompressMethod::FREEZE_COMPRESS)
   {
@@ -452,7 +452,7 @@ std::string MakeExtractCommandLine(
 		  TAREXPAND,
 		  file.c_str(),
 		  cmd.c_str()
-		);
+);
   }
   else if (compress_method && *compress_method == CompressMethod::MULTIPLE_FREEZE_COMPRESS)
   {
@@ -469,7 +469,7 @@ std::string MakeExtractCommandLine(
 		  TAREXPAND,
 		  file.c_str(),
 		  cmd.c_str()
-		);
+);
   }
   else if (compress_method && *compress_method == CompressMethod::COMPRESS_COMPRESS)
   {
@@ -484,7 +484,7 @@ std::string MakeExtractCommandLine(
 		  TAREXPAND,
 		  file.c_str(),
 		  cmd.c_str()
-		);
+);
   }
   else if (compress_method && *compress_method == CompressMethod::MULTIPLE_COMPRESS_COMPRESS)
   {
@@ -501,7 +501,7 @@ std::string MakeExtractCommandLine(
 		  TAREXPAND,
 		  file.c_str(),
 		  cmd.c_str()
-		);
+);
   }
   else if (compress_method && *compress_method == CompressMethod::GZIP_COMPRESS)
   {
@@ -516,7 +516,7 @@ std::string MakeExtractCommandLine(
 		  TAREXPAND,
 		  file.c_str(),
 		  cmd.c_str()
-		);
+);
   }
   else if (compress_method && *compress_method == CompressMethod::MULTIPLE_GZIP_COMPRESS)
   {
@@ -533,7 +533,7 @@ std::string MakeExtractCommandLine(
 		  TAREXPAND,
 		  file.c_str(),
 		  cmd.c_str()
-		);
+);
   }
   else if (compress_method && *compress_method == CompressMethod::BZIP_COMPRESS)
   {
@@ -548,7 +548,7 @@ std::string MakeExtractCommandLine(
 		  TAREXPAND,
 		  file.c_str(),
 		  cmd.c_str()
-		);
+);
   } else {
     /* gtar xOf - FILE < TAR_FILE ?? */
     /*-------------------------------*/
@@ -560,7 +560,7 @@ std::string MakeExtractCommandLine(
 		  file.c_str(),
 		  path.c_str(),
 		  cmd.c_str()
-		);
+);
   }
 
 #ifdef DEBUG

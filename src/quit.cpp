@@ -94,7 +94,7 @@ void QuitTo(DirEntry* dir_entry)
     pwp->pw_dir,
     std::filesystem::path::preferred_separator,
     static_cast<int>(parpid)
-  );
+);
 
   if (!QuitFileCheck(qfilename))
   {

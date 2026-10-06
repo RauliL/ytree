@@ -28,7 +28,7 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
         mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
         file_name_p_aux,
 			  input_buffer
-			);
+);
     }
     refresh();
     result = QuerySystemCall(command_line);
@@ -52,12 +52,12 @@ int GetPipeCommand(char *pipe_command)
 
   ClearHelp();
 
-  MvAddStr( LINES - 2, 1, "Pipe-Command: " );
-  if (InputString( pipe_command, LINES - 2, 15, 0, COLS - 16) == CR)
+  MvAddStr(LINES - 2, 1, "Pipe-Command: ");
+  if (InputString(pipe_command, LINES - 2, 15, 0, COLS - 16) == CR)
   {
     result = 0;
   }
-  move( LINES - 2, 1 ); clrtoeol();
+  move(LINES - 2, 1); clrtoeol();
 
   return( result );
 }
@@ -85,7 +85,7 @@ int PipeTaggedFiles(FileEntry* fe_ptr, WalkingPackage* walking_package)
       n,
       1,
       walking_package->function_data.pipe_cmd.pipe_file
-    ) != 1)
+) != 1)
     {
       FormatMessage("Write-Error!*{}", std::strerror(errno));
       close(i);

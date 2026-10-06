@@ -13,7 +13,7 @@ int CopyFile(Statistic *statistic_ptr,
              DirEntry *dest_dir_entry,
              char *to_dir_path,       /* absoluter Pfad */
              bool path_copy
-	    )
+)
 {
   long long file_size;
   const auto from_path = GetRealFileNamePath(fe_ptr);
@@ -80,7 +80,7 @@ int CopyFile(Statistic *statistic_ptr,
       if ((term = InputChoise(
             "Directory does not exist; create (y/N) ? ",
             "YN\033"
-          )) == 'Y')
+)) == 'Y')
       {
         if (!to_fs_path.empty() && !to_fs_path.is_absolute())
         {
@@ -113,7 +113,7 @@ int CopyFile(Statistic *statistic_ptr,
 
 
 #ifdef DEBUG
-  fprintf( stderr, "Copy: \"%s\" --> \"%s\"\n", from_path.c_str(), to_path.c_str() );
+  std::fprintf(stderr, "Copy: \"%s\" --> \"%s\"\n", from_path.c_str(), to_path.c_str());
 #endif /* DEBUG */
 
   if (to_path == from_path)
@@ -129,7 +129,7 @@ int CopyFile(Statistic *statistic_ptr,
     /* Ziel befindet sich im Sub-Tree */
     /*--------------------------------*/
 
-    GetFileEntry( dest_dir_entry, to_file, &dest_file_entry );
+    GetFileEntry(dest_dir_entry, to_file, &dest_file_entry);
 
     if( dest_file_entry )
     {
@@ -138,7 +138,7 @@ int CopyFile(Statistic *statistic_ptr,
 
       if( confirm )
       {
-	term = InputChoise( "file exist; overwrite (Y/N) ? ", "YN\033" );
+	term = InputChoise("file exist; overwrite (Y/N) ? ", "YN\033");
 
         if( term != 'Y' )
         {
@@ -147,7 +147,7 @@ int CopyFile(Statistic *statistic_ptr,
         }
       }
 
-      DeleteFile( dest_file_entry );
+      DeleteFile(dest_file_entry);
     }
   }
   /* access benutzen */
@@ -156,7 +156,7 @@ int CopyFile(Statistic *statistic_ptr,
   {
     /* Datei existiert */
     /*-----------------*/
-    term = InputChoise( "file exist; overwrite (Y/N) ? ", "YN\033" );
+    term = InputChoise("file exist; overwrite (Y/N) ? ", "YN\033");
     if (term != 'Y')
     {
       result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
@@ -165,12 +165,12 @@ int CopyFile(Statistic *statistic_ptr,
   }
 
 
-  if( !Copy( to_path, from_path ) )
+  if( !Copy(to_path, from_path) )
   {
     /* File wurde kopiert */
     /*--------------------*/
 
-    if( chmod( to_path.c_str(), fe_ptr->stat_struct.st_mode ) == -1 )
+    if( chmod(to_path.c_str(), fe_ptr->stat_struct.st_mode) == -1 )
     {
       FormatWarning("Can't chmod file*\"{}\"*to mode {}*IGNORED", to_path.c_str(), GetAttributes(fe_ptr->stat_struct.st_mode, buffer));
     }
@@ -196,11 +196,11 @@ int CopyFile(Statistic *statistic_ptr,
       fen_ptr->name = to_file;
       fen_ptr->stat_struct = stat_struct;
       fen_ptr->dir_entry   = dest_dir_entry->weak_from_this();
-      fen_ptr->matching    = Match( fen_ptr->name );
-      dest_dir_entry->files.insert( dest_dir_entry->files.begin(), fen_ptr );
+      fen_ptr->matching    = Match(fen_ptr->name);
+      dest_dir_entry->files.insert(dest_dir_entry->files.begin(), fen_ptr);
     }
 
-    GetAvailBytes( &statistic_ptr->disk_space );
+    GetAvailBytes(&statistic_ptr->disk_space);
 
     result = 0;
   }
@@ -212,9 +212,9 @@ int CopyFile(Statistic *statistic_ptr,
 
 FNC_XIT:
 
-  move( LINES - 3, 1 ); clrtoeol();
-  move( LINES - 2, 1 ); clrtoeol();
-  move( LINES - 1, 1 ); clrtoeol();
+  move(LINES - 3, 1); clrtoeol();
+  move(LINES - 2, 1); clrtoeol();
+  move(LINES - 1, 1); clrtoeol();
 
   return( result );
 }
@@ -246,13 +246,13 @@ int GetCopyParameter(const char *from_file, bool path_copy, char *to_file, char 
 
   ClearHelp();
 
-  MvAddStr( LINES - 3, 1, buffer );
-  MvAddStr( LINES - 2, 1, "AS   ");
+  MvAddStr(LINES - 3, 1, buffer);
+  MvAddStr(LINES - 2, 1, "AS   ");
 
   if (InputString(to_file, LINES - 2, 6, 0, COLS - 6) == CR)
   {
-    MvAddStr( LINES - 1, 1, "TO   " );
-    if (InputString( to_dir, LINES - 1, 6, 0, COLS - 6) == CR)
+    MvAddStr(LINES - 1, 1, "TO   ");
+    if (InputString(to_dir, LINES - 1, 6, 0, COLS - 6) == CR)
     {
       return 0;
     }
@@ -270,7 +270,7 @@ static int Copy(const std::string& to_path, const std::string& from_path)
   }
 
 #ifdef DEBUG
-  fprintf( stderr, "Copy: \"%s\" --> \"%s\"\n", from_path.c_str(), to_path.c_str() );
+  std::fprintf(stderr, "Copy: \"%s\" --> \"%s\"\n", from_path.c_str(), to_path.c_str());
 #endif /* DEBUG */
 
   if (!to_path.compare(from_path))
@@ -286,7 +286,7 @@ static int Copy(const std::string& to_path, const std::string& from_path)
     to_path,
     std::filesystem::copy_options::overwrite_existing,
     ec
-  );
+);
   if (ec)
   {
     FormatMessage("Can't copy file*\"{}\"*to*\"{}\"*{}", from_path.c_str(), to_path.c_str(), ec.message().c_str());
@@ -304,24 +304,24 @@ int CopyTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
 
   walking_package->new_fe_ptr = fe_ptr;  /* unchanged */
 
-  if( BuildFilename( fe_ptr->name,
+  if( BuildFilename(fe_ptr->name,
 		     walking_package->function_data.copy.to_file,
 		     new_name
-		   ) == 0 )
+) == 0 )
   {
     if( *new_name == '\0' )
     {
       Message("Can't copy file to*empty name");
     }
 
-    result = CopyFile( walking_package->function_data.copy.statistic_ptr,
+    result = CopyFile(walking_package->function_data.copy.statistic_ptr,
 		       fe_ptr,
 		       walking_package->function_data.copy.confirm,
 		       new_name,
 		       walking_package->function_data.copy.dest_dir_entry,
 		       walking_package->function_data.copy.to_path,
 		       walking_package->function_data.copy.path_copy
-		     );
+);
   }
 
   return( result );
@@ -338,7 +338,7 @@ static int CopyArchiveFile(
     mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
     from_p_aux,
     "> \"" + to_p_aux + "\""
-  );
+);
   const auto result = SilentSystemCall(command_line);
 
   if (result)

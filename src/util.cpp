@@ -118,7 +118,7 @@ int GetDirEntry(const std::shared_ptr<DirEntry>& tree,
                 char *dir_path,
                 DirEntry **dir_entry,
                 char *to_path
-	       )
+)
 {
   char dest_path[PATH_LENGTH+1];
   std::filesystem::path current_path;
@@ -148,7 +148,7 @@ int GetDirEntry(const std::shared_ptr<DirEntry>& tree,
     return -1;
   }
 
-  if( chdir( dir_path ) )
+  if( chdir(dir_path) )
   {
 #ifdef DEBUG
     FormatMessage("Invalid Path!*\"{}\"", dir_path);
@@ -189,7 +189,7 @@ int GetDirEntry(const std::shared_ptr<DirEntry>& tree,
     /*----------------------------------*/
 
     de_ptr = tree.get();
-    token = Strtok_r( &dest_path[n], preferred_separator_str, &old );
+    token = Strtok_r(&dest_path[n], preferred_separator_str, &old);
     while( token )
     {
       sde_ptr = nullptr;
@@ -212,7 +212,7 @@ int GetDirEntry(const std::shared_ptr<DirEntry>& tree,
 #endif
 	return( -3 );
       }
-      token = Strtok_r( nullptr, preferred_separator_str, &old );
+      token = Strtok_r(nullptr, preferred_separator_str, &old);
     }
     *dir_entry = de_ptr;
   }
@@ -248,13 +248,13 @@ char *GetAttributes(unsigned short modus, char *buffer)
 {
   char *save_buffer = buffer;
 
-       if( S_ISREG( modus ) )  *buffer++ = '-';
-  else if( S_ISDIR( modus ) )  *buffer++ = 'd';
-  else if( S_ISCHR( modus ) )  *buffer++ = 'c';
-  else if( S_ISBLK( modus ) )  *buffer++ = 'b';
-  else if( S_ISFIFO( modus ) ) *buffer++ = 'p';
-  else if( S_ISLNK( modus ) )  *buffer++ = 'l';
-  else if( S_ISSOCK( modus ) ) *buffer++ = 's';  /* ??? */
+       if( S_ISREG(modus) )  *buffer++ = '-';
+  else if( S_ISDIR(modus) )  *buffer++ = 'd';
+  else if( S_ISCHR(modus) )  *buffer++ = 'c';
+  else if( S_ISBLK(modus) )  *buffer++ = 'b';
+  else if( S_ISFIFO(modus) ) *buffer++ = 'p';
+  else if( S_ISLNK(modus) )  *buffer++ = 'l';
+  else if( S_ISSOCK(modus) ) *buffer++ = 's';  /* ??? */
   else                         *buffer++ = '?';  /* unknown */
 
   if( modus & S_IRUSR ) *buffer++ = 'r';
@@ -308,8 +308,8 @@ char *CTime(time_t f_time, char *buffer)
     std::exit(EXIT_FAILURE);
   }
 
-  cptr = ctime( &f_time );
-  strncpy( buffer, cptr+4, 12 );
+  cptr = std::ctime(&f_time);
+  std::strncpy(buffer, cptr+4, 12);
   buffer[12] = '\0';
 
   if( (now - f_time) > 31536000L )
@@ -317,7 +317,7 @@ char *CTime(time_t f_time, char *buffer)
     /* Differenz groesser als 1 Jahr */
     /*-------------------------------*/
 
-    strncpy( &buffer[7], cptr + 19, 5 );
+    std::strncpy(&buffer[7], cptr + 19, 5);
 
   }
 
@@ -445,12 +445,12 @@ void PrintOptions(WINDOW *win, int y, int x, const char *str)
      }
 
 #ifdef COLOR_SUPPORT
-    wattrset( win, COLOR_PAIR(color) | A_BOLD);
+    wattrset(win, COLOR_PAIR(color) | A_BOLD);
 #else
-    wattrset( win, color);
+    wattrset(win, color);
 #endif
-     mvwaddch( win, y, x++, ch );
-     wattrset( win, 0 );
+     mvwaddch(win, y, x++, ch);
+     wattrset(win, 0);
    }
 }
 
@@ -484,29 +484,29 @@ void PrintMenuOptions(WINDOW *win,int y, int x, char *str, int ncolor, int hcolo
     switch( ch ) {
         case '(': color = hi_color;
 #ifdef COLOR_SUPPORT
-                  WAttrAddStr( win, COLOR_PAIR(color) | A_BOLD, sbuf);
+                  WAttrAddStr(win, COLOR_PAIR(color) | A_BOLD, sbuf);
 #else
-                  WAttrAddStr( win, color, sbuf);
+                  WAttrAddStr(win, color, sbuf);
 #endif
 		  sbuf.clear();
 	          continue;
 
 	case ')': color = lo_color;
 #ifdef COLOR_SUPPORT
-                  WAttrAddStr( win, COLOR_PAIR(color) | A_BOLD, sbuf);
+                  WAttrAddStr(win, COLOR_PAIR(color) | A_BOLD, sbuf);
 #else
-                  WAttrAddStr( win, color, sbuf);
+                  WAttrAddStr(win, color, sbuf);
 #endif
 		  sbuf.clear();
 	          continue;
 
 #ifdef COLOR_SUPPORT
 	case ']': color = lo_color;
-                  WAttrAddStr( win, COLOR_PAIR(color) | A_BOLD, sbuf);
+                  WAttrAddStr(win, COLOR_PAIR(color) | A_BOLD, sbuf);
 		  sbuf.clear();
 	          continue;
 	case '[': color = hi_color;
-                  WAttrAddStr( win, COLOR_PAIR(color) | A_BOLD, sbuf);
+                  WAttrAddStr(win, COLOR_PAIR(color) | A_BOLD, sbuf);
 		  sbuf.clear();
 	          continue;
 #else
@@ -518,9 +518,9 @@ void PrintMenuOptions(WINDOW *win,int y, int x, char *str, int ncolor, int hcolo
   }
 
 #ifdef COLOR_SUPPORT
-  WAttrAddStr( win, COLOR_PAIR(color) | A_BOLD, sbuf);
+  WAttrAddStr(win, COLOR_PAIR(color) | A_BOLD, sbuf);
 #else
-  WAttrAddStr( win, color, sbuf);
+  WAttrAddStr(win, color, sbuf);
 #endif
 }
 
@@ -535,7 +535,7 @@ char *FormFilename(char *dest, char *src, unsigned int max_len)
   int begin;
   unsigned int l;
 
-  l = strlen(src);
+  l = std::strlen(src);
   begin = 0;
 
   if( l <= max_len )
@@ -602,7 +602,7 @@ void Fnsplit(char *path, char *dir, char *name)
 
   while( *path == ' ' || *path == '\t' ) path++;
 
-  while( strchr(path, std::filesystem::path::preferred_separator ) || strchr(path, '\\') )
+  while( std::strchr(path, std::filesystem::path::preferred_separator) || std::strchr(path, '\\') )
     *(dir++) = *(path++);
 
   *dir = '\0';
@@ -626,7 +626,7 @@ void Fnsplit(char *path, char *dir, char *name)
 int BuildFilename(const std::string& in_filename,
 		   const char *pattern,
 		   char *out_filename
-		 )
+)
 {
   const char *cptr;
   int  result = 0;
@@ -690,7 +690,7 @@ void NormPath(const char* in_path, char* out_path)
 
 
 /* reentrantes strtok */
-char *Strtok_r( char *str, const char *delim, char **old )
+char *Strtok_r(char *str, const char *delim, char **old)
 {
   char *result;
   int  l, m;
@@ -701,9 +701,9 @@ char *Strtok_r( char *str, const char *delim, char **old )
   if( str == nullptr )
     return( nullptr );
 
-  l = strlen( str );
-  if( ( result = strtok( str, delim ) ) != nullptr ) {
-    m = strlen( result );
+  l = std::strlen(str);
+  if( ( result = std::strtok(str, delim) ) != nullptr ) {
+    m = std::strlen(result);
     if( (m + 1) >= l)
       *old = nullptr;
     else
@@ -815,18 +815,18 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
   char buffer[4096]; /* enough??? */
 
 
-  if( fe_ptr && S_ISLNK( fe_ptr->stat_struct.st_mode ) )
+  if( fe_ptr && S_ISLNK(fe_ptr->stat_struct.st_mode) )
     sym_link_name = fe_ptr->symlink_target.c_str();
   else
     sym_link_name = "";
 
 
   tag = (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ';
-  GetAttributes( fe_ptr->stat_struct.st_mode, attributes);
+  GetAttributes(fe_ptr->stat_struct.st_mode, attributes);
 
-  CTime( fe_ptr->stat_struct.st_mtime, modify_time );
-  CTime( fe_ptr->stat_struct.st_ctime, change_time );
-  CTime( fe_ptr->stat_struct.st_atime, access_time );
+  CTime(fe_ptr->stat_struct.st_mtime, modify_time);
+  CTime(fe_ptr->stat_struct.st_ctime, change_time);
+  CTime(fe_ptr->stat_struct.st_atime, access_time);
 
   if (const auto owner_name_ptr = GetPasswdName(fe_ptr->stat_struct.st_uid))
   {
@@ -888,14 +888,14 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
     }
   }
   *dptr = '\0';
-  strncpy(line, buffer, linelen);
+  std::strncpy(line, buffer, linelen);
   line[linelen - 1] = '\0';
   return(0);
 }
 
 
 
-int GetUserFileEntryLength( int max_filename_len, int max_linkname_len, const char *tmpl)
+int GetUserFileEntryLength(int max_filename_len, int max_linkname_len, const char *tmpl)
 {
   int  len, n;
   const char *sptr;
@@ -954,7 +954,7 @@ long long AtoLL(const char *cptr)
 {
   long long ll;
 
-  sscanf(cptr, "%lld", &ll);
+  std::sscanf(cptr, "%lld", &ll);
 
   return(ll);
 }

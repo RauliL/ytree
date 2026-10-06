@@ -27,14 +27,14 @@ int ReadTreeFromTAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 
   dir_entry->name.clear();
 
-  while( fgets( tar_line, TAR_LINE_LENGTH, f ) != nullptr )
+  while( std::fgets(tar_line, TAR_LINE_LENGTH, f) != nullptr )
   {
     /* \n loeschen */
     /*-------------*/
 
-    tar_line[ strlen( tar_line ) - 1 ] = '\0';
+    tar_line[ std::strlen(tar_line) - 1 ] = '\0';
 
-    if( GetStatFromTAR( tar_line, path_name, &stat ) )
+    if( GetStatFromTAR(tar_line, path_name, &stat) )
     {
       FormatMessage("unknown tarinfo*{}", tar_line);
     }
@@ -50,15 +50,15 @@ int ReadTreeFromTAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
         /*-----------*/
 
 #ifdef DEBUG
-  fprintf( stderr, "DIR: %s\n", path_name );
+  std::fprintf(stderr, "DIR: %s\n", path_name);
 #endif
 
-	if( strcmp( path_name, "./" ) )
+	if( std::strcmp(path_name, "./") )
 	{
 	  /* "./" wird ignoriert */
 	  /*---------------------*/
 
-          TryInsertArchiveDirEntry( dir_entry, path_name, &stat );
+          TryInsertArchiveDirEntry(dir_entry, path_name, &stat);
 	  DisplayDiskStatistic();
 	  doupdate();
 	}
@@ -69,9 +69,9 @@ int ReadTreeFromTAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
         /*------*/
 
 #ifdef DEBUG
-  fprintf( stderr, "FILE: \"%s\"\n", path_name );
+  std::fprintf(stderr, "FILE: \"%s\"\n", path_name);
 #endif
-        InsertArchiveFileEntry( dir_entry, path_name, &stat );
+        InsertArchiveFileEntry(dir_entry, path_name, &stat);
       }
     }
   }
@@ -79,10 +79,10 @@ int ReadTreeFromTAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
   if( dir_flag == false )
   {
     statistic.disk_total_directories++;
-    memset( (char *) &dir_entry->stat_struct, 0, sizeof( struct stat ) );
+    std::memset((char *) &dir_entry->stat_struct, 0, sizeof( struct stat ));
     dir_entry->stat_struct.st_mode = S_IFDIR;
   }
-  return( MinimizeArchiveTree( dir_entry ) );
+  return( MinimizeArchiveTree(dir_entry) );
 }
 
 
@@ -98,18 +98,18 @@ static int GetStatFromTAR(char *tar_line, char *name, struct stat *stat)
 	 	           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
 
-  memset( stat, 0, sizeof( struct stat ) );
+  std::memset(stat, 0, sizeof( struct stat ));
 
   stat->st_nlink = 1;
 
-  t = Strtok_r( tar_line, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(tar_line, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Attribute */
   /*-----------*/
 
-  if( strlen( t ) != 10 ) return( -1 );
-  stat->st_mode = GetModus( t );
-  t = Strtok_r( nullptr, " \t/", &old ); if( t == nullptr ) return( -1 );
+  if( std::strlen(t) != 10 ) return( -1 );
+  stat->st_mode = GetModus(t);
+  t = Strtok_r(nullptr, " \t/", &old); if( t == nullptr ) return( -1 );
 
 
   /* Owner */
@@ -122,7 +122,7 @@ static int GetStatFromTAR(char *tar_line, char *name, struct stat *stat)
   }
   stat->st_uid = (unsigned) id;
 
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Group */
   /*-------*/
@@ -134,53 +134,53 @@ static int GetStatFromTAR(char *tar_line, char *name, struct stat *stat)
   }
   stat->st_gid = (unsigned) id;
 
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Dateilaenge */
   /*-------------*/
 
-  if( !isdigit( *t ) ) return( -1 );
-  stat->st_size = AtoLL( t );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  if( !std::isdigit(*t) ) return( -1 );
+  stat->st_size = AtoLL(t);
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* M-Datum */
   /*---------*/
 
   for( i=0; i < 12; i++ )
   {
-    if( !strcmp( t, month[i] ) ) break;
+    if( !std::strcmp(t, month[i]) ) break;
   }
   if( i >= 12 )
   {
     t[4] = t[7] = '\0';
 
-    tm_struct.tm_year = atoi(t) - 1900;
-    tm_struct.tm_mon  = atoi(&t[5]) - 1;
-    tm_struct.tm_mday = atoi(&t[8]);
+    tm_struct.tm_year = std::atoi(t) - 1900;
+    tm_struct.tm_mon  = std::atoi(&t[5]) - 1;
+    tm_struct.tm_mday = std::atoi(&t[8]);
 
-    t = Strtok_r( nullptr, " \t:", &old ); if( t == nullptr ) return( -1 );
-    tm_struct.tm_hour = atoi( t );
-    t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
-    tm_struct.tm_min = atoi( t );
-    t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+    t = Strtok_r(nullptr, " \t:", &old); if( t == nullptr ) return( -1 );
+    tm_struct.tm_hour = std::atoi(t);
+    t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
+    tm_struct.tm_min = std::atoi(t);
+    t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
     goto XDATE;
   }
 
 
   tm_struct.tm_mon = i;
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
-  tm_struct.tm_mday = atoi( t );
-  t = Strtok_r( nullptr, " \t:", &old ); if( t == nullptr ) return( -1 );
+  tm_struct.tm_mday = std::atoi(t);
+  t = Strtok_r(nullptr, " \t:", &old); if( t == nullptr ) return( -1 );
 
-  tm_struct.tm_hour = atoi( t );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  tm_struct.tm_hour = std::atoi(t);
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
-  tm_struct.tm_min = atoi( t );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  tm_struct.tm_min = std::atoi(t);
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
-  tm_struct.tm_year = atoi( t ) - 1900;
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  tm_struct.tm_year = std::atoi(t) - 1900;
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
 XDATE:
 
@@ -190,22 +190,22 @@ XDATE:
   stat->st_atime = 0;
   stat->st_ctime = 0;
 
-  stat->st_mtime = Mktime( &tm_struct );
+  stat->st_mtime = Mktime(&tm_struct);
 
   /* Dateiname */
   /*-----------*/
 
-  strcpy( name, t );
+  std::strcpy(name, t);
 
 
-  if( S_ISLNK( stat->st_mode ) )
+  if( S_ISLNK(stat->st_mode) )
   {
     /* Symbolischer Link */
     /*-------------------*/
 
-    t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
-    t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
-    strcpy( &name[ strlen( name ) + 1 ], t );
+    t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
+    t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
+    std::strcpy(&name[ std::strlen(name) + 1 ], t);
   }
 
   return( 0 );

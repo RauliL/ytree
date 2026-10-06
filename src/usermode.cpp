@@ -29,7 +29,7 @@ int DirUserMode(DirEntry *dir_entry, int ch)
         COMMAND_LINE_LENGTH,
         aux->c_str(),
         filepath.c_str()
-      );
+);
     } else {
       std::snprintf(
         command_line,
@@ -38,7 +38,7 @@ int DirUserMode(DirEntry *dir_entry, int ch)
         aux->c_str(),
         ' ',
         filepath.c_str()
-      );
+);
     }
     if (SilentSystemCall(command_line))
     {
@@ -78,7 +78,7 @@ int FileUserMode(FileEntry* file_entry, int ch)
         COMMAND_LINE_LENGTH,
         aux->c_str(),
         filepath.c_str()
-      );
+);
     } else {
       std::snprintf(
         command_line,
@@ -87,7 +87,7 @@ int FileUserMode(FileEntry* file_entry, int ch)
         aux->c_str(),
         ' ',
         filepath.c_str()
-      );
+);
     }
     if (SilentSystemCall(command_line))
     {

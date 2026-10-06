@@ -93,7 +93,7 @@ static int ViewFile(DirEntry* dir_entry, const std::string& file_path)
         COMMAND_LINE_LENGTH,
         aux->c_str(),
         file_p_aux.c_str()
-      );
+);
     } else {
       std::snprintf(
         command_line,
@@ -101,7 +101,7 @@ static int ViewFile(DirEntry* dir_entry, const std::string& file_path)
         "%s \"%s\"",
         aux->c_str(),
         file_p_aux.c_str()
-      );
+);
     }
   } else {
     const auto compress_method = GetFileMethod(file_path);
@@ -130,7 +130,7 @@ static int ViewFile(DirEntry* dir_entry, const std::string& file_path)
         file_p_aux.c_str(),
         ERR_TO_STDOUT,
         PAGER
-      );
+);
     } else {
       std::snprintf(
         command_line,
@@ -138,7 +138,7 @@ static int ViewFile(DirEntry* dir_entry, const std::string& file_path)
         "%s \"%s\"",
         PAGER,
         file_p_aux.c_str()
-      );
+);
     }
   }
 
@@ -201,7 +201,7 @@ static int ViewArchiveFile(const std::string& file_path)
         sizeof(buffer),
         "| %s",
         PAGER
-      );
+);
     } else {
       // Maybe pipe-able
       std::snprintf(
@@ -209,7 +209,7 @@ static int ViewArchiveFile(const std::string& file_path)
         sizeof(buffer),
         "| %s",
         aux->c_str()
-      );
+);
     }
   } else {
     std::snprintf(
@@ -217,13 +217,13 @@ static int ViewArchiveFile(const std::string& file_path)
       sizeof(buffer),
       "| %s",
       PAGER
-    );
+);
   }
   command_line = MakeExtractCommandLine(
     mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
     file_path,
     buffer
-  );
+);
   result = SystemCall(command_line);
   if (result)
   {
@@ -237,7 +237,7 @@ char *strn2print(char *dest, char *src, int c)
 {
     dest[c]='\0';
     for( ;c >= 0;c--)
-	dest[c] = (isprint(src[c]) ? src[c] : '.');
+	dest[c] = (std::isprint(src[c]) ? src[c] : '.');
     return dest;
 }
 
@@ -273,7 +273,7 @@ void printhexline(WINDOW *win, char *line, char *buf, int r, long offset)
     for (i=0; i< WCOLS-BYTES; i++)
 	waddch(win, line[i]| THECOLOR);
     for( i=0; i< BYTES; i++)
-	isprint(buf[i]) ? waddch(win, buf[i] | THECOLOR) :
+	std::isprint(buf[i]) ? waddch(win, buf[i] | THECOLOR) :
 			  waddch(win, ACS_BLOCK | COLOR_PAIR(HIDIR_COLOR));
     return;
 }
@@ -291,8 +291,8 @@ void update_line(WINDOW *win, long line)
     if (lseek(fd, (line - 1) * BYTES, SEEK_SET)== -1 )
     {
         *std::format_to(mensaje, "Error {} ", line) = '\0';
-	perror(mensaje);
-	fflush(stdout);
+	std::perror(mensaje);
+	std::fflush(stdout);
 	return;
     }
     r = read(fd, buf.data(), BYTES);
@@ -316,7 +316,7 @@ void scroll_up(WINDOW *win)
     wscrl(win,-1);
     scrollok(win,false);
     wmove(win, 0, 0);
-    update_line(win, current_line );
+    update_line(win, current_line);
     wnoutrefresh(win);
     doupdate();
 }
@@ -345,11 +345,11 @@ void Change2Edit(const std::string& file_path)
     }
     doupdate();
 
-    Print( stdscr, 0, 0, "File: ", MENU_COLOR );
-    Print( stdscr, 0, 6, CutPathname(file_path, WCOLS-5), HIMENUS_COLOR );
-    PrintOptions( stdscr, LINES - 3, 0, "(Edit file in hexadecimal mode)");
-    PrintOptions( stdscr, LINES - 2, 0, "(Q)uit   (^L) redraw  (<TAB>) change edit mode");
-    PrintOptions( stdscr, LINES - 1, 0,
+    Print(stdscr, 0, 0, "File: ", MENU_COLOR);
+    Print(stdscr, 0, 6, CutPathname(file_path, WCOLS-5), HIMENUS_COLOR);
+    PrintOptions(stdscr, LINES - 3, 0, "(Edit file in hexadecimal mode)");
+    PrintOptions(stdscr, LINES - 2, 0, "(Q)uit   (^L) redraw  (<TAB>) change edit mode");
+    PrintOptions(stdscr, LINES - 1, 0,
 		"(NEXT)-(RIGHT)/(PREV)-(LEFT) page   (HOME)-(END) of line   (DOWN)-(UP) line");
     return;
 }
@@ -365,11 +365,11 @@ void Change2View(const std::string& file_path)
     }
     doupdate();
 
-    Print( stdscr, 0, 0, "File: ", MENU_COLOR );
-    Print( stdscr, 0, 6, CutPathname(file_path, WCOLS - 5), HIMENUS_COLOR );
-    PrintOptions( stdscr, LINES - 3, 0, "View file in hexadecimal mode");
-    PrintOptions( stdscr, LINES - 2, 0, "(Q)uit   (^L) redraw  (E)dit hex");
-    PrintOptions( stdscr, LINES - 1, 0,
+    Print(stdscr, 0, 0, "File: ", MENU_COLOR);
+    Print(stdscr, 0, 6, CutPathname(file_path, WCOLS - 5), HIMENUS_COLOR);
+    PrintOptions(stdscr, LINES - 3, 0, "View file in hexadecimal mode");
+    PrintOptions(stdscr, LINES - 2, 0, "(Q)uit   (^L) redraw  (E)dit hex");
+    PrintOptions(stdscr, LINES - 1, 0,
 		"(NEXT)-(RIGHT)/(PREV)-(LEFT) page   (HOME)-(END) of line   (DOWN)-(UP) line");
     return;
 }
@@ -426,14 +426,14 @@ void change_char(int ch)
     char pp=0;
     char mensaje[50];
 
-    cambio = static_cast<CHANGES*>(malloc(sizeof(struct MODIF)));
+    cambio = static_cast<CHANGES*>(std::malloc(sizeof(struct MODIF)));
     cambio -> pos = ( (cursor_pos_y + current_line - 1) * BYTES) + CURSOR_POSX;
     if (lseek(fd, cambio -> pos, SEEK_SET)== -1 )
     {
-        *std::format_to(mensaje, "Error {} ", strerror(errno)) = '\0';
-	perror(mensaje);
-	fflush(stdout);
-	free(cambio);
+        *std::format_to(mensaje, "Error {} ", std::strerror(errno)) = '\0';
+	std::perror(mensaje);
+	std::fflush(stdout);
+	std::free(cambio);
 	return;
     }
     if ((read(fd, &cambio -> old_char,1)==1))
@@ -455,7 +455,7 @@ void change_char(int ch)
 	    default:
 		beep();
 		touchwin(VIEW);
-		free(cambio);
+		std::free(cambio);
 		return;
 		break;
 	    }
@@ -464,27 +464,27 @@ void change_char(int ch)
 	}
     	if (write(fd, &pp, 1)!= 1)
 	{
-    	    *std::format_to(mensaje, "Error al grabar el cambio {} ", strerror(errno)) = '\0';
-	    perror(mensaje);
-	    fflush(stdout);
-	    free(cambio);
+    	    *std::format_to(mensaje, "Error al grabar el cambio {} ", std::strerror(errno)) = '\0';
+	    std::perror(mensaje);
+	    std::fflush(stdout);
+	    std::free(cambio);
 	    return;
 	}
 	cambio -> new_char = pp;
 	cambio -> next = changes;
 	changes = cambio;
     }else{
-        *std::format_to(mensaje, "Error al posicionar {} ", strerror(errno)) = '\0';
-        perror(mensaje);
-        fflush(stdout);
-        free(cambio);
+        *std::format_to(mensaje, "Error al posicionar {} ", std::strerror(errno)) = '\0';
+        std::perror(mensaje);
+        std::fflush(stdout);
+        std::free(cambio);
         return;
     }
     else{
-        *std::format_to(mensaje, "Error al pre-leer {} ", strerror(errno)) = '\0';
-        perror(mensaje);
-        fflush(stdout);
-        free(cambio);
+        *std::format_to(mensaje, "Error al pre-leer {} ", std::strerror(errno)) = '\0';
+        std::perror(mensaje);
+        std::fflush(stdout);
+        std::free(cambio);
         return;
     }
     return;
@@ -499,18 +499,18 @@ void move_right(WINDOW *win)
 	cursor_pos_x--;
 	if ( cursor_pos_x < CANTX(BYTES) - 1 ) {
     	    cursor_pos_x += 1;
-	    wmove( win, cursor_pos_y, CURSOR_POS_X);
+	    wmove(win, cursor_pos_y, CURSOR_POS_X);
 	}else {
 	    if (fdstat.st_size >= ((current_line+cursor_pos_y) * BYTES) ){
 		if (cursor_pos_y < WLINES-1 ) {
 		    cursor_pos_y++;
 		    cursor_pos_x = 0;
-		    wmove( win, cursor_pos_y, CURSOR_POS_X);
+		    wmove(win, cursor_pos_y, CURSOR_POS_X);
 		} else {
 		    current_line++;
 		    scroll_down(win);
 		    cursor_pos_x = 0;
-		    wmove( win, cursor_pos_y, CURSOR_POS_X);
+		    wmove(win, cursor_pos_y, CURSOR_POS_X);
 		}
 	    } else
 		beep();
@@ -539,9 +539,9 @@ void hex_edit(const std::string& file_path)
     }
     inedit=true;
     update_all_lines(VIEW,WLINES-1);
-    leaveok( VIEW, false);
-    curs_set( 1);
-    wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
+    leaveok(VIEW, false);
+    curs_set(1);
+    wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
     wnoutrefresh(VIEW);
     while (!QUIT) {
     doupdate();
@@ -556,7 +556,7 @@ void hex_edit(const std::string& file_path)
 	    Change2Edit(file_path);
 /*	    current_line = oldpos/BYTES;*/
 	    update_all_lines(VIEW,WLINES-1);
-	    wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
+	    wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
 	    wnoutrefresh(VIEW);
 	    doupdate();
 	}
@@ -571,12 +571,12 @@ void hex_edit(const std::string& file_path)
 			   	if (fdstat.st_size > ((cursor_pos_y + current_line - 1 + 1) * BYTES + CURSOR_POSX)) {
 
 					if (cursor_pos_y < WLINES-1){
-				    		wmove( VIEW, ++cursor_pos_y, CURSOR_POS_X);
+				    		wmove(VIEW, ++cursor_pos_y, CURSOR_POS_X);
 				    		wnoutrefresh(VIEW);
 					} else {
 				    		++current_line;
 				    		scroll_down(VIEW);
-				    		wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
+				    		wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
 				    		wnoutrefresh(VIEW);
 					}
 				} else {
@@ -587,12 +587,12 @@ void hex_edit(const std::string& file_path)
 						for(cursor_pos_x = 0; (CURSOR_POSX + 1) < (fdstat.st_size % BYTES); cursor_pos_x++);
 
 						if (cursor_pos_y < WLINES-1){
-							wmove( VIEW, ++cursor_pos_y, CURSOR_POS_X);
+							wmove(VIEW, ++cursor_pos_y, CURSOR_POS_X);
 							wnoutrefresh(VIEW);
 						} else {
 							++current_line;
 							scroll_down(VIEW);
-							wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
+							wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
 							wnoutrefresh(VIEW);
 						}
 					}
@@ -604,12 +604,12 @@ void hex_edit(const std::string& file_path)
 	    case KEY_UP: /*ScroollUp();*/
 			if (cursor_pos_y > 0)
 			{
-			    wmove( VIEW, --cursor_pos_y, CURSOR_POS_X);
+			    wmove(VIEW, --cursor_pos_y, CURSOR_POS_X);
     			    wnoutrefresh(VIEW);
 			} else if (current_line > 1) {
 			    current_line--;
 			    scroll_up(VIEW);
-			    wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
+			    wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
     			    wnoutrefresh(VIEW);
 			} else
 			    beep();
@@ -617,16 +617,16 @@ void hex_edit(const std::string& file_path)
 	    case KEY_LEFT: /* move 1 char left */
 			    if ( cursor_pos_x > 0 ) {
 			        cursor_pos_x-=1;
-				wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
+				wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
 			    } else if (cursor_pos_y > 0 ) {
 				/*cursor_pos_x=ultimo_caracter;*/
 				cursor_pos_x=CANTX(BYTES) - 1;
-				wmove( VIEW, --cursor_pos_y,CURSOR_POS_X);
+				wmove(VIEW, --cursor_pos_y,CURSOR_POS_X);
 			    } else if (current_line > 1) {
 				current_line--;
 				scroll_up(VIEW);
 				cursor_pos_x=CANTX(BYTES) - 1;
-				wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
+				wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
 			    } else
 				beep();
 			wnoutrefresh(VIEW);
@@ -641,7 +641,7 @@ void hex_edit(const std::string& file_path)
 				    beep();
 /*			    oldpos = current_line * BYTES;*/
 			    update_all_lines(VIEW,WLINES);
-			    wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
+			    wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
 			    wnoutrefresh(VIEW);
 			    break;
 	    case KEY_RIGHT: move_right(VIEW);
@@ -667,13 +667,13 @@ void hex_edit(const std::string& file_path)
 			    }
 /*			    oldpos = current_line * BYTES;*/
 			    update_all_lines(VIEW,WLINES);
-			    wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
+			    wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
 			    wnoutrefresh(VIEW);
 		            break;
 	    case KEY_HOME:
 			    if (CURSOR_POSX > 0) {
 				cursor_pos_x = 0;
-				wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
+				wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
 			    } else
 				beep();
 			    wnoutrefresh(VIEW);
@@ -685,7 +685,7 @@ void hex_edit(const std::string& file_path)
 			 } else {
 			    cursor_pos_x = CANTX(BYTES)-1;
 			 }
-			 wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
+			 wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
 			 wnoutrefresh(VIEW);
 	                 break;
 	    case '\t' :
@@ -697,7 +697,7 @@ void hex_edit(const std::string& file_path)
 			    inhex=true;
 			    cursor_pos_x=cursor_pos_x*2;
 			}
-			wmove( VIEW, cursor_pos_y, CURSOR_POS_X);
+			wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
 			wnoutrefresh(VIEW);
 			break;
 	    case 'L' & 0x1f:
@@ -720,7 +720,7 @@ void hex_edit(const std::string& file_path)
 		    break;
 	}
     }
-    curs_set( 0);
+    curs_set(0);
     close(fd);
     fd=fd2;
     inedit=false;
@@ -734,7 +734,7 @@ int InternalView(const std::string& file_path)
     int ch;
     bool QUIT=false;
 
-    hexoffset = (!strcmp(HEXEDITOFFSET, "HEX")) ? true : false;
+    hexoffset = (!std::strcmp(HEXEDITOFFSET, "HEX")) ? true : false;
 
     if (stat(file_path.c_str(), &fdstat)!=0)
 	return -1;
@@ -849,7 +849,7 @@ int InternalView(const std::string& file_path)
 	    default: break;
 	}
     }
-    Print( stdscr, 0, 0, "Path: ", MENU_COLOR );
+    Print(stdscr, 0, 0, "Path: ", MENU_COLOR);
     delwin(VIEW);
     delwin(BORDER);
     touchwin(stdscr);

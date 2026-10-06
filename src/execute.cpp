@@ -12,7 +12,7 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
       COMMAND_LINE_LENGTH,
       "\"{}\"",
       ShellEscape(file_entry->name)
-    ).out = '\0';
+).out = '\0';
   }
 
   MvAddStr(LINES - 2, 1, "Command:");
@@ -29,7 +29,7 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
         FormatMessage("Can't change directory to*\"{}\"", path.c_str());
       } else {
         refresh();
-        result = QuerySystemCall( command_line );
+        result = QuerySystemCall(command_line);
       }
       if (chdir(cwd.c_str()))
       {
@@ -37,7 +37,7 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
       }
     } else {
       refresh();
-      result = QuerySystemCall( command_line );
+      result = QuerySystemCall(command_line);
     }
   }
 
@@ -52,14 +52,14 @@ int GetCommandLine(char *command_line)
 
   ClearHelp();
 
-  MvAddStr( LINES - 2, 1, "Command: " );
-  if (InputString( command_line, LINES - 2, 10, 0, COLS - 11) == CR)
+  MvAddStr(LINES - 2, 1, "Command: ");
+  if (InputString(command_line, LINES - 2, 10, 0, COLS - 11) == CR)
   {
-    move( LINES - 2, 1 ); clrtoeol();
+    move(LINES - 2, 1); clrtoeol();
     result = 0;
   }
 
-  move( LINES - 2, 1 ); clrtoeol();
+  move(LINES - 2, 1); clrtoeol();
 
   return( result );
 }
@@ -76,10 +76,10 @@ int GetSearchCommandLine(char *command_line)
 
   ClearHelp();
 
-  MvAddStr( LINES - 2, 1, "Search untag command: " );
+  MvAddStr(LINES - 2, 1, "Search untag command: ");
   *std::format_to_n(command_line, COMMAND_LINE_LENGTH, "{}", SEARCHCOMMAND).out = '\0';
 
-  cptr = strstr( command_line, "{}" );
+  cptr = std::strstr(command_line, "{}");
   if(cptr) {
     pos = (cptr - command_line) - 1;
     if(pos < 0)
@@ -87,13 +87,13 @@ int GetSearchCommandLine(char *command_line)
   } else {
     pos = 0;
   }
-  if (InputString( command_line, LINES - 2, 23, pos, COLS - 24) == CR)
+  if (InputString(command_line, LINES - 2, 23, pos, COLS - 24) == CR)
   {
-    move( LINES - 2, 1 ); clrtoeol();
+    move(LINES - 2, 1); clrtoeol();
     result = 0;
   }
 
-  move( LINES - 2, 1 ); clrtoeol();
+  move(LINES - 2, 1); clrtoeol();
 
   return( result );
 }

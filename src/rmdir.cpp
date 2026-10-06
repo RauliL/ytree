@@ -34,21 +34,21 @@ int DeleteDirectory(DirEntry *dir_entry)
   }
   else if( !dir_entry->files.empty() || !dir_entry->children.empty() )
   {
-    if( InputChoise( "Directory not empty, PRUNE ? (Y/N) ? ", "YN\033" ) == 'Y' ) {
+    if( InputChoise("Directory not empty, PRUNE ? (Y/N) ? ", "YN\033") == 'Y' ) {
       if( !dir_entry->children.empty() ) {
         ScanSubTree(dir_entry);
-        if( DeleteSubTree( dir_entry ) ) {
+        if( DeleteSubTree(dir_entry) ) {
           ESCAPE;
         }
       }
-      if( DeleteSingleDirectory( dir_entry ) ) {
+      if( DeleteSingleDirectory(dir_entry) ) {
 	ESCAPE;
       }
       result = 0;
       ESCAPE;
     }
   }
-  else if( InputChoise( "Delete this directory (Y/N) ? ", "YN\033" ) == 'Y' )
+  else if( InputChoise("Delete this directory (Y/N) ? ", "YN\033") == 'Y' )
   {
     const auto path = GetPath(dir_entry);
 
@@ -66,9 +66,9 @@ int DeleteDirectory(DirEntry *dir_entry)
 
       statistic.disk_total_directories--;
 
-      UnlinkDirEntry( dir_entry );
+      UnlinkDirEntry(dir_entry);
 
-      GetAvailBytes( &statistic.disk_space );
+      GetAvailBytes(&statistic.disk_space);
 
       result = 0;
     }
@@ -86,7 +86,7 @@ FNC_XIT:
 /* Loescht alle Unterverzeichnisse von dir_entry */
 /*-----------------------------------------------*/
 
-static int DeleteSubTree( DirEntry *dir_entry )
+static int DeleteSubTree(DirEntry *dir_entry)
 {
   int result = -1;
 
@@ -96,11 +96,11 @@ static int DeleteSubTree( DirEntry *dir_entry )
   for( const auto& de_sp : children ) {
     DirEntry *de_ptr = de_sp.get();
     if( !de_ptr->children.empty() ) {
-      if( DeleteSubTree( de_ptr ) ) {
+      if( DeleteSubTree(de_ptr) ) {
         ESCAPE;
       }
     }
-    if( DeleteSingleDirectory( de_ptr ) ) {
+    if( DeleteSingleDirectory(de_ptr) ) {
       ESCAPE;
     }
   }
@@ -114,7 +114,7 @@ FNC_XIT:
 
 
 
-static int DeleteSingleDirectory( DirEntry *dir_entry )
+static int DeleteSingleDirectory(DirEntry *dir_entry)
 {
   const auto path = GetPath(dir_entry);
 
@@ -148,7 +148,7 @@ static int DeleteSingleDirectory( DirEntry *dir_entry )
   if( parent && !parent->not_scanned )
     statistic.disk_total_directories--;
 
-  UnlinkDirEntry( dir_entry );
+  UnlinkDirEntry(dir_entry);
 
   return 0;
 }
@@ -157,7 +157,7 @@ static int DeleteSingleDirectory( DirEntry *dir_entry )
 /* Traegt dir_entry aus der Liste der Unterverzeichnisse seines Vaters aus */
 /*-------------------------------------------------------------------------*/
 
-static void UnlinkDirEntry( DirEntry *dir_entry )
+static void UnlinkDirEntry(DirEntry *dir_entry)
 {
   const auto parent = dir_entry->Parent();
 
@@ -173,7 +173,7 @@ static void UnlinkDirEntry( DirEntry *dir_entry )
       siblings.begin(),
       siblings.end(),
       [dir_entry]( const std::shared_ptr<DirEntry>& d ) { return d.get() == dir_entry; }
-    ),
+),
     siblings.end()
-  );
+);
 }

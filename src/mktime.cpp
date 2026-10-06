@@ -25,20 +25,20 @@
    specification. */
 
 
-static time_t mkgmtime (struct tm *tm);
+static time_t mkgmtime(struct tm *tm);
 
 /* Return the equivalent in seconds past 12:00:00 a.m. Jan 1, 1970 GMT
    of the local time and date in the exploded time structure `tm',
    and set `tm->tm_yday', `tm->tm_wday', and `tm->tm_isdst'.
    Return -1 if any of the other fields in `tm' has an invalid value. */
 
-time_t Mktime (struct tm *tm)
+time_t Mktime(struct tm *tm)
 {
   struct tm save_tm;		/* Copy of contents of `*tm'. */
   struct tm *ltm;		/* Local time. */
   time_t then;			/* The time to return. */
 
-  then = mkgmtime (tm);
+  then = mkgmtime(tm);
   if (then == -1)
     return -1;
 
@@ -49,9 +49,9 @@ time_t Mktime (struct tm *tm)
      If a change to or from daylight savings time occurs between when
      it is the time in `tm' locally and when it is that time in Greenwich,
      the change to or from dst is ignored, but that is a rare case. */
-  then += then - mkgmtime (localtime (&then));
+  then += then - mkgmtime(std::localtime(&then));
 
-  ltm = localtime (&then);
+  ltm = std::localtime(&then);
   save_tm.tm_yday = ltm->tm_yday;
   save_tm.tm_wday = ltm->tm_wday;
   save_tm.tm_isdst = ltm->tm_isdst;
@@ -77,7 +77,7 @@ static char monlens[] =
    and set `tm->tm_yday', `tm->tm_wday', and `tm->tm_isdst'.
    Return -1 if any of the other fields in `tm' has an invalid value. */
 
-static time_t mkgmtime (struct tm *tm)
+static time_t mkgmtime(struct tm *tm)
 {
   int years, months, days, hours, minutes, seconds;
 
@@ -91,21 +91,21 @@ static time_t mkgmtime (struct tm *tm)
   if (years < 1970
       || months < 0 || months > 11
       || days < 0
-      || days > monlens[months] + (months == 1 && leap (years)) - 1
+      || days > monlens[months] + (months == 1 && leap(years)) - 1
       || hours < 0 || hours > 23
       || minutes < 0 || minutes > 59
       || seconds < 0 || seconds > 61)
   return -1;
 
   /* Set `days' to the number of days into the year. */
-  if (months > 1 && leap (years))
+  if (months > 1 && leap(years))
     ++days;
   while (months-- > 0)
     days += monlens[months];
   tm->tm_yday = days;
 
   /* Now set `days' to the number of days since Jan 1, 1970. */
-  days += 365 * (years - 1970) + nleap (years);
+  days += 365 * (years - 1970) + nleap(years);
   tm->tm_wday = (days + 4) % 7;	/* Jan 1, 1970 was Thursday. */
   tm->tm_isdst = 0;
   

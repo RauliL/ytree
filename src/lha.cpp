@@ -28,21 +28,21 @@ int ReadTreeFromLHA(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 
   dir_entry->name.clear();
 
-  while( fgets( lha_line, LHA_LINE_LENGTH, f ) != nullptr )
+  while( std::fgets(lha_line, LHA_LINE_LENGTH, f) != nullptr )
   {
     /* \n loeschen */
     /*-------------*/
 
-    lha_line[ strlen( lha_line ) - 1 ] = '\0';
+    lha_line[ std::strlen(lha_line) - 1 ] = '\0';
 
-    if( ( (strlen( lha_line ) > (unsigned) 55 && lha_line[55] == ':' ) ||
-          (strlen( lha_line ) > (unsigned) 61 && lha_line[61] == ':' ) ) &&
+    if( ( (std::strlen(lha_line) > (unsigned) 55 && lha_line[55] == ':' ) ||
+          (std::strlen(lha_line) > (unsigned) 61 && lha_line[61] == ':' ) ) &&
   	  lha_line[34] != '*' && !std::string_view(&lha_line[1]).starts_with("Total") )
     {
       /* gueltiger Eintrag */
       /*-------------------*/
 
-      if( GetStatFromLHA( lha_line, path_name, &stat ) )
+      if( GetStatFromLHA(lha_line, path_name, &stat) )
       {
         FormatMessage("unknown lhainfo*{}", lha_line);
       }
@@ -52,9 +52,9 @@ int ReadTreeFromLHA(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
         /*------*/
 
 #ifdef DEBUG
-  fprintf( stderr, "FILE: \"%s\"\n", path_name );
+  std::fprintf(stderr, "FILE: \"%s\"\n", path_name);
 #endif
-        InsertArchiveFileEntry( dir_entry, path_name, &stat );
+        InsertArchiveFileEntry(dir_entry, path_name, &stat);
       }
     }
   }
@@ -63,10 +63,10 @@ int ReadTreeFromLHA(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
   if( dir_flag == false )
   {
     statistic.disk_total_directories++;
-    memset( (char *) &dir_entry->stat_struct, 0, sizeof( struct stat ) );
+    std::memset((char *) &dir_entry->stat_struct, 0, sizeof( struct stat ));
     dir_entry->stat_struct.st_mode = S_IFDIR;
   }
-  return( MinimizeArchiveTree( dir_entry ) );
+  return( MinimizeArchiveTree(dir_entry) );
 }
 
 
@@ -84,29 +84,29 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
 	 	           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
 
-  memset( stat, 0, sizeof( struct stat ) );
+  std::memset(stat, 0, sizeof( struct stat ));
 
   stat->st_nlink = 1;
 
-  t = Strtok_r( lha_line, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(lha_line, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Attributes */
   /*------------*/
 
-  if( strlen( t ) == 9 && *t != '[' )
+  if( std::strlen(t) == 9 && *t != '[' )
   {
     *modus = '-';
-    strcpy( &modus[1], t );
-    stat->st_mode = GetModus( modus );
+    std::strcpy(&modus[1], t);
+    stat->st_mode = GetModus(modus);
   }
   else if( *t == '[' )
   {
-    stat->st_mode = GetModus( "-rw-r--r--" );
+    stat->st_mode = GetModus("-rw-r--r--");
     dos_mode = true;
   }
   else return( -1 );
 
-  t = Strtok_r( nullptr, " \t/", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t/", &old); if( t == nullptr ) return( -1 );
 
   if( dos_mode )
   {
@@ -118,47 +118,47 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
     /* Owner */
     /*-------*/
 
-    id = atoi( t );
+    id = std::atoi(t);
     stat->st_uid = (unsigned) id;
-    t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+    t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
     /* Group */
     /*-------*/
 
-    id = atoi( t );
+    id = std::atoi(t);
     stat->st_gid = (unsigned) id;
-    t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+    t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
   }
 
   /* Packed-Size */
   /*-------------*/
 
-  if( !isdigit( *t ) ) return( -1 );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  if( !std::isdigit(*t) ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Dateilaenge */
   /*-------------*/
 
-  if( !isdigit( *t ) ) return( -1 );
-  stat->st_size = AtoLL( t );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  if( !std::isdigit(*t) ) return( -1 );
+  stat->st_size = AtoLL(t);
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Ratio */
   /*-------*/
 
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* CRC */
   /*-----*/
 
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   if( lha_line[61] == ':' )
   {
     /* ??? */
     /*-----*/
 
-    t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+    t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
   }
 
   /* M-Datum */
@@ -166,21 +166,21 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
 
   for( i=0; i < 12; i++ )
   {
-    if( !strcmp( t, month[i] ) ) break;
+    if( !std::strcmp(t, month[i]) ) break;
   }
   if( i >= 12 ) i = 0;
 
   tm_struct.tm_mon = i;
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
-  tm_struct.tm_mday = atoi( t );
-  t = Strtok_r( nullptr, " \t:", &old ); if( t == nullptr ) return( -1 );
+  tm_struct.tm_mday = std::atoi(t);
+  t = Strtok_r(nullptr, " \t:", &old); if( t == nullptr ) return( -1 );
 
-  tm_struct.tm_hour = atoi( t );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  tm_struct.tm_hour = std::atoi(t);
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
-  tm_struct.tm_min = atoi( t );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  tm_struct.tm_min = std::atoi(t);
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   if( lha_line[41] == '-' )
   {
@@ -189,8 +189,8 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
   }
   else
   {
-    tm_struct.tm_year = atoi( t ) - 1900;
-    t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+    tm_struct.tm_year = std::atoi(t) - 1900;
+    t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
   }
 
   tm_struct.tm_sec = 0;
@@ -200,12 +200,12 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
   stat->st_atime = 0;
   stat->st_ctime = 0;
 
-  stat->st_mtime = Mktime( &tm_struct );
+  stat->st_mtime = Mktime(&tm_struct);
 
   /* Dateiname */
   /*-----------*/
 
-  strcpy( name, t );
+  std::strcpy(name, t);
 
   return( 0 );
 }

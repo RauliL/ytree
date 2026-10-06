@@ -44,11 +44,11 @@
 /* Volume-Name und freien Plattenplatz ermitteln */
 /*-----------------------------------------------*/
 
-int GetDiskParameter( const std::string& path,
+int GetDiskParameter(const std::string& path,
 		      char *volume_name,
 		      long long *avail_bytes,
 		      long long *total_disk_space
-		    )
+)
 {
 
 #ifdef WIN32
@@ -74,14 +74,14 @@ int GetDiskParameter( const std::string& path,
 
 
 #ifdef WIN32
-  if( ( result = _getdiskfree( 0, &diskspace ) ) == 0 )
+  if( ( result = _getdiskfree(0, &diskspace) ) == 0 )
 #else
 #ifdef QNX
-   fd = open(path.c_str(), O_RDONLY );
-  if( ( result = disk_space( fd, &free_blocks, &total_blocks ) ) == 0 )
+   fd = open(path.c_str(), O_RDONLY);
+  if( ( result = disk_space(fd, &free_blocks, &total_blocks) ) == 0 )
 #else
 
-  if( ( result = statfs( path.c_str(), &statfs_struct ) ) == 0 )
+  if( ( result = statfs(path.c_str(), &statfs_struct) ) == 0 )
 #endif /* QNX */
 #endif /* WIN32 */
   {
@@ -205,10 +205,10 @@ int GetDiskParameter( const std::string& path,
 #endif /* __GNU__ */
 #endif /* __linux__ */
 
-        strncpy( volume_name,
+        std::strncpy(volume_name,
 	                fname,
 		        std::min(static_cast<std::size_t>(DISK_NAME_LENGTH), std::strlen(fname))
-		      );
+);
         volume_name[ std::min(static_cast<std::size_t>(DISK_NAME_LENGTH), std::strlen(fname))] = '\0';
       }
       else
@@ -283,11 +283,11 @@ int GetDiskParameter( const std::string& path,
 
 int GetAvailBytes(long long *avail_bytes)
 {
-  return( GetDiskParameter( statistic.tree->name,
+  return( GetDiskParameter(statistic.tree->name,
 			    nullptr,
 			    avail_bytes,
 			    nullptr
-			  )
+)
         );
 }
 

@@ -26,19 +26,19 @@ int ReadTreeFromARC(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 
   dir_entry->name.clear();
 
-  while( fgets( arc_line, ARC_LINE_LENGTH, f ) != nullptr )
+  while( std::fgets(arc_line, ARC_LINE_LENGTH, f) != nullptr )
   {
     /* \n loeschen */
     /*-------------*/
 
-    arc_line[ strlen( arc_line ) - 1 ] = '\0';
+    arc_line[ std::strlen(arc_line) - 1 ] = '\0';
 
-    if( strlen( arc_line ) > (unsigned) 63 && arc_line[63] == ':' )
+    if( std::strlen(arc_line) > (unsigned) 63 && arc_line[63] == ':' )
     {
       /* gueltiger Eintrag */
       /*-------------------*/
 
-      if( GetStatFromARC( arc_line, path_name, &stat ) )
+      if( GetStatFromARC(arc_line, path_name, &stat) )
       {
         FormatMessage("unknown arcinfo*{}", arc_line);
       }
@@ -48,9 +48,9 @@ int ReadTreeFromARC(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
         /*------*/
 
 #ifdef DEBUG
-  fprintf( stderr, "FILE: \"%s\"\n", path_name );
+  std::fprintf(stderr, "FILE: \"%s\"\n", path_name);
 #endif
-        InsertArchiveFileEntry( dir_entry, path_name, &stat );
+        InsertArchiveFileEntry(dir_entry, path_name, &stat);
       }
     }
   }
@@ -59,10 +59,10 @@ int ReadTreeFromARC(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
   if( dir_flag == false )
   {
     statistic.disk_total_directories++;
-    memset( (char *) &dir_entry->stat_struct, 0, sizeof( struct stat ) );
+    std::memset((char *) &dir_entry->stat_struct, 0, sizeof( struct stat ));
     dir_entry->stat_struct.st_mode = S_IFDIR;
   }
-  return( MinimizeArchiveTree( dir_entry ) );
+  return( MinimizeArchiveTree(dir_entry) );
 }
 
 
@@ -79,70 +79,70 @@ static int GetStatFromARC(char *arc_line, char *name, struct stat *stat)
 	 	           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
 
-  memset( stat, 0, sizeof( struct stat ) );
+  std::memset(stat, 0, sizeof( struct stat ));
 
   stat->st_nlink = 1;
 
-  t = Strtok_r( arc_line, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(arc_line, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Dateiname */
   /*-----------*/
 
-  strcpy( name, t );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  std::strcpy(name, t);
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Dateilaenge */
   /*-------------*/
 
-  if( !isdigit( *t ) ) return( -1 );
-  stat->st_size = AtoLL( t );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  if( !std::isdigit(*t) ) return( -1 );
+  stat->st_size = AtoLL(t);
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Stowage */
   /*---------*/
 
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* SF */
   /*----*/
 
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Size Now */
   /*----------*/
 
-  if( !isdigit( *t ) ) return( -1 );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  if( !std::isdigit(*t) ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* M-Datum */
   /*---------*/
 
-  tm_struct.tm_mday = atoi( t );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  tm_struct.tm_mday = std::atoi(t);
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   for( i=0; i < 12; i++ )
   {
-    if( !strcmp( t, month[i] ) ) break;
+    if( !std::strcmp(t, month[i]) ) break;
   }
   if( i >= 12 ) i = 0;
 
   tm_struct.tm_mon = i;
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
-  tm_struct.tm_year = atoi( t );
+  tm_struct.tm_year = std::atoi(t);
   if(tm_struct.tm_year < 70)
     tm_struct.tm_year += 100;
 
-  t = Strtok_r( nullptr, " \t:", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t:", &old); if( t == nullptr ) return( -1 );
 
-  tm_struct.tm_hour = atoi( t );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  tm_struct.tm_hour = std::atoi(t);
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
-  if( t[strlen(t)-1] == 'p' ) tm_struct.tm_hour += 12;
-  t[strlen(t)-1] ='\0';
+  if( t[std::strlen(t)-1] == 'p' ) tm_struct.tm_hour += 12;
+  t[std::strlen(t)-1] ='\0';
 
-  tm_struct.tm_min = atoi( t );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  tm_struct.tm_min = std::atoi(t);
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   tm_struct.tm_sec = 0;
 
@@ -151,7 +151,7 @@ static int GetStatFromARC(char *arc_line, char *name, struct stat *stat)
   stat->st_atime = 0;
   stat->st_ctime = 0;
 
-  stat->st_mtime = Mktime( &tm_struct );
+  stat->st_mtime = Mktime(&tm_struct);
 
   /* Attributes */
   /*------------*/
@@ -162,7 +162,7 @@ static int GetStatFromARC(char *arc_line, char *name, struct stat *stat)
   /*-------*/
 
   id = getuid();
-  if( id == -1 ) id = atoi( t );
+  if( id == -1 ) id = std::atoi(t);
   stat->st_uid = (unsigned) id;
 
   /* Group */

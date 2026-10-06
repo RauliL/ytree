@@ -226,7 +226,7 @@ int InputString(
           const auto rs = StrRight(
             ptr,
             StrVisualLength(ptr) - static_cast<int>(pos) - (insert_flag ? 0 : 1)
-          );
+);
 
           buffer = ls;
           buffer.append(char_buffer);
@@ -291,7 +291,7 @@ int InputString(
           const auto rs = StrRight(
             ptr,
             StrVisualLength(ptr) - static_cast<int>(pos) - 1
-          );
+);
 
           buffer = ls;
           buffer.append(rs);
@@ -449,8 +449,8 @@ int InputChoise(const char *msg, const char *term)
 
   curs_set(1);
   leaveok(stdscr, false);
-  mvprintw( LINES - 2, 1, "%s", msg );
-  RefreshWindow( stdscr );
+  mvprintw(LINES - 2, 1, "%s", msg);
+  RefreshWindow(stdscr);
   doupdate();
   do
   {
@@ -463,13 +463,13 @@ int InputChoise(const char *msg, const char *term)
     }
 #endif
     if(c >= 0)
-      if( islower( c ) ) c = toupper( c );
-  } while( c != -1 && !strchr( term, c ) );
+      if( std::islower(c) ) c = std::toupper(c);
+  } while( c != -1 && !std::strchr(term, c) );
 
   if(c >= 0)
-    echochar( c );
+    echochar(c);
 
-  move( LINES - 2, 1 ); clrtoeol();
+  move(LINES - 2, 1); clrtoeol();
   leaveok(stdscr, true);
   curs_set(0);
 
@@ -491,14 +491,14 @@ int GetTapeDeviceName()
 
   *std::format_to(path, "{}", statistic.tape_name) = '\0';
 
-  MvAddStr( LINES - 2, 1, "Tape-Device:" );
-  if (InputString( path, LINES - 2, 14, 0, COLS - 15) == CR)
+  MvAddStr(LINES - 2, 1, "Tape-Device:");
+  if (InputString(path, LINES - 2, 14, 0, COLS - 15) == CR)
   {
     result = 0;
     *std::format_to(statistic.tape_name, "{}", path) = '\0';
   }
 
-  move( LINES - 2, 1 ); clrtoeol();
+  move(LINES - 2, 1); clrtoeol();
 
   return( result );
 }
@@ -507,10 +507,10 @@ int GetTapeDeviceName()
 void HitReturnToContinue()
 {
   curs_set(1);
-  vidattr( A_REVERSE );
-  putp( "[Hit return to continue]" );
-  vidattr( 0 );
-  fflush( stdout );
+  vidattr(A_REVERSE);
+  putp("[Hit return to continue]");
+  vidattr(0);
+  std::fflush(stdout);
   Getch();
   curs_set(0);
   doupdate();
@@ -523,9 +523,9 @@ bool KeyPressed()
   bool pressed = false;
 
 #if !defined( __linux__ )
-  nodelay( stdscr, true );
-  if( wgetch( stdscr ) != ERR ) pressed = true;
-  nodelay( stdscr, false );
+  nodelay(stdscr, true);
+  if( wgetch(stdscr) != ERR ) pressed = true;
+  nodelay(stdscr, false);
 #endif /* __linux__ */
 
   return( pressed );
@@ -538,9 +538,9 @@ bool EscapeKeyPressed()
   int  c = 0;
 
 #if !defined( __linux__ )
-  nodelay( stdscr, true );
-  if( ( c = wgetch( stdscr ) ) != ERR ) pressed = true;
-  nodelay( stdscr, false );
+  nodelay(stdscr, true);
+  if( ( c = wgetch(stdscr) ) != ERR ) pressed = true;
+  nodelay(stdscr, false);
 #endif /* __linux__ */
 
   return( ( pressed && c == ESC ) ? true : false );
@@ -551,7 +551,7 @@ bool EscapeKeyPressed()
 
 #ifdef VI_KEYS
 
-int ViKey( int ch )
+int ViKey(int ch)
 {
   switch( ch )
   {

@@ -119,7 +119,7 @@ static void PrintHstEntry(int entry_no, int y, int color,
   int     ef_window_width;
 
 
-  GetMaxYX( history_window, &window_height, &window_width );
+  GetMaxYX(history_window, &window_height, &window_width);
   ef_window_width = window_width - 2; /* Effektive Window-Width */
 
 #ifdef NO_HIGHLIGHT
@@ -135,9 +135,9 @@ static void PrintHstEntry(int entry_no, int y, int color,
     return;
   }
 
-  strncpy( buffer, history[entry_no].c_str(), BUFSIZ - 3);
+  std::strncpy(buffer, history[entry_no].c_str(), BUFSIZ - 3);
   buffer[BUFSIZ - 3] = '\0';
-  n = strlen( buffer );
+  n = std::strlen(buffer);
   wmove(history_window,y,1);
 
   if(n <= ef_window_width) {
@@ -165,21 +165,21 @@ static void PrintHstEntry(int entry_no, int y, int color,
 #ifdef NO_HIGHLIGHT
   {
     const auto display = std::string(line_ptr) + ((color == HIHST_COLOR) ? " <" : "  ");
-    WAddStr( history_window, display );
+    WAddStr(history_window, display);
   }
 #else
 #ifdef COLOR_SUPPORT
   WbkgdSet(history_window, COLOR_PAIR(color)|A_BOLD);
 #else
   if(color == HIHST_COLOR)
-    wattrset( history_window, A_REVERSE );
+    wattrset(history_window, A_REVERSE);
 #endif /* COLOR_SUPPORT */
-  WAddStr( history_window, line_ptr );
+  WAddStr(history_window, line_ptr);
 #ifdef COLOR_SUPPORT
   WbkgdSet(history_window, COLOR_PAIR(WINHST_COLOR)| A_BOLD);
 #else
   if(color == HIHST_COLOR)
-    wattrset( history_window, 0 );
+    wattrset(history_window, 0);
 #endif /* COLOR_SUPPORT */
 #endif /* NO_HIGHLIGHT */
 }
@@ -194,7 +194,7 @@ int DisplayHistory()
 
   hilight_no = disp_begin_pos + cursor_pos;
   p_y = -1;
-  werase( history_window );
+  werase(history_window);
   for(i=0; i < HISTORY_WINDOW_HEIGHT; i++)
   {
     if (disp_begin_pos + i >= total_hist() ) break;
@@ -227,7 +227,7 @@ const char* GetHistory()
 
   do
   {
-    RefreshWindow( history_window );
+    RefreshWindow(history_window);
     doupdate();
     ch = Getch();
     ch = TranslateOverlayMouse(ch);
@@ -235,7 +235,7 @@ const char* GetHistory()
     if(ch != -1 && ch != KEY_RIGHT && ch != KEY_LEFT) {
       if(start_x) {
         start_x = 0;
-	PrintHstEntry( disp_begin_pos + cursor_pos,
+	PrintHstEntry(disp_begin_pos + cursor_pos,
 		       cursor_pos, HIHST_COLOR,
 		       start_x, &hide_left, &hide_right);
       }
@@ -249,7 +249,7 @@ const char* GetHistory()
       case ' ':      break;  /* Quick-Key */
 
       case KEY_RIGHT: start_x++;
-		      PrintHstEntry( disp_begin_pos + cursor_pos,
+		      PrintHstEntry(disp_begin_pos + cursor_pos,
 			             cursor_pos, HIHST_COLOR,
 		                     start_x, &hide_left, &hide_right);
 		      if(hide_right < 0)
@@ -258,7 +258,7 @@ const char* GetHistory()
 
       case KEY_LEFT:  if(start_x > 0)
        		        start_x--;
-		      PrintHstEntry( disp_begin_pos + cursor_pos,
+		      PrintHstEntry(disp_begin_pos + cursor_pos,
 			             cursor_pos, HIHST_COLOR,
 		                     start_x, &hide_left, &hide_right);
 		      break;
@@ -271,22 +271,22 @@ const char* GetHistory()
 		     else
 		     { if( cursor_pos + 1 < HISTORY_WINDOW_HEIGHT )
 		       {
-			 PrintHstEntry( disp_begin_pos + cursor_pos,
+			 PrintHstEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, HST_COLOR,
 		                        start_x, &hide_left, &hide_right);
 			 cursor_pos++;
-			 PrintHstEntry( disp_begin_pos + cursor_pos,
+			 PrintHstEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, HIHST_COLOR,
 		                        start_x, &hide_left, &hide_right);
                        }
 		       else
 		       {
-			 PrintHstEntry( disp_begin_pos + cursor_pos,
+			 PrintHstEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, HST_COLOR,
 		                        start_x, &hide_left, &hide_right);
-			 scroll( history_window );
+			 scroll(history_window);
 			 disp_begin_pos++;
-			 PrintHstEntry( disp_begin_pos + cursor_pos,
+			 PrintHstEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, HIHST_COLOR,
 		                        start_x, &hide_left, &hide_right);
                        }
@@ -299,23 +299,23 @@ const char* GetHistory()
 		     {
 		       if( cursor_pos - 1 >= 0 )
 		       {
-			 PrintHstEntry( disp_begin_pos + cursor_pos,
+			 PrintHstEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, HST_COLOR,
 		                        start_x, &hide_left, &hide_right);
 			 cursor_pos--;
-			 PrintHstEntry( disp_begin_pos + cursor_pos,
+			 PrintHstEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, HIHST_COLOR,
 		                        start_x, &hide_left, &hide_right);
                        }
 		       else
 		       {
-			 PrintHstEntry( disp_begin_pos + cursor_pos,
+			 PrintHstEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, HST_COLOR,
 		                        start_x, &hide_left, &hide_right);
-			 wmove( history_window, 0, 0 );
-			 winsertln( history_window );
+			 wmove(history_window, 0, 0);
+			 winsertln(history_window);
 			 disp_begin_pos--;
-			 PrintHstEntry( disp_begin_pos + cursor_pos,
+			 PrintHstEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, HIHST_COLOR,
 		                        start_x, &hide_left, &hide_right);
                        }
@@ -328,14 +328,14 @@ const char* GetHistory()
 		     {
 		       if( cursor_pos < HISTORY_WINDOW_HEIGHT - 1 )
 		       {
-			 PrintHstEntry( disp_begin_pos + cursor_pos,
+			 PrintHstEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, HST_COLOR,
 		                        start_x, &hide_left, &hide_right);
 		         if( disp_begin_pos + HISTORY_WINDOW_HEIGHT > total_hist()  - 1 )
 			   cursor_pos = total_hist() - disp_begin_pos - 1;
 			 else
 			   cursor_pos = HISTORY_WINDOW_HEIGHT - 1;
-			 PrintHstEntry( disp_begin_pos + cursor_pos,
+			 PrintHstEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, HIHST_COLOR,
 		                        start_x, &hide_left, &hide_right);
 		       }
@@ -363,11 +363,11 @@ const char* GetHistory()
 		     {
 		       if( cursor_pos > 0 )
 		       {
-			 PrintHstEntry( disp_begin_pos + cursor_pos,
+			 PrintHstEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, HST_COLOR,
 		                        start_x, &hide_left, &hide_right);
 			 cursor_pos = 0;
-			 PrintHstEntry( disp_begin_pos + cursor_pos,
+			 PrintHstEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, HIHST_COLOR,
 		                        start_x, &hide_left, &hide_right);
 		       }

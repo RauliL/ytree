@@ -36,7 +36,7 @@ void ErrorEx(const std::string& msg, const std::string& module, int line)
     module +
     "\"*Line " +
     std::to_string(line)
-  );
+);
 }
 
 static void MapErrorWindow(const std::string& header)
@@ -50,14 +50,14 @@ static void MapErrorWindow(const std::string& header)
 		0,
     "6--------------------------------------7",
     WINERR_COLOR
-  );
+);
   wattrset(error_window, A_REVERSE | A_BLINK);
   MvWAddStr(
     error_window,
     ERROR_WINDOW_HEIGHT - 2,
     1,
     "             PRESS ENTER              "
-  );
+);
   wattrset(error_window, 0);
   PrintErrorLine(1, header);
 }
@@ -73,14 +73,14 @@ static void MapNoticeWindow(const std::string& header)
     0,
     "6--------------------------------------7",
     WINERR_COLOR
-  );
+);
   wattrset(error_window, A_REVERSE | A_BLINK);
   MvWAddStr(
     error_window,
     ERROR_WINDOW_HEIGHT - 2,
     1,
     "             PLEASE WAIT              "
-  );
+);
   wattrset(error_window, 0);
   PrintErrorLine(1, header);
 }
@@ -106,7 +106,7 @@ static inline void PrintErrorLine(int y, const std::string& str)
     y,
     (ERROR_WINDOW_WIDTH - str.length()) >> 1,
     str
-  );
+);
 }
 
 static void DisplayErrorMessage(const std::string& msg)

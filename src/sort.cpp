@@ -19,12 +19,12 @@ void GetKindOfSort()
   SortOrder order = SortOrder::Ascending;
 
   ClearHelp();
-  PrintOptions( stdscr, LINES - 2, 1, 
+  PrintOptions(stdscr, LINES - 2, 1, 
             "Sort by (A)ccTime (C)hgTime (E)xtension (G)roup (M)odTime   (O)rder: [ascending]"
-	  );
-  PrintOptions( stdscr, LINES - 1, 2, "       (N)ame o(W)ner (S)ize" );
+);
+  PrintOptions(stdscr, LINES - 1, 2, "       (N)ame o(W)ner (S)ize");
 
-  RefreshWindow( stdscr );
+  RefreshWindow(stdscr);
   doupdate();
   do 
   {
@@ -32,7 +32,7 @@ void GetKindOfSort()
 	if(c == -1 || c == ESC)
 	  return;
 
-        c = toupper(c);
+        c = std::toupper(c);
 
 	if (c == 'Q')
 	  return;
@@ -57,22 +57,22 @@ void GetKindOfSort()
                         break;
                 case 'O': if (order == SortOrder::Ascending)
                           {
-                              PrintOptions( stdscr, LINES - 2, 58, "[descending]" );
+                              PrintOptions(stdscr, LINES - 2, 58, "[descending]");
                               order = SortOrder::Descending;
                           }
                           else
                           {
-                                PrintOptions( stdscr, LINES - 2, 58, "[ascending] " );
+                                PrintOptions(stdscr, LINES - 2, 58, "[ascending] ");
                                 order = SortOrder::Ascending;
                           }
-                        RefreshWindow( stdscr );
+                        RefreshWindow(stdscr);
                         doupdate();
                         break;
                 default : beep();
-                        RefreshWindow( stdscr );
+                        RefreshWindow(stdscr);
                         doupdate();
                         break;
         }
-  } while( ! strchr("ACEGMNWS", c));
+  } while( ! std::strchr("ACEGMNWS", c));
   SetKindOfSort(key, order);
 }

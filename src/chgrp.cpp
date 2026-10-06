@@ -29,10 +29,10 @@ int ChangeFileGroup(FileEntry *fe_ptr)
     return( result );
   }
 
-  if( ( group_id = GetNewGroup( fe_ptr->stat_struct.st_gid ) ) >= 0 )
+  if( ( group_id = GetNewGroup(fe_ptr->stat_struct.st_gid) ) >= 0 )
   {
     walking_package.function_data.change_group.new_group_id = group_id;
-    result = SetFileGroup( fe_ptr, &walking_package );
+    result = SetFileGroup(fe_ptr, &walking_package);
   }
   return( result );
 }
@@ -59,9 +59,9 @@ int GetNewGroup(int st_gid)
 
   ClearHelp();
 
-  MvAddStr( LINES - 2, 1, "New Group:" );
+  MvAddStr(LINES - 2, 1, "New Group:");
 
-  if (InputString( group, LINES - 2, 12, 0, GROUP_NAME_MAX) == CR)
+  if (InputString(group, LINES - 2, 12, 0, GROUP_NAME_MAX) == CR)
   {
     if (const auto group_id_ptr = GetGroupId(group))
     {
@@ -71,7 +71,7 @@ int GetNewGroup(int st_gid)
     }
   }
 
-  move( LINES - 2, 1 ); clrtoeol();
+  move(LINES - 2, 1); clrtoeol();
 
   return( group_id );
 }
@@ -127,9 +127,9 @@ int ChangeDirGroup(DirEntry *de_ptr)
     return( result );
   }
 
-  if( ( group_id = GetNewGroup( de_ptr->stat_struct.st_gid ) ) >= 0 )
+  if( ( group_id = GetNewGroup(de_ptr->stat_struct.st_gid) ) >= 0 )
   {
-    result = SetDirGroup( de_ptr, group_id );
+    result = SetDirGroup(de_ptr, group_id);
   }
   return( result );
 }

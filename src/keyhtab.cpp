@@ -20,7 +20,7 @@ void PrintMtchEntry(int entry_no, int y, int color,
   int     ef_window_width;
 
 
-  GetMaxYX( matches_window, &window_height, &window_width );
+  GetMaxYX(matches_window, &window_height, &window_width);
   ef_window_width = window_width - 2; /* Effektive Window-Width */
 
 #ifdef NO_HIGHLIGHT
@@ -33,9 +33,9 @@ void PrintMtchEntry(int entry_no, int y, int color,
 
   if(Mtchs[entry_no])
   {
-    strncpy( buffer,(char *) Mtchs[entry_no], BUFSIZ - 3);
+    std::strncpy(buffer,(char *) Mtchs[entry_no], BUFSIZ - 3);
     buffer[BUFSIZ - 3] = '\0';
-    n = strlen( buffer );
+    n = std::strlen(buffer);
     wmove(matches_window,y,1);
 
     if(n <= ef_window_width) {
@@ -63,21 +63,21 @@ void PrintMtchEntry(int entry_no, int y, int color,
 #ifdef NO_HIGHLIGHT
     {
       const auto display = std::string(line_ptr) + ((color == HIMTCH_COLOR) ? " <" : "  ");
-      WAddStr( matches_window, display );
+      WAddStr(matches_window, display);
     }
 #else
 #ifdef COLOR_SUPPORT
     WbkgdSet(matches_window, COLOR_PAIR(color)|A_BOLD);
 #else
     if(color == HIMTCH_COLOR)
-      wattrset( matches_window, A_REVERSE );
+      wattrset(matches_window, A_REVERSE);
 #endif /* COLOR_SUPPORT */
-    WAddStr( matches_window, line_ptr );
+    WAddStr(matches_window, line_ptr);
 #ifdef COLOR_SUPPORT
     WbkgdSet(matches_window, COLOR_PAIR(WINMTCH_COLOR)| A_BOLD);
 #else
     if(color == HIMTCH_COLOR)
-      wattrset( matches_window, 0 );
+      wattrset(matches_window, 0);
 #endif /* COLOR_SUPPORT */
 #endif /* NO_HIGHLIGHT */
   }
@@ -94,7 +94,7 @@ int DisplayMatches()
 
   hilight_no = disp_begin_pos + cursor_pos;
   p_y = -1;
-  werase( matches_window );
+  werase(matches_window);
   for(i=0; i < MATCHES_WINDOW_HEIGHT; i++)
   {
     if (disp_begin_pos + i >= total_matches ) break;
@@ -128,7 +128,7 @@ char* GetMatches(const std::string& base)
   }
 
   if (!(tmpval == Mtchs[0])){
-    TMP=static_cast<char*>(malloc(strlen(Mtchs[0])+1));
+    TMP=static_cast<char*>(std::malloc(std::strlen(Mtchs[0])+1));
     if (TMP != nullptr){
       *std::format_to(TMP, "{}", Mtchs[0]) = '\0';
       RetVal = TMP;
@@ -155,7 +155,7 @@ char* GetMatches(const std::string& base)
 
   do
   {
-    RefreshWindow( matches_window );
+    RefreshWindow(matches_window);
     doupdate();
     ch = Getch();
     ch = TranslateOverlayMouse(ch);
@@ -163,7 +163,7 @@ char* GetMatches(const std::string& base)
     if(ch != -1 && ch != KEY_RIGHT && ch != KEY_LEFT) {
       if(start_x) {
         start_x = 0;
-	PrintMtchEntry( disp_begin_pos + cursor_pos,
+	PrintMtchEntry(disp_begin_pos + cursor_pos,
 		       cursor_pos, HIMTCH_COLOR,
 		       start_x, &hide_left, &hide_right);
       }
@@ -177,7 +177,7 @@ char* GetMatches(const std::string& base)
       case ' ':      break;  /* Quick-Key */
 
       case KEY_RIGHT: start_x++;
-		      PrintMtchEntry( disp_begin_pos + cursor_pos,
+		      PrintMtchEntry(disp_begin_pos + cursor_pos,
 			             cursor_pos, HIMTCH_COLOR,
 		                     start_x, &hide_left, &hide_right);
 		      if(hide_right < 0)
@@ -186,7 +186,7 @@ char* GetMatches(const std::string& base)
 
       case KEY_LEFT:  if(start_x > 0)
        		        start_x--;
-		      PrintMtchEntry( disp_begin_pos + cursor_pos,
+		      PrintMtchEntry(disp_begin_pos + cursor_pos,
 			             cursor_pos, HIMTCH_COLOR,
 		                     start_x, &hide_left, &hide_right);
 		      break;
@@ -199,22 +199,22 @@ char* GetMatches(const std::string& base)
 		     else
 		     { if( cursor_pos + 1 < MATCHES_WINDOW_HEIGHT )
 		       {
-			 PrintMtchEntry( disp_begin_pos + cursor_pos,
+			 PrintMtchEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, MTCH_COLOR,
 		                        start_x, &hide_left, &hide_right);
 			 cursor_pos++;
-			 PrintMtchEntry( disp_begin_pos + cursor_pos,
+			 PrintMtchEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, HIMTCH_COLOR,
 		                        start_x, &hide_left, &hide_right);
                        }
 		       else
 		       {
-			 PrintMtchEntry( disp_begin_pos + cursor_pos,
+			 PrintMtchEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, MTCH_COLOR,
 		                        start_x, &hide_left, &hide_right);
-			 scroll( matches_window );
+			 scroll(matches_window);
 			 disp_begin_pos++;
-			 PrintMtchEntry( disp_begin_pos + cursor_pos,
+			 PrintMtchEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, HIMTCH_COLOR,
 		                        start_x, &hide_left, &hide_right);
                        }
@@ -227,23 +227,23 @@ char* GetMatches(const std::string& base)
 		     {
 		       if( cursor_pos - 1 >= 0 )
 		       {
-			 PrintMtchEntry( disp_begin_pos + cursor_pos,
+			 PrintMtchEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, MTCH_COLOR,
 		                        start_x, &hide_left, &hide_right);
 			 cursor_pos--;
-			 PrintMtchEntry( disp_begin_pos + cursor_pos,
+			 PrintMtchEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, HIMTCH_COLOR,
 		                        start_x, &hide_left, &hide_right);
                        }
 		       else
 		       {
-			 PrintMtchEntry( disp_begin_pos + cursor_pos,
+			 PrintMtchEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, MTCH_COLOR,
 		                        start_x, &hide_left, &hide_right);
-			 wmove( matches_window, 0, 0 );
-			 winsertln( matches_window );
+			 wmove(matches_window, 0, 0);
+			 winsertln(matches_window);
 			 disp_begin_pos--;
-			 PrintMtchEntry( disp_begin_pos + cursor_pos,
+			 PrintMtchEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, HIMTCH_COLOR,
 		                        start_x, &hide_left, &hide_right);
                        }
@@ -256,14 +256,14 @@ char* GetMatches(const std::string& base)
 		     {
 		       if( cursor_pos < MATCHES_WINDOW_HEIGHT - 1 )
 		       {
-			 PrintMtchEntry( disp_begin_pos + cursor_pos,
+			 PrintMtchEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, MTCH_COLOR,
 		                        start_x, &hide_left, &hide_right);
 		         if( disp_begin_pos + MATCHES_WINDOW_HEIGHT > total_matches  - 1 )
 			   cursor_pos = total_matches - disp_begin_pos - 1;
 			 else
 			   cursor_pos = MATCHES_WINDOW_HEIGHT - 1;
-			 PrintMtchEntry( disp_begin_pos + cursor_pos,
+			 PrintMtchEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, HIMTCH_COLOR,
 		                        start_x, &hide_left, &hide_right);
 		       }
@@ -291,11 +291,11 @@ char* GetMatches(const std::string& base)
 		     {
 		       if( cursor_pos > 0 )
 		       {
-			 PrintMtchEntry( disp_begin_pos + cursor_pos,
+			 PrintMtchEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, MTCH_COLOR,
 		                        start_x, &hide_left, &hide_right);
 			 cursor_pos = 0;
-			 PrintMtchEntry( disp_begin_pos + cursor_pos,
+			 PrintMtchEntry(disp_begin_pos + cursor_pos,
 					cursor_pos, HIMTCH_COLOR,
 		                        start_x, &hide_left, &hide_right);
 		       }
@@ -326,7 +326,7 @@ char* GetMatches(const std::string& base)
                      break;
       case LF :
       case CR :
-                     TMP=static_cast<char*>(malloc(strlen(Mtchs[ disp_begin_pos + cursor_pos])+1));
+                     TMP=static_cast<char*>(std::malloc(std::strlen(Mtchs[ disp_begin_pos + cursor_pos])+1));
 		     if (TMP != nullptr){
 		        *std::format_to(TMP, "{}", Mtchs[disp_begin_pos + cursor_pos]) = '\0';
                         RetVal = TMP;

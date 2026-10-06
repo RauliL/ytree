@@ -27,21 +27,21 @@ int ReadTreeFromZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 
   dir_entry->name.clear();
 
-  while( fgets( zip_line, ZIP_LINE_LENGTH, f ) != nullptr )
+  while( std::fgets(zip_line, ZIP_LINE_LENGTH, f) != nullptr )
   {
     /* \n loeschen */
     /*-------------*/
 
-    zip_line[ strlen( zip_line ) - 1 ] = '\0';
+    zip_line[ std::strlen(zip_line) - 1 ] = '\0';
 
-    if( strlen( zip_line ) > (unsigned) 58 &&
+    if( std::strlen(zip_line) > (unsigned) 58 &&
         (zip_line[56] == ':' ||
 	(zip_line[57] != 'd' && zip_line[58] == ':')))
     {
       /* gueltiger Eintrag */
       /*-------------------*/
 
-      if( GetStatFromZIP( zip_line, path_name, &stat ) )
+      if( GetStatFromZIP(zip_line, path_name, &stat) )
       {
         FormatMessage("unknown zipinfo*{}", zip_line);
       }
@@ -51,9 +51,9 @@ int ReadTreeFromZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
         /*------*/
 
 #ifdef DEBUG
-  fprintf( stderr, "FILE: \"%s\"\n", path_name );
+  std::fprintf(stderr, "FILE: \"%s\"\n", path_name);
 #endif
-        InsertArchiveFileEntry( dir_entry, path_name, &stat );
+        InsertArchiveFileEntry(dir_entry, path_name, &stat);
       }
     }
   }
@@ -62,10 +62,10 @@ int ReadTreeFromZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
   if( dir_flag == false )
   {
     statistic.disk_total_directories++;
-    memset( (char *) &dir_entry->stat_struct, 0, sizeof( struct stat ) );
+    std::memset((char *) &dir_entry->stat_struct, 0, sizeof( struct stat ));
     dir_entry->stat_struct.st_mode = S_IFDIR;
   }
-  return( MinimizeArchiveTree( dir_entry ) );
+  return( MinimizeArchiveTree(dir_entry) );
 }
 
 
@@ -81,87 +81,87 @@ static int GetStatFromZIP(char *zip_line, char *name, struct stat *stat)
 	 	           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
 
-  memset( stat, 0, sizeof( struct stat ) );
+  std::memset(stat, 0, sizeof( struct stat ));
 
   stat->st_nlink = 1;
 
-  t = Strtok_r( zip_line, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(zip_line, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Attributes */
   /*------------*/
 
-  if( strlen( t ) == 10 )
+  if( std::strlen(t) == 10 )
   {
-    stat->st_mode = GetModus( t );
+    stat->st_mode = GetModus(t);
   }
   else
   {
     /* DOS-Zip-File ? */
     /*----------------*/
 
-    stat->st_mode = GetModus( "-rw-rw-rw-" );
+    stat->st_mode = GetModus("-rw-rw-rw-");
   }
 
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Version */
   /*---------*/
 
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* BS */
   /*----*/
 
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Dateilaenge */
   /*-------------*/
 
-  if( !isdigit( *t ) ) return( -1 );
-  stat->st_size = AtoLL( t );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  if( !std::isdigit(*t) ) return( -1 );
+  stat->st_size = AtoLL(t);
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* ?? */
   /*----*/
 
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Compressed-Laenge */
   /*-------------------*/
 
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   /* Methode */
   /*---------*/
 
-  t = Strtok_r( nullptr, " \t-", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t-", &old); if( t == nullptr ) return( -1 );
 
   /* M-Datum */
   /*---------*/
 
-  tm_struct.tm_mday = atoi( t );
-  t = Strtok_r( nullptr, " \t-", &old ); if( t == nullptr ) return( -1 );
+  tm_struct.tm_mday = std::atoi(t);
+  t = Strtok_r(nullptr, " \t-", &old); if( t == nullptr ) return( -1 );
 
   for( i=0; i < 12; i++ )
   {
-    if( !strcmp( t, month[i] ) ) break;
+    if( !std::strcmp(t, month[i]) ) break;
   }
   if( i >= 12 ) i = 0;
 
   tm_struct.tm_mon = i;
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
-  tm_struct.tm_year = atoi( t );
+  tm_struct.tm_year = std::atoi(t);
   if(tm_struct.tm_year < 70)
     tm_struct.tm_year += 100;
 
-  t = Strtok_r( nullptr, " \t:", &old ); if( t == nullptr ) return( -1 );
+  t = Strtok_r(nullptr, " \t:", &old); if( t == nullptr ) return( -1 );
 
-  tm_struct.tm_hour = atoi( t );
-  t = Strtok_r( nullptr, " \t:", &old ); if( t == nullptr ) return( -1 );
+  tm_struct.tm_hour = std::atoi(t);
+  t = Strtok_r(nullptr, " \t:", &old); if( t == nullptr ) return( -1 );
 
-  tm_struct.tm_min = atoi( t );
-  t = Strtok_r( nullptr, " \t", &old ); if( t == nullptr ) return( -1 );
+  tm_struct.tm_min = std::atoi(t);
+  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
   tm_struct.tm_sec = 0;
 
@@ -170,13 +170,13 @@ static int GetStatFromZIP(char *zip_line, char *name, struct stat *stat)
   stat->st_atime = 0;
   stat->st_ctime = 0;
 
-  stat->st_mtime = Mktime( &tm_struct );
+  stat->st_mtime = Mktime(&tm_struct);
 
   /* Owner */
   /*-------*/
 
   id = getuid();
-  if( id == -1 ) id = atoi( t );
+  if( id == -1 ) id = std::atoi(t);
   stat->st_uid = (unsigned) id;
 
   /* Group */
@@ -188,7 +188,7 @@ static int GetStatFromZIP(char *zip_line, char *name, struct stat *stat)
   /* Dateiname */
   /*-----------*/
 
-  strcpy( name, t );
+  std::strcpy(name, t);
 
   return( 0 );
 }

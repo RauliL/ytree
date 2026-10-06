@@ -28,16 +28,16 @@ int MakeDirectory(DirEntry *father_dir_entry)
 
   ClearHelp();
 
-  MvAddStr( LINES - 2, 1, "Make Subdirectory: " );
+  MvAddStr(LINES - 2, 1, "Make Subdirectory: ");
 
   *dir_name = '\0';
 
-  if (InputString( dir_name, LINES - 2, 20, 0, COLS - 20 - 1) == CR)
+  if (InputString(dir_name, LINES - 2, 20, 0, COLS - 20 - 1) == CR)
   {
-    result = MakeDirEntry( father_dir_entry, dir_name );
+    result = MakeDirEntry(father_dir_entry, dir_name);
   }
 
-  move( LINES - 2, 1 ); clrtoeol();
+  move(LINES - 2, 1); clrtoeol();
 
   return( result );
 }
@@ -45,7 +45,7 @@ int MakeDirectory(DirEntry *father_dir_entry)
 
 
 
-int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name )
+int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name)
 {
   struct stat stat_struct;
   int result = -1;
@@ -61,10 +61,10 @@ int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name )
   const std::string path_str = path.string();
 
   std::error_code ec;
-  if( !std::filesystem::create_directory( path, ec ) )
+  if( !std::filesystem::create_directory(path, ec) )
   {
     if( !ec )
-      ec = std::make_error_code( std::errc::file_exists );
+      ec = std::make_error_code(std::errc::file_exists);
     FormatMessage("Can't create Directory*\"{}\"*{}", path_str.c_str(), ec.message().c_str());
   }
   else
@@ -72,7 +72,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name )
     const auto perms = static_cast<std::filesystem::perms>(
       (S_IRWXU | S_IRWXG | S_IRWXO) & ~user_umask
     );
-    std::filesystem::permissions( path, perms, ec );
+    std::filesystem::permissions(path, perms, ec);
     if( ec )
     {
       FormatWarning("Can't chmod Directory*\"{}\"*{}*IGNORED", path_str.c_str(), ec.message().c_str());
@@ -100,11 +100,11 @@ int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name )
         siblings.begin(),
         siblings.end(),
         [&den_ptr](const std::shared_ptr<DirEntry>& des_ptr) { return des_ptr->name > den_ptr->name; }
-      ),
+),
       den_ptr
-    );
+);
 
-    GetAvailBytes( &statistic.disk_space );
+    GetAvailBytes(&statistic.disk_space);
 
     result = 0;
   }
@@ -114,7 +114,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name )
 
 
 
-int MakePath( const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry )
+int MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry)
 {
   DirEntry *de_ptr, *sde_ptr;
   char     path[PATH_LENGTH+1];
@@ -122,7 +122,7 @@ int MakePath( const std::shared_ptr<DirEntry>& tree, const std::string& dir_path
   int      n;
   int      result = -1;
 
-  NormPath( dir_path.c_str(), path );
+  NormPath(dir_path.c_str(), path);
   *dest_dir_entry = nullptr;
 
   n = tree->name.size();
@@ -140,7 +140,7 @@ int MakePath( const std::shared_ptr<DirEntry>& tree, const std::string& dir_path
     /*----------------------------------*/
 
     de_ptr = tree.get();
-    token = Strtok_r( &path[n], preferred_separator_str, &old );
+    token = Strtok_r(&path[n], preferred_separator_str, &old);
     while( token )
     {
       sde_ptr = nullptr;
@@ -162,16 +162,16 @@ int MakePath( const std::shared_ptr<DirEntry>& tree, const std::string& dir_path
 	/*----------------------------------*/
 
 #ifdef DEBUG
-  fprintf( stderr, "MakeDirEntry: \"%s\"\n", token );
+  std::fprintf(stderr, "MakeDirEntry: \"%s\"\n", token);
 #endif /* DEBUG */
 
-	if( MakeDirEntry( de_ptr, token ) )
+	if( MakeDirEntry(de_ptr, token) )
 	{
 	  return( result );
 	}
 	continue;
       }
-      token = Strtok_r( nullptr, preferred_separator_str, &old );
+      token = Strtok_r(nullptr, preferred_separator_str, &old);
     }
     *dest_dir_entry = de_ptr;
     result = 0;
@@ -182,11 +182,11 @@ int MakePath( const std::shared_ptr<DirEntry>& tree, const std::string& dir_path
     /*--------------------------------------*/
 
 #ifdef DEBUG
-    fprintf( stderr, "MakePath: \"%s\"\n", path );
+    std::fprintf(stderr, "MakePath: \"%s\"\n", path);
 #endif /* DEBUG */
 
     std::error_code ec;
-    std::filesystem::create_directories( path, ec );
+    std::filesystem::create_directories(path, ec);
     /* Old progressive mkdir broke on non-EEXIST errors but still fell
      * through to result = 0; preserve that return value for compatibility.
      * create_directories treats an existing directory as success (!ec). */

@@ -162,12 +162,12 @@ static void DisplayVersion()
 		VERSION,
 		PATCHLEVEL,
 		VERSIONDATE
-	);
+);
   MvAddStr(
     LINES - 2,
     static_cast<unsigned>(COLS - std::strlen(version)) >> 1,
     version
-  );
+);
 }
 
 
@@ -185,7 +185,7 @@ void DisplayDirHelp()
       dir_help[static_cast<int>(mode)][1] = cptr;
   }
   for( i=0; i < (int)(sizeof(dir_help[static_cast<int>(mode)]) / sizeof(dir_help[static_cast<int>(mode)][0])); i++) {
-    PrintOptions( stdscr, LINES - 2 + i, 0, dir_help[static_cast<int>(mode)][i] );
+    PrintOptions(stdscr, LINES - 2 + i, 0, dir_help[static_cast<int>(mode)][i]);
     clrtoeol();
   }
 }
@@ -204,7 +204,7 @@ void DisplayFileHelp()
       file_help[static_cast<int>(mode)][1] = cptr;
   }
   for( i=0; i < (int)(sizeof(file_help[static_cast<int>(mode)]) / sizeof(file_help[static_cast<int>(mode)][0])); i++) {
-    PrintOptions( stdscr, LINES - 2 + i, 0, file_help[static_cast<int>(mode)][i] );
+    PrintOptions(stdscr, LINES - 2 + i, 0, file_help[static_cast<int>(mode)][i]);
     clrtoeol();
   }
 }
@@ -217,7 +217,7 @@ void ClearHelp()
 
   for( i=0; i < 3; i++ )
   {
-    wmove( stdscr, LINES - 3 + i, 0 ); clrtoeol();
+    wmove(stdscr, LINES - 3 + i, 0); clrtoeol();
   }
 }
 
@@ -229,39 +229,39 @@ void DisplayMenu()
   int    l, c;
 
 
-  PrintSpecialString( stdscr, 0, 0, "Path: ", MENU_COLOR );
+  PrintSpecialString(stdscr, 0, 0, "Path: ", MENU_COLOR);
 #ifdef COLOR_SUPPORT
   clrtoeol();
 #endif
 
-  werase( dir_window );
-  werase( big_file_window );
-  werase( small_file_window );
+  werase(dir_window);
+  werase(big_file_window);
+  werase(small_file_window);
 
   for( y=1; y <= (int)(sizeof(mask) / sizeof(mask[0])); y++){
-    PrintOptions( stdscr, y, 0, "|");
-    PrintOptions( stdscr, y, COLS - 25 , mask[y-1] );
+    PrintOptions(stdscr, y, 0, "|");
+    PrintOptions(stdscr, y, COLS - 25 , mask[y-1]);
   }
   for( ; y < LINES - 4; y++ )
-    PrintMenuLine( stdscr, y, 0, extended_line );
-  PrintLine( stdscr, DIR_WINDOW_HEIGHT + 2, 0, "6-7", COLS - 25 );
-  PrintLine( stdscr, 1, 0, first_line, COLS - 25);
-  PrintMenuLine( stdscr, y, 0, last_line );
+    PrintMenuLine(stdscr, y, 0, extended_line);
+  PrintLine(stdscr, DIR_WINDOW_HEIGHT + 2, 0, "6-7", COLS - 25);
+  PrintLine(stdscr, 1, 0, first_line, COLS - 25);
+  PrintMenuLine(stdscr, y, 0, last_line);
 
   l = sizeof(logo) / sizeof(logo[0]);
-  c = strlen( logo[0] );
+  c = std::strlen(logo[0]);
 
   for( y=0; y < l; y++ )
   {
-    MvWAddStr( dir_window,
+    MvWAddStr(dir_window,
 	       y + ((DIR_WINDOW_HEIGHT - l) >> 1),
 	       (DIR_WINDOW_WIDTH - c) >> 1,
 	       logo[y]
-	     );
+);
   }
   DisplayVersion();
 
-  touchwin( dir_window );
+  touchwin(dir_window);
   /* refresh(); */
 }
 
@@ -269,17 +269,17 @@ void DisplayMenu()
 
 void SwitchToSmallFileWindow()
 {
-  werase( file_window );
-  PrintLine( stdscr, DIR_WINDOW_HEIGHT + 2, 0, "6-7", COLS - 25 );
+  werase(file_window);
+  PrintLine(stdscr, DIR_WINDOW_HEIGHT + 2, 0, "6-7", COLS - 25);
   file_window = small_file_window;
-  RefreshWindow( stdscr );
+  RefreshWindow(stdscr);
 }
 
 
 void SwitchToBigFileWindow()
 {
-  werase( file_window );
-  RefreshWindow( file_window );
+  werase(file_window);
+  RefreshWindow(file_window);
 #ifdef COLOR_SUPPORT
   mvaddch(DIR_WINDOW_Y + DIR_WINDOW_HEIGHT, DIR_WINDOW_X - 1,
         ACS_VLINE | COLOR_PAIR(MENU_COLOR)| A_BOLD);
@@ -287,17 +287,17 @@ void SwitchToBigFileWindow()
            ACS_VLINE | COLOR_PAIR(MENU_COLOR)| A_BOLD);
 
 #else
-  mvwaddch( stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT,
+  mvwaddch(stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT,
 	   DIR_WINDOW_X - 1,
 	   ACS_VLINE
-	 );
-  mvwaddch( stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT,
+);
+  mvwaddch(stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT,
 	   DIR_WINDOW_X + DIR_WINDOW_WIDTH,
 	   ACS_VLINE
-	 );
+);
 #endif /* COLOR_SUPPORT */
   file_window = big_file_window;
-  RefreshWindow( stdscr );
+  RefreshWindow(stdscr);
 }
 
 
@@ -305,19 +305,19 @@ void MapF2Window()
 {
   auto buffer = MallocOrAbort<char>(F2_WINDOW_WIDTH + 1);
 
-  werase( f2_window );
-  memset(buffer, '=', F2_WINDOW_WIDTH);
+  werase(f2_window);
+  std::memset(buffer, '=', F2_WINDOW_WIDTH);
   buffer[F2_WINDOW_WIDTH] = '\0';
 
-  PrintSpecialString( f2_window, F2_WINDOW_HEIGHT - 1, 0, buffer, HST_COLOR );
-  RefreshWindow( f2_window );
-  free(buffer);
+  PrintSpecialString(f2_window, F2_WINDOW_HEIGHT - 1, 0, buffer, HST_COLOR);
+  RefreshWindow(f2_window);
+  std::free(buffer);
 }
 
 
 void UnmapF2Window()
 {
-  werase( f2_window );
+  werase(f2_window);
   if(file_window == big_file_window)
   {
 #ifdef COLOR_SUPPORT
@@ -327,15 +327,15 @@ void UnmapF2Window()
           ACS_VLINE | COLOR_PAIR(MENU_COLOR)| A_BOLD);
 
 #else
-    mvwaddch( stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT,
+    mvwaddch(stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT,
 	     DIR_WINDOW_X - 1,
 	     ACS_VLINE
-	   );
+);
 
-    mvwaddch( stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT,
+    mvwaddch(stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT,
 	     DIR_WINDOW_X + DIR_WINDOW_WIDTH,
 	     ACS_VLINE
-	   );
+);
 #endif /* COLOR_SUPPORT */
   }
   touchwin(stdscr);
@@ -357,10 +357,10 @@ static void PrintMenuLine(WINDOW *win, int y, int x, const char *line)
      p = COLS - 27;
   for (i = 1; i < p; i++)
       buffer[i] = line[1];
-  strncpy( &buffer[i], &line[2], l - i );
+  std::strncpy(&buffer[i], &line[2], l - i);
   buffer[l-1] = '\0';
-  PrintOptions( stdscr, y, x , buffer );
-  free( buffer );
+  PrintOptions(stdscr, y, x , buffer);
+  std::free(buffer);
 }
 
 
@@ -377,8 +377,8 @@ static void PrintLine(WINDOW *win, int y, int x, const char *line, int len)
     for(i=1; i < (len); i++)
         buffer[i] = line[1];
     *std::format_to(&buffer[i], "{}", &line[2]) = '\0';
-    PrintOptions( stdscr, y, x , buffer );
-    free( buffer );
+    PrintOptions(stdscr, y, x , buffer);
+    std::free(buffer);
   }
 }
 

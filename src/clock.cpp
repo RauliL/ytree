@@ -45,7 +45,7 @@ void ClockHandler(int sig)
       hora_tm->tm_hour,
       hora_tm->tm_min,
       hora_tm->tm_sec
-    );
+);
 # if defined(COLOR_SUPPORT)
     mvwaddch(time_window, 0, 0, ACS_RTEE | COLOR_PAIR(MENU_COLOR) | A_BOLD);
     mvwaddch(time_window, 0, 14, ACS_LTEE | COLOR_PAIR(MENU_COLOR) | A_BOLD);
