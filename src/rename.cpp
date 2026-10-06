@@ -9,9 +9,6 @@ static bool RenameFileEntry(const std::string&, const std::string&);
 int RenameDirectory(DirEntry *de_ptr, char *new_name)
 {
   DirEntry    *den_ptr;
-  DirEntry    *sde_ptr;
-  DirEntry    *ude_ptr;
-  FileEntry   *fe_ptr;
   const auto from_path = GetPath(de_ptr);
   const std::filesystem::path from_fs_path(from_path);
   std::string to_path;
@@ -50,26 +47,33 @@ int RenameDirectory(DirEntry *de_ptr, char *new_name)
     /* Struktur einklinken */
     /*---------------------*/
 
-    if( den_ptr->prev ) den_ptr->prev->next = den_ptr;
-    if( den_ptr->next ) den_ptr->next->prev = den_ptr;
+    if( den_ptr->parent )
+    {
+      std::replace(
+        den_ptr->parent->children.begin(),
+        den_ptr->parent->children.end(),
+        de_ptr,
+        den_ptr
+      );
+    }
 
     /* Subtree */
     /*---------*/
 
-    for( sde_ptr=den_ptr->sub_tree; sde_ptr; sde_ptr = sde_ptr->next )
-      sde_ptr->up_tree = den_ptr;
+    for( DirEntry *sde_ptr : den_ptr->children )
+      sde_ptr->parent = den_ptr;
 
     /* Files */
     /*-------*/
 
-    for( fe_ptr=den_ptr->file; fe_ptr; fe_ptr=fe_ptr->next )
+    for( FileEntry *fe_ptr : den_ptr->files )
       fe_ptr->dir_entry = den_ptr;
 
-    /* Uptree */
+    /* Wurzel */
     /*--------*/
 
-    for( ude_ptr=den_ptr->up_tree; ude_ptr; ude_ptr = ude_ptr->next )
-      if( ude_ptr->sub_tree == de_ptr ) ude_ptr->sub_tree = den_ptr;
+    if( statistic.tree == de_ptr ) statistic.tree = den_ptr;
+    if( disk_statistic.tree == de_ptr ) disk_statistic.tree = den_ptr;
 
     /* Alte Struktur freigeben */
     /*-------------------------*/
@@ -127,9 +131,12 @@ int RenameFile(FileEntry *fe_ptr, char *new_name, FileEntry **new_fe_ptr )
     /* Struktur einklinken */
     /*---------------------*/
 
-    if( fen_ptr->prev ) fen_ptr->prev->next = fen_ptr;
-    if( fen_ptr->next ) fen_ptr->next->prev = fen_ptr;
-    if( fen_ptr->dir_entry->file == fe_ptr ) fen_ptr->dir_entry->file = fen_ptr;
+    std::replace(
+      fen_ptr->dir_entry->files.begin(),
+      fen_ptr->dir_entry->files.end(),
+      fe_ptr,
+      fen_ptr
+    );
 
     /* Alte Struktur freigeben */
     /*-------------------------*/

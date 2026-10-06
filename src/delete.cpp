@@ -106,10 +106,10 @@ int RemoveFile(FileEntry *fe_ptr)
   /* File austragen */
   /*----------------*/
 
-  if( fe_ptr->next ) fe_ptr->next->prev = fe_ptr->prev;
-  if( fe_ptr->prev ) fe_ptr->prev->next = fe_ptr->next;
-  else
-    de_ptr->file = fe_ptr->next;
+  de_ptr->files.erase(
+    std::remove(de_ptr->files.begin(), de_ptr->files.end(), fe_ptr),
+    de_ptr->files.end()
+  );
 
   delete fe_ptr;
 

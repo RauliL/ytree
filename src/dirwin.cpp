@@ -7,6 +7,7 @@ struct DirEntryList
   std::size_t indent;
   DirEntry* dir_entry;
   unsigned short level;
+  bool has_next_sibling;
 };
 
 static std::vector<DirEntryList> dir_entry_list;
@@ -14,7 +15,7 @@ static std::vector<DirEntryList>::size_type current_dir_entry;
 static int window_height;
 static int window_width;
 
-static void ReadDirList(DirEntry* dir_entry);
+static void ReadDirList(const std::vector<DirEntry*>& dir_entries);
 static void PrintDirEntry(WINDOW *win, int entry_no, int y, unsigned char hilight);
 static void BuildDirEntryList(DirEntry* dir_entry);
 
@@ -30,7 +31,7 @@ static void BuildDirEntryList(DirEntry* dir_entry)
   dir_entry_list.reserve(statistic.disk_total_directories);
   current_dir_entry = 0;
 
-  ReadDirList(dir_entry);
+  ReadDirList({ dir_entry });
 }
 
 static void RotateDirMode(void)
@@ -49,15 +50,18 @@ static void RotateDirMode(void)
 
 
 
-static void ReadDirList(DirEntry* dir_entry)
+static void ReadDirList(const std::vector<DirEntry*>& dir_entries)
 {
   static std::size_t indent = 0;
   static int level = 0;
 
-  for (auto de_ptr = dir_entry; de_ptr; de_ptr = de_ptr->next)
+  for (std::size_t i = 0; i < dir_entries.size(); ++i)
   {
+    const auto de_ptr = dir_entries[i];
+    const auto has_next_sibling = i + 1 < dir_entries.size();
+
     indent &= ~(1L << level);
-    if (de_ptr->next)
+    if (has_next_sibling)
     {
       indent |= ( 1L << level );
     }
@@ -66,14 +70,15 @@ static void ReadDirList(DirEntry* dir_entry)
       indent,
       de_ptr,
       static_cast<unsigned short>(level),
+      has_next_sibling,
     });
 
     ++current_dir_entry;
 
-    if (!de_ptr->not_scanned && de_ptr->sub_tree)
+    if (!de_ptr->not_scanned && !de_ptr->children.empty())
     {
       ++level;
-      ReadDirList(de_ptr->sub_tree);
+      ReadDirList(de_ptr->children);
       --level;
     }
   }
@@ -116,7 +121,7 @@ static void PrintDirEntry(WINDOW *win,
       buffer += "  ";
   }
   de_ptr = dir_entry_list[entry_no].dir_entry;
-  if( de_ptr->next )
+  if( dir_entry_list[entry_no].has_next_sibling )
     buffer += "6-";
   else
     buffer += "3-";
@@ -546,13 +551,13 @@ void HandlePlus(
     beep();
     return;
   }
-  for (de_ptr = dir_entry->sub_tree; de_ptr; de_ptr = de_ptr->next)
+  for (const auto child : dir_entry->children)
   {
-    const auto path = GetPath(de_ptr);
+    const auto path = GetPath(child);
 
     std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", path.c_str());
-    ReadTree(de_ptr, new_login_path, 0);
-    SetMatchingParam(de_ptr);
+    ReadTree(child, new_login_path, 0);
+    SetMatchingParam(child);
   }
   dir_entry->not_scanned = false;
   BuildDirEntryList(start_dir_entry);
@@ -581,11 +586,11 @@ void HandleReadSubTree(DirEntry *dir_entry, DirEntry *start_dir_entry,
 void HandleUnreadSubTree(DirEntry *dir_entry, DirEntry *de_ptr,
 			 DirEntry *start_dir_entry, bool *need_dsp_help)
 {
-    if( dir_entry->not_scanned || (dir_entry->sub_tree == nullptr) ) {
+    if( dir_entry->not_scanned || dir_entry->children.empty() ) {
 	beep();
     } else {
-	for( de_ptr=dir_entry->sub_tree; de_ptr; de_ptr=de_ptr->next) {
-	    UnReadTree( de_ptr );
+	for( DirEntry *child : dir_entry->children ) {
+	    UnReadTree( child );
 	}
 	dir_entry->not_scanned = true;
 	BuildDirEntryList( start_dir_entry );
@@ -599,8 +604,7 @@ void HandleUnreadSubTree(DirEntry *dir_entry, DirEntry *de_ptr,
 
 void HandleTagDir(DirEntry *dir_entry, bool value)
 {
-    FileEntry *fe_ptr;
-    for(fe_ptr=dir_entry->file; fe_ptr; fe_ptr=fe_ptr->next)
+    for(FileEntry *fe_ptr : dir_entry->files)
     {
 	if( (fe_ptr->matching) && (fe_ptr->tagged != value ))
 	{
@@ -631,11 +635,7 @@ void HandleTagAllDirs(DirEntry* dir_entry, bool value)
 {
   for (std::size_t i = 0; i < dir_entry_list.size(); ++i)
   {
-    for (
-      auto fe_ptr = dir_entry_list[i].dir_entry->file;
-      fe_ptr;
-      fe_ptr = fe_ptr->next
-    )
+    for (FileEntry *fe_ptr : dir_entry_list[i].dir_entry->files)
     {
         if (fe_ptr->matching && fe_ptr->tagged != value)
         {
@@ -1152,14 +1152,14 @@ void ScanSubTree(DirEntry* dir_entry)
 {
   if (dir_entry->not_scanned)
   {
-    for (auto de_ptr = dir_entry->sub_tree; de_ptr; de_ptr = de_ptr->next)
+    for (const auto de_ptr : dir_entry->children)
     {
       ReadTree(de_ptr, GetPath(de_ptr), 999);
       SetMatchingParam(de_ptr);
     }
     dir_entry->not_scanned = false;
   } else {
-    for (auto de_ptr = dir_entry->sub_tree; de_ptr; de_ptr = de_ptr->next)
+    for (const auto de_ptr : dir_entry->children)
     {
       ScanSubTree(de_ptr);
     }

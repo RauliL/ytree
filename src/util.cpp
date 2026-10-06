@@ -57,7 +57,7 @@ std::string GetPath(const DirEntry* dir_entry)
 {
   std::string result;
 
-  for (auto de_ptr = dir_entry; de_ptr; de_ptr = de_ptr->up_tree)
+  for (auto de_ptr = dir_entry; de_ptr; de_ptr = de_ptr->parent)
   {
     const auto is_root =
       de_ptr->name.size() == 1 &&
@@ -67,7 +67,8 @@ std::string GetPath(const DirEntry* dir_entry)
     {
       result.insert(0, de_ptr->name);
     }
-    if (de_ptr->up_tree)
+    /* A nameless root (archive placeholder) doesn't contribute a separator */
+    if (de_ptr->parent && !de_ptr->parent->name.empty())
     {
       result.insert(result.begin(), std::filesystem::path::preferred_separator);
     }
@@ -185,13 +186,15 @@ int GetDirEntry(DirEntry *tree,
     token = Strtok_r( &dest_path[n], preferred_separator_str, &old );
     while( token )
     {
-      for( sde_ptr = de_ptr->sub_tree; sde_ptr; sde_ptr = sde_ptr->next )
+      sde_ptr = nullptr;
+      for( DirEntry *child : de_ptr->children )
       {
-        if( sde_ptr->name == token )
+        if( child->name == token )
 	{
 	  /* Subtree gefunden */
 	  /*------------------*/
 
+	  sde_ptr = child;
 	  de_ptr = sde_ptr;
 	  break;
 	}
@@ -215,11 +218,9 @@ int GetDirEntry(DirEntry *tree,
 
 int GetFileEntry(DirEntry *de_ptr, char *file_name, FileEntry **file_entry)
 {
-  FileEntry *fe_ptr;
-
   *file_entry = nullptr;
 
-  for( fe_ptr = de_ptr->file; fe_ptr; fe_ptr = fe_ptr->next )
+  for( FileEntry *fe_ptr : de_ptr->files )
   {
     if( fe_ptr->name == file_name )
     {

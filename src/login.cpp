@@ -15,23 +15,20 @@
 
 static void DeleteTree(DirEntry *tree)
 {
-  DirEntry  *de_ptr, *next_de_ptr;
-  FileEntry *fe_ptr, *next_fe_ptr;
+  if( tree == nullptr )
+    return;
 
-  for( de_ptr=tree; de_ptr; de_ptr=next_de_ptr)
+  for( FileEntry *fe_ptr : tree->files )
   {
-    next_de_ptr = de_ptr->next;
-
-    for( fe_ptr=de_ptr->file; fe_ptr; fe_ptr=next_fe_ptr)
-    {
-      next_fe_ptr=fe_ptr->next;
-      delete fe_ptr;
-    }
-
-    if( de_ptr->sub_tree ) DeleteTree( de_ptr->sub_tree );
-
-    delete de_ptr;
+    delete fe_ptr;
   }
+
+  for( DirEntry *de_ptr : tree->children )
+  {
+    DeleteTree( de_ptr );
+  }
+
+  delete tree;
 }
 
 
@@ -628,7 +625,6 @@ int LoginDisk(char *path)
     }
 
     statistic.tree->name = path;
-    statistic.tree->next = statistic.tree->prev = nullptr;
 
     depth = strtod(TREEDEPTH, nullptr);
     if (ReadTree(statistic.tree, path, depth))

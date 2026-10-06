@@ -127,7 +127,7 @@ static void ReadTaggedList(const DirEntry* dir_entry)
   max_filename_len = 0;
   max_linkname_len = 0;
 
-  for (auto fe_ptr = dir_entry->file; fe_ptr; fe_ptr = fe_ptr->next)
+  for (const auto fe_ptr : dir_entry->files)
   {
     if (fe_ptr->matching && fe_ptr->tagged)
     {
@@ -149,16 +149,13 @@ static void ReadTaggedList(const DirEntry* dir_entry)
 
 static void ReadTaggedFileList(const DirEntry* dir_entry)
 {
-  for (auto de_ptr = dir_entry; de_ptr; de_ptr = de_ptr->next)
+  for (const auto child : dir_entry->children)
   {
-    if (de_ptr->sub_tree)
-    {
-      ReadTaggedFileList(de_ptr->sub_tree);
-    }
-    ReadTaggedList(de_ptr);
-    global_max_filename_len = std::max(global_max_filename_len, max_filename_len);
-    global_max_linkname_len = std::max(global_max_linkname_len, max_linkname_len);
+    ReadTaggedFileList(child);
   }
+  ReadTaggedList(dir_entry);
+  global_max_filename_len = std::max(global_max_filename_len, max_filename_len);
+  global_max_linkname_len = std::max(global_max_linkname_len, max_linkname_len);
   max_filename_len = global_max_filename_len;
   max_linkname_len = global_max_linkname_len;
 }
@@ -192,7 +189,7 @@ static void ReadFileList(const DirEntry* dir_entry)
   max_filename_len = 0;
   max_linkname_len = 0;
 
-  for (auto fe_ptr = dir_entry->file; fe_ptr; fe_ptr = fe_ptr->next)
+  for (const auto fe_ptr : dir_entry->files)
   {
     if (fe_ptr->matching)
     {
@@ -214,16 +211,13 @@ static void ReadFileList(const DirEntry* dir_entry)
 
 static void ReadGlobalFileList(const DirEntry* dir_entry)
 {
-  for (auto de_ptr = dir_entry; de_ptr; de_ptr = de_ptr->next)
+  for (const auto child : dir_entry->children)
   {
-    if (de_ptr->sub_tree)
-    {
-      ReadGlobalFileList(de_ptr->sub_tree);
-    }
-    ReadFileList(de_ptr);
-    global_max_filename_len = std::max(global_max_filename_len, max_filename_len);
-    global_max_linkname_len = std::max(global_max_linkname_len, max_linkname_len);
+    ReadGlobalFileList(child);
   }
+  ReadFileList(dir_entry);
+  global_max_filename_len = std::max(global_max_filename_len, max_filename_len);
+  global_max_linkname_len = std::max(global_max_linkname_len, max_linkname_len);
   max_filename_len = global_max_filename_len;
   max_linkname_len = global_max_linkname_len;
 }

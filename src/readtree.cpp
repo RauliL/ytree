@@ -26,24 +26,18 @@ static void UnReadSubTree(DirEntry *dir_entry);
 int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
 {
   struct stat   stat_struct;
-  DirEntry      first_dir_entry;
-  DirEntry      *des_ptr;
   DirEntry      *den_ptr;
-  FileEntry     first_file_entry;
-  FileEntry     *fes_ptr;
   FileEntry     *fen_ptr;
   int		file_count;
+  std::vector<DirEntry*> new_children;
+  std::vector<FileEntry*> new_files;
 
 
   /* dir_entry initialisieren */
   /*--------------------------*/
 
-  dir_entry->file           = nullptr;
-/*
-  dir_entry->next           = NULL;
-  dir_entry->prev           = NULL;
-*/
-  dir_entry->sub_tree       = nullptr;
+  dir_entry->files.clear();
+  dir_entry->children.clear();
   dir_entry->total_bytes    = 0L;
   dir_entry->matching_bytes = 0L;
   dir_entry->tagged_bytes   = 0L;
@@ -61,9 +55,9 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
   if( S_ISBLK( dir_entry->stat_struct.st_mode ) )
     return( 0 ); /* Block-Device */
 
-  if (depth < 0 && dir_entry->up_tree)
+  if (depth < 0 && dir_entry->parent)
   {
-    dir_entry->up_tree->not_scanned = true;
+    dir_entry->parent->not_scanned = true;
 
     return 1;
   }
@@ -80,12 +74,6 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
 
     return 1;
   }
-
-  first_dir_entry.prev  = nullptr;
-  first_dir_entry.next  = nullptr;
-  first_dir_entry.name.clear();
-  first_file_entry.next = nullptr;
-  fes_ptr               = &first_file_entry;
 
   file_count = 0;
 
@@ -128,40 +116,13 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
       /* Directory-Entry */
       /*-----------------*/
       den_ptr = NewOrAbort<DirEntry>();
-      den_ptr->up_tree = dir_entry;
+      den_ptr->parent = dir_entry;
       den_ptr->name = entry_name;
       den_ptr->stat_struct = stat_struct;
 
       ReadTree(den_ptr, new_path, depth - 1);
 
-      /* Sortieren durch direktes Einfuegen */
-      /*------------------------------------*/
-
-      for( des_ptr = &first_dir_entry; des_ptr; des_ptr = des_ptr->next )
-      {
-        if( des_ptr->name > den_ptr->name )
-        {
-	  /* des-Element ist groesser */
-	  /*--------------------------*/
-
-	  den_ptr->next = des_ptr;
-	  den_ptr->prev = des_ptr->prev;
-	  des_ptr->prev->next = den_ptr;
-	  des_ptr->prev = den_ptr;
-	  break;
-	}
-
-	if( des_ptr->next == nullptr )
-	{
-	  /* Ende der Liste erreicht; ==> einfuegen */
-	  /*----------------------------------------*/
-
-          den_ptr->prev = des_ptr;
-	  den_ptr->next = des_ptr->next;
-          des_ptr->next = den_ptr;
-	  break;
-	}
-      }
+      new_children.push_back(den_ptr);
     }
     else
     {
@@ -190,9 +151,7 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
       }
 
       fen_ptr->dir_entry = dir_entry;
-      fes_ptr->next      = fen_ptr;
-      fen_ptr->prev      = fes_ptr;
-      fes_ptr            = fen_ptr;
+      new_files.push_back(fen_ptr);
       dir_entry->total_files++;
       dir_entry->total_bytes += stat_struct.st_size;
       statistic.disk_total_files++;
@@ -200,11 +159,17 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
     }
   }
 
-  if( first_file_entry.next ) first_file_entry.next->prev = nullptr;
-  if( first_dir_entry.next )  first_dir_entry.next->prev = nullptr;
+  /* Sortieren der Unterverzeichnisse (stabil, nach Namen) */
+  /*-------------------------------------------------------*/
 
-  dir_entry->file = first_file_entry.next;
-  dir_entry->sub_tree = first_dir_entry.next;
+  std::stable_sort(
+    new_children.begin(),
+    new_children.end(),
+    [](const DirEntry* a, const DirEntry* b) { return a->name < b->name; }
+  );
+
+  dir_entry->files = std::move(new_files);
+  dir_entry->children = std::move(new_children);
 
   DisplayDiskStatistic();
   doupdate();
@@ -214,25 +179,25 @@ int ReadTree(DirEntry *dir_entry, const std::string& path, int depth)
 
 
 
+static void RemoveAllFiles(DirEntry *dir_entry)
+{
+  while( !dir_entry->files.empty() )
+  {
+    RemoveFile( dir_entry->files.back() );
+  }
+}
+
+
 void UnReadTree(DirEntry *dir_entry)
 {
-  FileEntry *fe_ptr, *next_fe_ptr;
-
   if( dir_entry == statistic.tree )
   {
     Message("Can't delete ROOT");
   }
   else
   {
-    for( fe_ptr=dir_entry->file; fe_ptr; fe_ptr=next_fe_ptr )
-    {
-      next_fe_ptr = fe_ptr->next;
-      RemoveFile( fe_ptr );
-    }
-    if( dir_entry->sub_tree )
-    {
-      UnReadSubTree( dir_entry->sub_tree );
-    }
+    RemoveAllFiles( dir_entry );
+    UnReadSubTree( dir_entry );
     statistic.disk_total_directories--;
     (void) GetAvailBytes( &statistic.disk_space );
     DisplayDiskStatistic();
@@ -241,34 +206,23 @@ void UnReadTree(DirEntry *dir_entry)
 }
 
 
-static void UnReadSubTree(DirEntry *dir_entry)
+/* Loescht alle Unterverzeichnisse von parent */
+/*--------------------------------------------*/
+
+static void UnReadSubTree(DirEntry *parent)
 {
-  DirEntry *de_ptr, *next_de_ptr;
-  FileEntry *fe_ptr, *next_fe_ptr;
+  auto children = std::move(parent->children);
 
-  for( de_ptr = dir_entry; de_ptr; de_ptr = next_de_ptr )
+  parent->children.clear();
+
+  for( DirEntry *de_ptr : children )
   {
-    next_de_ptr = de_ptr->next;
+    RemoveAllFiles( de_ptr );
+    UnReadSubTree( de_ptr );
 
-    for( fe_ptr=de_ptr->file; fe_ptr; fe_ptr=next_fe_ptr )
-    {
-      next_fe_ptr = fe_ptr->next;
-      RemoveFile( fe_ptr );
-    }
-
-    if( de_ptr->sub_tree )
-    {
-      UnReadSubTree( de_ptr->sub_tree );
-    }
-
-    if( !de_ptr->up_tree->not_scanned )
+    if( !parent->not_scanned )
       statistic.disk_total_directories--;
-
-    if( de_ptr->prev ) de_ptr->prev->next = de_ptr->next;
-    else de_ptr->up_tree->sub_tree = de_ptr->next;
-    if( de_ptr->next ) de_ptr->next->prev = de_ptr->prev;
 
     delete de_ptr;
   }
 }
-

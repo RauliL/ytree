@@ -198,10 +198,7 @@ int CopyFile(Statistic *statistic_ptr,
       fen_ptr->stat_struct = stat_struct;
       fen_ptr->dir_entry   = dest_dir_entry;
       fen_ptr->matching    = Match( fen_ptr->name );
-      fen_ptr->next        = dest_dir_entry->file;
-      fen_ptr->prev        = nullptr;
-      if( dest_dir_entry->file ) dest_dir_entry->file->prev = fen_ptr;
-      dest_dir_entry->file = fen_ptr;
+      dest_dir_entry->files.insert( dest_dir_entry->files.begin(), fen_ptr );
     }
 
     (void) GetAvailBytes( &statistic_ptr->disk_space );

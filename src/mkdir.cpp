@@ -47,7 +47,7 @@ int MakeDirectory(DirEntry *father_dir_entry)
 
 int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
 {
-  DirEntry *den_ptr, *des_ptr;
+  DirEntry *den_ptr;
   struct stat stat_struct;
   int result = -1;
 
@@ -83,7 +83,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
      * ==> einklinken im Baum
      */
     den_ptr = NewOrAbort<DirEntry>();
-    den_ptr->up_tree = father_dir_entry;
+    den_ptr->parent = father_dir_entry;
     den_ptr->name = dir_name;
 
     statistic.disk_total_directories++;
@@ -94,42 +94,16 @@ int MakeDirEntry(DirEntry *father_dir_entry, char *dir_name )
     /* Sortieren durch direktes Einfuegen */
     /*------------------------------------*/
 
-    for( des_ptr = father_dir_entry->sub_tree; des_ptr; des_ptr = des_ptr->next )
-    {
-      if( des_ptr->name > den_ptr->name )
-      {
-	/* des-Element ist groesser */
-	/*--------------------------*/
+    auto& siblings = father_dir_entry->children;
 
-	den_ptr->next = des_ptr;
-	den_ptr->prev = des_ptr->prev;
-	if( des_ptr->prev) des_ptr->prev->next = den_ptr;
-	else father_dir_entry->sub_tree = den_ptr;
-	des_ptr->prev = den_ptr;
-	break;
-      }
-
-      if( des_ptr->next == nullptr )
-      {
-        /* Ende der Liste erreicht; ==> einfuegen */
-        /*----------------------------------------*/
-
-        den_ptr->prev = des_ptr;
-	den_ptr->next = des_ptr->next;
-        des_ptr->next = den_ptr;
-	break;
-      }
-    }
-
-    if( father_dir_entry->sub_tree == nullptr )
-    {
-      /* Erstes Element */
-      /*----------------*/
-
-      father_dir_entry->sub_tree = den_ptr;
-      den_ptr->prev = nullptr;
-      den_ptr->next = nullptr;
-    }
+    siblings.insert(
+      std::find_if(
+        siblings.begin(),
+        siblings.end(),
+        [den_ptr](const DirEntry* des_ptr) { return des_ptr->name > den_ptr->name; }
+      ),
+      den_ptr
+    );
 
     (void) GetAvailBytes( &statistic.disk_space );
 
@@ -170,13 +144,15 @@ int MakePath( DirEntry *tree, char *dir_path, DirEntry **dest_dir_entry )
     token = Strtok_r( &path[n], preferred_separator_str, &old );
     while( token )
     {
-      for( sde_ptr = de_ptr->sub_tree; sde_ptr; sde_ptr = sde_ptr->next )
+      sde_ptr = nullptr;
+      for( DirEntry *child : de_ptr->children )
       {
-        if( sde_ptr->name == token )
+        if( child->name == token )
 	{
 	  /* Subtree gefunden */
 	  /*------------------*/
 
+	  sde_ptr = child;
 	  de_ptr = sde_ptr;
 	  break;
 	}

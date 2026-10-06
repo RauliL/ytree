@@ -28,6 +28,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -442,8 +443,6 @@ struct DirEntry;
 
 struct FileEntry
 {
-  FileEntry* next = nullptr;
-  FileEntry* prev = nullptr;
   DirEntry* dir_entry = nullptr;
   struct stat stat_struct{};
   bool tagged = false;
@@ -454,11 +453,9 @@ struct FileEntry
 
 struct DirEntry
 {
-  FileEntry* file = nullptr;
-  DirEntry* next = nullptr;
-  DirEntry* prev = nullptr;
-  DirEntry* sub_tree = nullptr;
-  DirEntry* up_tree = nullptr;
+  std::vector<FileEntry*> files;
+  std::vector<DirEntry*> children;
+  DirEntry* parent = nullptr;
   long long total_bytes = 0;
   long long matching_bytes = 0;
   long long tagged_bytes = 0;
