@@ -1,9 +1,5 @@
 #include "ytree.h"
 
-#if defined(_WIN32)
-# include <grp.h>
-#endif
-
 std::optional<std::string> GetGroupName(gid_t gid)
 {
   const auto group = getgrgid(gid);

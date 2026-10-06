@@ -1,9 +1,5 @@
 #include "ytree.h"
 
-#if defined(_WIN32)
-# include <pwd.h>
-#endif
-
 std::optional<std::string> GetPasswdName(uid_t uid)
 {
   auto pwd = getpwuid(uid);

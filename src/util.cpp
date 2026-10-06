@@ -985,7 +985,7 @@ std::filesystem::path GetcwdOrDot()
 
 static inline bool Stat(const std::string& path, struct stat& st)
 {
-#if defined(S_IFLNK) && !defined(isc386)
+#ifdef S_IFLNK
   return !lstat(path.c_str(), &st);
 #else
   return !stat(path.c_str(), &st);

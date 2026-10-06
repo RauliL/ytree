@@ -9,35 +9,99 @@
 
 #include "ytree.h"
 
-#if ( defined( __linux__ ) || defined ( __GNU__ ) ) && !defined( SVR4 )
-
-#include <sys/vfs.h>
+#if defined(__linux__) || defined(__GNU__)
+# include <sys/vfs.h>
+#elif defined(__NetBSD__)
+# include <sys/statvfs.h>
 #else
-#ifdef WIN32
-#include <dos.h>
-#else
-#if defined( SVR4 ) || defined( OSF1 ) || defined( __NetBSD__ )
-#include <sys/statvfs.h>
-#else
-#if ( defined( __OpenBSD__ ) || defined ( __FreeBSD__ ) || defined (__APPLE__) )
-#include <sys/param.h>
-#include <sys/mount.h>
-#else
-#if defined( QNX )
-#include <sys/types.h>
-#include <sys/disk.h>
-#else
-/* z.B. SVR3 */
-#include <sys/statfs.h>
-#endif /* QNX */
+/* FreeBSD, OpenBSD, macOS, and other modern BSD derivatives */
+# include <sys/param.h>
+# include <sys/mount.h>
 #endif
-#endif /* SVR4 */
-#endif /* WIN32 */
-#endif /* linux / gnu */
 
 #ifdef __GNU__
-#include <hurd/hurd_types.h>
+# include <hurd/hurd_types.h>
 #endif
+
+#if defined(__NetBSD__)
+using FsStat = struct statvfs;
+#else
+using FsStat = struct statfs;
+#endif
+
+static int QueryFs(const char* path, FsStat* buf)
+{
+#if defined(__NetBSD__)
+  return ::statvfs(path, buf);
+#else
+  return ::statfs(path, buf);
+#endif
+}
+
+static long long FsBlockSize(const FsStat& fs)
+{
+#if defined(__NetBSD__)
+  return static_cast<long long>(fs.f_frsize);
+#else
+  return static_cast<long long>(fs.f_bsize);
+#endif
+}
+
+static const char* FilesystemTypeName(const FsStat& fs)
+{
+#ifdef __linux__
+  switch (fs.f_type)
+  {
+    case 0xEF51:     return "EXT2-OLD";
+    case 0xEF53:     return "EXT2";
+    case 0x137D:     return "EXT";
+    case 0x9660:     return "ISOFS";
+    case 0x137F:     return "MINIX";
+    case 0x138F:     return "MINIX2";
+    case 0x2468:     return "MINIX-NEW";
+    case 0x4d44:     return "DOS";
+    case 0x6969:     return "NFS";
+    case 0x9fa0:     return "PROC";
+    case 0x012FD16D: return "XIAFS";
+    default:         return "LINUX";
+  }
+#elif defined(__GNU__)
+  switch (fs.f_type)
+  {
+    case FSTYPE_UFS:     return "UFS";
+    case FSTYPE_NFS:     return "NFS";
+    case FSTYPE_GFS:     return "GFS";
+    case FSTYPE_LFS:     return "LFS";
+    case FSTYPE_SYSV:    return "SYSV";
+    case FSTYPE_FTP:     return "FTP";
+    case FSTYPE_TAR:     return "TAR";
+    case FSTYPE_AR:      return "AR";
+    case FSTYPE_CPIO:    return "CPIO";
+    case FSTYPE_MSLOSS:  return "DOS";
+    case FSTYPE_CPM:     return "CPM";
+    case FSTYPE_HFS:     return "HFS";
+    case FSTYPE_DTFS:    return "DTFS";
+    case FSTYPE_GRFS:    return "GRFS";
+    case FSTYPE_TERM:    return "TERM";
+    case FSTYPE_DEV:     return "DEV";
+    case FSTYPE_PROC:    return "PROC";
+    case FSTYPE_IFSOCK:  return "IFSOCK";
+    case FSTYPE_AFS:     return "AFS";
+    case FSTYPE_DFS:     return "DFS";
+    case FSTYPE_PROC9:   return "PROC9";
+    case FSTYPE_SOCKET:  return "SOCKET";
+    case FSTYPE_MISC:    return "MISC";
+    case FSTYPE_EXT2FS:  return "EXT2FS";
+    case FSTYPE_HTTP:    return "HTTP";
+    case FSTYPE_MEMFS:   return "MEM";
+    case FSTYPE_ISO9660: return "ISO9660";
+    default:             return "HURD";
+  }
+#else
+  /* FreeBSD, OpenBSD, NetBSD, macOS */
+  return fs.f_fstypename;
+#endif
+}
 
 
 
@@ -50,166 +114,32 @@ int GetDiskParameter(const std::string& path,
 		      long long *total_disk_space
 )
 {
-
-#ifdef WIN32
-  struct _diskfree_t diskspace;
-#else
-#if defined( SVR4 ) || defined( OSF1 ) || defined( __NetBSD__ )
-  struct statvfs statfs_struct;
-#else
-#ifdef QNX
-  long total_blocks, free_blocks;
-  int fd;
-#else
-  struct statfs statfs_struct;
-#endif /* QNX */
-#endif /* SVR4 */
-#endif /* WIN32 */
-
+  FsStat fs{};
   char *p;
   const char* fname;
   int  result;
   long long bfree;
   long long this_disk_space;
 
-
-#ifdef WIN32
-  if( ( result = _getdiskfree(0, &diskspace) ) == 0 )
-#else
-#ifdef QNX
-   fd = open(path.c_str(), O_RDONLY);
-  if( ( result = disk_space(fd, &free_blocks, &total_blocks) ) == 0 )
-#else
-
-  if( ( result = statfs(path.c_str(), &statfs_struct) ) == 0 )
-#endif /* QNX */
-#endif /* WIN32 */
+  if ((result = QueryFs(path.c_str(), &fs)) == 0)
   {
-    if( volume_name )
+    if (volume_name)
     {
       /* Name ermitteln */
       /*----------------*/
 
-      if( mode == Mode::DISK_MODE || mode == Mode::USER_MODE )
+      if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
       {
+        fname = FilesystemTypeName(fs);
 
-#ifdef __linux__
-	switch( statfs_struct.f_type ) {
-	  case 0xEF51:
-	       fname = "EXT2-OLD"; break;
-	  case 0xEF53:
-	       fname = "EXT2"; break;
-	  case 0x137D:
-	       fname = "EXT"; break;
-	  case 0x9660:
-	       fname = "ISOFS"; break;
-	  case 0x137F:
-	       fname = "MINIX"; break;
-	  case 0x138F:
-	       fname = "MINIX2"; break;
-	  case 0x2468:
-	       fname = "MINIX-NEW"; break;
-	  case 0x4d44:
-	       fname = "DOS"; break;
-	  case 0x6969:
-	       fname = "NFS"; break;
-	  case 0x9fa0:
-	       fname = "PROC"; break;
-	  case 0x012FD16D:
-	       fname = "XIAFS"; break;
-	  default:
-	       fname = "LINUX";
-	}
-#else
-#ifdef __GNU__
-       switch( statfs_struct.f_type ) {
-         case FSTYPE_UFS:
-              fname = "UFS"; break;
-         case FSTYPE_NFS:
-              fname = "NFS"; break;
-         case FSTYPE_GFS:
-              fname = "GFS"; break;
-         case FSTYPE_LFS:
-              fname = "LFS"; break;
-         case FSTYPE_SYSV:
-              fname = "SYSV"; break;
-         case FSTYPE_FTP:
-              fname = "FTP"; break;
-         case FSTYPE_TAR:
-              fname = "TAR"; break;
-         case FSTYPE_AR:
-              fname = "AR"; break;
-         case FSTYPE_CPIO:
-              fname = "CPIO"; break;
-         case FSTYPE_MSLOSS:
-              fname = "DOS"; break;
-         case FSTYPE_CPM:
-              fname = "CPM"; break;
-         case FSTYPE_HFS:
-              fname = "HFS"; break;
-         case FSTYPE_DTFS:
-              fname = "DTFS"; break;
-         case FSTYPE_GRFS:
-              fname = "GRFS"; break;
-         case FSTYPE_TERM:
-              fname = "TERM"; break;
-         case FSTYPE_DEV:
-              fname = "DEV"; break;
-         case FSTYPE_PROC:
-              fname = "PROC"; break;
-         case FSTYPE_IFSOCK:
-              fname = "IFSOCK"; break;
-         case FSTYPE_AFS:
-              fname = "AFS"; break;
-         case FSTYPE_DFS:
-              fname = "DFS"; break;
-         case FSTYPE_PROC9:
-              fname = "PROC9"; break;
-         case FSTYPE_SOCKET:
-              fname = "SOCKET"; break;
-         case FSTYPE_MISC:
-              fname = "MISC"; break;
-         case FSTYPE_EXT2FS:
-              fname = "EXT2FS"; break;
-         case FSTYPE_HTTP:
-              fname = "HTTP"; break;
-         case FSTYPE_MEMFS:
-              fname = "MEM"; break;
-         case FSTYPE_ISO9660:
-              fname = "ISO9660"; break;
-         default:
-              fname = "HURD";
-       }
-#else
-#if defined ( __FreeBSD__ ) || defined (__APPLE__)
-        fname = "UNIX";
-#else
-#ifdef WIN32
-        fname = "WIN-NT";
-#else
-#ifdef QNX
-        fname = "QNX";
-#else
-#if defined( SVR4 ) || defined( OSF1 )
-        fname = statfs_struct.f_fstr;
-#else
-#if defined(__OpenBSD__) || defined(__NetBSD__)
-        fname = statfs_struct.f_fstypename;
-#else
-        fname = statfs_struct.f_fname;
-#endif /* __OpenBSD__ || __NetBSD__ */
-#endif /* SVR4 */
-#endif /* QNX */
-#endif /* WIN32 */
-#endif /* FreeBSD / Apple */
-#endif /* __GNU__ */
-#endif /* __linux__ */
-
-        std::strncpy(volume_name,
-	                fname,
-		        std::min(static_cast<std::size_t>(DISK_NAME_LENGTH), std::strlen(fname))
-);
-        volume_name[ std::min(static_cast<std::size_t>(DISK_NAME_LENGTH), std::strlen(fname))] = '\0';
+        std::strncpy(
+          volume_name,
+          fname,
+          std::min(static_cast<std::size_t>(DISK_NAME_LENGTH), std::strlen(fname))
+        );
+        volume_name[
+          std::min(static_cast<std::size_t>(DISK_NAME_LENGTH), std::strlen(fname))
+        ] = '\0';
       }
       else
       {
@@ -224,58 +154,25 @@ int GetDiskParameter(const std::string& path,
         }
 
         std::strncpy(volume_name, p, sizeof(statistic.disk_name));
-        volume_name[sizeof( statistic.disk_name )] = '\0';
+        volume_name[sizeof(statistic.disk_name)] = '\0';
       }
     } /* volume_name */
 
-#ifdef WIN32
-    *avail_bytes = (long) diskspace.bytes_per_sector *
-                   (long) diskspace.sectors_per_cluster *
-                   (long) diskspace.avail_clusters;
-    this_disk_space = 900000000L; /* for now.. */
-#else
+    const auto bsize = FsBlockSize(fs);
+    bfree = getuid() ? fs.f_bavail : fs.f_bfree;
+    if (bfree < 0L)
+    {
+      bfree = 0L;
+    }
+    *avail_bytes = bfree * bsize;
+    this_disk_space = static_cast<long long>(fs.f_blocks) * bsize;
 
-#if (defined( SVR4 ) || defined( OSF1 )) && !defined( __DGUX__ )
-    bfree = getuid() ? statfs_struct.f_bavail : statfs_struct.f_bfree;
-    if( bfree < 0L ) bfree = 0L;
-    *avail_bytes = bfree * statfs_struct.f_frsize;
-    this_disk_space   = statfs_struct.f_blocks * statfs_struct.f_frsize;
-#else
-#if defined( __linux__ ) || defined( __GNU__ )
-    bfree = getuid() ? statfs_struct.f_bavail : statfs_struct.f_bfree;
-    if( bfree < 0L ) bfree = 0L;
-    *avail_bytes = bfree * statfs_struct.f_bsize;
-    this_disk_space   = statfs_struct.f_blocks * statfs_struct.f_blocks;
-#else
-#ifdef SVR3
-    bfree = statfs_struct.f_bfree;
-    if( bfree < 0L ) bfree = 0L;
-    *avail_bytes = bfree * BLKSIZ;  /* SYSV */
-    this_disk_space   = statfs_struct.f_blocks * BLKSIZ;
-#else
-#if defined( QNX )
-    *avail_bytes = free_blocks * 512;
-    this_disk_space = total_blocks * 512;
-#else
-    bfree = statfs_struct.f_bfree;
-    if( bfree < 0L ) bfree = 0L;
-    *avail_bytes = bfree * statfs_struct.f_bsize;
-    this_disk_space   = statfs_struct.f_blocks * statfs_struct.f_bsize;
-#endif /* QNX */
-#endif /* SVR3 */
-#endif /* linux / gnu */
-#endif /* SVR4/!__DGUX__ */
-#endif /* WIN32 */
-
-    if( total_disk_space )
+    if (total_disk_space)
     {
       *total_disk_space = this_disk_space;
     }
   }
-#ifdef QNX
-  close(fd);
-#endif
-  return( result );
+  return result;
 }
 
 
@@ -283,12 +180,10 @@ int GetDiskParameter(const std::string& path,
 
 int GetAvailBytes(long long *avail_bytes)
 {
-  return( GetDiskParameter(statistic.tree->name,
-			    nullptr,
-			    avail_bytes,
-			    nullptr
-)
-        );
+  return GetDiskParameter(
+    statistic.tree->name,
+    nullptr,
+    avail_bytes,
+    nullptr
+  );
 }
-
-

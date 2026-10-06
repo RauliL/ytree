@@ -54,38 +54,6 @@
 # include <curses.h>
 #endif
 
-#ifdef WIN32
-
-#define  S_IREAD         S_IRUSR
-#define  S_IWRITE        S_IWUSR
-#define  S_IEXEC         S_IXUSR
-
-#define  popen           _popen
-#define  pclose          _pclose
-#define  sys_errlist     _sys_errlist
-
-/* Diese Funktionen koennen direkt umgesetzt werden */
-/*--------------------------------------------------*/
-
-#define  echochar(ch)              { addch(ch); refresh(); }
-#define  putp(str)                 std::puts(str)
-
-
-/* ... hier ist ein wenig mehr Arbeit noetig ... */
-/*-----------------------------------------------*/
-
-#define  vidattr(attr)
-
-
-/* ... und hier gibt's keine entsprechende Funktion. */
-/*---------------------------------------------------*/
-
-#define  typeahead(file)
-
-#endif /* WIN32 */
-
-
-
 #ifndef KEY_BTAB
 #define KEY_BTAB  0x1d
 #endif
@@ -94,7 +62,7 @@
 #define KEY_END   KEY_EOL
 #endif
 
-#if defined( S_IFLNK ) && !defined( isc386 )
+#ifdef S_IFLNK
 #define STAT_(a, b) lstat(a, b)
 #else
 #define STAT_(a, b) stat(a, b)
@@ -347,8 +315,6 @@ struct SortSpec
 #define ACCTIME_VIEWNAME	"act"
 #define CHGTIME_VIEWNAME	"sct"
 
-
-#define BLKSIZ             512  /* Blockgroesse fuer SVR3 */
 
 #define CLOCK_INTERVAL	   1
 
