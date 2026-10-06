@@ -56,7 +56,7 @@ int LoginDisk(char *path)
         mode = Mode::DISK_MODE;
       }
       statistic = disk_statistic;
-      (void) SetFileSpec( statistic.file_spec );
+      SetFileSpec( statistic.file_spec );
       return( 1 );   /* Return-Wert fuer "alten Baum" */
     }
   }
@@ -145,7 +145,7 @@ int LoginDisk(char *path)
   }
 
 
-  (void) GetDiskParameter( path,
+  GetDiskParameter( path,
 			   statistic.disk_name,
 			   &statistic.disk_space,
 			   &statistic.disk_capacity
@@ -471,18 +471,18 @@ int LoginDisk(char *path)
       /* Sohn */
       /*------*/
 
-      (void) close( p[0] );
-      (void) close( 1 );
+      close( p[0] );
+      close( 1 );
       if(dup( p[1] ) == -1)
       {
-	/* (void) fprintf(stderr, "dup failed\n" ); */
+	/* fprintf(stderr, "dup failed\n" ); */
       }
-      (void) close( p[1] );
+      close( p[1] );
 
       if( result == 0 && SilentSystemCallEx( command_line, false ) )
       {
         result = 1;
-	/* (void) fprintf(stderr, "system(%s)*failed\n", command_line ); */
+	/* fprintf(stderr, "system(%s)*failed\n", command_line ); */
       }
       exit( result );
     }
@@ -491,7 +491,7 @@ int LoginDisk(char *path)
       /* Vater */
       /*-------*/
 
-      (void) close( p[1] );
+      close( p[1] );
       status = 0;
 
       if (!(f = fdopen(p[0], "r")))
@@ -506,8 +506,8 @@ int LoginDisk(char *path)
 	if( ReadTreeFromZOO( statistic.tree, f ) )
         {
 	  Error("ReadTreeFromZOO() failed");
-          (void) fclose( f );
-	  (void) wait( &status );
+          fclose( f );
+	  wait( &status );
           return( -1 );
 	}
       }
@@ -516,8 +516,8 @@ int LoginDisk(char *path)
 	if( ReadTreeFromRPM( statistic.tree, f ) )
         {
 	  Error("ReadTreeFromRPM() failed");
-          (void) fclose( f );
-	  (void) wait( &status );
+          fclose( f );
+	  wait( &status );
           return( -1 );
 	}
       }
@@ -526,8 +526,8 @@ int LoginDisk(char *path)
 	if( ReadTreeFromLHA( statistic.tree, f ) )
         {
 	  Error("ReadTreeFromLHA() failed");
-          (void) fclose( f );
-	  (void) wait( &status );
+          fclose( f );
+	  wait( &status );
           return( -1 );
 	}
       }
@@ -536,8 +536,8 @@ int LoginDisk(char *path)
 	if( ReadTreeFromZIP( statistic.tree, f ) )
         {
 	  Error("ReadTreeFromZIP() failed");
-          (void) fclose( f );
-	  (void) wait( &status );
+          fclose( f );
+	  wait( &status );
           return( -1 );
 	}
       }
@@ -546,8 +546,8 @@ int LoginDisk(char *path)
 	if( ReadTreeFromARC( statistic.tree, f ) )
         {
 	  Error("ReadTreeFromARC() failed");
-          (void) fclose( f );
-	  (void) wait( &status );
+          fclose( f );
+	  wait( &status );
           return( -1 );
 	}
       }
@@ -556,8 +556,8 @@ int LoginDisk(char *path)
 	if( ReadTreeFromRAR( statistic.tree, f ) )
         {
 	  Error("ReadTreeFromRAR() failed");
-          (void) fclose( f );
-	  (void) wait( &status );
+          fclose( f );
+	  wait( &status );
           return( -1 );
 	}
       }
@@ -566,17 +566,17 @@ int LoginDisk(char *path)
         if( ReadTreeFromTAR( statistic.tree, f ) )
         {
           Error("ReadTreeFromTAR() failed");
-          (void) fclose( f );
-	  (void) wait( &status );
+          fclose( f );
+	  wait( &status );
           return( -1 );
         }
       }
-      (void) wait( &status );
+      wait( &status );
       if(status)
       {
         FormatMessage("ReadTarFile() failed*can't execute*{}", command_line);
       }
-      (void) fclose( f );
+      fclose( f );
     }
   }
   else
@@ -601,7 +601,7 @@ int LoginDisk(char *path)
     disk_statistic = statistic;
   }
 
-  (void) SetFileSpec( statistic.file_spec );
+  SetFileSpec( statistic.file_spec );
 /*  SetKindOfSort( statistic.kind_of_sort ); */
 
   return( 0 );

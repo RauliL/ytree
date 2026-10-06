@@ -200,7 +200,7 @@ void UnReadTree(DirEntry *dir_entry)
     RemoveAllFiles( dir_entry );
     UnReadSubTree( dir_entry );
     statistic.disk_total_directories--;
-    (void) GetAvailBytes( &statistic.disk_space );
+    GetAvailBytes( &statistic.disk_space );
     DisplayDiskStatistic();
     doupdate();
   }

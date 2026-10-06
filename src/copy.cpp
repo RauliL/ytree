@@ -129,7 +129,7 @@ int CopyFile(Statistic *statistic_ptr,
     /* Ziel befindet sich im Sub-Tree */
     /*--------------------------------*/
 
-    (void) GetFileEntry( dest_dir_entry, to_file, &dest_file_entry );
+    GetFileEntry( dest_dir_entry, to_file, &dest_file_entry );
 
     if( dest_file_entry )
     {
@@ -147,7 +147,7 @@ int CopyFile(Statistic *statistic_ptr,
         }
       }
 
-      (void) DeleteFile( dest_file_entry );
+      DeleteFile( dest_file_entry );
     }
   }
   /* access benutzen */
@@ -200,7 +200,7 @@ int CopyFile(Statistic *statistic_ptr,
       dest_dir_entry->files.insert( dest_dir_entry->files.begin(), fen_ptr );
     }
 
-    (void) GetAvailBytes( &statistic_ptr->disk_space );
+    GetAvailBytes( &statistic_ptr->disk_space );
 
     result = 0;
   }

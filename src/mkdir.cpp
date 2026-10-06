@@ -104,7 +104,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name )
       den_ptr
     );
 
-    (void) GetAvailBytes( &statistic.disk_space );
+    GetAvailBytes( &statistic.disk_space );
 
     result = 0;
   }

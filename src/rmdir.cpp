@@ -68,7 +68,7 @@ int DeleteDirectory(DirEntry *dir_entry)
 
       UnlinkDirEntry( dir_entry );
 
-      (void) GetAvailBytes( &statistic.disk_space );
+      GetAvailBytes( &statistic.disk_space );
 
       result = 0;
     }

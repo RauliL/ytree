@@ -65,7 +65,7 @@ UNLINK_DONE:
   /*----------------*/
 
   result = RemoveFile( fe_ptr );
-  (void) GetAvailBytes( &statistic.disk_space );
+  GetAvailBytes( &statistic.disk_space );
 
 FNC_XIT:
 

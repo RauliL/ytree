@@ -118,7 +118,7 @@ int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, st
     fprintf( stderr, "can't get directory for file*%s*trying recover", path );
 #endif
 
-    (void) memset( (char *) &stat_struct, 0, sizeof( struct stat ) );
+    memset( (char *) &stat_struct, 0, sizeof( struct stat ) );
     stat_struct.st_mode = S_IFDIR;
 
     if( TryInsertArchiveDirEntry( tree, dir, &stat_struct ) )
@@ -221,7 +221,7 @@ int TryInsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *dir, s
   char dir_path[PATH_LENGTH + 1];
   char *s, *t;
 
-  (void) memset( dir_path, 0, sizeof( dir_path ) );
+  memset( dir_path, 0, sizeof( dir_path ) );
 
 #ifdef DEBUG
   fprintf( stderr, "Try install start \n" );

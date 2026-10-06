@@ -205,7 +205,7 @@ int GetDiskParameter( const std::string& path,
 #endif /* __GNU__ */
 #endif /* __linux__ */
 
-        (void) strncpy( volume_name,
+        strncpy( volume_name,
 	                fname,
 		        std::min(static_cast<std::size_t>(DISK_NAME_LENGTH), std::strlen(fname))
 		      );

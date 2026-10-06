@@ -67,9 +67,9 @@ static void WalkTaggedFiles(
   const std::function<int(FileEntry*, WalkingPackage*)>&,
   WalkingPackage*
 );
-static bool IsMatchingTaggedFiles(void);
+static bool IsMatchingTaggedFiles();
 static void RemoveFileEntry(int entry_no);
-static void ChangeFileEntry(void);
+static void ChangeFileEntry();
 static int  DeleteTaggedFiles(int max_dispfiles);
 static void SilentWalkTaggedFiles(
   const std::function<int(FileEntry*, WalkingPackage*)>&,
@@ -128,7 +128,7 @@ void SetFileMode(ViewMode new_file_mode)
 
 
 
-void RotateFileMode(void)
+void RotateFileMode()
 {
   switch( file_mode )
   {
@@ -515,11 +515,11 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   {
     case ViewMode::MODE_1 : if( fe_ptr )
 		  {
-		    (void) GetAttributes( fe_ptr->stat_struct.st_mode,
+		    GetAttributes( fe_ptr->stat_struct.st_mode,
 		                          attributes
 				        );
 
-		    (void) CTime( fe_ptr->stat_struct.st_mtime, modify_time );
+		    CTime( fe_ptr->stat_struct.st_mtime, modify_time );
 
 
 
@@ -565,7 +565,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     case ViewMode::MODE_2 : if( fe_ptr )
 		  {
-		    (void) GetAttributes( fe_ptr->stat_struct.st_mode,
+		    GetAttributes( fe_ptr->stat_struct.st_mode,
 		                          attributes
 				        );
 
@@ -642,8 +642,8 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     case ViewMode::MODE_4 : if( fe_ptr )
 		  {
-		    (void) CTime( fe_ptr->stat_struct.st_ctime, change_time );
-		    (void) CTime( fe_ptr->stat_struct.st_atime, access_time );
+		    CTime( fe_ptr->stat_struct.st_ctime, change_time );
+		    CTime( fe_ptr->stat_struct.st_atime, access_time );
 
                     if( S_ISLNK( fe_ptr->stat_struct.st_mode ) )
 		    {
@@ -1537,7 +1537,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 		   	mask = S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 
-			(void) GetAttributes( mask, modus );
+			GetAttributes( mask, modus );
 
 		        if( GetNewFileModus( LINES - 2, 1, modus, "\r\033" ) == CR )
 			{
@@ -2308,7 +2308,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      else
 		      {
 		        need_dsp_help = true;
-			(void) DeleteTaggedFiles( max_disp_files );
+			DeleteTaggedFiles( max_disp_files );
 			if( file_entry_list.size() == 0 ) unput_char = ESC;
 			dir_entry->start_file = 0;
 			dir_entry->cursor_pos = 0;
@@ -2478,7 +2478,7 @@ int HandleFileWindow(DirEntry *dir_entry)
       case 'P' :
       case 'p' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
 		      de_ptr = fe_ptr->Dir().get();
-		      (void) Pipe( de_ptr, fe_ptr );
+		      Pipe( de_ptr, fe_ptr );
 		      need_dsp_help = true;
 		      break;
 
@@ -2526,7 +2526,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 			  Warning("pclose() failed");
 			}
 
-                        (void) GetAvailBytes( &statistic.disk_space );
+                        GetAvailBytes( &statistic.disk_space );
                         DisplayAvailBytes();
 
 			DisplayFiles( dir_entry,
@@ -2540,7 +2540,7 @@ int HandleFileWindow(DirEntry *dir_entry)
       case 'X':
       case 'x' :      fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
 		      de_ptr = fe_ptr->Dir().get();
-		      (void) Execute( de_ptr, fe_ptr );
+		      Execute( de_ptr, fe_ptr );
 		      need_dsp_help = true;
 		      break;
 
@@ -2826,7 +2826,7 @@ static void SilentTagWalkTaggedFiles(
 
 
 
-static bool IsMatchingTaggedFiles(void)
+static bool IsMatchingTaggedFiles()
 {
   FileEntry *fe_ptr;
   int i;

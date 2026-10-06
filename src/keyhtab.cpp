@@ -33,7 +33,7 @@ void PrintMtchEntry(int entry_no, int y, int color,
 
   if(Mtchs[entry_no])
   {
-    (void) strncpy( buffer,(char *) Mtchs[entry_no], BUFSIZ - 3);
+    strncpy( buffer,(char *) Mtchs[entry_no], BUFSIZ - 3);
     buffer[BUFSIZ - 3] = '\0';
     n = strlen( buffer );
     wmove(matches_window,y,1);
@@ -151,7 +151,7 @@ char* GetMatches(const std::string& base)
   cursor_pos     = 0;
   start_x        = 0;
   /* leaveok(stdscr, true); */
-  (void) DisplayMatches();
+  DisplayMatches();
 
   do
   {

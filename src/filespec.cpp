@@ -71,7 +71,7 @@ current value as default, but that's just an up-arrow away.
 Returns 0 on success, -1 on failure (empty string).
 <<***************************************************************/
 
-int ReadFileSpec(void)
+int ReadFileSpec()
 {
   int result = -1;
 

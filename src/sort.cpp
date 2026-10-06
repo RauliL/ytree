@@ -12,7 +12,7 @@
 
 
 
-void GetKindOfSort(void)
+void GetKindOfSort()
 {
   int c;
   SortKey key = SortKey::Name;

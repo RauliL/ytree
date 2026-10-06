@@ -53,7 +53,7 @@ int ReadTreeFromZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 #ifdef DEBUG
   fprintf( stderr, "FILE: \"%s\"\n", path_name );
 #endif
-        (void) InsertArchiveFileEntry( dir_entry, path_name, &stat );
+        InsertArchiveFileEntry( dir_entry, path_name, &stat );
       }
     }
   }
@@ -62,7 +62,7 @@ int ReadTreeFromZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
   if( dir_flag == false )
   {
     statistic.disk_total_directories++;
-    (void) memset( (char *) &dir_entry->stat_struct, 0, sizeof( struct stat ) );
+    memset( (char *) &dir_entry->stat_struct, 0, sizeof( struct stat ) );
     dir_entry->stat_struct.st_mode = S_IFDIR;
   }
   return( MinimizeArchiveTree( dir_entry ) );
@@ -81,7 +81,7 @@ static int GetStatFromZIP(char *zip_line, char *name, struct stat *stat)
 	 	           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
 
-  (void) memset( stat, 0, sizeof( struct stat ) );
+  memset( stat, 0, sizeof( struct stat ) );
 
   stat->st_nlink = 1;
 
@@ -188,7 +188,7 @@ static int GetStatFromZIP(char *zip_line, char *name, struct stat *stat)
   /* Dateiname */
   /*-----------*/
 
-  (void) strcpy( name, t );
+  strcpy( name, t );
 
   return( 0 );
 }

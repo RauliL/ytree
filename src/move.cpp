@@ -48,7 +48,7 @@ int MoveFile(FileEntry *fe_ptr,
     /* Ziel befindet sich im Sub-Tree */
     /*--------------------------------*/
 
-    (void) GetFileEntry( dest_dir_entry, to_file, &dest_file_entry );
+    GetFileEntry( dest_dir_entry, to_file, &dest_file_entry );
 
     if( dest_file_entry )
     {
@@ -65,7 +65,7 @@ int MoveFile(FileEntry *fe_ptr,
 	}
       }
 
-      (void) DeleteFile( dest_file_entry );
+      DeleteFile( dest_file_entry );
     }
   }
   /* access benutzen */
@@ -101,7 +101,7 @@ int MoveFile(FileEntry *fe_ptr,
     /* Original aus Baum austragen */
     /*-----------------------------*/
 
-    (void) RemoveFile( fe_ptr );
+    RemoveFile( fe_ptr );
 
 
     if( dest_dir_entry )
@@ -130,7 +130,7 @@ int MoveFile(FileEntry *fe_ptr,
       *new_fe_ptr          = fen_ptr.get();
     }
 
-    (void) GetAvailBytes( &statistic.disk_space );
+    GetAvailBytes( &statistic.disk_space );
 
     result = 0;
   }

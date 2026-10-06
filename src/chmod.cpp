@@ -30,7 +30,7 @@ int ChangeFileModus(FileEntry *fe_ptr)
     return( result );
   }
 
-  (void) GetAttributes( fe_ptr->stat_struct.st_mode, modus );
+  GetAttributes( fe_ptr->stat_struct.st_mode, modus );
 
   if( GetNewFileModus( LINES - 2, 1, modus, "\r\033" ) == CR )
   {
@@ -61,7 +61,7 @@ int ChangeDirModus(DirEntry *de_ptr)
     return( result );
   }
 
-  (void) GetAttributes( de_ptr->stat_struct.st_mode, modus );
+  GetAttributes( de_ptr->stat_struct.st_mode, modus );
 
   if( GetNewFileModus( LINES - 2, 1, modus, "\r\033" ) == CR )
   {

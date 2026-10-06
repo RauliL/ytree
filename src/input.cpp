@@ -400,7 +400,7 @@ int InputString(
 
 #ifdef KEY_MOUSE
       case KEY_MOUSE:
-        (void)DecodeMouse(MouseFocus::Overlay);
+        DecodeMouse(MouseFocus::Overlay);
         break;
 #endif
 
@@ -458,7 +458,7 @@ int InputChoise(const char *msg, const char *term)
 #ifdef KEY_MOUSE
     if (c == KEY_MOUSE)
     {
-      (void)DecodeMouse(MouseFocus::Overlay);
+      DecodeMouse(MouseFocus::Overlay);
       continue;
     }
 #endif
@@ -480,7 +480,7 @@ int InputChoise(const char *msg, const char *term)
 
 
 
-int GetTapeDeviceName( void )
+int GetTapeDeviceName()
 {
   int  result;
   char path[PATH_LENGTH * 2 +1];
@@ -504,14 +504,14 @@ int GetTapeDeviceName( void )
 }
 
 
-void HitReturnToContinue(void)
+void HitReturnToContinue()
 {
   curs_set(1);
   vidattr( A_REVERSE );
   putp( "[Hit return to continue]" );
   vidattr( 0 );
-  (void) fflush( stdout );
-  (void) Getch();
+  fflush( stdout );
+  Getch();
   curs_set(0);
   doupdate();
 }

@@ -135,7 +135,7 @@ static void PrintHstEntry(int entry_no, int y, int color,
     return;
   }
 
-  (void) strncpy( buffer, history[entry_no].c_str(), BUFSIZ - 3);
+  strncpy( buffer, history[entry_no].c_str(), BUFSIZ - 3);
   buffer[BUFSIZ - 3] = '\0';
   n = strlen( buffer );
   wmove(history_window,y,1);
@@ -223,7 +223,7 @@ const char* GetHistory()
   cursor_pos     = 0;
   start_x        = 0;
   /* leaveok(stdscr, true); */
-  (void) DisplayHistory();
+  DisplayHistory();
 
   do
   {

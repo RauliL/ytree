@@ -14,7 +14,7 @@
 static void PrettyPrintNumber(int y, int x, long long number);
 
 
-void DisplayDiskStatistic(void)
+void DisplayDiskStatistic()
 {
   static const char* fmt= "[%-17s]";
   char buff[20];
@@ -37,7 +37,7 @@ void DisplayDiskStatistic(void)
 
 
 
-void DisplayAvailBytes(void)
+void DisplayAvailBytes()
 {
   PrettyPrintNumber( 5,  COLS - 17, statistic.disk_space / (long long)1024 );
   RefreshWindow( stdscr );
@@ -46,14 +46,14 @@ void DisplayAvailBytes(void)
 
 
 
-void DisplayFileSpec(void)
+void DisplayFileSpec()
 {
   mvwprintw( stdscr, 2,  COLS - 18, "%-17s", statistic.file_spec );
   RefreshWindow( stdscr );
 }
 
 
-void DisplayDiskName(void)
+void DisplayDiskName()
 {
   static const char* fmt= "[%-17s]";
   char buff[20];
@@ -114,7 +114,7 @@ void DisplayDirTagged(DirEntry *dir_entry)
 
 
 
-void DisplayDiskTagged(void)
+void DisplayDiskTagged()
 {
   PrettyPrintNumber( 15, COLS - 17, statistic.disk_tagged_files );
   PrettyPrintNumber( 16, COLS - 17, statistic.disk_tagged_bytes );

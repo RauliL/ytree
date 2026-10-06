@@ -4,7 +4,7 @@
 
 static void PrintMenuLine(WINDOW *win, int y, int x, const char *line);
 static void PrintLine(WINDOW *win, int y, int x, const char *line, int len);
-static void DisplayVersion(void);
+static void DisplayVersion();
 
 
 
@@ -173,7 +173,7 @@ static void DisplayVersion()
 
 
 
-void DisplayDirHelp(void)
+void DisplayDirHelp()
 {
   int i;
   const char *cptr;
@@ -192,7 +192,7 @@ void DisplayDirHelp(void)
 
 
 
-void DisplayFileHelp(void)
+void DisplayFileHelp()
 {
   int i;
   const char *cptr;
@@ -211,7 +211,7 @@ void DisplayFileHelp(void)
 
 
 
-void ClearHelp(void)
+void ClearHelp()
 {
   int i;
 
@@ -223,7 +223,7 @@ void ClearHelp(void)
 
 
 
-void DisplayMenu(void)
+void DisplayMenu()
 {
   int    y;
   int    l, c;
@@ -267,7 +267,7 @@ void DisplayMenu(void)
 
 
 
-void SwitchToSmallFileWindow(void)
+void SwitchToSmallFileWindow()
 {
   werase( file_window );
   PrintLine( stdscr, DIR_WINDOW_HEIGHT + 2, 0, "6-7", COLS - 25 );
@@ -276,7 +276,7 @@ void SwitchToSmallFileWindow(void)
 }
 
 
-void SwitchToBigFileWindow(void)
+void SwitchToBigFileWindow()
 {
   werase( file_window );
   RefreshWindow( file_window );
@@ -301,7 +301,7 @@ void SwitchToBigFileWindow(void)
 }
 
 
-void MapF2Window(void)
+void MapF2Window()
 {
   auto buffer = MallocOrAbort<char>(F2_WINDOW_WIDTH + 1);
 
@@ -315,7 +315,7 @@ void MapF2Window(void)
 }
 
 
-void UnmapF2Window(void)
+void UnmapF2Window()
 {
   werase( f2_window );
   if(file_window == big_file_window)
@@ -357,7 +357,7 @@ static void PrintMenuLine(WINDOW *win, int y, int x, const char *line)
      p = COLS - 27;
   for (i = 1; i < p; i++)
       buffer[i] = line[1];
-  (void) strncpy( &buffer[i], &line[2], l - i );
+  strncpy( &buffer[i], &line[2], l - i );
   buffer[l-1] = '\0';
   PrintOptions( stdscr, y, x , buffer );
   free( buffer );

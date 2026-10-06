@@ -34,7 +34,7 @@ static void BuildDirEntryList(DirEntry* dir_entry)
   ReadDirList({ dir_entry->shared_from_this() });
 }
 
-static void RotateDirMode(void)
+static void RotateDirMode()
 {
   switch( dir_mode )
   {
@@ -141,7 +141,7 @@ static void PrintDirEntry(WINDOW *win,
       break;
 
     case ViewMode::MODE_2 :
-                 (void)GetAttributes(de_ptr->stat_struct.st_mode, attributes);
+                 GetAttributes(de_ptr->stat_struct.st_mode, attributes);
                  if (const auto owner_name_ptr = GetPasswdName(de_ptr->stat_struct.st_uid))
                  {
                    std::strncpy(owner, owner_name_ptr->c_str(), sizeof(owner));
@@ -165,8 +165,8 @@ static void PrintDirEntry(WINDOW *win,
     case ViewMode::MODE_5 : /* unused for dirs */
       break;
     case ViewMode::MODE_4 :
-                 (void) CTime( de_ptr->stat_struct.st_ctime, change_time );
-                 (void) CTime( de_ptr->stat_struct.st_atime, access_time );
+                 CTime( de_ptr->stat_struct.st_ctime, change_time );
+                 CTime( de_ptr->stat_struct.st_atime, access_time );
                  line_buffer = std::format(
                    "Chg.: {:>12}  Acc.: {:>12}",
                    change_time,
@@ -1067,7 +1067,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
       case CR :      HandleSwitchWindow(dir_entry, start_dir_entry, &need_dsp_help, &ch);
 		     break;
       case 'X':
-      case 'x':      (void) Execute( dir_entry, nullptr );
+      case 'x':      Execute( dir_entry, nullptr );
 		     need_dsp_help = true;
 		     DisplayAvailBytes();
 		     break;
@@ -1121,17 +1121,17 @@ int HandleDirWindow(DirEntry *start_dir_entry)
 		     need_dsp_help = true;
 		     break;
       case 'G':
-      case 'g':      (void) ChangeDirGroup( dir_entry );
+      case 'g':      ChangeDirGroup( dir_entry );
                      DisplayTree( dir_window, statistic.disp_begin_pos, statistic.disp_begin_pos + statistic.cursor_pos );
 		     need_dsp_help = true;
 		     break;
       case 'O':
-      case 'o':      (void) ChangeDirOwner( dir_entry );
+      case 'o':      ChangeDirOwner( dir_entry );
                      DisplayTree( dir_window, statistic.disp_begin_pos, statistic.disp_begin_pos + statistic.cursor_pos );
 		     need_dsp_help = true;
 		     break;
       case 'A':
-      case 'a':      (void) ChangeDirModus( dir_entry );
+      case 'a':      ChangeDirModus( dir_entry );
                      DisplayTree( dir_window, statistic.disp_begin_pos, statistic.disp_begin_pos + statistic.cursor_pos );
 		     need_dsp_help = true;
 		     break;

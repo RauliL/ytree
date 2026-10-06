@@ -432,7 +432,7 @@ enum class ViewMode : int
 /* #define PRINT(ch) (ch) */
 
 #ifdef COLOR_SUPPORT
-extern void StartColors(void);
+extern void StartColors();
 extern void WbkgdSet(WINDOW *w, chtype c);
 #else
 #define StartColors()	;
@@ -597,13 +597,13 @@ extern bool      bypass_small_window;
 extern const char* initial_directory;
 extern char 	 builtin_hexdump_cmd[];
 
-extern void DisplayMenu(void);
-extern void DisplayDiskStatistic(void);
+extern void DisplayMenu();
+extern void DisplayDiskStatistic();
 extern void DisplayDirStatistic(DirEntry *dir_entry);
 extern void DisplayDirParameter(DirEntry *dir_entry);
 extern void DisplayDirTagged(DirEntry *dir_entry);
-extern void DisplayDiskTagged(void);
-extern void DisplayDiskName(void);
+extern void DisplayDiskTagged();
+extern void DisplayDiskName();
 extern void DisplayFileParameter(FileEntry *file_entry);
 extern void DisplayGlobalFileParameter(FileEntry *file_entry);
 extern void RefreshWindow(WINDOW *win);
@@ -639,8 +639,8 @@ void UnmapNoticeWindow();
 extern void SetFileMode(ViewMode new_file_mode);
 extern int  HandleFileWindow(DirEntry *dir_entry);
 extern char *GetAttributes(unsigned short modus, char *buffer);
-extern void SwitchToSmallFileWindow(void);
-extern void SwitchToBigFileWindow(void);
+extern void SwitchToSmallFileWindow();
+extern void SwitchToBigFileWindow();
 std::optional<std::string> GetGroupName(gid_t gid);
 std::optional<int> GetGroupId(const std::string& name);
 std::optional<std::string> GetPasswdName(uid_t uid);
@@ -655,11 +655,11 @@ int View(DirEntry* dir_entry, const std::string& file_path);
 int ViewHex(const std::string& file_path);
 int InternalView(const std::string& file_path);
 int Edit(const DirEntry* dir_entry, const std::string& file_path);
-extern void DisplayAvailBytes(void);
-extern void DisplayFileSpec(void);
+extern void DisplayAvailBytes();
+extern void DisplayFileSpec();
 extern void QuitTo(DirEntry * dir_entry);
 void Quit();
-extern int  ReadFileSpec(void);
+extern int  ReadFileSpec();
 int InputString(
   char* s,
   const int y,
@@ -667,12 +667,12 @@ int InputString(
   const std::size_t initial_pos,
   const std::size_t max_length
 );
-extern void RotateFileMode(void);
+extern void RotateFileMode();
 int Execute(const DirEntry* dir_entry, const FileEntry* file_entry);
 extern int  Pipe(DirEntry *dir_entry, FileEntry *file_entry);
 extern int  PipeTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
 extern int  GetPipeCommand(char *pipe_command);
-extern void GetKindOfSort(void);
+extern void GetKindOfSort();
 extern void SetKindOfSort(SortKey key, SortOrder order = SortOrder::Ascending);
 extern int  ChangeFileModus(FileEntry *fe_ptr);
 extern int  ChangeDirModus(DirEntry *de_ptr);
@@ -697,9 +697,9 @@ extern int  ChangeFileGroup(FileEntry *fe_ptr);
 extern int  GetNewGroup(int st_gid);
 extern int  SetFileGroup(FileEntry *fe_ptr, WalkingPackage *walking_package);
 extern int  ChangeDirGroup(DirEntry *de_ptr);
-extern void DisplayDirHelp(void);
-extern void DisplayFileHelp(void);
-extern void ClearHelp(void);
+extern void DisplayDirHelp();
+extern void DisplayFileHelp();
+extern void ClearHelp();
 extern int  GetAvailBytes(long long *avail_bytes);
 extern int  DeleteDirectory(DirEntry *dir_entry);
 extern int  ExecuteCommand(FileEntry *fe_ptr, WalkingPackage *walking_package);
@@ -732,17 +732,17 @@ extern time_t Mktime(struct tm *tm);
 extern int TryInsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *dir, struct stat *stat);
 extern int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, struct stat *stat);
 extern int MinimizeArchiveTree(const std::shared_ptr<DirEntry>& tree);
-extern void HitReturnToContinue(void);
+extern void HitReturnToContinue();
 extern int  TermcapWgetch(WINDOW *win);
 extern void TermcapVidattr(int attr );
-extern void TermcapInitscr(void);
-extern void TermcapEndwin(void);
+extern void TermcapInitscr();
+extern void TermcapEndwin();
 extern int  BuildFilename(const std::string& in_filename, const char *pattern, char *out_filename);
 extern int  ViKey( int ch );
 std::optional<CompressMethod> GetFileMethod(const std::string& filename);
-extern bool KeyPressed(void);
-extern bool EscapeKeyPressed(void);
-extern int  GetTapeDeviceName(void);
+extern bool KeyPressed();
+extern bool EscapeKeyPressed();
+extern int  GetTapeDeviceName();
 extern int  MakePath( const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry );
 extern int  MakeDirEntry( DirEntry *father_dir_entry, const std::string& dir_name );
 extern void NormPath( const char *in_path, char *out_path );
@@ -760,17 +760,17 @@ extern int  KeyF2Get(DirEntry *start_dir_entry,
                int disp_begin_pos,
                int cursor_pos,
                char *path);
-extern void Switch2F2Window(void);
-extern void MapF2Window(void);
-extern void UnmapF2Window(void);
+extern void Switch2F2Window();
+extern void MapF2Window();
+extern void UnmapF2Window();
 void MvAddStr(int y, int x, const std::string& str);
 void MvWAddStr(WINDOW* win, int y, int x, const std::string& str);
 void WAddStr(WINDOW* win, const std::string& str);
 void AddStr(const std::string& str);
 extern void ClockHandler(int);
 std::optional<std::string> GetExtViewer(const std::string& filename);
-extern void InitClock(void);
-extern void SuspendClock(void);
+extern void InitClock();
+extern void SuspendClock();
 std::optional<std::string> GetExtension(const std::string& filename);
 std::string ShellEscape(const std::string& src);
 extern int  BuildUserFileEntry(FileEntry *fe_ptr,
@@ -780,8 +780,8 @@ extern int  GetUserFileEntryLength(int max_filename_len,
 				   int max_linkname_len, const char *tmpl);
 extern long long AtoLL(const char* cptr);
 extern void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no);
-extern void ReCreateWindows(void);
-extern int  Getch(void);
+extern void ReCreateWindows();
+extern int  Getch();
 
 enum class MouseFocus
 {

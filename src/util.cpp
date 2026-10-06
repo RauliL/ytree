@@ -309,7 +309,7 @@ char *CTime(time_t f_time, char *buffer)
   }
 
   cptr = ctime( &f_time );
-  (void) strncpy( buffer, cptr+4, 12 );
+  strncpy( buffer, cptr+4, 12 );
   buffer[12] = '\0';
 
   if( (now - f_time) > 31536000L )
@@ -317,7 +317,7 @@ char *CTime(time_t f_time, char *buffer)
     /* Differenz groesser als 1 Jahr */
     /*-------------------------------*/
 
-    (void) strncpy( &buffer[7], cptr + 19, 5 );
+    strncpy( &buffer[7], cptr + 19, 5 );
 
   }
 
@@ -822,11 +822,11 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
 
 
   tag = (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ';
-  (void) GetAttributes( fe_ptr->stat_struct.st_mode, attributes);
+  GetAttributes( fe_ptr->stat_struct.st_mode, attributes);
 
-  (void) CTime( fe_ptr->stat_struct.st_mtime, modify_time );
-  (void) CTime( fe_ptr->stat_struct.st_ctime, change_time );
-  (void) CTime( fe_ptr->stat_struct.st_atime, access_time );
+  CTime( fe_ptr->stat_struct.st_mtime, modify_time );
+  CTime( fe_ptr->stat_struct.st_ctime, change_time );
+  CTime( fe_ptr->stat_struct.st_atime, access_time );
 
   if (const auto owner_name_ptr = GetPasswdName(fe_ptr->stat_struct.st_uid))
   {
