@@ -3,24 +3,23 @@ name: Build
 on: [push]
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-
+  build-ubuntu:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@v6
       - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake g++ libncurses-dev
-
-      - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-
+        uses: awalsh128/cache-apt-pkgs-action@v1.6.3
+        with:
+          packages: cmake g++ libncurses-dev
+          version: 1.0
       - name: Build
-        run: cmake --build build --config Release --parallel
+        uses: threeal/cmake-action@v2.1.0
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Build
+        uses: threeal/cmake-action@v2.1.0
