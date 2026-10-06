@@ -782,6 +782,40 @@ extern long long AtoLL(const char* cptr);
 extern void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no);
 extern void ReCreateWindows(void);
 extern int  Getch(void);
+
+enum class MouseFocus
+{
+  Dir,
+  File,
+  Overlay
+};
+
+enum class MouseAction
+{
+  None,
+  Ignore,
+  Select,
+  Activate,
+  Tag,
+  ScrollUp,
+  ScrollDown,
+  SwitchToDir,
+  SwitchToFile
+};
+
+struct MouseEvent
+{
+  MouseAction action = MouseAction::None;
+  int row = 0;
+  int col = 0;
+};
+
+void EnableMouse();
+MouseEvent DecodeMouse(MouseFocus focus);
+
+/* Maps KEY_MOUSE scroll events to KEY_UP/KEY_DOWN; other mouse input to -1. */
+int TranslateOverlayMouse(int ch);
+
 extern int  DirUserMode(DirEntry *dir_entry, int ch);
 extern int  FileUserMode(FileEntry* file_entry, int ch);
 std::optional<std::string> GetUserFileAction(int chkey, int* pchremap);

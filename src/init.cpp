@@ -30,6 +30,7 @@ int Init(
   nonl();
   raw();
   keypad( stdscr, true );
+  EnableMouse();
   clearok(stdscr, true);
   leaveok(stdscr,false);
   curs_set(0);
