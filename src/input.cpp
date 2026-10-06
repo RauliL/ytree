@@ -216,7 +216,7 @@ int InputString(
       {
         const auto ptr = buffer.c_str();
 
-        if (insert_flag && pos >= StrVisualLength(ptr))
+        if (insert_flag && pos >= static_cast<std::size_t>(StrVisualLength(ptr)))
         {
           // Append symbol.
           buffer.append(char_buffer);
@@ -225,7 +225,7 @@ int InputString(
           const auto ls = pos > 0 ? StrLeft(ptr, pos) : std::string{};
           const auto rs = StrRight(
             ptr,
-            StrVisualLength(ptr) - pos - (insert_flag ? 0 : 1)
+            StrVisualLength(ptr) - static_cast<int>(pos) - (insert_flag ? 0 : 1)
           );
 
           buffer = ls;
@@ -236,7 +236,8 @@ int InputString(
         ++pos;
       }
 
-      max_length_reached = StrVisualLength(buffer.c_str()) >= max_length;
+      max_length_reached =
+        static_cast<std::size_t>(StrVisualLength(buffer.c_str())) >= max_length;
       RefreshInputString(buffer, y, x, pos, max_length);
       continue;
     }
@@ -257,7 +258,7 @@ int InputString(
         break;
 
       case KEY_RIGHT:
-        if (pos < StrVisualLength(buffer.c_str()))
+        if (pos < static_cast<std::size_t>(StrVisualLength(buffer.c_str())))
         {
           ++pos;
         } else {
@@ -283,11 +284,14 @@ int InputString(
         break;
 
       case KEY_DC:
-        if (pos < StrVisualLength(buffer.c_str()))
+        if (pos < static_cast<std::size_t>(StrVisualLength(buffer.c_str())))
         {
           const auto ptr = buffer.c_str();
           const auto ls = StrLeft(ptr, pos);
-          const auto rs = StrRight(ptr, StrVisualLength(ptr) - pos - 1);
+          const auto rs = StrRight(
+            ptr,
+            StrVisualLength(ptr) - static_cast<int>(pos) - 1
+          );
 
           buffer = ls;
           buffer.append(rs);

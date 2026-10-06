@@ -119,6 +119,12 @@ TARGET_COMPILE_FEATURES(
     cxx_std_20
 )
 
+TARGET_COMPILE_OPTIONS(
+  ytree
+  PRIVATE
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall;-Werror>
+)
+
 TARGET_INCLUDE_DIRECTORIES(
   ytree
   PRIVATE

@@ -109,7 +109,7 @@ int LoginDisk(char *path)
     DeleteTree( statistic.tree );
   }
 
-  (void) memset( &statistic, 0, sizeof( statistic ) );
+  statistic = {};
 
   statistic.tree = MallocOrAbort<DirEntry>(sizeof(DirEntry) + PATH_LENGTH);
 
