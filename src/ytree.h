@@ -731,7 +731,7 @@ std::optional<std::string> GetExtViewer(const std::string& filename);
 extern void InitClock();
 extern void SuspendClock();
 std::optional<std::string> GetExtension(const std::string& filename);
-std::string ShellEscape(const std::string& src);
+std::string ShellQuote(const std::string& src);
 extern int  BuildUserFileEntry(FileEntry *fe_ptr,
             int max_filename_len, int max_linkname_len,
             const char *tmpl, int linelen, char *line);

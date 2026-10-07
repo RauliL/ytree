@@ -4,7 +4,6 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
 {
   static char input_buffer[COMMAND_LINE_LENGTH + 1] = "| ";
   const auto file_name_path = GetRealFileNamePath(file_entry);
-  const auto file_name_p_aux = ShellEscape(file_name_path);
   std::string command_line;
   int result = -1;
 
@@ -20,13 +19,13 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
     {
       /* Kommandozeile zusammenbasteln */
       /*-------------------------------*/
-      command_line = std::string(CAT) + " \"" + file_name_p_aux + "\" " + input_buffer;
+      command_line = std::string(CAT) + " " + ShellQuote(file_name_path.string()) + " " + input_buffer;
     } else {
       /* TAR/ZOO/Mode::ZIP_FILE_MODE */
       /*-----------------------*/
       command_line = MakeExtractCommandLine(
         mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
-        file_name_p_aux,
+        file_name_path.string(),
 			  input_buffer
 );
     }

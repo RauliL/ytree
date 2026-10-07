@@ -760,35 +760,31 @@ std::optional<std::string> GetExtension(const std::string& filename)
   return filename.substr(pos + 1);
 }
 
-std::string ShellEscape(const std::string& src)
+std::string ShellQuote(const std::string& src)
 {
-  static const std::string esc_chars = "\\!\"#$&'()*;<>?[]^`{|}~";
+  // Double-quoted shell word; escape only characters special inside "...".
   std::string result;
 
-  for (const auto& c : src)
+  result.reserve(src.size() + 2);
+  result += '"';
+
+  for (const auto c : src)
   {
     switch (c)
     {
-      case '\t':
-        result += "\\t";
-        break;
-
-      case '\n':
-        result += "\\n";
-        break;
-
-      case '\r':
-        result += "\\r";
-        break;
-
+      case '"':
+      case '\\':
+      case '$':
+      case '`':
+        result += '\\';
+        [[fallthrough]];
       default:
-        if (esc_chars.find(c) != std::string::npos)
-        {
-          result += '\\';
-        }
         result += c;
+        break;
     }
   }
+
+  result += '"';
 
   return result;
 }

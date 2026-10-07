@@ -10,8 +10,8 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
     *std::format_to_n(
       command_line,
       COMMAND_LINE_LENGTH,
-      "\"{}\"",
-      ShellEscape(file_entry->name)
+      "{}",
+      ShellQuote(file_entry->name)
 ).out = '\0';
   }
 

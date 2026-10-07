@@ -332,18 +332,16 @@ static int CopyArchiveFile(
   const std::string& from_path
 )
 {
-  const auto from_p_aux = ShellEscape(to_path);
-  const auto to_p_aux = ShellEscape(from_path);
   const auto command_line = MakeExtractCommandLine(
     mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
-    from_p_aux,
-    "> \"" + to_p_aux + "\""
+    from_path,
+    "> " + ShellQuote(to_path)
 );
   const auto result = SilentSystemCall(command_line);
 
   if (result)
   {
-    FormatWarning("Can't copy file*{}*to file*{}", from_p_aux.c_str(), to_p_aux.c_str());
+    FormatWarning("Can't copy file*{}*to file*{}", from_path.c_str(), to_path.c_str());
   }
 
   return result;

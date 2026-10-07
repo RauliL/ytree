@@ -72,7 +72,7 @@ int View(DirEntry* dir_entry, const std::filesystem::path& file_path)
 static int ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path)
 {
   char* command_line = nullptr;
-  const auto file_p_aux = ShellEscape(file_path);
+  const auto file_p_aux = ShellQuote(file_path.string());
   int  result = -1;
   bool notice_mapped = false;
 
@@ -102,7 +102,7 @@ static int ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path)
       std::snprintf(
         command_line,
         COMMAND_LINE_LENGTH,
-        "%s \"%s\"",
+        "%s %s",
         aux->c_str(),
         file_p_aux.c_str()
       );
@@ -129,7 +129,7 @@ static int ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path)
       std::snprintf(
         command_line,
         COMMAND_LINE_LENGTH,
-        "%s < \"%s\" %s | %s",
+        "%s < %s %s | %s",
         uncompress_command,
         file_p_aux.c_str(),
         ERR_TO_STDOUT,
@@ -139,7 +139,7 @@ static int ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path)
       std::snprintf(
         command_line,
         COMMAND_LINE_LENGTH,
-        "%s \"%s\"",
+        "%s %s",
         PAGER,
         file_p_aux.c_str()
       );
