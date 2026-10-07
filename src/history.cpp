@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <vector>
 
-#define MAX_HST_FILE_LINES 50
+static constexpr std::size_t MAX_HST_FILE_LINES = 50;
 
 static std::optional<std::string> custom_history_path;
 static std::vector<std::string> history;
@@ -19,7 +19,7 @@ static int disp_begin_pos = 0;
 
 void ReadHistory(const std::optional<std::string>& custom_path)
 {
-  std::string filename;
+  std::filesystem::path filename;
   char buffer[BUFSIZ];
 
   if (custom_path)
@@ -29,7 +29,7 @@ void ReadHistory(const std::optional<std::string>& custom_path)
   }
   else if (const auto cache_dir = GetXdgCachePath())
   {
-    filename = PathJoin({ *cache_dir, "history" });
+    filename = *cache_dir / "history";
   } else {
     return;
   }
@@ -49,7 +49,7 @@ void ReadHistory(const std::optional<std::string>& custom_path)
 
 void SaveHistory()
 {
-  std::string filename;
+  std::filesystem::path filename;
 
   if (history.empty())
   {
@@ -68,13 +68,13 @@ void SaveHistory()
     {
       return;
     }
-    filename = PathJoin({ *cache_dir, "history" });
+    filename = *cache_dir / "history";
   } else {
     return;
   }
   if (auto f = std::fopen(filename.c_str(), "w"))
   {
-    const auto n = std::min<std::size_t>(history.size(), MAX_HST_FILE_LINES);
+    const auto n = std::min(history.size(), MAX_HST_FILE_LINES);
 
     // Write oldest of the kept entries first.
     for (auto i = n; i-- > 0;)

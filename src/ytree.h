@@ -790,10 +790,8 @@ void TruncateVisual(char* str, std::size_t max_len);
 int StrVisualLength(std::string_view str);
 void WAttrAddStr(WINDOW* win, int attr, const std::string& str);
 void StatOrAbort(const std::string& path, struct stat& st);
-std::optional<std::string> GetHomePath();
-std::optional<std::string> GetXdgCachePath();
-std::optional<std::string> GetXdgConfigPath();
-std::string PathJoin(const std::initializer_list<std::string>& parts);
+std::optional<std::filesystem::path> GetXdgCachePath();
+std::optional<std::filesystem::path> GetXdgConfigPath();
 
 template<class T>
 inline T* MallocOrAbort(const std::size_t size)

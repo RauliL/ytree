@@ -1,6 +1,6 @@
-#include "ytree.h"
+#include <peelo/xdg.hpp>
 
-#include <vector>
+#include "ytree.h"
 
 struct DirEntryList
 {
@@ -874,7 +874,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
         const auto login = std::string(start_dir_entry->name) + (initial_directory + 1);
         std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", login.c_str());
       }
-      else if (*initial_directory == '~' && (home = GetHomePath()))
+      else if (*initial_directory == '~' && (home = peelo::xdg::home_dir()))
       {
         /* Entry of form "~/alpha/beta" */
         const auto login = *home + (initial_directory + 1);

@@ -217,7 +217,7 @@ static std::string NormalizeExtension(std::string extension)
 
 int ReadProfile(const std::optional<std::string>& custom_path)
 {
-  std::string filename;
+  std::filesystem::path filename;
 
   if (custom_path)
   {
@@ -226,7 +226,7 @@ int ReadProfile(const std::optional<std::string>& custom_path)
   }
   else if (const auto config_path = GetXdgConfigPath())
   {
-    filename = PathJoin({ *config_path, "config.toml" });
+    filename = *config_path / "config.toml";
   } else {
     return -1;
   }
@@ -234,7 +234,7 @@ int ReadProfile(const std::optional<std::string>& custom_path)
   toml::table table;
   try
   {
-    table = toml::parse_file(filename);
+    table = toml::parse_file(filename.string());
   }
   catch (const toml::parse_error&)
   {
