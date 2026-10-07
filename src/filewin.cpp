@@ -2445,7 +2445,7 @@ int HandleFileWindow(DirEntry *dir_entry)
           const auto path = GetFileNamePath(fe_ptr);
           char new_login_path[PATH_LENGTH + 1];
 
-          *std::format_to(new_login_path, "{}", path) = '\0';
+          *std::format_to(new_login_path, "{}", path.string()) = '\0';
           if (!GetNewLoginPath(new_login_path))
           {
             dir_entry->login_flag = true;

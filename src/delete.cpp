@@ -28,7 +28,7 @@ int DeleteFile(FileEntry *fe_ptr)
   {
     if (!IsWriteable(filepath))
     {
-      if (!Exists(filepath))
+      if (!std::filesystem::exists(filepath))
       {
         /* Datei existiert nicht ==> fertig */
         goto UNLINK_DONE;

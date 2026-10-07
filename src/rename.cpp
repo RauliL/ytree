@@ -1,10 +1,15 @@
 #include "ytree.h"
 
-#include <filesystem>
 #include <system_error>
 
-static bool RenameDirEntry(const std::string&, const std::string&);
-static bool RenameFileEntry(const std::string&, const std::string&);
+static bool RenameDirEntry(
+  const std::filesystem::path&,
+  const std::filesystem::path&
+);
+static bool RenameFileEntry(
+  const std::filesystem::path&,
+  const std::filesystem::path&
+);
 
 int RenameDirectory(DirEntry *de_ptr, const std::string& new_name)
 {
@@ -157,8 +162,8 @@ int GetRenameParameter(const std::string* old_name, char *new_name)
 }
 
 static bool RenameDirEntry(
-  const std::string& to_path,
-  const std::string& from_path
+  const std::filesystem::path& to_path,
+  const std::filesystem::path& from_path
 )
 {
   if (!to_path.compare(from_path))
@@ -168,7 +173,7 @@ static bool RenameDirEntry(
     return false;
   }
 
-  if (Exists(to_path))
+  if (std::filesystem::exists(to_path))
   {
     Message("Can't rename directory:*Destination object already exist!");
 
@@ -188,8 +193,8 @@ static bool RenameDirEntry(
 }
 
 static bool RenameFileEntry(
-  const std::string& to_path,
-  const std::string& from_path)
+  const std::filesystem::path& to_path,
+  const std::filesystem::path& from_path)
 {
   if (!to_path.compare(from_path))
   {
@@ -198,7 +203,7 @@ static bool RenameFileEntry(
     return false;
   }
 
-  if (Exists(to_path))
+  if (std::filesystem::exists(to_path))
   {
     Message("Can't rename!*Destination object already exist!");
 
@@ -225,7 +230,7 @@ int RenameTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
 
   if( BuildFilename(fe_ptr->name,
                      walking_package->function_data.rename.new_name,
-		     new_name
+             new_name
 ) == 0 )
   {
     if( *new_name == '\0' )

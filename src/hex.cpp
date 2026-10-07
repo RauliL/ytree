@@ -1,9 +1,9 @@
 #include "ytree.h"
 
-static int ViewHexFile(const std::string& file_path);
-static int ViewHexArchiveFile(const std::string& file_path);
+static int ViewHexFile(const std::filesystem::path& file_path);
+static int ViewHexArchiveFile(const std::filesystem::path& file_path);
 
-int ViewHex(const std::string& file_path)
+int ViewHex(const std::filesystem::path& file_path)
 {
   switch (mode)
   {
@@ -28,92 +28,29 @@ int ViewHex(const std::string& file_path)
   return -1;
 }
 
-static int ViewHexFile(const std::string& file_path)
+static int ViewHexFile(const std::filesystem::path& file_path)
 {
-  char* command_line;
-  int result = -1;
-
   if (!IsReadable(file_path))
   {
-    FormatMessage("HexView not possible!*\"{}\"*{}", file_path.c_str(), std::strerror(errno));
+    FormatMessage(
+      "HexView not possible!*\"{}\"*{}",
+      file_path.c_str(),
+      std::strerror(errno)
+    );
 
     return -1;
   }
 
-  InternalView(file_path);
-
-  return 0;
-
-  command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
-
-  const auto compress_method = GetFileMethod(file_path);
-
-  if (compress_method && *compress_method == CompressMethod::FREEZE_COMPRESS)
-  {
-    std::snprintf(
-      command_line,
-      COMMAND_LINE_LENGTH,
-		  "%s < '%s' %s | %s | %s",
-		  MELT,
-		  file_path.c_str(),
-		  ERR_TO_STDOUT,
-		  HEXDUMP,
-		  PAGER
-    );
-  }
-  else if (compress_method && *compress_method == CompressMethod::COMPRESS_COMPRESS)
-  {
-    std::snprintf(
-      command_line,
-      COMMAND_LINE_LENGTH,
-		  "%s < '%s' %s | %s | %s",
-		  UNCOMPRESS,
-		  file_path.c_str(),
-		  ERR_TO_STDOUT,
-		  HEXDUMP,
-		  PAGER
-    );
-  }
-  else if (compress_method && *compress_method == CompressMethod::GZIP_COMPRESS)
-  {
-    std::snprintf(
-      command_line,
-      COMMAND_LINE_LENGTH,
-		  "%s < '%s' %s | %s | %s",
-		  GNUUNZIP,
-		  file_path.c_str(),
-		  ERR_TO_STDOUT,
-		  HEXDUMP,
-		  PAGER
-    );
-  } else {
-    std::snprintf(
-      command_line,
-      COMMAND_LINE_LENGTH,
-		  "%s '%s' | %s",
-		  HEXDUMP,
-		  file_path.c_str(),
-		  PAGER
-    );
-  }
-
-  if ((result = SilentSystemCall(command_line)))
-  {
-    FormatMessage("can't execute*{}", command_line);
-  }
-
-  std::free(command_line);
-
-  return result;
+  return InternalView(file_path);
 }
 
-static int ViewHexArchiveFile(const std::string& file_path)
+static int ViewHexArchiveFile(const std::filesystem::path& file_path)
 {
   const auto command_line = MakeExtractCommandLine(
     mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
 		file_path,
-    std::string("| ") + HEXDUMP + " | " + PAGER
-);
+    std::format("| {} | {}", HEXDUMP, PAGER)
+  );
   const auto result = SilentSystemCall(command_line);
 
   if (result)

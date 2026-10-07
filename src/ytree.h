@@ -302,21 +302,21 @@ struct SortSpec
 
 #define DEFAULT_FILE_SPEC "*"
 
-#define TAGSYMBOL_VIEWNAME	"tag"
-#define FILENAME_VIEWNAME	"fnm"
-#define ATTRIBUTE_VIEWNAME	"atr"
-#define LINKCOUNT_VIEWNAME	"lct"
-#define FILESIZE_VIEWNAME	"fsz"
-#define MODTIME_VIEWNAME	"mot"
-#define SYMLINK_VIEWNAME	"lnm"
-#define UID_VIEWNAME		"uid"
-#define GID_VIEWNAME		"gid"
-#define INODE_VIEWNAME		"ino"
-#define ACCTIME_VIEWNAME	"act"
-#define CHGTIME_VIEWNAME	"sct"
+#define TAGSYMBOL_VIEWNAME  "tag"
+#define FILENAME_VIEWNAME "fnm"
+#define ATTRIBUTE_VIEWNAME  "atr"
+#define LINKCOUNT_VIEWNAME  "lct"
+#define FILESIZE_VIEWNAME "fsz"
+#define MODTIME_VIEWNAME  "mot"
+#define SYMLINK_VIEWNAME  "lnm"
+#define UID_VIEWNAME    "uid"
+#define GID_VIEWNAME    "gid"
+#define INODE_VIEWNAME    "ino"
+#define ACCTIME_VIEWNAME  "act"
+#define CHGTIME_VIEWNAME  "sct"
 
 
-#define CLOCK_INTERVAL	   1
+#define CLOCK_INTERVAL     1
 
 #define ERR_TO_NULL           " 2> /dev/null"
 #define ERR_TO_STDOUT         " 2>&1 "
@@ -401,7 +401,7 @@ enum class ViewMode : int
 extern void StartColors();
 extern void WbkgdSet(WINDOW *w, chtype c);
 #else
-#define StartColors()	;
+#define StartColors() ;
 #define WbkgdSet(a, b)  ;
 #endif /* COLOR_SUPPORT */
 
@@ -556,12 +556,12 @@ extern Statistic statistic;
 extern Statistic disk_statistic;
 extern Mode      mode;
 extern int       user_umask;
-extern bool	 print_time;
+extern bool  print_time;
 extern bool      resize_request;
 extern char      number_seperator;
 extern bool      bypass_small_window;
 extern const char* initial_directory;
-extern char 	 builtin_hexdump_cmd[];
+extern char    builtin_hexdump_cmd[];
 
 extern void DisplayMenu();
 extern void DisplayDiskStatistic();
@@ -583,9 +583,9 @@ extern int  ReadTreeFromLHA(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 extern int  ReadTreeFromARC(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
 extern int  ReadTreeFromRAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
 extern int  GetDiskParameter(const std::string& path,
-			     char *volume_name,
-			     long long *avail_bytes,
-			     long long *capacity
+           char *volume_name,
+           long long *avail_bytes,
+           long long *capacity
 );
 extern int  HandleDirWindow(DirEntry *start_dir_entry);
 extern void DisplayFileWindow(DirEntry *dir_entry);
@@ -593,7 +593,7 @@ int Init(
   const std::optional<std::string>& configuration_file,
   const std::optional<std::string>& history_file
 );
-std::string GetPath(const DirEntry* dir_entry);
+std::filesystem::path GetPath(const DirEntry* dir_entry);
 bool Match(const std::string& file_name);
 int SetMatchSpec(const std::string& new_spec);
 extern int  SetFileSpec(char *file_spec);
@@ -610,15 +610,15 @@ std::optional<std::string> GetGroupName(gid_t gid);
 std::optional<int> GetGroupId(const std::string& name);
 std::optional<std::string> GetPasswdName(uid_t uid);
 std::optional<int> GetPasswdUid(const std::string& name);
-std::string GetFileNamePath(const FileEntry* file_entry);
-std::string GetRealFileNamePath(const FileEntry* file_entry);
+std::filesystem::path GetFileNamePath(const FileEntry* file_entry);
+std::filesystem::path GetRealFileNamePath(const FileEntry* file_entry);
 int SystemCall(const std::string& command_line);
 int QuerySystemCall(const std::string& command_line);
 int SilentSystemCall(const std::string& command_line);
 int SilentSystemCallEx(const std::string& command_line, bool enable_clock);
-int View(DirEntry* dir_entry, const std::string& file_path);
-int ViewHex(const std::string& file_path);
-int InternalView(const std::string& file_path);
+int View(DirEntry* dir_entry, const std::filesystem::path& file_path);
+int ViewHex(const std::filesystem::path& file_path);
+int InternalView(const std::filesystem::path& file_path);
 int Edit(const DirEntry* dir_entry, const std::string& file_path);
 extern void DisplayAvailBytes();
 extern void DisplayFileSpec();
@@ -736,7 +736,7 @@ extern int  BuildUserFileEntry(FileEntry *fe_ptr,
             int max_filename_len, int max_linkname_len,
             const char *tmpl, int linelen, char *line);
 extern int  GetUserFileEntryLength(int max_filename_len,
-				   int max_linkname_len, const char *tmpl);
+           int max_linkname_len, const char *tmpl);
 extern long long AtoLL(const char* cptr);
 extern void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no);
 extern void ReCreateWindows();
@@ -807,17 +807,12 @@ inline T* MallocOrAbort(const std::size_t size)
   return ptr;
 }
 
-inline bool Exists(const std::string& path)
-{
-  return !access(path.c_str(), F_OK);
-}
-
-inline bool IsReadable(const std::string& path)
+inline bool IsReadable(const std::filesystem::path& path)
 {
   return !access(path.c_str(), R_OK);
 }
 
-inline bool IsWriteable(const std::string& path)
+inline bool IsWriteable(const std::filesystem::path& path)
 {
   return !access(path.c_str(), W_OK);
 }

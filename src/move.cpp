@@ -70,7 +70,7 @@ int MoveFile(FileEntry *fe_ptr,
   }
   /* access benutzen */
   /*-----------------*/
-  else if (Exists(to_path))
+  else if (std::filesystem::exists(to_path))
   {
     /* Datei existiert */
     /*-----------------*/

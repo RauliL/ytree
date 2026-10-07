@@ -53,7 +53,7 @@ static const std::unordered_map<std::string, CompressMethod> file_extensions =
   { ".SPM", CompressMethod::RPM_COMPRESS }
 };
 
-std::string GetPath(const DirEntry* dir_entry)
+std::filesystem::path GetPath(const DirEntry* dir_entry)
 {
   std::string result;
 
@@ -83,12 +83,12 @@ std::string GetPath(const DirEntry* dir_entry)
   return result;
 }
 
-std::string GetFileNamePath(const FileEntry* file_entry)
+std::filesystem::path GetFileNamePath(const FileEntry* file_entry)
 {
-  return (std::filesystem::path(GetPath(file_entry->Dir().get())) / file_entry->name).string();
+  return GetPath(file_entry->Dir().get()) / file_entry->name;
 }
 
-std::string GetRealFileNamePath(const FileEntry* file_entry)
+std::filesystem::path GetRealFileNamePath(const FileEntry* file_entry)
 {
   if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
   {
@@ -103,14 +103,10 @@ std::string GetRealFileNamePath(const FileEntry* file_entry)
       return file_entry->symlink_target;
     }
 
-    return (std::filesystem::path(GetPath(file_entry->Dir().get())) /
-            file_entry->symlink_target)
-      .string();
+    return GetPath(file_entry->Dir().get()) / file_entry->symlink_target;
   }
 
-  return (std::filesystem::path(GetPath(file_entry->Dir().get())) /
-          file_entry->name)
-    .string();
+  return GetPath(file_entry->Dir().get()) / file_entry->name;
 }
 
 int GetDirEntry(const std::shared_ptr<DirEntry>& tree,

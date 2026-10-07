@@ -152,7 +152,7 @@ int CopyFile(Statistic *statistic_ptr,
   }
   /* access benutzen */
   /*-----------------*/
-  else if (Exists(to_path) && confirm)
+  else if (std::filesystem::exists(to_path) && confirm)
   {
     /* Datei existiert */
     /*-----------------*/
