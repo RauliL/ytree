@@ -237,7 +237,7 @@ int InputString(
       }
 
       max_length_reached =
-        static_cast<std::size_t>(StrVisualLength(buffer.c_str())) >= max_length;
+        static_cast<std::size_t>(StrVisualLength(buffer)) >= max_length;
       RefreshInputString(buffer, y, x, pos, max_length);
       continue;
     }
@@ -258,7 +258,7 @@ int InputString(
         break;
 
       case KEY_RIGHT:
-        if (pos < static_cast<std::size_t>(StrVisualLength(buffer.c_str())))
+        if (pos < static_cast<std::size_t>(StrVisualLength(buffer)))
         {
           ++pos;
         } else {
@@ -284,7 +284,7 @@ int InputString(
         break;
 
       case KEY_DC:
-        if (pos < static_cast<std::size_t>(StrVisualLength(buffer.c_str())))
+        if (pos < static_cast<std::size_t>(StrVisualLength(buffer)))
         {
           const auto ptr = buffer.c_str();
           const auto ls = StrLeft(ptr, pos);
@@ -320,7 +320,7 @@ int InputString(
           const auto ls = StrLeft(pp, max_length);
 
           buffer = ls;
-          pos = StrVisualLength(ls.c_str());
+          pos = StrVisualLength(ls);
           MvAddStr(y, x, buffer);
           for (auto i = pos; i < max_length; ++i)
           {
@@ -339,7 +339,7 @@ int InputString(
 
       case KEY_END:
       case 'E' & 0x1f:
-        pos = StrVisualLength(buffer.c_str());
+        pos = StrVisualLength(buffer);
         break;
 
       case KEY_EIC:
@@ -360,7 +360,7 @@ int InputString(
           const auto ls = StrLeft(pp, max_length);
 
           buffer = ls;
-          pos = StrVisualLength(ls.c_str());
+          pos = StrVisualLength(ls);
           MvWAddStr(stdscr, y, x, buffer);
           for (auto i = pos; i < max_length; ++i)
           {
@@ -389,7 +389,7 @@ int InputString(
           const auto ls = StrLeft(path, max_length);
 
           buffer = ls;
-          pos = StrVisualLength(ls.c_str());
+          pos = StrVisualLength(ls);
         }
         break;
       }

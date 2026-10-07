@@ -12,7 +12,7 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
       COMMAND_LINE_LENGTH,
       "{}",
       ShellQuote(file_entry->name)
-).out = '\0';
+    ).out = '\0';
   }
 
   MvAddStr(LINES - 2, 1, "Command:");
@@ -23,15 +23,18 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
     if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
     {
       const auto path = GetPath(dir_entry);
+      std::error_code ec;
 
-      if (chdir(path.c_str()))
+      std::filesystem::current_path(path, ec);
+      if (ec)
       {
         FormatMessage("Can't change directory to*\"{}\"", path.c_str());
       } else {
         refresh();
         result = QuerySystemCall(command_line);
       }
-      if (chdir(cwd.c_str()))
+      std::filesystem::current_path(cwd, ec);
+      if (ec)
       {
         FormatMessage("Can't change directory to*\"{}\"", cwd.c_str());
       }
@@ -44,11 +47,9 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
   return result;
 }
 
-int GetCommandLine(char *command_line)
+int GetCommandLine(char* command_line)
 {
-  int result;
-
-  result = -1;
+  int result = -1;
 
   ClearHelp();
 
@@ -61,7 +62,7 @@ int GetCommandLine(char *command_line)
 
   move(LINES - 2, 1); clrtoeol();
 
-  return( result );
+  return result;
 }
 
 

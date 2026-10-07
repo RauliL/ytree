@@ -25,14 +25,17 @@ int Edit(const DirEntry* dir_entry, const std::string& file_path)
   {
     const auto cwd = GetcwdOrDot();
     const auto path = GetPath(dir_entry);
+    std::error_code ec;
 
-    if (chdir(path.c_str()))
+    std::filesystem::current_path(path, ec);
+    if (ec)
     {
       FormatMessage("Can't change directory to*\"{}\"", path.c_str());
     } else {
       result = SystemCall(command_line);
     }
-    if (chdir(cwd.c_str()))
+    std::filesystem::current_path(cwd, ec);
+    if (ec)
     {
       FormatMessage("Can't change directory to*\"{}\"", cwd.c_str());
     }

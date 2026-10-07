@@ -121,6 +121,7 @@ int GetDirEntry(const std::shared_ptr<DirEntry>& tree,
   char *token, *old;
   DirEntry *de_ptr, *sde_ptr;
   int n;
+  std::error_code ec;
 
   *dir_entry = nullptr;
   *to_path   = '\0';
@@ -136,20 +137,24 @@ int GetDirEntry(const std::shared_ptr<DirEntry>& tree,
     return -1;
   }
 
-  if (*dir_path != std::filesystem::path::preferred_separator &&
-      chdir(GetPath(current_dir_entry).c_str()))
+  if (*dir_path != std::filesystem::path::preferred_separator)
   {
-    Error("chdir() failed");
+    std::filesystem::current_path(GetPath(current_dir_entry), ec);
+    if (ec)
+    {
+      Error("chdir() failed");
 
-    return -1;
+      return -1;
+    }
   }
 
-  if( chdir(dir_path) )
+  std::filesystem::current_path(dir_path, ec);
+  if (ec)
   {
 #ifdef DEBUG
     FormatMessage("Invalid Path!*\"{}\"", dir_path);
 #endif
-    return( -3 );
+    return -3;
   }
 
   if (*dir_path != std::filesystem::path::preferred_separator)
@@ -163,7 +168,8 @@ int GetDirEntry(const std::shared_ptr<DirEntry>& tree,
     std::snprintf(dest_path, sizeof(dest_path), "%s", dir_path);
   }
 
-  if (chdir(current_path.c_str()))
+  std::filesystem::current_path(current_path, ec);
+  if (ec)
   {
     Error("chdir() failed; Can't resume");
 
@@ -192,21 +198,21 @@ int GetDirEntry(const std::shared_ptr<DirEntry>& tree,
       for( const auto& child : de_ptr->children )
       {
         if( child->name == token )
-	{
-	  /* Subtree gefunden */
-	  /*------------------*/
+  {
+    /* Subtree gefunden */
+    /*------------------*/
 
-	  sde_ptr = child.get();
-	  de_ptr = sde_ptr;
-	  break;
-	}
+    sde_ptr = child.get();
+    de_ptr = sde_ptr;
+    break;
+  }
       }
       if( sde_ptr == nullptr )
       {
 #ifdef DEBUG
-	FormatError("Can't find directory; token={}", token);
+  FormatError("Can't find directory; token={}", token);
 #endif
-	return( -3 );
+  return( -3 );
       }
       token = Strtok_r(nullptr, preferred_separator_str, &old);
     }
@@ -416,14 +422,14 @@ void PrintOptions(WINDOW *win, int y, int x, const char *str)
 
     switch( *str ) {
         case '(': color = hi_color;  continue;
-	case ')': color = lo_color;  continue;
+  case ')': color = lo_color;  continue;
 
 #ifdef COLOR_SUPPORT
-	case ']': color = lo_color;  continue;
-	case '[': color = hi_color;  continue;
+  case ']': color = lo_color;  continue;
+  case '[': color = hi_color;  continue;
 #else
-	case ']':
-	case '[': /* ignore */ continue;
+  case ']':
+  case '[': /* ignore */ continue;
 #endif
 
         case '1': ch = ACS_ULCORNER; break;
@@ -484,30 +490,30 @@ void PrintMenuOptions(WINDOW *win,int y, int x, char *str, int ncolor, int hcolo
 #else
                   WAttrAddStr(win, color, sbuf);
 #endif
-		  sbuf.clear();
-	          continue;
+      sbuf.clear();
+            continue;
 
-	case ')': color = lo_color;
+  case ')': color = lo_color;
 #ifdef COLOR_SUPPORT
                   WAttrAddStr(win, COLOR_PAIR(color) | A_BOLD, sbuf);
 #else
                   WAttrAddStr(win, color, sbuf);
 #endif
-		  sbuf.clear();
-	          continue;
+      sbuf.clear();
+            continue;
 
 #ifdef COLOR_SUPPORT
-	case ']': color = lo_color;
+  case ']': color = lo_color;
                   WAttrAddStr(win, COLOR_PAIR(color) | A_BOLD, sbuf);
-		  sbuf.clear();
-	          continue;
-	case '[': color = hi_color;
+      sbuf.clear();
+            continue;
+  case '[': color = hi_color;
                   WAttrAddStr(win, COLOR_PAIR(color) | A_BOLD, sbuf);
-		  sbuf.clear();
-	          continue;
+      sbuf.clear();
+            continue;
 #else
-	case ']':
-	case '[': /* ignore */ continue;
+  case ']':
+  case '[': /* ignore */ continue;
 #endif
         default : sbuf += static_cast<char>(PRINT(*str));
     }
@@ -620,8 +626,8 @@ void Fnsplit(char *path, char *dir, char *name)
 
 
 int BuildFilename(const std::string& in_filename,
-		   const char *pattern,
-		   char *out_filename
+       const char *pattern,
+       char *out_filename
 )
 {
   const char *cptr;
@@ -790,8 +796,8 @@ std::string ShellQuote(const std::string& src)
 }
 
 int BuildUserFileEntry(FileEntry *fe_ptr,
-			int max_filename_len, int max_linkname_len,
-			const char *tmpl, int linelen, char *line)
+      int max_filename_len, int max_linkname_len,
+      const char *tmpl, int linelen, char *line)
 {
   char attributes[11];
   char modify_time[13];
@@ -865,11 +871,11 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
       } else if(std::string_view(sptr).starts_with(CHGTIME_VIEWNAME)) {
         n = static_cast<int>(std::format_to(dptr, "{:>12}", change_time) - dptr);
       } else {
-	n = -1;
+  n = -1;
       }
       if(n == -1) {
         *dptr++ = '%';
-	} else {
+  } else {
         dptr += n;
         if(*sptr) sptr++;
         if(*sptr) sptr++;
@@ -922,12 +928,12 @@ int GetUserFileEntryLength(int max_filename_len, int max_linkname_len, const cha
       } else if(std::string_view(sptr).starts_with(CHGTIME_VIEWNAME)) {
         n = 12;
       } else {
-	n = -1;
+  n = -1;
       }
       if(n == -1) {
         len++;
-	sptr++;
-	} else {
+  sptr++;
+  } else {
         len += n;
         if(*sptr) sptr++;
         if(*sptr) sptr++;
