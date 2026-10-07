@@ -793,20 +793,6 @@ void StatOrAbort(const std::string& path, struct stat& st);
 std::optional<std::filesystem::path> GetXdgCachePath();
 std::optional<std::filesystem::path> GetXdgConfigPath();
 
-template<class T>
-inline T* MallocOrAbort(const std::size_t size)
-{
-  const auto ptr = static_cast<T*>(std::malloc(size));
-
-  if (!ptr)
-  {
-    Error("malloc() failed*ABORT");
-    std::exit(EXIT_FAILURE);
-  }
-
-  return ptr;
-}
-
 inline bool IsReadable(const std::filesystem::path& path)
 {
   return !access(path.c_str(), R_OK);

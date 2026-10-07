@@ -71,9 +71,9 @@ int View(DirEntry* dir_entry, const std::filesystem::path& file_path)
 
 static int ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path)
 {
-  char* command_line = nullptr;
+  std::string command_line;
   const auto file_p_aux = ShellQuote(file_path.string());
-  int  result = -1;
+  int result = -1;
   bool notice_mapped = false;
 
   if (!IsReadable(file_path))
@@ -83,29 +83,25 @@ static int ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path)
       file_path.c_str(),
       std::strerror(errno)
     );
-    goto FNC_XIT;
-  }
 
-  command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
+    return -1;
+  }
 
   if (const auto aux = GetExtViewer(file_path))
   {
     if (aux->find("%s") != std::string::npos)
     {
+      char tmp[COMMAND_LINE_LENGTH + 1];
+
       std::snprintf(
-        command_line,
+        tmp,
         COMMAND_LINE_LENGTH,
         aux->c_str(),
         file_p_aux.c_str()
       );
+      command_line = tmp;
     } else {
-      std::snprintf(
-        command_line,
-        COMMAND_LINE_LENGTH,
-        "%s %s",
-        aux->c_str(),
-        file_p_aux.c_str()
-      );
+      command_line = std::format("{} {}", *aux, file_p_aux);
     }
   } else {
     const auto compress_method = GetFileMethod(file_path);
@@ -126,22 +122,18 @@ static int ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path)
         BUNZIP
       );
 
-      std::snprintf(
-        command_line,
-        COMMAND_LINE_LENGTH,
-        "%s < %s %s | %s",
+      command_line = std::format(
+        "{} < {} {} | {}",
         uncompress_command,
-        file_p_aux.c_str(),
+        file_p_aux,
         ERR_TO_STDOUT,
         PAGER
       );
     } else {
-      std::snprintf(
-        command_line,
-        COMMAND_LINE_LENGTH,
-        "%s %s",
+      command_line = std::format(
+        "{} {}",
         PAGER,
-        file_p_aux.c_str()
+        file_p_aux
       );
     }
   }
@@ -156,17 +148,20 @@ the ytree starting cwd. new code grabbed from execute.c.
   {
     const auto cwd = GetcwdOrDot();
     const auto path = GetPath(dir_entry);
+    std::error_code ec;
 
-    if (chdir(path.c_str()))
+    std::filesystem::current_path(path, ec);
+    if (ec)
     {
-        FormatMessage("Can't change directory to*\"{}\"", path.c_str());
+      FormatMessage("Can't change directory to*\"{}\"", path.string());
     } else {
-        result = SystemCall(command_line);
+      result = SystemCall(command_line);
     }
-    if (chdir(cwd.c_str()))
-      {
-      FormatMessage("Can't change directory to*\"{}\"", cwd.c_str());
-      }
+    std::filesystem::current_path(cwd, ec);
+    if (ec)
+    {
+      FormatMessage("Can't change directory to*\"{}\"", cwd.string());
+    }
   } else {
     result = SystemCall(command_line);
   }
@@ -179,12 +174,6 @@ the ytree starting cwd. new code grabbed from execute.c.
   if (notice_mapped)
   {
     UnmapNoticeWindow();
-  }
-
-FNC_XIT:
-  if (command_line)
-  {
-    std::free(command_line);
   }
 
   return result;

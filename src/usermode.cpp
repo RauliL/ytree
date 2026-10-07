@@ -14,31 +14,24 @@ int DirUserMode(DirEntry *dir_entry, int ch)
 {
   int chremap;
   const auto filepath = GetPath(dir_entry);
-  char* command_line = nullptr;
 
   while (const auto aux = GetUserDirAction(ch, &chremap))
   {
-    if (!command_line)
-    {
-      command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
-    }
+    std::string command_line;
+
     if (aux->find("%s") != std::string::npos)
     {
+      char tmp[COMMAND_LINE_LENGTH + 1];
+
       std::snprintf(
-        command_line,
+        tmp,
         COMMAND_LINE_LENGTH,
         aux->c_str(),
         filepath.c_str()
-);
+      );
+      command_line = tmp;
     } else {
-      std::snprintf(
-        command_line,
-        COMMAND_LINE_LENGTH,
-        "%s%c%s",
-        aux->c_str(),
-        ' ',
-        filepath.c_str()
-);
+      command_line = std::format("{} {}", *aux, filepath.string());
     }
     if (SilentSystemCall(command_line))
     {
@@ -49,11 +42,6 @@ int DirUserMode(DirEntry *dir_entry, int ch)
       break;
     }
     ch = chremap;
-  }
-
-  if (command_line)
-  {
-    std::free(static_cast<void*>(command_line));
   }
 
   return ch;
@@ -62,32 +50,25 @@ int DirUserMode(DirEntry *dir_entry, int ch)
 int FileUserMode(FileEntry* file_entry, int ch)
 {
   const auto filepath = GetRealFileNamePath(file_entry);
-  char* command_line = nullptr;
   int chremap;
 
   while (const auto aux = GetUserFileAction(ch, &chremap))
   {
-    if (!command_line)
-    {
-      command_line = MallocOrAbort<char>(COMMAND_LINE_LENGTH + 1);
-    }
+    std::string command_line;
+
     if (aux->find("%s") != std::string::npos)
     {
+      char tmp[COMMAND_LINE_LENGTH + 1];
+
       std::snprintf(
-        command_line,
+        tmp,
         COMMAND_LINE_LENGTH,
         aux->c_str(),
         filepath.c_str()
-);
+      );
+      command_line = tmp;
     } else {
-      std::snprintf(
-        command_line,
-        COMMAND_LINE_LENGTH,
-        "%s%c%s",
-        aux->c_str(),
-        ' ',
-        filepath.c_str()
-);
+      command_line = std::format("{} {}", *aux, filepath.string());
     }
     if (SilentSystemCall(command_line))
     {
@@ -98,11 +79,6 @@ int FileUserMode(FileEntry* file_entry, int ch)
       break;
     }
     ch = chremap;
-  }
-
-  if (command_line)
-  {
-    std::free(static_cast<void*>(command_line));
   }
 
   return chremap;

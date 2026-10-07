@@ -2555,7 +2555,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 		      else
 		      {
-            auto command_line = MallocOrAbort<char>(COLS + 1);
+                char command_line[COLS + 1];
 
 			need_dsp_help = true;
 			*command_line = '\0';
@@ -2581,7 +2581,6 @@ int HandleFileWindow(DirEntry *dir_entry)
 					start_x
 );
 			}
-			std::free(command_line);
 		      }
 		      break;
 
@@ -2596,7 +2595,7 @@ int HandleFileWindow(DirEntry *dir_entry)
 		      }
 		      else
 		      {
-            auto command_line = MallocOrAbort<char>(COLS + 1);
+                char command_line[COLS + 1];
 
 			need_dsp_help = true;
 			*command_line = '\0';
@@ -2616,7 +2615,6 @@ int HandleFileWindow(DirEntry *dir_entry)
 					start_x
 );
 			}
-			std::free(command_line);
 		      }
 		      break;
 

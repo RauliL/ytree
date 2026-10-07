@@ -303,7 +303,7 @@ void SwitchToBigFileWindow()
 
 void MapF2Window()
 {
-  auto buffer = MallocOrAbort<char>(F2_WINDOW_WIDTH + 1);
+  char buffer[F2_WINDOW_WIDTH + 1];
 
   werase(f2_window);
   std::memset(buffer, '=', F2_WINDOW_WIDTH);
@@ -311,7 +311,6 @@ void MapF2Window()
 
   PrintSpecialString(f2_window, F2_WINDOW_HEIGHT - 1, 0, buffer, HST_COLOR);
   RefreshWindow(f2_window);
-  std::free(buffer);
 }
 
 
@@ -348,7 +347,7 @@ static void PrintMenuLine(WINDOW *win, int y, int x, const char *line)
   std::size_t i;
   std::size_t p = std::strchr(line, '(') ? 2 : 0;
   const std::size_t l = COLS + 2 + (std::strchr(line, '(') ? 2 : 0);
-  auto buffer = MallocOrAbort<char>(l);
+  char buffer[l];
 
   buffer[0] = line[0];
   if (p == 0)
@@ -360,7 +359,6 @@ static void PrintMenuLine(WINDOW *win, int y, int x, const char *line)
   std::strncpy(&buffer[i], &line[2], l - i);
   buffer[l-1] = '\0';
   PrintOptions(stdscr, y, x , buffer);
-  std::free(buffer);
 }
 
 
@@ -371,14 +369,13 @@ static void PrintLine(WINDOW *win, int y, int x, const char *line, int len)
 
   if(len > 0)
   {
-    auto buffer = MallocOrAbort<char>(len + 2);
+    char buffer[len + 2];
 
     buffer[0] = line[0];
     for(i=1; i < (len); i++)
         buffer[i] = line[1];
     *std::format_to(&buffer[i], "{}", &line[2]) = '\0';
     PrintOptions(stdscr, y, x , buffer);
-    std::free(buffer);
   }
 }
 
