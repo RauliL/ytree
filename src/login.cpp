@@ -591,7 +591,7 @@ int LoginDisk(char *path)
 
     statistic.tree->name = path;
 
-    depth = std::strtod(TREEDEPTH, nullptr);
+    depth = GetDoubleProfileValue("TREEDEPTH");
     if (ReadTree(statistic.tree, path, depth))
     {
       Error("ReadTree() failed");

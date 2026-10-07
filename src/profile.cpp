@@ -301,7 +301,7 @@ int ReadProfile(const std::optional<std::string>& custom_path)
   return 0;
 }
 
-const char* GetProfileValue(const char* name)
+const char* GetProfileValue(const std::string& name)
 {
   const auto entry = profile.find(name);
 
@@ -323,6 +323,23 @@ const char* GetProfileValue(const char* name)
   }
 
   return "";
+}
+
+double GetDoubleProfileValue(const std::string& name)
+{
+  const auto value = GetProfileValue(name);
+
+  return value && *value ? std::strtod(value, nullptr) : 0.0;
+}
+
+int GetIntProfileValue(const std::string& name)
+{
+  return static_cast<int>(GetDoubleProfileValue(name));
+}
+
+bool GetBooleanProfileValue(const std::string& name)
+{
+  return GetIntProfileValue(name) != 0;
 }
 
 static std::optional<std::string> GetUserAction(

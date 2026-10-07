@@ -47,14 +47,14 @@ int Init(
   ReadProfile(configuration_file);
   ReadHistory(history_file);
 
-  SetFileMode(static_cast<ViewMode>(static_cast<int>(std::strtod(FILEMODE, nullptr))));
+  SetFileMode(static_cast<ViewMode>(GetIntProfileValue("FILEMODE")));
   SetKindOfSort(SortKey::Name);
-  bypass_small_window = (bool)std::strtod(NOSMALLWINDOW, nullptr);
+  bypass_small_window = GetBooleanProfileValue("NOSMALLWINDOW");
   initial_directory = INITIALDIR;
 
   InitClock();
 
-  return( 0 );
+  return 0;
 }
 
 

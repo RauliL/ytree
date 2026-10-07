@@ -707,7 +707,10 @@ extern int  MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name
 extern void NormPath(const char *in_path, char *out_path);
 extern char *Strtok_r(char *str, const char *delim, char **old);
 int ReadProfile(const std::optional<std::string>& custom_path);
-extern const char *GetProfileValue(const char *key);
+const char* GetProfileValue(const std::string& key);
+double GetDoubleProfileValue(const std::string& key);
+int GetIntProfileValue(const std::string& key);
+bool GetBooleanProfileValue(const std::string& key);
 char GetNumberSeparator();
 void ScanSubTree(DirEntry* dir_entry);
 extern void GetMaxYX(WINDOW *win, int *height, int *width);
