@@ -337,235 +337,205 @@ std::string MakeExtractCommandLine(
   const std::string& cmd
 )
 {
-  char command_line[COMMAND_LINE_LENGTH + 1];
-  const auto compress_method = GetFileMethod(path);
   const auto l = path.length();
 
-  if (compress_method && *compress_method == CompressMethod::ZOO_COMPRESS)
+  if (const auto compress_method = GetFileMethod(path))
   {
-    /* zoo xp FILE ?? */
-    /*----------------*/
-    std::snprintf(
-      command_line,
-      COMMAND_LINE_LENGTH,
-      "%s '%s' '%s' %s",
-      ZOOEXPAND,
-      path.c_str(),
-      file.c_str(),
-      cmd.c_str()
-    );
-  }
-  else if (compress_method && *compress_method == CompressMethod::LHA_COMPRESS)
-  {
-    /* xlharc p FILE ?? */
-    /*------------------*/
-    std::snprintf(
-      command_line,
-      COMMAND_LINE_LENGTH,
-      "%s '%s' '%s' %s",
-      LHAEXPAND,
-      path.c_str(),
-      file.c_str(),
-      cmd.c_str()
-    );
-  }
-  else if (compress_method && *compress_method == CompressMethod::ZIP_COMPRESS)
-  {
-    /* unzip -c FILE ?? */
-    /*------------------*/
-    std::snprintf(
-      command_line,
-      COMMAND_LINE_LENGTH,
-      "%s '%s' '%s' %s",
-      ZIPEXPAND,
-      path.c_str(),
-      file.c_str(),
-      cmd.c_str()
-    );
-  }
-  else if (compress_method && *compress_method == CompressMethod::ARC_COMPRESS)
-  {
-    /* arc p FILE ?? */
-    /*---------------*/
-    std::snprintf(
-      command_line,
-      COMMAND_LINE_LENGTH,
-      "%s '%s' '%s' %s",
-      ARCEXPAND,
-      path.c_str(),
-      file.c_str(),
-      cmd.c_str()
-    );
-  }
-  else if (compress_method && *compress_method == CompressMethod::RPM_COMPRESS)
-  {
-    /* TF=/tmp/ytree.$$; mkdir $TF; cd $TF; rpm2cpio RPM_FILE | cpio -id FILE;
-     * cat $TF/$2; cd /tmp; rm -rf $TF; exit 0
-     */
-    if (!std::strcmp(RPMEXPAND, "builtin"))
+    if (*compress_method == CompressMethod::ZOO_COMPRESS)
     {
-      std::snprintf(
-        command_line,
-        COMMAND_LINE_LENGTH,
-        "(TF=/tmp/ytree.$$; mkdir $TF; rpm2cpio '%s' | (cd $TF; cpio --no-absolute-filenames -i -d '%s'); cat \"$TF/%s\"; cd /tmp; rm -rf $TF; exit 0) %s",
-        path.c_str(),
-        !file.empty() && file[0] == std::filesystem::path::preferred_separator ? file.substr(1).c_str() : file.c_str(),
-        file.c_str(),
-        cmd.c_str()
+      /* zoo xp FILE ?? */
+      /*----------------*/
+      return std::format(
+        "{} '{}' '{}' {}",
+        GetProfileValueOrEmpty("ZOOEXPAND"),
+        path,
+        file,
+        cmd
       );
-    } else {
-      std::snprintf(
-        command_line,
-        COMMAND_LINE_LENGTH,
-        "%s '%s' '%s' %s",
-        RPMEXPAND,
-        path.c_str(),
-        file.c_str(),
-        cmd.c_str()
+    }
+    else if (*compress_method == CompressMethod::LHA_COMPRESS)
+    {
+      /* xlharc p FILE ?? */
+      /*------------------*/
+      return std::format(
+        "{} '{}' '{}' {}",
+        GetProfileValueOrEmpty("LHAEXPAND"),
+        path,
+        file,
+        cmd
+      );
+    }
+    else if (*compress_method == CompressMethod::ZIP_COMPRESS)
+    {
+      /* unzip -c FILE ?? */
+      /*------------------*/
+      return std::format(
+        "{} '{}' '{}' {}",
+        GetProfileValueOrEmpty("ZIPEXPAND"),
+        path,
+        file,
+        cmd
+      );
+    }
+    else if (*compress_method == CompressMethod::ARC_COMPRESS)
+    {
+      /* arc p FILE ?? */
+      /*---------------*/
+      return std::format(
+        "{} '{}' '{}' {}",
+        GetProfileValueOrEmpty("ARCEXPAND"),
+        path,
+        file,
+        cmd
+      );
+    }
+    else if (*compress_method == CompressMethod::RPM_COMPRESS)
+    {
+      const auto expand = GetProfileValueOrEmpty("RPMEXPAND");
+
+      /* TF=/tmp/ytree.$$; mkdir $TF; cd $TF; rpm2cpio RPM_FILE | cpio -id FILE;
+       * cat $TF/$2; cd /tmp; rm -rf $TF; exit 0
+       */
+      if (expand == "builtin")
+      {
+        return std::format(
+          "(TF=/tmp/ytree.$$; mkdir $TF; rpm2cpio '{}' | (cd $TF; cpio --no-absolute-filenames -i -d '{}'); cat \"$TF/{}\"; cd /tmp; rm -rf $TF; exit 0) {}",
+          path,
+          !file.empty() && file[0] == std::filesystem::path::preferred_separator ? file.substr(1) : file,
+          file,
+          cmd
+        );
+      } else {
+        return std::format(
+          "{} '{}' '{}' {}",
+          expand,
+          path,
+          file,
+          cmd
+        );
+      }
+    }
+    else if (*compress_method == CompressMethod::RAR_COMPRESS)
+    {
+      /* rar p FILE ?? */
+      /*---------------*/
+      return std::format(
+        "{} '{}' '{}' {}",
+        GetProfileValueOrEmpty("RAREXPAND"),
+        path,
+        file,
+        cmd
+      );
+    }
+    else if (*compress_method == CompressMethod::FREEZE_COMPRESS)
+    {
+      /* melt < TAR_FILE | gtar xOf - FILE ?? */
+      /*--------------------------------------*/
+      return std::format(
+        "{} < '{}' | {} '{}' {}",
+        GetProfileValueOrEmpty("MELT"),
+        path,
+        GetProfileValueOrEmpty("TAREXPAND"),
+        file,
+        cmd
+      );
+    }
+    else if (*compress_method == CompressMethod::MULTIPLE_FREEZE_COMPRESS)
+    {
+      /* CAT TAR_FILEs | melt | gtar xOf - FILE ?? */
+      /*-------------------------------------------*/
+      const auto cat = path.substr(0, l - 2) + "*";
+
+      return std::format(
+        "{} {} | {} | {} '{}' {}",
+        GetProfileValueOrEmpty("CAT"),
+        cat,
+        GetProfileValueOrEmpty("MELT"),
+        GetProfileValueOrEmpty("TAREXPAND"),
+        file,
+        cmd
+      );
+    }
+    else if (*compress_method == CompressMethod::COMPRESS_COMPRESS)
+    {
+      /* uncompress < TAR_FILE | gtar xOf - FILE ?? */
+      /*--------------------------------------------*/
+      return std::format(
+        "{} < {} | {} '{}' {}",
+        GetProfileValueOrEmpty("UNCOMPRESS"),
+        path,
+        GetProfileValueOrEmpty("TAREXPAND"),
+        file,
+        cmd
+      );
+    }
+    else if (*compress_method == CompressMethod::MULTIPLE_COMPRESS_COMPRESS)
+    {
+      /* CAT TAR_FILEs | uncompress | gtar xOf - FILE ?? */
+      /*-------------------------------------------------*/
+      const auto cat = path.substr(0, l - 2) + "*";
+
+      return std::format(
+        "{} {} | {} | {} '{}' {}",
+        GetProfileValueOrEmpty("CAT"),
+        cat,
+        GetProfileValueOrEmpty("UNCOMPRESS"),
+        GetProfileValueOrEmpty("TAREXPAND"),
+        file,
+        cmd
+      );
+    }
+    else if (*compress_method == CompressMethod::GZIP_COMPRESS)
+    {
+      /* gunzip < TAR_FILE | gtar xOf - FILE ?? */
+      /*----------------------------------------*/
+      return std::format(
+        "{} < '{}' | {} '{}' {}",
+        GetProfileValueOrEmpty("GNUUNZIP"),
+        path,
+        GetProfileValueOrEmpty("TAREXPAND"),
+        file,
+        cmd
+      );
+    }
+    else if (*compress_method == CompressMethod::MULTIPLE_GZIP_COMPRESS)
+    {
+      /* CAT TAR_FILEs | gunzip | gtar xOf - FILE ?? */
+      /*---------------------------------------------*/
+      const auto cat = path.substr(0, l - 2) + "*";
+
+      return std::format(
+        "{} {} | {} | {} '{}' {}",
+        GetProfileValueOrEmpty("CAT"),
+        cat,
+        GetProfileValueOrEmpty("GNUUNZIP"),
+        GetProfileValueOrEmpty("TAREXPAND"),
+        file,
+        cmd
+      );
+    }
+    else if (*compress_method == CompressMethod::BZIP_COMPRESS)
+    {
+      /* bunzip2 < TAR_FILE | gtar xOf - FILE ?? */
+      /*----------------------------------------*/
+      return std::format(
+        "{} < '{}' | {} '{}' {}",
+        GetProfileValueOrEmpty("BUNZIP"),
+        path,
+        GetProfileValueOrEmpty("TAREXPAND"),
+        file,
+        cmd
       );
     }
   }
-  else if (compress_method && *compress_method == CompressMethod::RAR_COMPRESS)
-  {
-    /* rar p FILE ?? */
-    /*---------------*/
-    std::snprintf(
-      command_line,
-      COMMAND_LINE_LENGTH,
-      "%s '%s' '%s' %s",
-      RAREXPAND,
-      path.c_str(),
-      file.c_str(),
-      cmd.c_str()
-    );
-  }
-  else if (compress_method && *compress_method == CompressMethod::FREEZE_COMPRESS)
-  {
-    /* melt < TAR_FILE | gtar xOf - FILE ?? */
-    /*--------------------------------------*/
-    std::snprintf(
-      command_line,
-      COMMAND_LINE_LENGTH,
-      "%s < '%s' | %s '%s' %s",
-      MELT,
-      path.c_str(),
-      TAREXPAND,
-      file.c_str(),
-      cmd.c_str()
-    );
-  }
-  else if (compress_method && *compress_method == CompressMethod::MULTIPLE_FREEZE_COMPRESS)
-  {
-    /* CAT TAR_FILEs | melt | gtar xOf - FILE ?? */
-    /*-------------------------------------------*/
-    const auto cat = path.substr(0, l - 2) + "*";
-    std::snprintf(
-      command_line,
-      COMMAND_LINE_LENGTH,
-      "%s %s | %s | %s '%s' %s",
-      CAT,
-      cat.c_str(),
-      MELT,
-      TAREXPAND,
-      file.c_str(),
-      cmd.c_str()
-    );
-  }
-  else if (compress_method && *compress_method == CompressMethod::COMPRESS_COMPRESS)
-  {
-    /* uncompress < TAR_FILE | gtar xOf - FILE ?? */
-    /*--------------------------------------------*/
-    std::snprintf(
-      command_line,
-      COMMAND_LINE_LENGTH,
-      "%s < %s | %s '%s' %s",
-      UNCOMPRESS,
-      path.c_str(),
-      TAREXPAND,
-      file.c_str(),
-      cmd.c_str()
-    );
-  }
-  else if (compress_method && *compress_method == CompressMethod::MULTIPLE_COMPRESS_COMPRESS)
-  {
-    /* CAT TAR_FILEs | uncompress | gtar xOf - FILE ?? */
-    /*-------------------------------------------------*/
-    const auto cat = path.substr(0, l - 2) + "*";
-    std::snprintf(
-      command_line,
-      COMMAND_LINE_LENGTH,
-      "%s %s | %s | %s '%s' %s",
-      CAT,
-      cat.c_str(),
-      UNCOMPRESS,
-      TAREXPAND,
-      file.c_str(),
-      cmd.c_str()
-    );
-  }
-  else if (compress_method && *compress_method == CompressMethod::GZIP_COMPRESS)
-  {
-    /* gunzip < TAR_FILE | gtar xOf - FILE ?? */
-    /*----------------------------------------*/
-    std::snprintf(
-      command_line,
-      COMMAND_LINE_LENGTH,
-      "%s < '%s' | %s '%s' %s",
-      GNUUNZIP,
-      path.c_str(),
-      TAREXPAND,
-      file.c_str(),
-      cmd.c_str()
-    );
-  }
-  else if (compress_method && *compress_method == CompressMethod::MULTIPLE_GZIP_COMPRESS)
-  {
-    /* CAT TAR_FILEs | gunzip | gtar xOf - FILE ?? */
-    /*---------------------------------------------*/
-    const auto cat = path.substr(0, l - 2) + "*";
-    std::snprintf(
-      command_line,
-      COMMAND_LINE_LENGTH,
-      "%s %s | %s | %s '%s' %s",
-      CAT,
-      cat.c_str(),
-      GNUUNZIP,
-      TAREXPAND,
-      file.c_str(),
-      cmd.c_str()
-    );
-  }
-  else if (compress_method && *compress_method == CompressMethod::BZIP_COMPRESS)
-  {
-    /* bunzip2 < TAR_FILE | gtar xOf - FILE ?? */
-    /*----------------------------------------*/
-    std::snprintf(
-      command_line,
-      COMMAND_LINE_LENGTH,
-      "%s < '%s' | %s '%s' %s",
-      BUNZIP,
-      path.c_str(),
-      TAREXPAND,
-      file.c_str(),
-      cmd.c_str()
-    );
-  } else {
-    /* gtar xOf - FILE < TAR_FILE ?? */
-    /*-------------------------------*/
-    std::snprintf(
-      command_line,
-      COMMAND_LINE_LENGTH,
-      "%s '%s' < '%s' %s",
-      TAREXPAND,
-      file.c_str(),
-      path.c_str(),
-      cmd.c_str()
-    );
-  }
 
-#ifdef DEBUG
-  std::fprintf(stderr, "system(\"%s\");\n", command_line);
-#endif
-
-  return command_line;
+  /* gtar xOf - FILE < TAR_FILE ?? */
+  /*-------------------------------*/
+  return std::format(
+    "{} '{}' < '{}' {}",
+    GetProfileValueOrEmpty("TAREXPAND"),
+    file,
+    path,
+    cmd
+  );
 }

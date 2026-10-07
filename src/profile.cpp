@@ -8,7 +8,7 @@
 
 struct Profile
 {
-  const char* def;
+  std::optional<std::string> def;
   std::optional<std::string> envvar;
   std::optional<std::string> value;
 };
@@ -297,7 +297,7 @@ void ReadProfile(const std::optional<std::filesystem::path>& custom_path)
   ApplyKeyTable(dirmenu, table["dircmd"].as_table(), true);
 }
 
-const char* GetProfileValue(const std::string& name)
+std::optional<std::string> GetProfileValue(const std::string& name)
 {
   const auto entry = profile.find(name);
 
@@ -305,7 +305,7 @@ const char* GetProfileValue(const std::string& name)
   {
     if (entry->second.value)
     {
-      return entry->second.value->c_str();
+      return entry->second.value;
     }
     else if (entry->second.envvar)
     {
@@ -318,14 +318,14 @@ const char* GetProfileValue(const std::string& name)
     return entry->second.def;
   }
 
-  return "";
+  return {};
 }
 
 double GetDoubleProfileValue(const std::string& name)
 {
   const auto value = GetProfileValue(name);
 
-  return value && *value ? std::strtod(value, nullptr) : 0.0;
+  return value && !value->empty() ? std::strtod(value->c_str(), nullptr) : 0.0;
 }
 
 int GetIntProfileValue(const std::string& name)
@@ -400,5 +400,5 @@ char GetNumberSeparator()
 {
   const auto value = GetProfileValue("NUMBERSEP");
 
-  return value && *value ? *value : DEFAULT_NUMBERSEP[0];
+  return value && !value->empty() ? value->at(0) : DEFAULT_NUMBERSEP[0];
 }

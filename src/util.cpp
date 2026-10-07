@@ -395,9 +395,8 @@ void Print(WINDOW* win, int y, int x, const std::string& str, int color)
   }
 }
 
-void PrintOptions(WINDOW *win, int y, int x, const char *str)
+void PrintOptions(WINDOW *win, int y, int x, const std::string& str)
 {
-  int ch;
   int color, hi_color, lo_color;
 
   if(x < 0 || y < 0) {
@@ -415,11 +414,12 @@ void PrintOptions(WINDOW *win, int y, int x, const char *str)
 
   color = lo_color;
 
-  for( ; *str; str++ )
+  for (const auto& c : str)
   {
-    ch = (int) *str;
+    auto ch = static_cast<int>(c);
 
-    switch( *str ) {
+    switch (c)
+    {
         case '(': color = hi_color;  continue;
   case ')': color = lo_color;  continue;
 
@@ -442,7 +442,7 @@ void PrintOptions(WINDOW *win, int y, int x, const char *str)
         case '9': ch = ACS_LARROW;   break;
         case '|': ch = ACS_VLINE;    break;
         case '-': ch = ACS_HLINE;    break;
-        default:  ch = PRINT(*str);
+        default:  ch = PRINT(c);
      }
 
 #ifdef COLOR_SUPPORT
@@ -782,9 +782,14 @@ std::string ShellQuote(const std::string& src)
   return result;
 }
 
-int BuildUserFileEntry(FileEntry *fe_ptr,
-      int max_filename_len, int max_linkname_len,
-      const char *tmpl, int linelen, char *line)
+int BuildUserFileEntry(
+  FileEntry* fe_ptr,
+  int max_filename_len,
+  int max_linkname_len,
+  const std::string& tmpl,
+  int linelen,
+  char* line
+)
 {
   char attributes[11];
   char modify_time[13];
@@ -829,8 +834,8 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
   const auto fitted_name = FitVisualWidth(fe_ptr->name, max_filename_len, true);
   const auto fitted_link = FitVisualWidth(sym_link_name, max_linkname_len, true);
 
-  for(sptr=tmpl, dptr=buffer; *sptr; ) {
-
+  for(sptr = tmpl.c_str(), dptr = buffer; *sptr;)
+  {
     if(*sptr == '%') {
       sptr++;
       if(std::string_view(sptr).starts_with(TAGSYMBOL_VIEWNAME)) {
@@ -880,15 +885,20 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
 
 
 
-int GetUserFileEntryLength(int max_filename_len, int max_linkname_len, const char *tmpl)
+int GetUserFileEntryLength(
+  int max_filename_len,
+  int max_linkname_len,
+  const std::string& tmpl
+)
 {
-  int  len, n;
-  const char *sptr;
+  int len;
+  int n;
+  const char* sptr;
 
 
-  for(len=0, sptr=tmpl; *sptr; ) {
-
-    if(*sptr == '%') {
+  for (len = 0, sptr = tmpl.c_str(); *sptr;)
+  {
+    if (*sptr == '%') {
       sptr++;
       if(std::string_view(sptr).starts_with(TAGSYMBOL_VIEWNAME)) {
         n=1;
@@ -931,9 +941,9 @@ int GetUserFileEntryLength(int max_filename_len, int max_linkname_len, const cha
       len++;
     }
   }
-  return(len);
-}
 
+  return len;
+}
 
 std::int64_t AtoLL(const char *cptr)
 {

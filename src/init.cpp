@@ -50,7 +50,7 @@ void Init(
   SetFileMode(static_cast<ViewMode>(GetIntProfileValue("FILEMODE")));
   SetKindOfSort(SortKey::Name);
   bypass_small_window = GetBooleanProfileValue("NOSMALLWINDOW");
-  initial_directory = INITIALDIR;
+  initial_directory = GetProfileValue("INITIALDIR");
 
   InitClock();
 }

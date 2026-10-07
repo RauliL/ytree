@@ -115,11 +115,11 @@ static int ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path)
       )
     )
     {
-      const auto uncompress_command = (
-        *compress_method == CompressMethod::FREEZE_COMPRESS ? MELT :
-        *compress_method == CompressMethod::COMPRESS_COMPRESS ? UNCOMPRESS :
-        *compress_method == CompressMethod::GZIP_COMPRESS ? GNUUNZIP :
-        BUNZIP
+      const auto uncompress_command = GetProfileValueOrEmpty(
+        *compress_method == CompressMethod::FREEZE_COMPRESS ? "MELT" :
+        *compress_method == CompressMethod::COMPRESS_COMPRESS ? "UNCOMPRESS" :
+        *compress_method == CompressMethod::GZIP_COMPRESS ? "GNUUNZIP" :
+        "BUNZIP"
       );
 
       command_line = Join(
@@ -128,10 +128,10 @@ static int ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path)
         file_p_aux,
         ERR_TO_STDOUT,
         "|",
-        PAGER
+        GetProfileValueOrEmpty("PAGER")
       );
     } else {
-      command_line = Join(GetProfileValue("PAGER"), file_p_aux);
+      command_line = Join(GetProfileValueOrEmpty("PAGER"), file_p_aux);
     }
   }
 
@@ -179,35 +179,20 @@ the ytree starting cwd. new code grabbed from execute.c.
 static int ViewArchiveFile(const std::filesystem::path& file_path)
 {
   std::string command_line;
-  char buffer[100];
+  std::string buffer = "| ";
   int result = -1;
 
   if (const auto aux = GetExtViewer(file_path))
   {
     if (aux->find("%s") != std::string::npos)
     {
-      std::snprintf(
-        buffer,
-        sizeof(buffer),
-        "| %s",
-        GetProfileValue("PAGER")
-      );
+      buffer += GetProfileValueOrEmpty("PAGER");
     } else {
       // Maybe pipe-able
-      std::snprintf(
-        buffer,
-        sizeof(buffer),
-        "| %s",
-        aux->c_str()
-      );
+      buffer += *aux;
     }
   } else {
-    std::snprintf(
-      buffer,
-      sizeof(buffer),
-      "| %s",
-      GetProfileValue("PAGER")
-    );
+    buffer += GetProfileValueOrEmpty("PAGER");
   }
   command_line = MakeExtractCommandLine(
     mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
@@ -715,7 +700,7 @@ int InternalView(const std::filesystem::path& file_path)
     int ch;
     bool QUIT=false;
 
-    hexoffset = (!std::strcmp(HEXEDITOFFSET, "HEX")) ? true : false;
+    hexoffset = GetProfileValueOrEmpty("HEXEDITOFFSET") == "HEX";
 
     if (stat(file_path.c_str(), &fdstat)!=0)
     return -1;

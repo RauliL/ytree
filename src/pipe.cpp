@@ -19,7 +19,11 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
     {
       /* Kommandozeile zusammenbasteln */
       /*-------------------------------*/
-      command_line = std::string(CAT) + " " + ShellQuote(file_name_path.string()) + " " + input_buffer;
+      command_line = Join(
+        GetProfileValueOrEmpty("CAT"),
+        ShellQuote(file_name_path.string()),
+        input_buffer
+      );
     } else {
       /* TAR/ZOO/Mode::ZIP_FILE_MODE */
       /*-----------------------*/
@@ -27,7 +31,7 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
         mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
         file_name_path.string(),
 			  input_buffer
-);
+      );
     }
     refresh();
     result = QuerySystemCall(command_line);

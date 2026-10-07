@@ -860,32 +860,38 @@ int HandleDirWindow(DirEntry *start_dir_entry)
   need_dsp_help = true;
 
   BuildDirEntryList(start_dir_entry);
-  if ( initial_directory != nullptr )
+  if (initial_directory)
   {
-    if ( !std::strcmp(initial_directory, ".") )   /* Entry just a single "." */
+    if (!initial_directory->compare("."))
     {
       statistic.disp_begin_pos = 0;
       statistic.cursor_pos = 0;
       unput_char = CR;
-    }
-    else
-    {
-      if ( *initial_directory == '.' ) {   /* Entry of form "./alpha/beta" */
-        const auto login = std::string(start_dir_entry->name) + (initial_directory + 1);
+    } else {
+      if (!initial_directory->empty() && initial_directory->at(1) == '.')
+      {
+        const auto login = start_dir_entry->name + initial_directory->substr(1);
+
         std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", login.c_str());
       }
-      else if (*initial_directory == '~' && (home = peelo::xdg::home_dir()))
+      if (
+        !initial_directory->empty() &&
+        initial_directory->at(1) == '~' &&
+        (home = peelo::xdg::home_dir())
+      )
       {
         /* Entry of form "~/alpha/beta" */
-        const auto login = *home + (initial_directory + 1);
+        const auto login = *home + initial_directory->substr(1);
+
         std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", login.c_str());
       }
       else {            /* Entry of form "beta" or "/full/path/alpha/beta" */
-        std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", initial_directory);
+        std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", initial_directory->c_str());
       }
       for (int i = 0; i < static_cast<int>(statistic.disk_total_directories); ++i)
       {
         std::string name;
+
         if (*new_login_path == std::filesystem::path::preferred_separator)
         {
           name = GetPath(dir_entry_list[i].dir_entry.get());
@@ -901,7 +907,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
         }
       }
     }
-    initial_directory = nullptr;
+    initial_directory.reset();
   }
   dir_entry = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry.get();
 

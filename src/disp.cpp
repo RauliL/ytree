@@ -49,9 +49,9 @@ static const char *last_line = "3-8-----------------------4";
 static const char *first_line ="1-5";
 
 
-static const char dir_help_disk_mode_0[] = "DIR       (A)ttribute (D)elete  (F)ilespec  (G)roup (L)og (M)akedir                 (Q)uit";
-static const char dir_help_disk_mode_1[] = "COMMANDS  (O)wner (R)ename (S)howall (^S)how-tagged (T)ag (U)ntag e(X)ecute   (^F) dirmode";
-static const char* dir_help[MAX_MODES][2] =
+static const std::string dir_help_disk_mode_0 = "DIR       (A)ttribute (D)elete  (F)ilespec  (G)roup (L)og (M)akedir                 (Q)uit";
+static const std::string dir_help_disk_mode_1 = "COMMANDS  (O)wner (R)ename (S)howall (^S)how-tagged (T)ag (U)ntag e(X)ecute   (^F) dirmode";
+static std::string dir_help[MAX_MODES][2] =
   {
     { /* Mode::DISK_MODE */
       dir_help_disk_mode_0,
@@ -100,9 +100,9 @@ static const char* dir_help[MAX_MODES][2] =
   };
 
 
-static const char file_help_disk_mode_0[] = "FILE      (A)ttribute (C)opy (D)elete (E)dit (F)ilespec (G)roup (H)ex (L)ogin (M)ove    (Q)uit ";
-static const char file_help_disk_mode_1[] = "COMMANDS  (O)wner (P)ipe (R)ename (S)ort (T)ag (U)ntag (V)iew e(X)ecute pathcop(Y) (^F)ilemode ";
-static const char* file_help[MAX_MODES][2] =
+static const std::string file_help_disk_mode_0 = "FILE      (A)ttribute (C)opy (D)elete (E)dit (F)ilespec (G)roup (H)ex (L)ogin (M)ove    (Q)uit ";
+static const std::string file_help_disk_mode_1 = "COMMANDS  (O)wner (P)ipe (R)ename (S)ort (T)ag (U)ntag (V)iew e(X)ecute pathcop(Y) (^F)ilemode ";
+static std::string file_help[MAX_MODES][2] =
   {
     { /* Mode::DISK_MODE */
       file_help_disk_mode_0,
@@ -175,17 +175,23 @@ static void DisplayVersion()
 
 void DisplayDirHelp()
 {
-  int i;
-  const char *cptr;
+  std::optional<std::string> cptr;
+  const auto m = static_cast<int>(mode);
 
-  if (mode == Mode::USER_MODE) {
-    if (dir_help[static_cast<int>(mode)][0] == dir_help_disk_mode_0 && (cptr = DIR1) != nullptr)
-      dir_help[static_cast<int>(mode)][0] = cptr;
-    if (dir_help[static_cast<int>(mode)][1] == dir_help_disk_mode_1 && (cptr = DIR2) != nullptr)
-      dir_help[static_cast<int>(mode)][1] = cptr;
+  if (mode == Mode::USER_MODE)
+  {
+    if (dir_help[m][0] == dir_help_disk_mode_0 && (cptr = GetProfileValue("DIR1")))
+    {
+      dir_help[m][0] = *cptr;
+    }
+    if (dir_help[m][1] == dir_help_disk_mode_1 && (cptr = GetProfileValue("DIR2")))
+    {
+      dir_help[m][1] = *cptr;
+    }
   }
-  for( i=0; i < (int)(sizeof(dir_help[static_cast<int>(mode)]) / sizeof(dir_help[static_cast<int>(mode)][0])); i++) {
-    PrintOptions(stdscr, LINES - 2 + i, 0, dir_help[static_cast<int>(mode)][i]);
+  for(int i = 0; i < (int)(sizeof(dir_help[m]) / sizeof(dir_help[m][0])); ++i)
+  {
+    PrintOptions(stdscr, LINES - 2 + i, 0, dir_help[m][i]);
     clrtoeol();
   }
 }
@@ -194,17 +200,23 @@ void DisplayDirHelp()
 
 void DisplayFileHelp()
 {
-  int i;
-  const char *cptr;
+  std::optional<std::string> cptr;
+  const auto m = static_cast<int>(mode);
 
-  if (mode == Mode::USER_MODE) {
-    if (file_help[static_cast<int>(mode)][0] == file_help_disk_mode_0 && (cptr = FILE1) != nullptr)
-      file_help[static_cast<int>(mode)][0] = cptr;
-    if (file_help[static_cast<int>(mode)][1] == file_help_disk_mode_1 && (cptr = FILE2) != nullptr)
-      file_help[static_cast<int>(mode)][1] = cptr;
+  if (mode == Mode::USER_MODE)
+  {
+    if (file_help[m][0] == file_help_disk_mode_0 && (cptr = GetProfileValue("FILE1")))
+    {
+      file_help[m][0] = *cptr;
+    }
+    if (file_help[m][1] == file_help_disk_mode_1 && (cptr = GetProfileValue("FILE2")))
+    {
+      file_help[m][1] = *cptr;
+    }
   }
-  for( i=0; i < (int)(sizeof(file_help[static_cast<int>(mode)]) / sizeof(file_help[static_cast<int>(mode)][0])); i++) {
-    PrintOptions(stdscr, LINES - 2 + i, 0, file_help[static_cast<int>(mode)][i]);
+  for(int i = 0; i < (int)(sizeof(file_help[m]) / sizeof(file_help[m][0])); ++i)
+  {
+    PrintOptions(stdscr, LINES - 2 + i, 0, file_help[m][i]);
     clrtoeol();
   }
 }

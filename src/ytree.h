@@ -190,45 +190,7 @@
 /* Auswahl der benutzten UNIX-Kommandos */
 /*--------------------------------------*/
 
-#define CAT             GetProfileValue("CAT")
-#define HEXDUMP         GetProfileValue("HEXDUMP")
-#define EDITOR          GetProfileValue("EDITOR")
-#define PAGER           GetProfileValue("PAGER")
-#define MELT            GetProfileValue("MELT")
-#define UNCOMPRESS      GetProfileValue("UNCOMPRESS")
-#define GNUUNZIP        GetProfileValue("GNUUNZIP")
-#define BUNZIP          GetProfileValue("BUNZIP")
-#define MANROFF         GetProfileValue("MANROFF")
-#define TARLIST         GetProfileValue("TARLIST")
-#define TAREXPAND       GetProfileValue("TAREXPAND")
-#define RPMLIST         GetProfileValue("RPMLIST")
-#define RPMEXPAND       GetProfileValue("RPMEXPAND")
-#define ZOOLIST         GetProfileValue("ZOOLIST")
-#define ZOOEXPAND       GetProfileValue("ZOOEXPAND")
-#define ZIPLIST         GetProfileValue("ZIPLIST")
-#define ZIPEXPAND       GetProfileValue("ZIPEXPAND")
-#define LHALIST         GetProfileValue("LHALIST")
-#define LHAEXPAND       GetProfileValue("LHAEXPAND")
-#define ARCLIST         GetProfileValue("ARCLIST")
-#define ARCEXPAND       GetProfileValue("ARCEXPAND")
-#define TREEDEPTH       GetProfileValue("TREEDEPTH")
-#define USERVIEW        GetProfileValue("USERVIEW")
-#define RARLIST         GetProfileValue("RARLIST")
-#define RAREXPAND       GetProfileValue("RAREXPAND")
-#define FILEMODE        GetProfileValue("FILEMODE")
-#define NOSMALLWINDOW   GetProfileValue("NOSMALLWINDOW")
-#define INITIALDIR      GetProfileValue("INITIALDIR")
-#define DIR1            GetProfileValue("DIR1")
-#define DIR2            GetProfileValue("DIR2")
-#define FILE1           GetProfileValue("FILE1")
-#define FILE2           GetProfileValue("FILE2")
-#define SEARCHCOMMAND   GetProfileValue("SEARCHCOMMAND")
-#define HEXEDITOFFSET   GetProfileValue("HEXEDITOFFSET")
-#define LISTJUMPSEARCH  GetProfileValue("LISTJUMPSEARCH")
-
-
 #define DEFAULT_TREE       "."
-
 
 #define Error(msg) ErrorEx(msg, __FILE__, __LINE__)
 #define FormatError(...) ErrorEx(std::format(__VA_ARGS__), __FILE__, __LINE__)
@@ -571,7 +533,7 @@ extern int       user_umask;
 extern bool  print_time;
 extern bool      resize_request;
 extern bool      bypass_small_window;
-extern const char* initial_directory;
+extern std::optional<std::string> initial_directory;
 extern char    builtin_hexdump_cmd[];
 
 extern void DisplayMenu();
@@ -692,7 +654,7 @@ extern int  LoginDisk(char *path);
 extern int  GetNewLoginPath(char *path);
 void PrintSpecialString(WINDOW* win, int y, int x, const std::string& str, int color);
 void Print(WINDOW* win, int y, int x, const std::string& str, int color);
-extern void PrintOptions(WINDOW *,int, int, const char *);
+extern void PrintOptions(WINDOW *,int, int, const std::string&);
 extern void PrintMenuOptions(WINDOW *,int, int, char *, int, int);
 extern char *FormFilename(char *dest, char *src, unsigned int max_len);
 extern char *CutFilename(char *dest, const std::string& src, unsigned int max_len);
@@ -720,7 +682,7 @@ extern int  MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name
 extern void NormPath(const char *in_path, char *out_path);
 extern char *Strtok_r(char *str, const char *delim, char **old);
 void ReadProfile(const std::optional<std::filesystem::path>& custom_path);
-const char* GetProfileValue(const std::string& key);
+std::optional<std::string> GetProfileValue(const std::string& key);
 double GetDoubleProfileValue(const std::string& key);
 int GetIntProfileValue(const std::string& key);
 bool GetBooleanProfileValue(const std::string& key);
@@ -746,11 +708,19 @@ std::optional<std::string> GetExtViewer(const std::filesystem::path& filename);
 extern void InitClock();
 extern void SuspendClock();
 std::string ShellQuote(const std::string& src);
-extern int  BuildUserFileEntry(FileEntry *fe_ptr,
-            int max_filename_len, int max_linkname_len,
-            const char *tmpl, int linelen, char *line);
-extern int  GetUserFileEntryLength(int max_filename_len,
-           int max_linkname_len, const char *tmpl);
+int BuildUserFileEntry(
+  FileEntry* fe_ptr,
+  int max_filename_len,
+  int max_linkname_len,
+  const std::string& tmpl,
+  int linelen,
+  char* line
+);
+int GetUserFileEntryLength(
+  int max_filename_len,
+  int max_linkname_len,
+  const std::string& tmpl
+);
 std::int64_t AtoLL(const char* cptr);
 extern void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no);
 extern void ReCreateWindows();
@@ -806,6 +776,11 @@ void WAttrAddStr(WINDOW* win, int attr, const std::string& str);
 void StatOrAbort(const std::string& path, struct stat& st);
 std::optional<std::filesystem::path> GetXdgCachePath();
 std::optional<std::filesystem::path> GetXdgConfigPath();
+
+inline std::string GetProfileValueOrEmpty(const std::string& key)
+{
+  return GetProfileValue(key).value_or(std::string());
+}
 
 inline bool IsReadable(const std::filesystem::path& path)
 {

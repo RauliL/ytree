@@ -114,7 +114,7 @@ void SetFileMode(ViewMode new_file_mode)
 		 break;
     case MODE_5: max_userview_len = GetUserFileEntryLength(max_filename_len,
 					                   max_linkname_len,
-					                   USERVIEW);
+					                   GetProfileValueOrEmpty("USERVIEW"));
                  if(max_userview_len)
 		   max_column = window_width / (max_userview_len + 1);
 		 else
@@ -141,7 +141,7 @@ void RotateFileMode()
   }
   if( (mode != Mode::DISK_MODE && mode != Mode::USER_MODE) && file_mode == ViewMode::MODE_4 ) {
     RotateFileMode();
-  } else if(file_mode == ViewMode::MODE_5 && !std::strcmp(USERVIEW, "")) {
+  } else if(file_mode == ViewMode::MODE_5 && GetProfileValueOrEmpty("USERVIEW").empty()) {
     RotateFileMode();
   }
 }
@@ -686,7 +686,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 		  {
 		    line_buffer.assign(std::max(old_cols + PATH_LENGTH, 200), '\0');
  		    BuildUserFileEntry(fe_ptr,  max_filename_len, max_linkname_len,
-		        USERVIEW,
+		        GetProfileValueOrEmpty("USERVIEW"),
 		        200, line_buffer.data());
 		    line_buffer.resize(std::strlen(line_buffer.c_str()));
 		  }
@@ -2956,7 +2956,7 @@ static void RereadWindowSize(DirEntry *dir_entry)
 
 static void ListJump(DirEntry * dir_entry, const char *str)
 {
-   int incremental = (!std::strcmp(LISTJUMPSEARCH, "1")) ? 1 : 0; /* from config.toml */
+  const auto incremental = GetBooleanProfileValue("LISTJUMPSEARCH");
 
     /*  in file_window press initial char of file to jump to it */
 

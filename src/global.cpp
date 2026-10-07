@@ -23,9 +23,9 @@ WINDOW *time_window;
 
 Statistic statistic;
 Statistic disk_statistic;
-Mode      mode;
-int	  user_umask;
-bool	  print_time;
-bool	  resize_request;
-bool	  bypass_small_window;
-const char* initial_directory;
+Mode mode;
+int user_umask;
+bool print_time;
+bool resize_request;
+bool bypass_small_window;
+std::optional<std::string> initial_directory;

@@ -49,7 +49,12 @@ static int ViewHexArchiveFile(const std::filesystem::path& file_path)
   const auto command_line = MakeExtractCommandLine(
     mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
     file_path,
-    Join("|", GetProfileValue("HEXDUMP"), "|", GetProfileValue("PAGER"))
+    Join(
+      "|",
+      GetProfileValueOrEmpty("HEXDUMP"),
+      "|",
+      GetProfileValueOrEmpty("PAGER")
+    )
   );
   const auto result = SilentSystemCall(command_line);
 

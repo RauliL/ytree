@@ -19,7 +19,7 @@ int Edit(const DirEntry* dir_entry, const std::string& file_path)
     return -1;
   }
 
-  command_line = std::string(EDITOR) + " " + ShellQuote(file_path);
+  command_line = Join(GetProfileValueOrEmpty("EDITOR"), ShellQuote(file_path));
 
   if (mode == Mode::DISK_MODE)
   {

@@ -78,7 +78,12 @@ int GetSearchCommandLine(char *command_line)
   ClearHelp();
 
   MvAddStr(LINES - 2, 1, "Search untag command: ");
-  *std::format_to_n(command_line, COMMAND_LINE_LENGTH, "{}", SEARCHCOMMAND).out = '\0';
+  *std::format_to_n(
+    command_line,
+    COMMAND_LINE_LENGTH,
+    "{}",
+    GetProfileValueOrEmpty("SEARCHCOMMAND")
+  ).out = '\0';
 
   cptr = std::strstr(command_line, "{}");
   if(cptr) {
