@@ -801,3 +801,24 @@ inline bool IsWriteable(const std::filesystem::path& path)
 {
   return !access(path.c_str(), W_OK);
 }
+
+template<class... Args>
+std::string Join(Args&&... args)
+{
+  std::string result;
+  bool first = true;
+  auto append = [&result, &first](const std::string& part)
+  {
+    if (first)
+    {
+      first = false;
+    } else {
+      result.append(1, ' ');
+    }
+    result.append(part);
+  };
+
+  (append(args), ...);
+
+  return result;
+}

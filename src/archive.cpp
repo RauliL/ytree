@@ -182,24 +182,24 @@ static int GetArchiveDirEntry(DirEntry *tree, char *path, DirEntry **dir_entry)
         is_root = true;
 
       if( n && de_ptr->name.compare(0, n, path, n) == 0 &&
-	  (is_root || path[n] == '\0' || path[n] == std::filesystem::path::preferred_separator ) )
+    (is_root || path[n] == '\0' || path[n] == std::filesystem::path::preferred_separator ) )
       {
-	if( ( is_root && path[n] == '\0' ) ||
-	    ( path[n] == std::filesystem::path::preferred_separator && path[n+1] == '\0' ) )
-	{
-	  /* Pfad abgearbeitet; ==> fertig */
-	  /*-------------------------------*/
+  if( ( is_root && path[n] == '\0' ) ||
+      ( path[n] == std::filesystem::path::preferred_separator && path[n+1] == '\0' ) )
+  {
+    /* Pfad abgearbeitet; ==> fertig */
+    /*-------------------------------*/
 
-	  *dir_entry = de_ptr;
-	  return( 0 );
-	}
-	else
+    *dir_entry = de_ptr;
+    return( 0 );
+  }
+  else
         {
-	  return( GetArchiveDirEntry(de_ptr,
-				  ( is_root ) ? &path[n] : &path[n+1],
-				  dir_entry
+    return( GetArchiveDirEntry(de_ptr,
+          ( is_root ) ? &path[n] : &path[n+1],
+          dir_entry
 ) );
-	}
+  }
       }
     }
   }
@@ -233,10 +233,10 @@ int TryInsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *dir, s
     {
       if( GetArchiveDirEntry(tree.get(), dir_path, &de_ptr) == -1 )
       {
-	/* Evtl. fehlender teil; ==> einfuegen */
-	/*-------------------------------------*/
+  /* Evtl. fehlender teil; ==> einfuegen */
+  /*-------------------------------------*/
 
-	if( InsertArchiveDirEntry(tree, dir_path, stat) ) return( -1 );
+  if( InsertArchiveDirEntry(tree, dir_path, stat) ) return( -1 );
       }
     }
   }
@@ -353,7 +353,7 @@ std::string MakeExtractCommandLine(
       path.c_str(),
       file.c_str(),
       cmd.c_str()
-);
+    );
   }
   else if (compress_method && *compress_method == CompressMethod::LHA_COMPRESS)
   {
@@ -364,10 +364,10 @@ std::string MakeExtractCommandLine(
       COMMAND_LINE_LENGTH,
       "%s '%s' '%s' %s",
       LHAEXPAND,
-		  path.c_str(),
-		  file.c_str(),
-		  cmd.c_str()
-);
+      path.c_str(),
+      file.c_str(),
+      cmd.c_str()
+    );
   }
   else if (compress_method && *compress_method == CompressMethod::ZIP_COMPRESS)
   {
@@ -377,11 +377,11 @@ std::string MakeExtractCommandLine(
       command_line,
       COMMAND_LINE_LENGTH,
       "%s '%s' '%s' %s",
-		  ZIPEXPAND,
-		  path.c_str(),
-		  file.c_str(),
-		  cmd.c_str()
-);
+      ZIPEXPAND,
+      path.c_str(),
+      file.c_str(),
+      cmd.c_str()
+    );
   }
   else if (compress_method && *compress_method == CompressMethod::ARC_COMPRESS)
   {
@@ -391,11 +391,11 @@ std::string MakeExtractCommandLine(
       command_line,
       COMMAND_LINE_LENGTH,
       "%s '%s' '%s' %s",
-		  ARCEXPAND,
-		  path.c_str(),
-		  file.c_str(),
-		  cmd.c_str()
-);
+      ARCEXPAND,
+      path.c_str(),
+      file.c_str(),
+      cmd.c_str()
+    );
   }
   else if (compress_method && *compress_method == CompressMethod::RPM_COMPRESS)
   {
@@ -408,21 +408,21 @@ std::string MakeExtractCommandLine(
         command_line,
         COMMAND_LINE_LENGTH,
         "(TF=/tmp/ytree.$$; mkdir $TF; rpm2cpio '%s' | (cd $TF; cpio --no-absolute-filenames -i -d '%s'); cat \"$TF/%s\"; cd /tmp; rm -rf $TF; exit 0) %s",
-		    path.c_str(),
+        path.c_str(),
         !file.empty() && file[0] == std::filesystem::path::preferred_separator ? file.substr(1).c_str() : file.c_str(),
         file.c_str(),
         cmd.c_str()
-);
+      );
     } else {
       std::snprintf(
         command_line,
         COMMAND_LINE_LENGTH,
         "%s '%s' '%s' %s",
-		    RPMEXPAND,
-		    path.c_str(),
-		    file.c_str(),
-		    cmd.c_str()
-);
+        RPMEXPAND,
+        path.c_str(),
+        file.c_str(),
+        cmd.c_str()
+      );
     }
   }
   else if (compress_method && *compress_method == CompressMethod::RAR_COMPRESS)
@@ -433,11 +433,11 @@ std::string MakeExtractCommandLine(
       command_line,
       COMMAND_LINE_LENGTH,
       "%s '%s' '%s' %s",
-		  RAREXPAND,
-		  path.c_str(),
-		  file.c_str(),
-		  cmd.c_str()
-);
+      RAREXPAND,
+      path.c_str(),
+      file.c_str(),
+      cmd.c_str()
+    );
   }
   else if (compress_method && *compress_method == CompressMethod::FREEZE_COMPRESS)
   {
@@ -447,12 +447,12 @@ std::string MakeExtractCommandLine(
       command_line,
       COMMAND_LINE_LENGTH,
       "%s < '%s' | %s '%s' %s",
-		  MELT,
-		  path.c_str(),
-		  TAREXPAND,
-		  file.c_str(),
-		  cmd.c_str()
-);
+      MELT,
+      path.c_str(),
+      TAREXPAND,
+      file.c_str(),
+      cmd.c_str()
+    );
   }
   else if (compress_method && *compress_method == CompressMethod::MULTIPLE_FREEZE_COMPRESS)
   {
@@ -463,13 +463,13 @@ std::string MakeExtractCommandLine(
       command_line,
       COMMAND_LINE_LENGTH,
       "%s %s | %s | %s '%s' %s",
-		  CAT,
-		  cat.c_str(),
-		  MELT,
-		  TAREXPAND,
-		  file.c_str(),
-		  cmd.c_str()
-);
+      CAT,
+      cat.c_str(),
+      MELT,
+      TAREXPAND,
+      file.c_str(),
+      cmd.c_str()
+    );
   }
   else if (compress_method && *compress_method == CompressMethod::COMPRESS_COMPRESS)
   {
@@ -479,12 +479,12 @@ std::string MakeExtractCommandLine(
       command_line,
       COMMAND_LINE_LENGTH,
       "%s < %s | %s '%s' %s",
-		  UNCOMPRESS,
+      UNCOMPRESS,
       path.c_str(),
-		  TAREXPAND,
-		  file.c_str(),
-		  cmd.c_str()
-);
+      TAREXPAND,
+      file.c_str(),
+      cmd.c_str()
+    );
   }
   else if (compress_method && *compress_method == CompressMethod::MULTIPLE_COMPRESS_COMPRESS)
   {
@@ -495,13 +495,13 @@ std::string MakeExtractCommandLine(
       command_line,
       COMMAND_LINE_LENGTH,
       "%s %s | %s | %s '%s' %s",
-		  CAT,
-		  cat.c_str(),
-		  UNCOMPRESS,
-		  TAREXPAND,
-		  file.c_str(),
-		  cmd.c_str()
-);
+      CAT,
+      cat.c_str(),
+      UNCOMPRESS,
+      TAREXPAND,
+      file.c_str(),
+      cmd.c_str()
+    );
   }
   else if (compress_method && *compress_method == CompressMethod::GZIP_COMPRESS)
   {
@@ -511,12 +511,12 @@ std::string MakeExtractCommandLine(
       command_line,
       COMMAND_LINE_LENGTH,
       "%s < '%s' | %s '%s' %s",
-		  GNUUNZIP,
-		  path.c_str(),
-		  TAREXPAND,
-		  file.c_str(),
-		  cmd.c_str()
-);
+      GNUUNZIP,
+      path.c_str(),
+      TAREXPAND,
+      file.c_str(),
+      cmd.c_str()
+    );
   }
   else if (compress_method && *compress_method == CompressMethod::MULTIPLE_GZIP_COMPRESS)
   {
@@ -527,13 +527,13 @@ std::string MakeExtractCommandLine(
       command_line,
       COMMAND_LINE_LENGTH,
       "%s %s | %s | %s '%s' %s",
-		  CAT,
-		  cat.c_str(),
-		  GNUUNZIP,
-		  TAREXPAND,
-		  file.c_str(),
-		  cmd.c_str()
-);
+      CAT,
+      cat.c_str(),
+      GNUUNZIP,
+      TAREXPAND,
+      file.c_str(),
+      cmd.c_str()
+    );
   }
   else if (compress_method && *compress_method == CompressMethod::BZIP_COMPRESS)
   {
@@ -543,12 +543,12 @@ std::string MakeExtractCommandLine(
       command_line,
       COMMAND_LINE_LENGTH,
       "%s < '%s' | %s '%s' %s",
-		  BUNZIP,
-		  path.c_str(),
-		  TAREXPAND,
-		  file.c_str(),
-		  cmd.c_str()
-);
+      BUNZIP,
+      path.c_str(),
+      TAREXPAND,
+      file.c_str(),
+      cmd.c_str()
+    );
   } else {
     /* gtar xOf - FILE < TAR_FILE ?? */
     /*-------------------------------*/
@@ -556,11 +556,11 @@ std::string MakeExtractCommandLine(
       command_line,
       COMMAND_LINE_LENGTH,
       "%s '%s' < '%s' %s",
-		  TAREXPAND,
-		  file.c_str(),
-		  path.c_str(),
-		  cmd.c_str()
-);
+      TAREXPAND,
+      file.c_str(),
+      path.c_str(),
+      cmd.c_str()
+    );
   }
 
 #ifdef DEBUG

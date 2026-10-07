@@ -101,7 +101,7 @@ static int ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path)
       );
       command_line = tmp;
     } else {
-      command_line = std::format("{} {}", *aux, file_p_aux);
+      command_line = Join(*aux, file_p_aux);
     }
   } else {
     const auto compress_method = GetFileMethod(file_path);
@@ -122,19 +122,16 @@ static int ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path)
         BUNZIP
       );
 
-      command_line = std::format(
-        "{} < {} {} | {}",
+      command_line = Join(
         uncompress_command,
+        "<",
         file_p_aux,
         ERR_TO_STDOUT,
+        "|",
         PAGER
       );
     } else {
-      command_line = std::format(
-        "{} {}",
-        PAGER,
-        file_p_aux
-      );
+      command_line = Join(GetProfileValue("PAGER"), file_p_aux);
     }
   }
 

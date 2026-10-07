@@ -31,7 +31,7 @@ int DirUserMode(DirEntry *dir_entry, int ch)
       );
       command_line = tmp;
     } else {
-      command_line = std::format("{} {}", *aux, filepath.string());
+      command_line = Join(*aux, filepath.string());
     }
     if (SilentSystemCall(command_line))
     {
@@ -68,7 +68,7 @@ int FileUserMode(FileEntry* file_entry, int ch)
       );
       command_line = tmp;
     } else {
-      command_line = std::format("{} {}", *aux, filepath.string());
+      command_line = Join(*aux, filepath.string());
     }
     if (SilentSystemCall(command_line))
     {
