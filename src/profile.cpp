@@ -9,7 +9,7 @@
 struct Profile
 {
   const char* def;
-  const char* envvar;
+  std::optional<std::string> envvar;
   std::optional<std::string> value;
 };
 
@@ -27,43 +27,43 @@ static std::unordered_map<std::string, std::string> viewer_mapping;
 
 static std::unordered_map<std::string, Profile> profile =
 {
-  { { "ARCEXPAND" }, { DEFAULT_ARCEXPAND,     nullptr,     std::nullopt } },
-  { { "ARCLIST" },    { DEFAULT_ARCLIST,       nullptr,     std::nullopt } },
-  { { "BUNZIP" },     { DEFAULT_BUNZIP,        nullptr,     std::nullopt } },
-  { { "CAT" },        { DEFAULT_CAT,           nullptr,     std::nullopt } },
-  { { "DIR1" },       { DEFAULT_DIR1,          nullptr,     std::nullopt } },
-  { { "DIR2" },       { DEFAULT_DIR2,          nullptr,     std::nullopt } },
+  { { "ARCEXPAND" }, { DEFAULT_ARCEXPAND,     std::nullopt,     std::nullopt } },
+  { { "ARCLIST" },    { DEFAULT_ARCLIST,       std::nullopt,     std::nullopt } },
+  { { "BUNZIP" },     { DEFAULT_BUNZIP,        std::nullopt,     std::nullopt } },
+  { { "CAT" },        { DEFAULT_CAT,           std::nullopt,     std::nullopt } },
+  { { "DIR1" },       { DEFAULT_DIR1,          std::nullopt,     std::nullopt } },
+  { { "DIR2" },       { DEFAULT_DIR2,          std::nullopt,     std::nullopt } },
   { { "EDITOR" },     { DEFAULT_EDITOR,        "EDITOR", std::nullopt } },
-  { { "FILE1" },      { DEFAULT_FILE1,         nullptr,     std::nullopt } },
-  { { "FILE2" },      { DEFAULT_FILE2,         nullptr,     std::nullopt } },
-  { { "FILEMODE" },   { DEFAULT_FILEMODE,      nullptr,     std::nullopt } },
-  { { "GNUUNZIP" },   { DEFAULT_GNUUNZIP,      nullptr,     std::nullopt } },
-  { { "HEXDUMP" },    { DEFAULT_HEXDUMP,       nullptr,     std::nullopt } },
-  { { "HEXEDITOFFSET" }, { DEFAULT_HEXEDITOFFSET, nullptr,     std::nullopt } },
-  { { "INITIALDIR" },    { DEFAULT_INITIALDIR,    nullptr,     std::nullopt } },
-  { { "LHAEXPAND" },     { DEFAULT_LHAEXPAND,     nullptr,     std::nullopt } },
-  { { "LHALIST" },       { DEFAULT_LHALIST,       nullptr,     std::nullopt } },
-  { { "LISTJUMPSEARCH" }, { DEFAULT_LISTJUMPSEARCH,nullptr,     std::nullopt } },
-  { { "MANROFF" },       { DEFAULT_MANROFF,       nullptr,     std::nullopt } },
-  { { "MELT" },          { DEFAULT_MELT,          nullptr,     std::nullopt } },
-  { { "NOSMALLWINDOW" }, { DEFAULT_NOSMALLWINDOW, nullptr,     std::nullopt } },
-  { { "NUMBERSEP" },     { DEFAULT_NUMBERSEP,     nullptr,     std::nullopt } },
+  { { "FILE1" },      { DEFAULT_FILE1,         std::nullopt,     std::nullopt } },
+  { { "FILE2" },      { DEFAULT_FILE2,         std::nullopt,     std::nullopt } },
+  { { "FILEMODE" },   { DEFAULT_FILEMODE,      std::nullopt,     std::nullopt } },
+  { { "GNUUNZIP" },   { DEFAULT_GNUUNZIP,      std::nullopt,     std::nullopt } },
+  { { "HEXDUMP" },    { DEFAULT_HEXDUMP,       std::nullopt,     std::nullopt } },
+  { { "HEXEDITOFFSET" }, { DEFAULT_HEXEDITOFFSET, std::nullopt,     std::nullopt } },
+  { { "INITIALDIR" },    { DEFAULT_INITIALDIR,    std::nullopt,     std::nullopt } },
+  { { "LHAEXPAND" },     { DEFAULT_LHAEXPAND,     std::nullopt,     std::nullopt } },
+  { { "LHALIST" },       { DEFAULT_LHALIST,       std::nullopt,     std::nullopt } },
+  { { "LISTJUMPSEARCH" }, { DEFAULT_LISTJUMPSEARCH,std::nullopt,     std::nullopt } },
+  { { "MANROFF" },       { DEFAULT_MANROFF,       std::nullopt,     std::nullopt } },
+  { { "MELT" },          { DEFAULT_MELT,          std::nullopt,     std::nullopt } },
+  { { "NOSMALLWINDOW" }, { DEFAULT_NOSMALLWINDOW, std::nullopt,     std::nullopt } },
+  { { "NUMBERSEP" },     { DEFAULT_NUMBERSEP,     std::nullopt,     std::nullopt } },
   { { "PAGER" },         { DEFAULT_PAGER,        "PAGER",  std::nullopt } },
-  { { "RAREXPAND" },     { DEFAULT_RAREXPAND,     nullptr,     std::nullopt } },
-  { { "RARLIST" },       { DEFAULT_RARLIST,       nullptr,     std::nullopt } },
-  { { "RPMEXPAND" },     { DEFAULT_RPMEXPAND,     nullptr,     std::nullopt } },
-  { { "RPMLIST" },       { DEFAULT_RPMLIST,       nullptr,     std::nullopt } },
-  { { "SEARCHCOMMAND" }, { DEFAULT_SEARCHCOMMAND, nullptr,     std::nullopt } },
+  { { "RAREXPAND" },     { DEFAULT_RAREXPAND,     std::nullopt,     std::nullopt } },
+  { { "RARLIST" },       { DEFAULT_RARLIST,       std::nullopt,     std::nullopt } },
+  { { "RPMEXPAND" },     { DEFAULT_RPMEXPAND,     std::nullopt,     std::nullopt } },
+  { { "RPMLIST" },       { DEFAULT_RPMLIST,       std::nullopt,     std::nullopt } },
+  { { "SEARCHCOMMAND" }, { DEFAULT_SEARCHCOMMAND, std::nullopt,     std::nullopt } },
   { { "TAPEDEV" },       { DEFAULT_TAPEDEV,       "TAPE",   std::nullopt } },
-  { { "TAREXPAND" },     { DEFAULT_TAREXPAND,     nullptr,     std::nullopt } },
-  { { "TARLIST" },       { DEFAULT_TARLIST,       nullptr,     std::nullopt } },
-  { { "TREEDEPTH" },     { DEFAULT_TREEDEPTH,     nullptr,     std::nullopt } },
-  { { "UNCOMPRESS" },    { DEFAULT_UNCOMPRESS,    nullptr,     std::nullopt } },
-  { { "USERVIEW" },      {	"",                    nullptr,     std::nullopt } },
-  { { "ZIPEXPAND" },     { DEFAULT_ZIPEXPAND,     nullptr,     std::nullopt } },
-  { { "ZIPLIST" },       { DEFAULT_ZIPLIST,       nullptr,     std::nullopt } },
-  { { "ZOOEXPAND" },     { DEFAULT_ZOOEXPAND,     nullptr,     std::nullopt } },
-  { { "ZOOLIST" },       { DEFAULT_ZOOLIST,       nullptr,     std::nullopt } },
+  { { "TAREXPAND" },     { DEFAULT_TAREXPAND,     std::nullopt,     std::nullopt } },
+  { { "TARLIST" },       { DEFAULT_TARLIST,       std::nullopt,     std::nullopt } },
+  { { "TREEDEPTH" },     { DEFAULT_TREEDEPTH,     std::nullopt,     std::nullopt } },
+  { { "UNCOMPRESS" },    { DEFAULT_UNCOMPRESS,    std::nullopt,     std::nullopt } },
+  { { "USERVIEW" },      {	"",                    std::nullopt,     std::nullopt } },
+  { { "ZIPEXPAND" },     { DEFAULT_ZIPEXPAND,     std::nullopt,     std::nullopt } },
+  { { "ZIPLIST" },       { DEFAULT_ZIPLIST,       std::nullopt,     std::nullopt } },
+  { { "ZOOEXPAND" },     { DEFAULT_ZOOEXPAND,     std::nullopt,     std::nullopt } },
+  { { "ZOOLIST" },       { DEFAULT_ZOOLIST,       std::nullopt,     std::nullopt } },
 };
 
 static inline int ChCode(const char* s)
@@ -97,7 +97,7 @@ static std::string TomlValueToString(const toml::node& node)
   return {};
 }
 
-static std::string TomlValueToString(const toml::node_view<const toml::node>& view)
+static inline std::string TomlValueToString(const toml::node_view<const toml::node>& view)
 {
   if (!view)
   {
@@ -313,7 +313,7 @@ const char* GetProfileValue(const char* name)
     }
     else if (entry->second.envvar)
     {
-      if (const auto value = std::getenv(entry->second.envvar))
+      if (const auto value = std::getenv(entry->second.envvar->c_str()))
       {
         return value;
       }
