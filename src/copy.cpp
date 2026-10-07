@@ -1,8 +1,5 @@
 #include "ytree.h"
 
-#include <filesystem>
-#include <system_error>
-
 static int Copy(const std::string& to_path, const std::string& from_path);
 static int CopyArchiveFile(const std::string& to_path, const std::string& from_path);
 
@@ -15,7 +12,7 @@ int CopyFile(Statistic *statistic_ptr,
              bool path_copy
 )
 {
-  long long file_size;
+  std::int64_t file_size;
   const auto from_path = GetRealFileNamePath(fe_ptr);
   const auto from_dir = GetPath(fe_ptr->Dir().get());
   std::filesystem::path to_fs_path;

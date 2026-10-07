@@ -1,7 +1,5 @@
 #include "ytree.h"
 
-#include <system_error>
-
 static bool RenameDirEntry(
   const std::filesystem::path&,
   const std::filesystem::path&

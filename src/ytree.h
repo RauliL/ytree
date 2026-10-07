@@ -10,6 +10,7 @@
 #include <climits>
 #include <clocale>
 #include <cmath>
+#include <cstdint>
 #include <csetjmp>
 #include <csignal>
 #include <cstdlib>
@@ -445,9 +446,9 @@ struct DirEntry : std::enable_shared_from_this<DirEntry>
   std::vector<std::shared_ptr<FileEntry>> files;
   std::vector<std::shared_ptr<DirEntry>> children;
   std::weak_ptr<DirEntry> parent;
-  long long total_bytes = 0;
-  long long matching_bytes = 0;
-  long long tagged_bytes = 0;
+  std::int64_t total_bytes = 0;
+  std::int64_t matching_bytes = 0;
+  std::int64_t tagged_bytes = 0;
   unsigned int total_files = 0;
   unsigned int matching_files = 0;
   unsigned int tagged_files = 0;
@@ -470,14 +471,14 @@ struct DirEntry : std::enable_shared_from_this<DirEntry>
 struct Statistic
 {
   std::shared_ptr<DirEntry> tree;
-  long long disk_space;
-  long long disk_capacity;
-  long long disk_total_files;
-  long long disk_total_bytes;
-  long long disk_matching_files;
-  long long disk_matching_bytes;
-  long long disk_tagged_files;
-  long long disk_tagged_bytes;
+  std::int64_t disk_space;
+  std::int64_t disk_capacity;
+  std::int64_t disk_total_files;
+  std::int64_t disk_total_bytes;
+  std::int64_t disk_matching_files;
+  std::int64_t disk_matching_bytes;
+  std::int64_t disk_tagged_files;
+  std::int64_t disk_tagged_bytes;
   unsigned int  disk_total_directories;
   int           disp_begin_pos;
   int           cursor_pos;
@@ -594,8 +595,8 @@ extern int  ReadTreeFromARC(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 extern int  ReadTreeFromRAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
 extern int  GetDiskParameter(const std::string& path,
            char *volume_name,
-           long long *avail_bytes,
-           long long *capacity
+           std::int64_t *avail_bytes,
+           std::int64_t *capacity
 );
 extern int  HandleDirWindow(DirEntry *start_dir_entry);
 extern void DisplayFileWindow(DirEntry *dir_entry);
@@ -675,7 +676,7 @@ extern int  ChangeDirGroup(DirEntry *de_ptr);
 extern void DisplayDirHelp();
 extern void DisplayFileHelp();
 extern void ClearHelp();
-extern int  GetAvailBytes(long long *avail_bytes);
+extern int  GetAvailBytes(std::int64_t *avail_bytes);
 extern int  DeleteDirectory(DirEntry *dir_entry);
 extern int  ExecuteCommand(FileEntry *fe_ptr, WalkingPackage *walking_package);
 extern int  GetCommandLine(char *command_line);
@@ -750,7 +751,7 @@ extern int  BuildUserFileEntry(FileEntry *fe_ptr,
             const char *tmpl, int linelen, char *line);
 extern int  GetUserFileEntryLength(int max_filename_len,
            int max_linkname_len, const char *tmpl);
-extern long long AtoLL(const char* cptr);
+std::int64_t AtoLL(const char* cptr);
 extern void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no);
 extern void ReCreateWindows();
 extern int  Getch();

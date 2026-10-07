@@ -38,12 +38,12 @@ static int QueryFs(const char* path, FsStat* buf)
 #endif
 }
 
-static long long FsBlockSize(const FsStat& fs)
+static std::int64_t FsBlockSize(const FsStat& fs)
 {
 #if defined(__NetBSD__)
-  return static_cast<long long>(fs.f_frsize);
+  return static_cast<std::int64_t>(fs.f_frsize);
 #else
-  return static_cast<long long>(fs.f_bsize);
+  return static_cast<std::int64_t>(fs.f_bsize);
 #endif
 }
 
@@ -110,16 +110,16 @@ static const char* FilesystemTypeName(const FsStat& fs)
 
 int GetDiskParameter(const std::string& path,
 		      char *volume_name,
-		      long long *avail_bytes,
-		      long long *total_disk_space
+		      std::int64_t *avail_bytes,
+		      std::int64_t *total_disk_space
 )
 {
   FsStat fs{};
   char *p;
   const char* fname;
   int  result;
-  long long bfree;
-  long long this_disk_space;
+  std::int64_t bfree;
+  std::int64_t this_disk_space;
 
   if ((result = QueryFs(path.c_str(), &fs)) == 0)
   {
@@ -165,7 +165,7 @@ int GetDiskParameter(const std::string& path,
       bfree = 0L;
     }
     *avail_bytes = bfree * bsize;
-    this_disk_space = static_cast<long long>(fs.f_blocks) * bsize;
+    this_disk_space = static_cast<std::int64_t>(fs.f_blocks) * bsize;
 
     if (total_disk_space)
     {
@@ -178,7 +178,7 @@ int GetDiskParameter(const std::string& path,
 
 
 
-int GetAvailBytes(long long *avail_bytes)
+int GetAvailBytes(std::int64_t *avail_bytes)
 {
   return GetDiskParameter(
     statistic.tree->name,

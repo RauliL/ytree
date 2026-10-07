@@ -5,14 +5,7 @@
  * Loeschen von Dateien / Verzeichnissen
  *
  ***************************************************************************/
-
-
 #include "ytree.h"
-
-#include <filesystem>
-#include <system_error>
-
-
 
 int DeleteFile(FileEntry *fe_ptr)
 {
@@ -78,7 +71,7 @@ FNC_XIT:
 
 int RemoveFile(FileEntry *fe_ptr)
 {
-  long long file_size;
+  std::int64_t file_size;
 
   const auto de_ptr = fe_ptr->Dir();
 

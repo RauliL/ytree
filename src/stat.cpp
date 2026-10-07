@@ -11,7 +11,7 @@
 
 
 
-static void PrettyPrintNumber(int y, int x, long long number);
+static void PrettyPrintNumber(int y, int x, std::int64_t number);
 
 
 void DisplayDiskStatistic()
@@ -22,7 +22,7 @@ void DisplayDiskStatistic()
 
   std::snprintf(buff, sizeof(buff), fmt, statistic.file_spec);
   PrintMenuOptions(stdscr, 2, COLS - 18, buff, MENU_COLOR, HIMENUS_COLOR);
-  PrettyPrintNumber(5,  COLS - 17, statistic.disk_space / (long long)1024);
+  PrettyPrintNumber(5,  COLS - 17, statistic.disk_space / (std::int64_t)1024);
   PrintOptions(stdscr, 7,  COLS - 24, "[DISK Statistics   ]");
   PrettyPrintNumber(9, COLS - 17, statistic.disk_total_files);
   PrettyPrintNumber(10, COLS - 17, statistic.disk_total_bytes);
@@ -39,7 +39,7 @@ void DisplayDiskStatistic()
 
 void DisplayAvailBytes()
 {
-  PrettyPrintNumber(5,  COLS - 17, statistic.disk_space / (long long)1024);
+  PrettyPrintNumber(5,  COLS - 17, statistic.disk_space / (std::int64_t)1024);
   RefreshWindow(stdscr);
 }
 
@@ -160,7 +160,7 @@ void DisplayDirParameter(DirEntry *dir_entry)
     CutFilename(buffer, f, 20)
 );
   PrintMenuOptions(stdscr, 18, COLS - 22, auxbuff, MENU_COLOR, HIMENUS_COLOR);
-  PrettyPrintNumber(19, COLS - 17, (long long) dir_entry->total_bytes);
+  PrettyPrintNumber(19, COLS - 17, (std::int64_t) dir_entry->total_bytes);
   RefreshWindow(stdscr);
 }
 
@@ -187,7 +187,7 @@ void DisplayGlobalFileParameter(FileEntry *file_entry)
   if (std::snprintf(buffer2, PATH_LENGTH, "[%-20s]", buffer1))
     ;
   PrintMenuOptions(stdscr, 18, COLS - 22, buffer2, GLOBAL_COLOR, HIGLOBAL_COLOR);
-  PrettyPrintNumber(19, COLS - 17, (long long) file_entry->stat_struct.st_size);
+  PrettyPrintNumber(19, COLS - 17, (std::int64_t) file_entry->stat_struct.st_size);
   RefreshWindow(stdscr);
 }
 
@@ -206,18 +206,18 @@ void DisplayFileParameter(FileEntry *file_entry)
     CutFilename(buffer, file_entry->name, 20)
   );
   PrintMenuOptions(stdscr, 18, COLS - 22, auxbuff, MENU_COLOR, HIMENUS_COLOR);
-  PrettyPrintNumber(19, COLS - 17, (long long)file_entry->stat_struct.st_size);
+  PrettyPrintNumber(19, COLS - 17, (std::int64_t)file_entry->stat_struct.st_size);
   RefreshWindow(stdscr);
 }
 
-void PrettyPrintNumber(int y, int x, long long number)
+void PrettyPrintNumber(int y, int x, std::int64_t number)
 {
   const auto number_separator = GetNumberSeparator();
-  const auto terra    = (long)   ( number / (long long) 1000000000000 );
-  const auto giga     = (long) ( ( number % (long long) 1000000000000 ) / (long long) 1000000000 );
-  const auto mega     = (long) ( ( number % (long long) 1000000000 ) / (long long) 1000000 );
-  const auto kilo     = (long) ( ( number % (long long) 1000000 ) / (long long) 1000 );
-  const auto one      = (long)   ( number % (long long) 1000 );
+  const auto terra    = (long)   ( number / (std::int64_t) 1000000000000 );
+  const auto giga     = (long) ( ( number % (std::int64_t) 1000000000000 ) / (std::int64_t) 1000000000 );
+  const auto mega     = (long) ( ( number % (std::int64_t) 1000000000 ) / (std::int64_t) 1000000 );
+  const auto kilo     = (long) ( ( number % (std::int64_t) 1000000 ) / (std::int64_t) 1000 );
+  const auto one      = (long)   ( number % (std::int64_t) 1000 );
   char buffer[32];
 
   *buffer = 0;

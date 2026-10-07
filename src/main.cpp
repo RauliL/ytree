@@ -5,16 +5,9 @@
  * Hauptmodul
  *
  ***************************************************************************/
-
-
 #include "ytree.h"
 
-#include <filesystem>
-
-
-
 static char path[PATH_LENGTH+1];
-
 
 int main(int argc, char **argv)
 {

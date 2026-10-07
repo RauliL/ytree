@@ -135,7 +135,7 @@ static void PrintDirEntry(WINDOW *win,
         "{:>10} {:3} {:8} {:>12}",
         attributes,
         de_ptr->stat_struct.st_nlink,
-        static_cast<long long>(de_ptr->stat_struct.st_size),
+        static_cast<std::int64_t>(de_ptr->stat_struct.st_size),
         modify_time
 );
       break;

@@ -1,9 +1,5 @@
 #include "ytree.h"
 
-#include <algorithm>
-#include <filesystem>
-#include <vector>
-
 static constexpr std::size_t MAX_HST_FILE_LINES = 50;
 
 static std::optional<std::string> custom_history_path;

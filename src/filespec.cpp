@@ -33,7 +33,7 @@ int SetFileSpec(char *file_spec)
 void SetMatchingParam(DirEntry *dir_entry)
 {
   unsigned long matching_files = 0L;
-  long long matching_bytes = 0L;
+  std::int64_t matching_bytes = 0L;
 
   for( const auto& fe_ptr : dir_entry->files )
   {

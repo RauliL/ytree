@@ -531,7 +531,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      fitted_name,
 				      attributes,
 				      fe_ptr->stat_struct.st_nlink,
-                                      (long long) fe_ptr->stat_struct.st_size,
+                                      (std::int64_t) fe_ptr->stat_struct.st_size,
 				      modify_time,
 				      fitted_link
 );
@@ -544,7 +544,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      fitted_name,
 				      attributes,
 				      fe_ptr->stat_struct.st_nlink,
-                                      (long long) fe_ptr->stat_struct.st_size,
+                                      (std::int64_t) fe_ptr->stat_struct.st_size,
 				      modify_time
 );
                     }
@@ -588,7 +588,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
 				      fitted_name,
-				      (long long)fe_ptr->stat_struct.st_ino,
+				      (std::int64_t)fe_ptr->stat_struct.st_ino,
               owner,
               group,
 				      fitted_link
@@ -600,7 +600,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 				      (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
 				      type_of_file,
 				      fitted_name,
-				      (long long)fe_ptr->stat_struct.st_ino,
+				      (std::int64_t)fe_ptr->stat_struct.st_ino,
               owner,
               group
 );
@@ -1248,7 +1248,7 @@ int HandleFileWindow(DirEntry *dir_entry)
   int tmp2;
   int unput_char;
   int list_pos;
-  long long file_size;
+  std::int64_t file_size;
   int i;
   int owner_id;
   int group_id;

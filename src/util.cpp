@@ -1,6 +1,5 @@
 #include "ytree.h"
 
-#include <filesystem>
 #include <unordered_map>
 
 static const std::unordered_map<std::string, CompressMethod> file_extensions =
@@ -843,7 +842,7 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
       } else if(std::string_view(sptr).starts_with(LINKCOUNT_VIEWNAME)) {
         n = static_cast<int>(std::format_to(dptr, "{:3}", (int)fe_ptr->stat_struct.st_nlink) - dptr);
       } else if(std::string_view(sptr).starts_with(FILESIZE_VIEWNAME)) {
-        n = static_cast<int>(std::format_to(dptr, "{:7}", (long long) fe_ptr->stat_struct.st_size) - dptr);
+        n = static_cast<int>(std::format_to(dptr, "{:7}", (std::int64_t) fe_ptr->stat_struct.st_size) - dptr);
       } else if(std::string_view(sptr).starts_with(MODTIME_VIEWNAME)) {
         n = static_cast<int>(std::format_to(dptr, "{:>12}", modify_time) - dptr);
       } else if(std::string_view(sptr).starts_with(SYMLINK_VIEWNAME)) {
@@ -853,7 +852,7 @@ int BuildUserFileEntry(FileEntry *fe_ptr,
       } else if(std::string_view(sptr).starts_with(GID_VIEWNAME)) {
         n = static_cast<int>(std::format_to(dptr, "{:<8}", group) - dptr);
       } else if(std::string_view(sptr).starts_with(INODE_VIEWNAME)) {
-        n = static_cast<int>(std::format_to(dptr, "{:7}", (long long)fe_ptr->stat_struct.st_ino) - dptr);
+        n = static_cast<int>(std::format_to(dptr, "{:7}", (std::int64_t)fe_ptr->stat_struct.st_ino) - dptr);
       } else if(std::string_view(sptr).starts_with(ACCTIME_VIEWNAME)) {
         n = static_cast<int>(std::format_to(dptr, "{:>12}", access_time) - dptr);
       } else if(std::string_view(sptr).starts_with(CHGTIME_VIEWNAME)) {
@@ -936,13 +935,9 @@ int GetUserFileEntryLength(int max_filename_len, int max_linkname_len, const cha
 }
 
 
-long long AtoLL(const char *cptr)
+std::int64_t AtoLL(const char *cptr)
 {
-  long long ll;
-
-  std::sscanf(cptr, "%lld", &ll);
-
-  return(ll);
+  return static_cast<std::int64_t>(std::strtoll(cptr, nullptr, 10));
 }
 
 std::optional<std::filesystem::path> Getcwd()
