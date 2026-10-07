@@ -49,7 +49,6 @@ int Init(
 
   SetFileMode(static_cast<ViewMode>(static_cast<int>(std::strtod(FILEMODE, nullptr))));
   SetKindOfSort(SortKey::Name);
-  number_seperator = *(NUMBERSEP);
   bypass_small_window = (bool)std::strtod(NOSMALLWINDOW, nullptr);
   initial_directory = INITIALDIR;
 

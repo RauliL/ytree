@@ -28,5 +28,4 @@ int	  user_umask;
 bool	  print_time;
 bool	  resize_request;
 bool	  bypass_small_window;
-char   number_seperator;
 const char* initial_directory;

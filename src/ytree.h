@@ -215,7 +215,6 @@
 #define RARLIST         GetProfileValue("RARLIST")
 #define RAREXPAND       GetProfileValue("RAREXPAND")
 #define FILEMODE        GetProfileValue("FILEMODE")
-#define NUMBERSEP       GetProfileValue("NUMBERSEP")
 #define NOSMALLWINDOW   GetProfileValue("NOSMALLWINDOW")
 #define INITIALDIR      GetProfileValue("INITIALDIR")
 #define DIR1            GetProfileValue("DIR1")
@@ -558,7 +557,6 @@ extern Mode      mode;
 extern int       user_umask;
 extern bool  print_time;
 extern bool      resize_request;
-extern char      number_seperator;
 extern bool      bypass_small_window;
 extern const char* initial_directory;
 extern char    builtin_hexdump_cmd[];
@@ -710,6 +708,7 @@ extern void NormPath(const char *in_path, char *out_path);
 extern char *Strtok_r(char *str, const char *delim, char **old);
 int ReadProfile(const std::optional<std::string>& custom_path);
 extern const char *GetProfileValue(const char *key);
+char GetNumberSeparator();
 void ScanSubTree(DirEntry* dir_entry);
 extern void GetMaxYX(WINDOW *win, int *height, int *width);
 const char* GetHistory();

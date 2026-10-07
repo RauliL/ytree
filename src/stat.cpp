@@ -204,27 +204,26 @@ void DisplayFileParameter(FileEntry *file_entry)
     sizeof(auxbuff),
     "[%-20s]",
     CutFilename(buffer, file_entry->name, 20)
-);
+  );
   PrintMenuOptions(stdscr, 18, COLS - 22, auxbuff, MENU_COLOR, HIMENUS_COLOR);
   PrettyPrintNumber(19, COLS - 17, (long long)file_entry->stat_struct.st_size);
   RefreshWindow(stdscr);
 }
 
-
-
 void PrettyPrintNumber(int y, int x, long long number)
 {
+  const auto number_separator = GetNumberSeparator();
+  const auto terra    = (long)   ( number / (long long) 1000000000000 );
+  const auto giga     = (long) ( ( number % (long long) 1000000000000 ) / (long long) 1000000000 );
+  const auto mega     = (long) ( ( number % (long long) 1000000000 ) / (long long) 1000000 );
+  const auto kilo     = (long) ( ( number % (long long) 1000000 ) / (long long) 1000 );
+  const auto one      = (long)   ( number % (long long) 1000 );
   char buffer[32];
-  long terra, giga, mega, kilo, one;
 
   *buffer = 0;
-  terra    = (long)   ( number / (long long) 1000000000000 );
-  giga     = (long) ( ( number % (long long) 1000000000000 ) / (long long) 1000000000 );
-  mega     = (long) ( ( number % (long long) 1000000000 ) / (long long) 1000000 );
-  kilo     = (long) ( ( number % (long long) 1000000 ) / (long long) 1000 );
-  one      = (long)   ( number % (long long) 1000 );
 
-  if( terra ){
+  if (terra)
+  {
      /* "123123123123123" */
      std::snprintf(
        buffer,
@@ -235,63 +234,61 @@ void PrettyPrintNumber(int y, int x, long long number)
        mega,
        kilo,
        one
-);
-     PrintMenuOptions(stdscr, y, x, buffer, MENU_COLOR, HIMENUS_COLOR);
-     }
-  if( giga ){
+    );
+    PrintMenuOptions(stdscr, y, x, buffer, MENU_COLOR, HIMENUS_COLOR);
+  }
+  if (giga)
+  {
      /* "123,123,123,123" */
      std::snprintf(
        buffer,
        sizeof(buffer),
        "[%3ld%c%03ld%c%03ld%c%03ld]",
        giga,
-       number_seperator,
+       number_separator,
        mega,
-       number_seperator,
+       number_separator,
        kilo,
-       number_seperator,
+       number_separator,
        one
-);
-     PrintMenuOptions(stdscr, y, x, buffer, MENU_COLOR, HIMENUS_COLOR);
-     }
-  else if( mega ) {
+    );
+    PrintMenuOptions(stdscr, y, x, buffer, MENU_COLOR, HIMENUS_COLOR);
+  }
+  else if (mega)
+  {
      /* "    123,123,123" */
      std::snprintf(
        buffer,
        sizeof(buffer),
        "[    %3ld%c%03ld%c%03ld]",
        mega,
-       number_seperator,
+       number_separator,
        kilo,
-       number_seperator,
+       number_separator,
        one
-);
-     PrintMenuOptions(stdscr, y, x, buffer, MENU_COLOR, HIMENUS_COLOR);
-     }
-  else if( kilo ) {
+    );
+    PrintMenuOptions(stdscr, y, x, buffer, MENU_COLOR, HIMENUS_COLOR);
+  }
+  else if (kilo)
+  {
      /* "        123,123" */
      std::snprintf(
        buffer,
        sizeof(buffer),
        "[        %3ld%c%03ld]",
        kilo,
-       number_seperator,
+       number_separator,
        one
-);
-     PrintMenuOptions(stdscr, y, x, buffer, MENU_COLOR, HIMENUS_COLOR);
-     }
-  else {
+    );
+    PrintMenuOptions(stdscr, y, x, buffer, MENU_COLOR, HIMENUS_COLOR);
+  } else {
      /* "            123" */
      std::snprintf(
        buffer,
        sizeof(buffer),
        "[            %3ld]",
        one
-);
-     PrintMenuOptions(stdscr, y, x, buffer, MENU_COLOR, HIMENUS_COLOR);
-     }
- return;
+    );
+    PrintMenuOptions(stdscr, y, x, buffer, MENU_COLOR, HIMENUS_COLOR);
+  }
 }
-
-
-

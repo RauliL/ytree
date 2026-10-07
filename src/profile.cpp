@@ -380,3 +380,10 @@ std::optional<std::string> GetExtViewer(const std::string& filename)
 
   return std::nullopt;
 }
+
+char GetNumberSeparator()
+{
+  const auto value = GetProfileValue("NUMBERSEP");
+
+  return value && *value ? *value : DEFAULT_NUMBERSEP[0];
+}
