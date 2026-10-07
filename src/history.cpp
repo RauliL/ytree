@@ -17,7 +17,7 @@ static int total_hist()
 static int cursor_pos     = 0;
 static int disp_begin_pos = 0;
 
-void ReadHistory(const std::optional<std::string>& custom_path)
+void ReadHistory(const std::optional<std::filesystem::path>& custom_path)
 {
   std::filesystem::path filename;
   char buffer[BUFSIZ];

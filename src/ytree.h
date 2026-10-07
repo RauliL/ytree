@@ -587,9 +587,9 @@ extern int  GetDiskParameter(const std::string& path,
 );
 extern int  HandleDirWindow(DirEntry *start_dir_entry);
 extern void DisplayFileWindow(DirEntry *dir_entry);
-int Init(
-  const std::optional<std::string>& configuration_file,
-  const std::optional<std::string>& history_file
+void Init(
+  const std::optional<std::filesystem::path>& configuration_file,
+  const std::optional<std::filesystem::path>& history_file
 );
 std::filesystem::path GetPath(const DirEntry* dir_entry);
 bool Match(const std::string& file_name);
@@ -706,7 +706,7 @@ extern int  MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& d
 extern int  MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name);
 extern void NormPath(const char *in_path, char *out_path);
 extern char *Strtok_r(char *str, const char *delim, char **old);
-int ReadProfile(const std::optional<std::string>& custom_path);
+void ReadProfile(const std::optional<std::filesystem::path>& custom_path);
 const char* GetProfileValue(const std::string& key);
 double GetDoubleProfileValue(const std::string& key);
 int GetIntProfileValue(const std::string& key);
@@ -716,7 +716,7 @@ void ScanSubTree(DirEntry* dir_entry);
 extern void GetMaxYX(WINDOW *win, int *height, int *width);
 const char* GetHistory();
 void InsHistory(const std::string& str);
-void ReadHistory(const std::optional<std::string>& custom_path);
+void ReadHistory(const std::optional<std::filesystem::path>& custom_path);
 void SaveHistory();
 char* GetMatches(const std::string& base);
 extern int  KeyF2Get(DirEntry *start_dir_entry,

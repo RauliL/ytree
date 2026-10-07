@@ -15,9 +15,9 @@ static WINDOW *Subwin(WINDOW *orig, int nlines, int ncols,
 static WINDOW *Newwin(int nlines, int ncols,
                       int begin_y, int begin_x);
 
-int Init(
-  const std::optional<std::string>& configuration_file,
-  const std::optional<std::string>& history_file
+void Init(
+  const std::optional<std::filesystem::path>& configuration_file,
+  const std::optional<std::filesystem::path>& history_file
 )
 {
 
@@ -53,11 +53,7 @@ int Init(
   initial_directory = INITIALDIR;
 
   InitClock();
-
-  return 0;
 }
-
-
 
 void ReCreateWindows()
 {

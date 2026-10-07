@@ -215,7 +215,7 @@ static std::string NormalizeExtension(std::string extension)
   return extension;
 }
 
-int ReadProfile(const std::optional<std::string>& custom_path)
+void ReadProfile(const std::optional<std::filesystem::path>& custom_path)
 {
   std::filesystem::path filename;
 
@@ -228,7 +228,7 @@ int ReadProfile(const std::optional<std::string>& custom_path)
   {
     filename = *config_path / "config.toml";
   } else {
-    return -1;
+    return;
   }
 
   toml::table table;
@@ -238,7 +238,7 @@ int ReadProfile(const std::optional<std::string>& custom_path)
   }
   catch (const toml::parse_error&)
   {
-    return -1;
+    return;
   }
 
   if (const auto* global = table["global"].as_table())
@@ -297,8 +297,6 @@ int ReadProfile(const std::optional<std::string>& custom_path)
   ApplyKeyTable(filemenu, table["filecmd"].as_table(), true);
   ApplyKeyTable(dirmenu, table["dirmap"].as_table(), false);
   ApplyKeyTable(dirmenu, table["dircmd"].as_table(), true);
-
-  return 0;
 }
 
 const char* GetProfileValue(const std::string& name)

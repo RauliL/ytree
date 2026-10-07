@@ -20,8 +20,8 @@ int main(int argc, char **argv)
 {
   const char *p;
   int argi;
-  std::optional<std::string> config_file;
-  std::optional<std::string> history_file;
+  std::optional<std::filesystem::path> config_file;
+  std::optional<std::filesystem::path> history_file;
 
   std::setlocale(LC_ALL, "");
 
@@ -65,10 +65,7 @@ int main(int argc, char **argv)
     }
   }
 
-  if (Init(config_file, history_file))
-  {
-    std::exit(EXIT_FAILURE);
-  }
+  Init(config_file, history_file);
 
   std::string startup_path = p;
   if (std::filesystem::path(startup_path).is_relative())
