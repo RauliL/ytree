@@ -291,8 +291,8 @@ static bool SortByName(const FileEntry* e1, const FileEntry* e2)
 
 static bool SortByExtension(const FileEntry* e1, const FileEntry* e2)
 {
-  const auto ext1 = GetExtension(e1->name).value_or("");
-  const auto ext2 = GetExtension(e2->name).value_or("");
+  const auto ext1 = e1->GetExtension().value_or("");
+  const auto ext2 = e2->GetExtension().value_or("");
   int result;
 
   /* Ok, this isn't optimized */

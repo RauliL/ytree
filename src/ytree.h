@@ -426,6 +426,18 @@ struct FileEntry
 
   /* Owning directory, or null if it has expired. */
   std::shared_ptr<DirEntry> Dir() const { return dir_entry.lock(); }
+
+  std::optional<std::string> GetExtension() const
+  {
+    const auto extension = std::filesystem::path(name).extension();
+
+    if (extension.empty())
+    {
+      return std::nullopt;
+    }
+
+    return extension.string();
+  }
 };
 
 struct DirEntry : std::enable_shared_from_this<DirEntry>
@@ -729,10 +741,9 @@ void MvAddStr(int y, int x, const std::string& str);
 void MvWAddStr(WINDOW* win, int y, int x, const std::string& str);
 void WAddStr(WINDOW* win, const std::string& str);
 extern void ClockHandler(int);
-std::optional<std::string> GetExtViewer(const std::string& filename);
+std::optional<std::string> GetExtViewer(const std::filesystem::path& filename);
 extern void InitClock();
 extern void SuspendClock();
-std::optional<std::string> GetExtension(const std::string& filename);
 std::string ShellQuote(const std::string& src);
 extern int  BuildUserFileEntry(FileEntry *fe_ptr,
             int max_filename_len, int max_linkname_len,

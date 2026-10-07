@@ -190,8 +190,8 @@ static int ViewArchiveFile(const std::filesystem::path& file_path)
         buffer,
         sizeof(buffer),
         "| %s",
-        PAGER
-);
+        GetProfileValue("PAGER")
+      );
     } else {
       // Maybe pipe-able
       std::snprintf(
@@ -199,21 +199,21 @@ static int ViewArchiveFile(const std::filesystem::path& file_path)
         sizeof(buffer),
         "| %s",
         aux->c_str()
-);
+      );
     }
   } else {
     std::snprintf(
       buffer,
       sizeof(buffer),
       "| %s",
-      PAGER
-);
+      GetProfileValue("PAGER")
+    );
   }
   command_line = MakeExtractCommandLine(
     mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
     file_path,
     buffer
-);
+  );
   result = SystemCall(command_line);
   if (result)
   {

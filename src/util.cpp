@@ -754,18 +754,6 @@ void GetMaxYX(WINDOW *win, int *height, int *width)
   }
 }
 
-std::optional<std::string> GetExtension(const std::string& filename)
-{
-  const auto pos = filename.rfind('.');
-
-  if (pos == std::string::npos || pos == 0)
-  {
-    return std::nullopt;
-  }
-
-  return filename.substr(pos + 1);
-}
-
 std::string ShellQuote(const std::string& src)
 {
   // Double-quoted shell word; escape only characters special inside "...".
