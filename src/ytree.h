@@ -448,6 +448,60 @@ struct Statistic
   char          disk_name[DISK_NAME_LENGTH + 1];
 };
 
+struct WalkContextBase
+{
+  FileEntry *new_fe_ptr = nullptr;
+};
+
+struct ChangeModusWalkContext : WalkContextBase
+{
+  char new_modus[11]{};
+};
+
+struct ChangeOwnerWalkContext : WalkContextBase
+{
+  unsigned new_owner_id = 0;
+};
+
+struct ChangeGroupWalkContext : WalkContextBase
+{
+  unsigned new_group_id = 0;
+};
+
+struct ExecuteWalkContext : WalkContextBase
+{
+  std::string command;
+};
+
+struct CopyWalkContext : WalkContextBase
+{
+  Statistic *statistic_ptr = nullptr;
+  DirEntry  *dest_dir_entry = nullptr;
+  char      *to_file = nullptr;
+  char      *to_path = nullptr;
+  bool      path_copy = false;
+  bool      confirm = false;
+};
+
+struct RenameWalkContext : WalkContextBase
+{
+  char *new_name = nullptr;
+  bool confirm = false;
+};
+
+struct MoveWalkContext : WalkContextBase
+{
+  DirEntry *dest_dir_entry = nullptr;
+  char     *to_file = nullptr;
+  char     *to_path = nullptr;
+  bool     confirm = false;
+};
+
+struct PipeWalkContext : WalkContextBase
+{
+  FILE *pipe_file = nullptr;
+};
+
 union FunctionData
 {
   struct
