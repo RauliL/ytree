@@ -60,6 +60,8 @@ static std::unordered_map<std::string, Profile> profile =
   { "TARLIST",        { DEFAULT_TARLIST,       std::nullopt,     std::nullopt } },
   { "TREEDEPTH",      { DEFAULT_TREEDEPTH,     std::nullopt,     std::nullopt } },
   { "UNCOMPRESS",     { DEFAULT_UNCOMPRESS,    std::nullopt,     std::nullopt } },
+  { "UNXZ",           { DEFAULT_UNXZ,          std::nullopt,     std::nullopt } },
+  { "UNZSTD",         { DEFAULT_UNZSTD,        std::nullopt,     std::nullopt } },
   { "USERVIEW",       { "",                    std::nullopt,     std::nullopt } },
   { "ZIPEXPAND",      { DEFAULT_ZIPEXPAND,     std::nullopt,     std::nullopt } },
   { "ZIPLIST",        { DEFAULT_ZIPLIST,       std::nullopt,     std::nullopt } },

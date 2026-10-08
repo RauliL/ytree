@@ -236,6 +236,10 @@ enum class CompressMethod : int
   TAPE_DIR_BZIP_COMPRESS = 17,
   RAR_COMPRESS = 18,
   SEVENZIP_COMPRESS = 19,
+  XZ_COMPRESS = 20,
+  ZSTD_COMPRESS = 21,
+  TAPE_DIR_XZ_COMPRESS = 22,
+  TAPE_DIR_ZSTD_COMPRESS = 23,
 };
 
 enum class SortKey
