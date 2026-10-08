@@ -25,7 +25,6 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
       {
         FormatMessage("Can't change directory to*\"{}\"", path.c_str());
       } else {
-        refresh();
         result = QuerySystemCall(command_line);
       }
       std::filesystem::current_path(cwd, ec);
@@ -34,7 +33,6 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
         FormatMessage("Can't change directory to*\"{}\"", cwd.c_str());
       }
     } else {
-      refresh();
       result = QuerySystemCall(command_line);
     }
   }

@@ -2671,11 +2671,11 @@ int HandleFileWindow(DirEntry *dir_entry)
               ExecuteWalkContext execute_ctx;
               execute_ctx.command = command_line;
               SilentTagWalkTaggedFiles(ExecuteCommand, &execute_ctx);
-              RefreshWindow(file_window);
 
               HitReturnToContinue();
-
+              refresh();
               InitClock();
+              RefreshWindow(file_window);
 
               DisplayFiles(
                 dir_entry,
@@ -2707,6 +2707,8 @@ int HandleFileWindow(DirEntry *dir_entry)
               execute_ctx.command = command_line;
               SilentWalkTaggedFiles(ExecuteCommand, &execute_ctx);
               HitReturnToContinue();
+              refresh();
+              InitClock();
 
               DisplayFiles(
                 dir_entry,

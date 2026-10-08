@@ -503,14 +503,19 @@ int GetTapeDeviceName()
 
 void HitReturnToContinue()
 {
-  curs_set(1);
-  vidattr(A_REVERSE);
-  putp("[Hit return to continue]");
-  vidattr(0);
+  std::FILE* tty = std::fopen("/dev/tty", "r+");
+  if (tty != nullptr)
+  {
+    std::fputs("\n[Hit return to continue]", tty);
+    std::fflush(tty);
+    std::fgetc(tty);
+    std::fclose(tty);
+    return;
+  }
+
+  std::fputs("\n[Hit return to continue]", stdout);
   std::fflush(stdout);
-  Getch();
-  curs_set(0);
-  doupdate();
+  std::fgetc(stdin);
 }
 
 

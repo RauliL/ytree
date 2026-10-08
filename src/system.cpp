@@ -1,13 +1,40 @@
 #include "ytree.h"
 
+static void PrepareTerminalForShell()
+{
+  if (!isendwin())
+  {
+    endwin();
+  }
+  reset_shell_mode();
+  std::fflush(stdout);
+  std::fflush(stderr);
+  std::fputc('\n', stdout);
+  std::fflush(stdout);
+}
+
+static void RestoreScreenAfterShell(const bool restart_clock)
+{
+  if (isendwin())
+  {
+    refresh();
+  }
+  leaveok(stdscr, true);
+  curs_set(0);
+  if (restart_clock)
+  {
+    InitClock();
+  }
+}
+
 int SystemCall(const std::string& command_line)
 {
   int result;
 
-  endwin();
+  PrepareTerminalForShell();
   result = SilentSystemCall(command_line);
+  RestoreScreenAfterShell(true);
   GetAvailBytes(&statistic.disk_space);
-  refresh();
 
   return result;
 }
@@ -16,11 +43,11 @@ int QuerySystemCall(const std::string& command_line)
 {
   int result;
 
-  endwin();
+  PrepareTerminalForShell();
   result = SilentSystemCall(command_line);
   HitReturnToContinue();
+  RestoreScreenAfterShell(true);
   GetAvailBytes(&statistic.disk_space);
-  refresh();
 
   return result;
 }
@@ -36,17 +63,14 @@ int SilentSystemCallEx(const std::string& command_line, bool enable_clock)
 {
   int result;
 
-  // Hier ist die einzige Stelle, in der Kommandos aufgerufen werden!
+  (void)enable_clock;
+
   SuspendClock();
+
+  PrepareTerminalForShell();
 
   result = std::system(command_line.c_str());
 
-  leaveok(stdscr, true);
-  curs_set(0);
-  if (enable_clock)
-  {
-    InitClock();
-  }
   GetAvailBytes(&statistic.disk_space);
 
   return result;
