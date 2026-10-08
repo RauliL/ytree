@@ -112,7 +112,9 @@ static int ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path)
         *compress_method == CompressMethod::FREEZE_COMPRESS ||
         *compress_method == CompressMethod::COMPRESS_COMPRESS ||
         *compress_method == CompressMethod::GZIP_COMPRESS ||
-        *compress_method == CompressMethod::BZIP_COMPRESS
+        *compress_method == CompressMethod::BZIP_COMPRESS ||
+        *compress_method == CompressMethod::XZ_COMPRESS ||
+        *compress_method == CompressMethod::ZSTD_COMPRESS
       )
     )
     {
@@ -120,7 +122,9 @@ static int ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path)
         *compress_method == CompressMethod::FREEZE_COMPRESS ? "MELT" :
         *compress_method == CompressMethod::COMPRESS_COMPRESS ? "UNCOMPRESS" :
         *compress_method == CompressMethod::GZIP_COMPRESS ? "GNUUNZIP" :
-        "BUNZIP"
+        *compress_method == CompressMethod::BZIP_COMPRESS ? "BUNZIP" :
+        *compress_method == CompressMethod::XZ_COMPRESS ? "UNXZ" :
+        "UNZSTD"
       );
 
       command_line = Join(

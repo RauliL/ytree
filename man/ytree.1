@@ -327,10 +327,12 @@ choosing an archive file with the \fILog\fR command or
 by calling ytree from the command line with an archive file
 given as a command line argument.
 
-ytree recognize the filename extensions ".F", ".Z", ".z" and
-".gz" and calls the appropriate uncompressor MELT
-(default=melt), UNCOMPRESS (default=uncompress) and GNUUNZIP
-(default=gunzip \-c). You may change these settings in config.toml.
+ytree recognize the filename extensions ".F", ".Z", ".z",
+".gz", ".bz2", ".xz", ".lzma", ".zst" and ".zstd" and calls the
+appropriate uncompressor MELT (default=melt), UNCOMPRESS
+(default=uncompress), GNUUNZIP (default=gunzip \-c), BUNZIP
+(default=bunzip2), UNXZ (default=xz \-dc) and UNZSTD
+(default=zstd \-dc). You may change these settings in config.toml.
 
 ytree supports following archive types and requires:
 .nf
@@ -358,6 +360,9 @@ TAR-Files may have following extensions:
 \fB  ".Z", ".TZ", ".TZR", ".Xaa",                   (compress)\fR
 \fB  ".z", ".gz", ".tzr", ".tz", ".xaa", ".tgz", ".TGZ",\fR
 \fB  ".taz", ".TAZ", ".tpz" und ".TPZ"                  (gzip)\fR
+\fB  ".bz2"                                            (bzip2)\fR
+\fB  ".xz", ".txz", ".lzma"                               (xz)\fR
+\fB  ".zst", ".zstd", ".tzst"                           (zstd)\fR
 .fi
 .RE
 

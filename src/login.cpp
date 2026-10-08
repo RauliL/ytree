@@ -126,6 +126,8 @@ bool LoginDisk(const std::string& path)
         case CompressMethod::TAPE_DIR_FREEZE_COMPRESS:
         case CompressMethod::TAPE_DIR_GZIP_COMPRESS:
         case CompressMethod::TAPE_DIR_BZIP_COMPRESS:
+        case CompressMethod::TAPE_DIR_XZ_COMPRESS:
+        case CompressMethod::TAPE_DIR_ZSTD_COMPRESS:
           mode = Mode::TAPE_MODE;
           break;
 
@@ -357,6 +359,30 @@ bool LoginDisk(const std::string& path)
         GetProfileValueOrEmpty("TARLIST")
       );
     }
+    else if (*file_method == CompressMethod::XZ_COMPRESS)
+    {
+      /* xz -dc < TAR_FILE | gtar tvf - */
+      /*--------------------------------*/
+      command_line = std::format(
+        "{} < '{}' {} | {}",
+        GetProfileValueOrEmpty("UNXZ"),
+        statistic.login_path,
+        ERR_TO_STDOUT,
+        GetProfileValueOrEmpty("TARLIST")
+      );
+    }
+    else if (*file_method == CompressMethod::ZSTD_COMPRESS)
+    {
+      /* zstd -dc < TAR_FILE | gtar tvf - */
+      /*----------------------------------*/
+      command_line = std::format(
+        "{} < '{}' {} | {}",
+        GetProfileValueOrEmpty("UNZSTD"),
+        statistic.login_path,
+        ERR_TO_STDOUT,
+        GetProfileValueOrEmpty("TARLIST")
+      );
+    }
     else if (*file_method == CompressMethod::TAPE_DIR_FREEZE_COMPRESS)
     {
       /* melt < TAR_FILE */
@@ -394,6 +420,26 @@ bool LoginDisk(const std::string& path)
       command_line = std::format(
         "{} < '{}'",
         GetProfileValueOrEmpty("BUNZIP"),
+        statistic.login_path
+      );
+    }
+    else if (*file_method == CompressMethod::TAPE_DIR_XZ_COMPRESS)
+    {
+      /* xz -dc < TAR_FILE */
+      /*-------------------*/
+      command_line = std::format(
+        "{} < '{}'",
+        GetProfileValueOrEmpty("UNXZ"),
+        statistic.login_path
+      );
+    }
+    else if (*file_method == CompressMethod::TAPE_DIR_ZSTD_COMPRESS)
+    {
+      /* zstd -dc < TAR_FILE */
+      /*---------------------*/
+      command_line = std::format(
+        "{} < '{}'",
+        GetProfileValueOrEmpty("UNZSTD"),
         statistic.login_path
       );
     }

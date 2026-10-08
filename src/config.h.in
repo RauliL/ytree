@@ -33,6 +33,8 @@
 #define DEFAULT_UNCOMPRESS "uncompress"
 #define DEFAULT_GNUUNZIP   "gunzip -c"
 #define DEFAULT_BUNZIP     "bunzip2"
+#define DEFAULT_UNXZ       "xz -dc"
+#define DEFAULT_UNZSTD     "zstd -dc"
 #define DEFAULT_MANROFF    "nroff -man"
 
 #define DEFAULT_ZOOLIST    "zoo vm"
