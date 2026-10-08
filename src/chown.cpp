@@ -17,7 +17,7 @@ static int SetDirOwner(DirEntry *de_ptr, int new_owner_id);
 
 int ChangeFileOwner(FileEntry *fe_ptr)
 {
-  WalkingPackage walking_package;
+  ChangeOwnerWalkContext ctx;
   int  owner_id;
   int  result;
 
@@ -31,8 +31,8 @@ int ChangeFileOwner(FileEntry *fe_ptr)
 
   if( ( owner_id = GetNewOwner(fe_ptr->stat_struct.st_uid) ) >= 0 )
   {
-    walking_package.function_data.change_owner.new_owner_id = owner_id;
-    result = SetFileOwner(fe_ptr, &walking_package);
+    ctx.new_owner_id = owner_id;
+    result = SetFileOwner(fe_ptr, &ctx);
   }
   return( result );
 }
@@ -79,7 +79,7 @@ int GetNewOwner(int st_uid)
 
 
 
-int SetFileOwner(FileEntry *fe_ptr, WalkingPackage *walking_package)
+int SetFileOwner(FileEntry *fe_ptr, ChangeOwnerWalkContext *ctx)
 {
   const auto path = GetFileNamePath(fe_ptr);
   struct stat stat_struct;
@@ -88,9 +88,9 @@ int SetFileOwner(FileEntry *fe_ptr, WalkingPackage *walking_package)
 
   result = -1;
 
-  walking_package->new_fe_ptr = fe_ptr; /* unchanged */
+  ctx->new_fe_ptr = fe_ptr; /* unchanged */
 
-  new_owner_id = walking_package->function_data.change_owner.new_owner_id;
+  new_owner_id = ctx->new_owner_id;
 
   if (!chown(path.c_str(), new_owner_id, fe_ptr->stat_struct.st_gid))
   {
