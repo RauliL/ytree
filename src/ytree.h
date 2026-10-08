@@ -440,11 +440,11 @@ struct Statistic
   int           disp_begin_pos;
   int           cursor_pos;
   SortSpec      kind_of_sort;
-  char          login_path[PATH_LENGTH + 1];
-  char          path[PATH_LENGTH + 1];
-  char          tape_name[PATH_LENGTH + 1];
-  char          file_spec[FILE_SPEC_LENGTH + 1];
-  char          disk_name[DISK_NAME_LENGTH + 1];
+  std::string   login_path;
+  std::string   path;
+  std::string   tape_name;
+  std::string   file_spec;
+  std::string   disk_name;
 };
 
 struct WalkContextBase
@@ -540,10 +540,11 @@ extern int  ReadTreeFromZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 extern int  ReadTreeFromLHA(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
 extern int  ReadTreeFromARC(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
 extern int  ReadTreeFromRAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
-extern int  GetDiskParameter(const std::string& path,
-           char *volume_name,
-           std::int64_t *avail_bytes,
-           std::int64_t *capacity
+bool GetDiskParameter(
+  const std::string& path,
+  std::string* volume_name,
+  std::int64_t* avail_bytes,
+  std::int64_t* capacity
 );
 extern int  HandleDirWindow(DirEntry *start_dir_entry);
 extern void DisplayFileWindow(DirEntry *dir_entry);
@@ -554,7 +555,7 @@ void Init(
 std::filesystem::path GetPath(const DirEntry* dir_entry);
 bool Match(const std::string& file_name);
 int SetMatchSpec(const std::string& new_spec);
-extern int  SetFileSpec(char *file_spec);
+bool SetFileSpec(const std::string& file_spec);
 extern void SetMatchingParam(DirEntry *dir_entry);
 void ErrorEx(const std::string& msg, const std::string& module, int line);
 void Warning(const std::string& msg);
@@ -632,7 +633,7 @@ extern int  ChangeDirGroup(DirEntry *de_ptr);
 extern void DisplayDirHelp();
 extern void DisplayFileHelp();
 extern void ClearHelp();
-extern int  GetAvailBytes(std::int64_t *avail_bytes);
+bool GetAvailBytes(std::int64_t* avail_bytes);
 extern int  DeleteDirectory(DirEntry *dir_entry);
 extern int  ExecuteCommand(FileEntry *fe_ptr, ExecuteWalkContext *ctx);
 bool GetCommandLine(std::string& command_line);
@@ -644,8 +645,8 @@ extern int  RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry
 extern int  RenameTaggedFiles(FileEntry *fe_ptr, RenameWalkContext *ctx);
 extern int  GetRenameParameter(const std::string* old_name, char *new_name);
 extern char *CTime(time_t f_time, char *buffer);
-extern int  LoginDisk(char *path);
-extern int  GetNewLoginPath(char *path);
+bool LoginDisk(const std::string& path);
+bool GetNewLoginPath(std::string& path);
 void PrintSpecialString(WINDOW* win, int y, int x, const std::string& str, int color);
 void Print(WINDOW* win, int y, int x, const std::string& str, int color);
 extern void PrintOptions(WINDOW *,int, int, const std::string&);
@@ -657,7 +658,7 @@ void PrintMenuOptions(
   int ncolor,
   int hcolor
 );
-extern char *FormFilename(char *dest, char *src, unsigned int max_len);
+char* FormFilename(char* dest, const std::string& src, unsigned int max_len);
 extern char *CutFilename(char *dest, const std::string& src, unsigned int max_len);
 std::string CutPathname(const std::string& src, std::size_t max_len);
 extern void   Fnsplit(char *path, char *dir, char *name);
@@ -677,10 +678,10 @@ extern int  ViKey(int ch);
 std::optional<CompressMethod> GetFileMethod(const std::string& filename);
 extern bool KeyPressed();
 extern bool EscapeKeyPressed();
-extern int  GetTapeDeviceName();
+bool GetTapeDeviceName();
 extern int  MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry);
 extern int  MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name);
-extern void NormPath(const char *in_path, char *out_path);
+std::string NormPath(const std::string& in_path);
 extern char *Strtok_r(char *str, const char *delim, char **old);
 void ReadProfile(const std::optional<std::filesystem::path>& custom_path);
 std::optional<std::string> GetProfileValue(const std::string& key);

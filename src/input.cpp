@@ -672,25 +672,23 @@ int InputChoise(const char *msg, const char *term)
 
 
 
-int GetTapeDeviceName()
+bool GetTapeDeviceName()
 {
-  int  result;
   std::string path = statistic.tape_name;
-
-  result = -1;
 
   ClearHelp();
 
   MvAddStr(LINES - 2, 1, "Tape-Device:");
   if (InputString(path, LINES - 2, 14, 0, COLS - 15) == CR)
   {
-    result = 0;
-    *std::format_to(statistic.tape_name, "{}", path) = '\0';
+    statistic.tape_name = path;
+    move(LINES - 2, 1); clrtoeol();
+    return true;
   }
 
   move(LINES - 2, 1); clrtoeol();
 
-  return( result );
+  return false;
 }
 
 

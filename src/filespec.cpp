@@ -12,11 +12,11 @@
 
 
 
-int SetFileSpec(char *file_spec)
+bool SetFileSpec(const std::string& file_spec)
 {
-  if( SetMatchSpec(file_spec) )
+  if (SetMatchSpec(file_spec))
   {
-    return( 1 );
+    return false;
   }
 
   statistic.disk_matching_files = 0L;
@@ -24,7 +24,7 @@ int SetFileSpec(char *file_spec)
 
   SetMatchingParam(statistic.tree.get());
 
-  return( 0 );
+  return true;
 }
 
 
@@ -82,16 +82,13 @@ int ReadFileSpec()
   MvAddStr(LINES - 2, 1, "New filespec:");
   if (InputString(buffer, LINES - 2, 15, 0, FILE_SPEC_LENGTH) == CR)
   {
-    char file_spec_buf[FILE_SPEC_LENGTH * 2 + 1];
-
-    *std::format_to(file_spec_buf, "{}", buffer) = '\0';
-    if( SetFileSpec(file_spec_buf) )
+    if (!SetFileSpec(buffer))
     {
       Message("Invalid Filespec");
     }
     else
     {
-      *std::format_to(statistic.file_spec, "{}", buffer) = '\0';
+      statistic.file_spec = buffer;
       result = 0;
     }
   }

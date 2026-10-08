@@ -561,13 +561,13 @@ void PrintMenuOptions(
  *                              FormFilename                                 *
  *****************************************************************************/
 
-char *FormFilename(char *dest, char *src, unsigned int max_len)
+char* FormFilename(char* dest, const std::string& src, unsigned int max_len)
 {
   int i;
   int begin;
   unsigned int l;
 
-  l = std::strlen(src);
+  l = static_cast<unsigned int>(src.size());
   begin = 0;
 
   if( l <= max_len )
@@ -579,7 +579,7 @@ char *FormFilename(char *dest, char *src, unsigned int max_len)
   for(i=0; i < (int) max_len - 4; i++)
     if( src[l - i] == std::filesystem::path::preferred_separator || src[l - i] == '\\' )
       begin = l - i;
-  *std::format_to(dest, "/...{}", &src[begin]) = '\0';
+  *std::format_to(dest, "/...{}", src.c_str() + begin) = '\0';
   return dest;
 }
 
@@ -701,7 +701,7 @@ std::optional<CompressMethod> GetFileMethod(const std::string& filename)
   return std::nullopt;
 }
 
-void NormPath(const char* in_path, char* out_path)
+std::string NormPath(const std::string& in_path)
 {
   auto result = std::filesystem::path(in_path).lexically_normal().string();
 
@@ -716,7 +716,7 @@ void NormPath(const char* in_path, char* out_path)
     result = ".";
   }
 
-  std::snprintf(out_path, PATH_LENGTH + 1, "%s", result.c_str());
+  return result;
 }
 
 

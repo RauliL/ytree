@@ -20,7 +20,7 @@ void DisplayDiskStatistic()
   char buff[20];
   *buff = '\0';
 
-  std::snprintf(buff, sizeof(buff), fmt, statistic.file_spec);
+  std::snprintf(buff, sizeof(buff), fmt, statistic.file_spec.c_str());
   PrintMenuOptions(stdscr, 2, COLS - 18, buff, MENU_COLOR, HIMENUS_COLOR);
   PrettyPrintNumber(5,  COLS - 17, statistic.disk_space / (std::int64_t)1024);
   PrintOptions(stdscr, 7,  COLS - 24, "[DISK Statistics   ]");
@@ -48,7 +48,7 @@ void DisplayAvailBytes()
 
 void DisplayFileSpec()
 {
-  mvwprintw(stdscr, 2,  COLS - 18, "%-17s", statistic.file_spec);
+  mvwprintw(stdscr, 2,  COLS - 18, "%-17s", statistic.file_spec.c_str());
   RefreshWindow(stdscr);
 }
 
@@ -58,7 +58,7 @@ void DisplayDiskName()
   static const char* fmt= "[%-17s]";
   char buff[20];
 
-  std::snprintf(buff, sizeof(buff), fmt, statistic.disk_name);
+  std::snprintf(buff, sizeof(buff), fmt, statistic.disk_name.c_str());
   PrintMenuOptions(stdscr, 4, COLS - 18, buff, MENU_COLOR, HIMENUS_COLOR);
   RefreshWindow(stdscr);
 }
@@ -75,11 +75,7 @@ void DisplayDirStatistic(DirEntry *dir_entry)
 
   *auxbuff = *buffer = '\0';
   std::snprintf(format, sizeof(format), "%%-%ds", COLS - 10);
-  {
-    const auto p = path.string() + (dir_entry->not_scanned ? "*" : "");
-
-    *std::format_to(statistic.path, "{}", p) = '\0';
-  }
+  statistic.path = path.string() + (dir_entry->not_scanned ? "*" : "");
   std::snprintf(
     auxbuff,
     sizeof(auxbuff),
@@ -138,16 +134,12 @@ void DisplayDirParameter(DirEntry *dir_entry)
   char auxbuff[PATH_LENGTH + 1];
 
   std::snprintf(format, sizeof(format), "%%-%ds", COLS - 10);
-  {
-    const auto p = path.string() + (dir_entry->not_scanned ? "*" : "");
-
-    *std::format_to(statistic.path, "{}", p) = '\0';
-  }
+  statistic.path = path.string() + (dir_entry->not_scanned ? "*" : "");
   std::snprintf(
     auxbuff,
     sizeof(auxbuff),
     format,
-    FormFilename(buffer,statistic.path, COLS - 10)
+    FormFilename(buffer, statistic.path, COLS - 10)
 );
   wmove(stdscr, 0, 6);
   wclrtoeol(stdscr);

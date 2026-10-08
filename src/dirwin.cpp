@@ -1155,22 +1155,23 @@ int HandleDirWindow(DirEntry *start_dir_entry)
       case 'l':
 #endif
       case 'L':
+      {
+        std::string login_path;
         if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
         {
-          std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", disk_statistic.login_path);
+          login_path = disk_statistic.login_path;
         } else {
-          const auto path = GetPath(dir_entry);
-
-          std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", path.c_str());
+          login_path = GetPath(dir_entry);
         }
-        if (!GetNewLoginPath(new_login_path))
+        if (GetNewLoginPath(login_path))
         {
           DisplayMenu();
           doupdate();
-          LoginDisk(new_login_path);
-         }
-         need_dsp_help = true;
-         break;
+          LoginDisk(login_path);
+        }
+        need_dsp_help = true;
+        break;
+      }
 
       case 'L' & 0x1F:
          clearok(stdscr, true);
@@ -1204,7 +1205,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
         }
 
         // Following needed to ignore old tree in memory.
-        *disk_statistic.login_path = 0;
+        disk_statistic.login_path.clear();
 
         LoginDisk(new_login_path);
         need_dsp_help = true;

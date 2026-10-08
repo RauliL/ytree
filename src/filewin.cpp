@@ -2576,11 +2576,9 @@ int HandleFileWindow(DirEntry *dir_entry)
         fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
         if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
         {
-          const auto path = GetFileNamePath(fe_ptr);
-          char new_login_path[PATH_LENGTH + 1];
+          auto new_login_path = GetFileNamePath(fe_ptr).string();
 
-          *std::format_to(new_login_path, "{}", path.string()) = '\0';
-          if (!GetNewLoginPath(new_login_path))
+          if (GetNewLoginPath(new_login_path))
           {
             dir_entry->login_flag = true;
             LoginDisk(new_login_path);

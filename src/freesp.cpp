@@ -108,77 +108,74 @@ static const char* FilesystemTypeName(const FsStat& fs)
 /* Volume-Name und freien Plattenplatz ermitteln */
 /*-----------------------------------------------*/
 
-int GetDiskParameter(const std::string& path,
-          char *volume_name,
-          std::int64_t *avail_bytes,
-          std::int64_t *total_disk_space
+bool GetDiskParameter(
+  const std::string& path,
+  std::string* volume_name,
+  std::int64_t* avail_bytes,
+  std::int64_t* total_disk_space
 )
 {
   FsStat fs{};
-  char *p;
-  const char* fname;
-  int  result;
   std::int64_t bfree;
   std::int64_t this_disk_space;
 
-  if ((result = QueryFs(path.c_str(), &fs)) == 0)
+  if (QueryFs(path.c_str(), &fs) != 0)
   {
-    if (volume_name)
-    {
-      /* Name ermitteln */
-      /*----------------*/
-
-      if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
-      {
-        fname = FilesystemTypeName(fs);
-
-        std::strncpy(
-          volume_name,
-          fname,
-          std::min(static_cast<std::size_t>(DISK_NAME_LENGTH), std::strlen(fname))
-        );
-        volume_name[
-          std::min(static_cast<std::size_t>(DISK_NAME_LENGTH), std::strlen(fname))
-        ] = '\0';
-      }
-      else
-      {
-        /* TAR/ZOO/ZIP-FILE_MODE */
-        /*-----------------------*/
-
-        if (!(p = std::strrchr(statistic.login_path, std::filesystem::path::preferred_separator)))
-        {
-          p = statistic.login_path;
-        } else {
-          p++;
-        }
-
-        std::strncpy(volume_name, p, sizeof(statistic.disk_name));
-        volume_name[sizeof(statistic.disk_name)] = '\0';
-      }
-    } /* volume_name */
-
-    const auto bsize = FsBlockSize(fs);
-    bfree = getuid() ? fs.f_bavail : fs.f_bfree;
-    if (bfree < 0L)
-    {
-      bfree = 0L;
-    }
-    *avail_bytes = bfree * bsize;
-    this_disk_space = static_cast<std::int64_t>(fs.f_blocks) * bsize;
-
-    if (total_disk_space)
-    {
-      *total_disk_space = this_disk_space;
-    }
+    return false;
   }
-  return result;
+
+  if (volume_name)
+  {
+    /* Name ermitteln */
+    /*----------------*/
+
+    if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
+    {
+      *volume_name = FilesystemTypeName(fs);
+      if (volume_name->size() > DISK_NAME_LENGTH)
+      {
+        volume_name->resize(DISK_NAME_LENGTH);
+      }
+    }
+    else
+    {
+      /* TAR/ZOO/ZIP-FILE_MODE */
+      /*-----------------------*/
+
+      const auto pos = statistic.login_path.rfind(
+        std::filesystem::path::preferred_separator
+      );
+      *volume_name = (pos == std::string::npos)
+        ? statistic.login_path
+        : statistic.login_path.substr(pos + 1);
+      if (volume_name->size() > DISK_NAME_LENGTH)
+      {
+        volume_name->resize(DISK_NAME_LENGTH);
+      }
+    }
+  } /* volume_name */
+
+  const auto bsize = FsBlockSize(fs);
+  bfree = getuid() ? fs.f_bavail : fs.f_bfree;
+  if (bfree < 0L)
+  {
+    bfree = 0L;
+  }
+  *avail_bytes = bfree * bsize;
+  this_disk_space = static_cast<std::int64_t>(fs.f_blocks) * bsize;
+
+  if (total_disk_space)
+  {
+    *total_disk_space = this_disk_space;
+  }
+
+  return true;
 }
 
 
 
 
-int GetAvailBytes(std::int64_t *avail_bytes)
+bool GetAvailBytes(std::int64_t* avail_bytes)
 {
   return GetDiskParameter(
     statistic.tree->name,

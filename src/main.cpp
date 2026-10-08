@@ -7,8 +7,6 @@
  ***************************************************************************/
 #include "ytree.h"
 
-static char path[PATH_LENGTH+1];
-
 int main(int argc, char **argv)
 {
   const char *p;
@@ -75,12 +73,12 @@ int main(int argc, char **argv)
 
   /* Normalize path */
 
-  NormPath(startup_path.c_str(), path);
+  auto path = NormPath(startup_path);
 
-  statistic.login_path[0] = '\0';
-  statistic.path[0] = '0';
+  statistic.login_path.clear();
+  statistic.path.clear();
 
-  if( LoginDisk(path) == -1 )
+  if( !LoginDisk(path) )
   {
     endwin();
     std::exit(1);

@@ -107,12 +107,11 @@ int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name)
 int MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry)
 {
   DirEntry *de_ptr, *sde_ptr;
-  char     path[PATH_LENGTH+1];
   char     *token, *old;
   int      n;
   int      result = -1;
 
-  NormPath(dir_path.c_str(), path);
+  auto path = NormPath(dir_path);
   *dest_dir_entry = nullptr;
 
   n = tree->name.size();
@@ -123,14 +122,14 @@ int MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path,
     tree->name[0] == std::filesystem::path::preferred_separator;
 
   if( tree_is_root ||
-      ( tree->name.compare(0, n, path, n) == 0 &&
+      ( tree->name.compare(0, n, path, 0, n) == 0 &&
        ( path[n] == std::filesystem::path::preferred_separator || path[n] == '\0' ) ) )
   {
     /* Pfad befindet sich im (Sub)-Tree */
     /*----------------------------------*/
 
     de_ptr = tree.get();
-    token = Strtok_r(&path[n], preferred_separator_str, &old);
+    token = Strtok_r(path.data() + n, preferred_separator_str, &old);
     while( token )
     {
       sde_ptr = nullptr;
@@ -172,7 +171,7 @@ int MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path,
     /*--------------------------------------*/
 
 #ifdef DEBUG
-    std::fprintf(stderr, "MakePath: \"%s\"\n", path);
+    std::fprintf(stderr, "MakePath: \"%s\"\n", path.c_str());
 #endif /* DEBUG */
 
     std::error_code ec;

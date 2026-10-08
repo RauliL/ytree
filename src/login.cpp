@@ -13,14 +13,10 @@
 
 
 
-/* Login Disk liefert
- * -1 bei Fehler
- * 0  bei fehlerfreiem lesen eines neuen Baumes
- * 1  bei Benutzung des Baumes im Speicher
- */
+/* Login Disk: true on success, false on failure. */
 
 
-int LoginDisk(char *path)
+bool LoginDisk(const std::string& path)
 {
   struct stat stat_struct;
   std::string command_line;
@@ -39,8 +35,8 @@ int LoginDisk(char *path)
     disk_statistic = statistic;
   }
 
-  if ( disk_statistic.login_path[0] != 0) {
-    if( !std::strcmp(disk_statistic.login_path, path) )
+  if (!disk_statistic.login_path.empty()) {
+    if( path == disk_statistic.login_path )
     {
       /* Tree is in memory! Use it! */
       /*----------------------------*/
@@ -57,18 +53,18 @@ int LoginDisk(char *path)
       }
       statistic = disk_statistic;
       SetFileSpec(statistic.file_spec);
-      return( 1 );   /* Return-Wert fuer "alten Baum" */
+      return true;   /* Tree already in memory */
     }
   }
 
 
-  if( STAT_(path, &stat_struct) )
+  if( STAT_(path.c_str(), &stat_struct) )
   {
     /* Stat failed */
     /*-------------*/
     FormatMessage("Can't access*\"{}\"*{}", path, std::strerror(errno));
 
-    return -1;
+    return false;
   }
 
 
@@ -77,10 +73,10 @@ int LoginDisk(char *path)
 
   statistic.tree = std::make_shared<DirEntry>();
 
-  *std::format_to(statistic.path, "{}", path) = '\0';
-  *std::format_to(statistic.login_path, "{}", path) = '\0';
-  *std::format_to(statistic.file_spec, "{}", DEFAULT_FILE_SPEC) = '\0';
-  *std::format_to(statistic.tape_name, "{}", DEFAULT_TAPEDEV) = '\0';
+  statistic.path = path;
+  statistic.login_path = path;
+  statistic.file_spec = DEFAULT_FILE_SPEC;
+  statistic.tape_name = DEFAULT_TAPEDEV;
   statistic.kind_of_sort = { SortKey::Name, SortOrder::Ascending };
   statistic.tree->stat_struct = stat_struct;
 
@@ -90,7 +86,7 @@ int LoginDisk(char *path)
     /* No Directory ==> TAR_FILE/RPM/ZOO/ZIP/LHA/ARC_FILE */
     /*----------------------------------------------------*/
     file_method = GetFileMethod(statistic.login_path);
-    l = std::strlen(statistic.login_path);
+    l = static_cast<int>(statistic.login_path.size());
     if (!file_method)
     {
       mode = Mode::TAR_FILE_MODE;
@@ -145,10 +141,11 @@ int LoginDisk(char *path)
   }
 
 
-  GetDiskParameter(path,
-         statistic.disk_name,
-         &statistic.disk_space,
-         &statistic.disk_capacity
+  GetDiskParameter(
+    path,
+    &statistic.disk_name,
+    &statistic.disk_space,
+    &statistic.disk_capacity
   );
 
   RefreshWindow(stdscr);
@@ -162,9 +159,9 @@ int LoginDisk(char *path)
     /* zugehoeriges tape-device ermitteln */
     /*------------------------------------*/
 
-    if( GetTapeDeviceName() )
+    if (!GetTapeDeviceName())
     {
-      return( -1 );
+      return false;
     }
   }
 
@@ -177,7 +174,7 @@ int LoginDisk(char *path)
     {
       Error("pipe() failed");
 
-      return -1;
+      return false;
     }
 
     if (!file_method)
@@ -267,7 +264,7 @@ int LoginDisk(char *path)
     }
     else if (*file_method == CompressMethod::MULTIPLE_FREEZE_COMPRESS)
     {
-      const auto cat_file = std::string(statistic.login_path, l - 2) + "*";
+      const auto cat_file = statistic.login_path.substr(0, l - 2) + "*";
 
       /* cat TAR_FILE | melt | gtar tvf - */
       /*----------------------------------*/
@@ -294,7 +291,7 @@ int LoginDisk(char *path)
     }
     else if (*file_method == CompressMethod::MULTIPLE_COMPRESS_COMPRESS)
     {
-      const auto cat_file = std::string(statistic.login_path, l - 2) + "*";
+      const auto cat_file = statistic.login_path.substr(0, l - 2) + "*";
 
       /* cat TAR_FILE.X* | uncompress | gtar tvf - */
       /*-------------------------------------------*/
@@ -321,7 +318,7 @@ int LoginDisk(char *path)
     }
     else if (*file_method == CompressMethod::MULTIPLE_GZIP_COMPRESS)
     {
-      const auto cat_file = std::string(statistic.login_path, l - 2) + "*";
+      const auto cat_file = statistic.login_path.substr(0, l - 2) + "*";
 
       /* cat TAR_FILE.X* | gunzip | gtar tvf - */
       /*---------------------------------------*/
@@ -400,7 +397,7 @@ int LoginDisk(char *path)
       close(p[0]);
       close(p[1]);
 
-      return -1;
+      return false;
     }
 
     command_line += ERR_TO_NULL;
@@ -417,7 +414,7 @@ int LoginDisk(char *path)
       close(p[0]);
       close(p[1]);
 
-      return -1;
+      return false;
     }
     else if( pid == 0 )
     {
@@ -451,7 +448,7 @@ int LoginDisk(char *path)
       {
         Error("fdopen() failed");
 
-        return -1;
+        return false;
       }
 
       if( mode == Mode::ZOO_FILE_MODE )
@@ -461,7 +458,7 @@ int LoginDisk(char *path)
     Error("ReadTreeFromZOO() failed");
           std::fclose(f);
     wait(&status);
-          return( -1 );
+          return false;
   }
       }
       else if( mode == Mode::RPM_FILE_MODE )
@@ -471,7 +468,7 @@ int LoginDisk(char *path)
     Error("ReadTreeFromRPM() failed");
           std::fclose(f);
     wait(&status);
-          return( -1 );
+          return false;
   }
       }
       else if( mode == Mode::LHA_FILE_MODE )
@@ -481,7 +478,7 @@ int LoginDisk(char *path)
     Error("ReadTreeFromLHA() failed");
           std::fclose(f);
     wait(&status);
-          return( -1 );
+          return false;
   }
       }
       else if( mode == Mode::ZIP_FILE_MODE )
@@ -491,7 +488,7 @@ int LoginDisk(char *path)
     Error("ReadTreeFromZIP() failed");
           std::fclose(f);
     wait(&status);
-          return( -1 );
+          return false;
   }
       }
       else if( mode == Mode::ARC_FILE_MODE )
@@ -501,7 +498,7 @@ int LoginDisk(char *path)
     Error("ReadTreeFromARC() failed");
           std::fclose(f);
     wait(&status);
-          return( -1 );
+          return false;
   }
       }
       else if( mode == Mode::RAR_FILE_MODE )
@@ -511,7 +508,7 @@ int LoginDisk(char *path)
     Error("ReadTreeFromRAR() failed");
           std::fclose(f);
     wait(&status);
-          return( -1 );
+          return false;
   }
       }
       else
@@ -521,7 +518,7 @@ int LoginDisk(char *path)
           Error("ReadTreeFromTAR() failed");
           std::fclose(f);
     wait(&status);
-          return( -1 );
+          return false;
         }
       }
       wait(&status);
@@ -534,11 +531,11 @@ int LoginDisk(char *path)
   }
   else
   {
-    if( *disk_statistic.login_path )
+    if (!disk_statistic.login_path.empty())
     {
       /* Alten Baum loeschen */
       /*---------------------*/
-      *disk_statistic.login_path = '\0';
+      disk_statistic.login_path.clear();
       disk_statistic.tree.reset();
     }
 
@@ -549,7 +546,7 @@ int LoginDisk(char *path)
     {
       Error("ReadTree() failed");
 
-      return -1;
+      return false;
     }
     disk_statistic = statistic;
   }
@@ -557,25 +554,22 @@ int LoginDisk(char *path)
   SetFileSpec(statistic.file_spec);
 /*  SetKindOfSort( statistic.kind_of_sort ); */
 
-  return( 0 );
+  return true;
 }
 
 
 
 
 
-int GetNewLoginPath(char *path)
+bool GetNewLoginPath(std::string& path)
 {
-  int result;
   std::string aux = path;
-
-  result = -1;
 
   ClearHelp();
 
   MvAddStr(LINES - 2, 1, "NEW LOGIN-PATH:");
 
-  if( mode == Mode::LL_FILE_MODE && *path == '<' )
+  if (mode == Mode::LL_FILE_MODE && !path.empty() && path.front() == '<')
   {
     if (!aux.empty())
     {
@@ -589,11 +583,11 @@ int GetNewLoginPath(char *path)
 
   if (InputString(aux, LINES - 2, 17, 0, COLS - 24) == CR)
   {
-    NormPath(aux.c_str(), path);
-    result = 0;
+    path = NormPath(aux);
+    return true;
   }
 
-return( result );
+  return false;
 }
 
 
