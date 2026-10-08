@@ -1990,10 +1990,17 @@ int HandleFileWindow(DirEntry *dir_entry)
 
           need_dsp_help = true;
 
-          if( GetCopyParameter(fe_ptr->name.c_str(), path_copy, to_file, to_dir) )
-                      {
-      beep();
-      break;
+          {
+            std::string copy_as;
+            std::string copy_to;
+
+            if (!GetCopyParameter(fe_ptr->name, path_copy, copy_as, copy_to))
+            {
+              beep();
+              break;
+            }
+            *std::format_to(to_file, "{}", copy_as) = '\0';
+            *std::format_to(to_dir, "{}", copy_to) = '\0';
           }
 
           if( mode == Mode::DISK_MODE || mode == Mode::USER_MODE )
@@ -2109,11 +2116,18 @@ int HandleFileWindow(DirEntry *dir_entry)
           {
             need_dsp_help = true;
 
-      if( GetCopyParameter(nullptr, path_copy, to_file, to_dir) )
-                        {
-        beep();
-        break;
-            }
+      {
+        std::string copy_as;
+        std::string copy_to;
+
+        if (!GetCopyParameter(std::nullopt, path_copy, copy_as, copy_to))
+        {
+          beep();
+          break;
+        }
+        *std::format_to(to_file, "{}", copy_as) = '\0';
+        *std::format_to(to_dir, "{}", copy_to) = '\0';
+      }
 
 
       if( mode == Mode::DISK_MODE || mode == Mode::USER_MODE )
@@ -2228,10 +2242,17 @@ int HandleFileWindow(DirEntry *dir_entry)
 
           need_dsp_help = true;
 
-          if( GetMoveParameter(fe_ptr->name.c_str(), to_file, to_dir) )
-                      {
-      beep();
-      break;
+          {
+            std::string move_as;
+            std::string move_to;
+
+            if (!GetMoveParameter(fe_ptr->name, move_as, move_to))
+            {
+              beep();
+              break;
+            }
+            *std::format_to(to_file, "{}", move_as) = '\0';
+            *std::format_to(to_dir, "{}", move_to) = '\0';
           }
 
                       if( GetDirEntry(statistic.tree,
@@ -2297,11 +2318,18 @@ int HandleFileWindow(DirEntry *dir_entry)
           {
             need_dsp_help = true;
 
-      if( GetMoveParameter(nullptr, to_file, to_dir) )
-                        {
-        beep();
-        break;
-            }
+      {
+        std::string move_as;
+        std::string move_to;
+
+        if (!GetMoveParameter(std::nullopt, move_as, move_to))
+        {
+          beep();
+          break;
+        }
+        *std::format_to(to_file, "{}", move_as) = '\0';
+        *std::format_to(to_dir, "{}", move_to) = '\0';
+      }
 
 
                         if( GetDirEntry(statistic.tree,

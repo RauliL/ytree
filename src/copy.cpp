@@ -220,47 +220,61 @@ FNC_XIT:
 
 
 
-int GetCopyParameter(const char *from_file, bool path_copy, char *to_file, char *to_dir)
+static bool GetAsToParameter(
+  const std::string& header,
+  std::optional<std::string_view> from_file,
+  std::string& to_file,
+  std::string& to_dir
+)
 {
-  char buffer[PATH_LENGTH + 1];
-  std::string to_file_str;
-  std::string to_dir_str;
-
-  if( from_file == nullptr )
-  {
-    from_file = "TAGGED FILES";
-    to_file_str = "*";
-  }
-  else
-  {
-    to_file_str = from_file;
-  }
-
-  if( path_copy )
-  {
-    std::snprintf(buffer, sizeof(buffer), "PATHCOPY %s", from_file);
-  } else {
-    std::snprintf(buffer, sizeof(buffer), "COPY %s", from_file);
-  }
+  std::string to_file_input = from_file ? std::string(*from_file) : "*";
+  std::string to_dir_input;
 
   ClearHelp();
 
-  MvAddStr(LINES - 3, 1, buffer);
+  MvAddStr(LINES - 3, 1, header);
   MvAddStr(LINES - 2, 1, "AS   ");
 
-  if (InputString(to_file_str, LINES - 2, 6, 0, COLS - 6) == CR)
+  if (InputString(to_file_input, LINES - 2, 6, 0, COLS - 6) == CR)
   {
     MvAddStr(LINES - 1, 1, "TO   ");
-    if (InputString(to_dir_str, LINES - 1, 6, 0, COLS - 6) == CR)
+    if (InputString(to_dir_input, LINES - 1, 6, 0, COLS - 6) == CR)
     {
-      *std::format_to(to_file, "{}", to_file_str) = '\0';
-      *std::format_to(to_dir, "{}", to_dir_str) = '\0';
-      return 0;
+      to_file = std::move(to_file_input);
+      to_dir = std::move(to_dir_input);
+      return true;
     }
   }
   ClearHelp();
 
-  return -1;
+  return false;
+}
+
+bool GetCopyParameter(
+  std::optional<std::string_view> from_file,
+  bool path_copy,
+  std::string& to_file,
+  std::string& to_dir
+)
+{
+  const std::string_view label = from_file ? *from_file : "TAGGED FILES";
+  const auto header = path_copy
+    ? std::format("PATHCOPY {}", label)
+    : std::format("COPY {}", label);
+
+  return GetAsToParameter(header, from_file, to_file, to_dir);
+}
+
+bool GetMoveParameter(
+  std::optional<std::string_view> from_file,
+  std::string& to_file,
+  std::string& to_dir
+)
+{
+  const std::string_view label = from_file ? *from_file : "TAGGED FILES";
+  const auto header = std::format("MOVE {}", label);
+
+  return GetAsToParameter(header, from_file, to_file, to_dir);
 }
 
 static int Copy(const std::string& to_path, const std::string& from_path)

@@ -146,43 +146,6 @@ FNC_XIT:
 
 
 
-int GetMoveParameter(const char *from_file, char *to_file, char *to_dir)
-{
-  char buffer[PATH_LENGTH * 2 +1];
-  std::string to_file_str;
-  std::string to_dir_str;
-
-  if( from_file == nullptr )
-  {
-    from_file = "TAGGED FILES";
-    to_file_str = "*";
-  }
-  else
-  {
-    to_file_str = from_file;
-  }
-
-  std::snprintf(buffer, sizeof(buffer), "MOVE %s", from_file);
-
-  ClearHelp();
-
-  MvAddStr(LINES - 3, 1, buffer);
-  MvAddStr(LINES - 2, 1, "AS  ");
-  if (InputString(to_file_str, LINES - 2, 6, 0, COLS - 6) == CR)
-  {
-    MvAddStr(LINES - 1, 1, "TO   ");
-    if (InputString(to_dir_str, LINES - 1, 6, 0, COLS - 6) == CR)
-    {
-      *std::format_to(to_file, "{}", to_file_str) = '\0';
-      *std::format_to(to_dir, "{}", to_dir_str) = '\0';
-      return 0;
-    }
-  }
-  ClearHelp();
-
-  return -1;
-}
-
 static bool Move(const std::string& to_path, const std::string& from_path)
 {
   if (!to_path.compare(from_path))

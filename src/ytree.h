@@ -611,8 +611,17 @@ extern int  InputChoise(const char *msg, const char *term);
 void Message(const std::string& msg);
 extern int  GetDirEntry(const std::shared_ptr<DirEntry>& tree, DirEntry *current_dir_entry, char *dir_path, DirEntry **dir_entry, char *to_path);
 extern int  GetFileEntry(DirEntry *de_ptr, char *file_name, FileEntry **file_entry);
-extern int  GetCopyParameter(const char *from_file, bool path_copy, char *to_file, char *to_dir);
-extern int  GetMoveParameter(const char *from_file, char *to_file, char *to_dir);
+bool GetCopyParameter(
+  std::optional<std::string_view> from_file,
+  bool path_copy,
+  std::string& to_file,
+  std::string& to_dir
+);
+bool GetMoveParameter(
+  std::optional<std::string_view> from_file,
+  std::string& to_file,
+  std::string& to_dir
+);
 extern int  ChangeFileOwner(FileEntry *fe_ptr);
 extern int  GetNewOwner(int st_uid);
 extern int  SetFileOwner(FileEntry *fe_ptr, ChangeOwnerWalkContext *ctx);
