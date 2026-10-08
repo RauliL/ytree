@@ -19,6 +19,8 @@ int ViewHex(const std::filesystem::path& file_path)
     case ZIP_FILE_MODE:
     case LHA_FILE_MODE:
     case ARC_FILE_MODE:
+    case RAR_FILE_MODE:
+    case SEVENZIP_FILE_MODE:
       return ViewHexArchiveFile(file_path);
 
     default:

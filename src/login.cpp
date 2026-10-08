@@ -117,6 +117,10 @@ bool LoginDisk(const std::string& path)
           mode = Mode::RAR_FILE_MODE;
           break;
 
+        case CompressMethod::SEVENZIP_COMPRESS:
+          mode = Mode::SEVENZIP_FILE_MODE;
+          break;
+
         case CompressMethod::TAPE_DIR_NO_COMPRESS:
         case CompressMethod::TAPE_DIR_COMPRESS_COMPRESS:
         case CompressMethod::TAPE_DIR_FREEZE_COMPRESS:
@@ -247,6 +251,16 @@ bool LoginDisk(const std::string& path)
       command_line = std::format(
         "{} '{}'",
         GetProfileValueOrEmpty("RARLIST"),
+        statistic.login_path
+      );
+    }
+    else if (*file_method == CompressMethod::SEVENZIP_COMPRESS)
+    {
+      /* 7ZIP_FILE */
+      /*-----------*/
+      command_line = std::format(
+        "{} '{}'",
+        GetProfileValueOrEmpty("SEVENZIPLIST"),
         statistic.login_path
       );
     }
@@ -510,6 +524,16 @@ bool LoginDisk(const std::string& path)
     wait(&status);
           return false;
   }
+      }
+      else if (mode == Mode::SEVENZIP_FILE_MODE)
+      {
+        if (ReadTreeFrom7ZIP(statistic.tree, f))
+        {
+          Error("ReadTreeFrom7ZIP() failed");
+          std::fclose(f);
+          wait(&status);
+          return false;
+        }
       }
       else
       {
