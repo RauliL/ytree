@@ -2651,78 +2651,70 @@ int HandleFileWindow(DirEntry *dir_entry)
           break;
 
       case 'S' & 0x1F :
-                      if( !IsMatchingTaggedFiles() )
-                      {
-                        beep();
-                      }
+          if (!IsMatchingTaggedFiles())
+          {
+            beep();
+          }
           else if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
           {
-      Message("Feature not available in archives.");
-          }
-          else
-          {
-                char command_line[COMMAND_LINE_LENGTH + 1];
+            Message("Feature not available in archives.");
+          } else {
+            std::string command_line;
 
-      need_dsp_help = true;
-      *command_line = '\0';
-            if( !GetSearchCommandLine(command_line) )
-      {
-        refresh();
-        endwin();
-        SuspendClock();
+            need_dsp_help = true;
+            if (GetSearchCommandLine(command_line))
+            {
+              refresh();
+              endwin();
+              SuspendClock();
 
-        ExecuteWalkContext execute_ctx;
-        execute_ctx.command = command_line;
-                          SilentTagWalkTaggedFiles(ExecuteCommand,
-                      &execute_ctx
-);
-        RefreshWindow(file_window);
+              ExecuteWalkContext execute_ctx;
+              execute_ctx.command = command_line;
+              SilentTagWalkTaggedFiles(ExecuteCommand, &execute_ctx);
+              RefreshWindow(file_window);
 
-        HitReturnToContinue();
+              HitReturnToContinue();
 
-        InitClock();
+              InitClock();
 
-        DisplayFiles(dir_entry,
-          dir_entry->start_file,
-          dir_entry->start_file + dir_entry->cursor_pos,
-          start_x
-);
-      }
+              DisplayFiles(
+                dir_entry,
+                dir_entry->start_file,
+                dir_entry->start_file + dir_entry->cursor_pos,
+                start_x
+              );
+            }
           }
           break;
 
       case 'X' & 0x1F:
           if( !IsMatchingTaggedFiles() )
           {
-      beep();
+            beep();
           }
           else if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
           {
-      Message("I am sorry*^X not supported in Archive-mode");
-          }
-          else
-          {
-                char command_line[COMMAND_LINE_LENGTH + 1];
+            Message("I am sorry*^X not supported in Archive-mode");
+          } else {
+            std::string command_line;
 
-      need_dsp_help = true;
-      *command_line = '\0';
-            if( !GetCommandLine(command_line) )
-      {
-        refresh();
-        endwin();
-        ExecuteWalkContext execute_ctx;
-        execute_ctx.command = command_line;
-                          SilentWalkTaggedFiles(ExecuteCommand,
-                   &execute_ctx
-);
-        HitReturnToContinue();
+            need_dsp_help = true;
+            if (GetCommandLine(command_line))
+            {
+              refresh();
+              endwin();
+              ExecuteWalkContext execute_ctx;
+              execute_ctx.command = command_line;
+              SilentWalkTaggedFiles(ExecuteCommand, &execute_ctx);
+              HitReturnToContinue();
 
-        DisplayFiles(dir_entry,
-          dir_entry->start_file,
-          dir_entry->start_file + dir_entry->cursor_pos,
-          start_x
-);
-      }
+              DisplayFiles(
+                dir_entry,
+                dir_entry->start_file,
+                dir_entry->start_file + dir_entry->cursor_pos,
+                start_x
+              );
+            }
           }
           break;
 
