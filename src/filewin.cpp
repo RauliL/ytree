@@ -61,6 +61,14 @@ static bool SortByGroup(const FileEntry* e1, const FileEntry* e2);
 static bool SortByExtension(const FileEntry* e1, const FileEntry* e2);
 static void DisplayFiles(DirEntry *de_ptr, int start_file_no, int hilight_no, int start_x);
 static void ReadGlobalFileList(const DirEntry* dir_entry);
+template<typename Context>
+  requires std::is_base_of_v<WalkContextBase, Context>
+static void WalkTaggedFiles(
+  int,
+  int,
+  const std::function<int(FileEntry*, Context*)>&,
+  Context*
+);
 static void WalkTaggedFiles(
   int,
   int,
@@ -71,6 +79,18 @@ static bool IsMatchingTaggedFiles();
 static void RemoveFileEntry(int entry_no);
 static void ChangeFileEntry();
 static int  DeleteTaggedFiles(int max_dispfiles);
+template<typename Context>
+  requires std::is_base_of_v<WalkContextBase, Context>
+static void SilentWalkTaggedFiles(
+  const std::function<int(FileEntry*, Context*)>&,
+  Context*
+);
+template<typename Context>
+  requires std::is_base_of_v<WalkContextBase, Context>
+static void SilentTagWalkTaggedFiles(
+  const std::function<int(FileEntry*, Context*)>&,
+  Context*
+);
 static void SilentWalkTaggedFiles(
   const std::function<int(FileEntry*, WalkingPackage*)>&,
   WalkingPackage*
@@ -2664,6 +2684,86 @@ int HandleFileWindow(DirEntry *dir_entry)
 
 
 
+template<typename Context>
+  requires std::is_base_of_v<WalkContextBase, Context>
+static void WalkTaggedFiles(
+  int start_file,
+  int cursor_pos,
+  const std::function<int(FileEntry*, Context*)>& fkt,
+  Context* ctx
+)
+{
+  FileEntry *fe_ptr;
+  int       i;
+  int       start_x = 0;
+  int       result = 0;
+  bool      maybe_change_x = false;
+
+  if( baudrate() >= QUICK_BAUD_RATE ) typeahead(0);
+
+  max_disp_files = window_height * max_column;
+
+  for( i=0; i < (int)file_entry_list.size() && result == 0; i++ )
+  {
+    const auto fe_sp = file_entry_list[i];
+
+    fe_ptr = fe_sp.get();
+
+    if( fe_ptr->tagged && fe_ptr->matching )
+    {
+      if( maybe_change_x == false &&
+    i >= start_file && i < start_file + max_disp_files )
+      {
+    PrintFileEntry(start_file + cursor_pos,
+      cursor_pos % window_height,
+      cursor_pos / window_height,
+      false,
+            start_x
+);
+
+        cursor_pos = i - start_file;
+
+  PrintFileEntry(start_file + cursor_pos,
+      cursor_pos % window_height,
+      cursor_pos / window_height,
+      true,
+            start_x
+);
+      }
+      else
+      {
+  start_file = std::max(0, i - max_disp_files + 1);
+  cursor_pos = i - start_file;
+
+        DisplayFiles(fe_ptr->Dir().get(),
+          start_file,
+          start_file + cursor_pos,
+          start_x
+);
+  maybe_change_x = false;
+      }
+
+      if( fe_ptr->Dir()->global_flag )
+        DisplayGlobalFileParameter(fe_ptr);
+      else
+        DisplayFileParameter(fe_ptr);
+
+      RefreshWindow(file_window);
+      doupdate();
+      result = fkt(fe_ptr, ctx);
+      if( ctx->new_fe_ptr != fe_ptr )
+      {
+        file_entry_list[i] = FindSharedFileEntry(ctx->new_fe_ptr);
+  ChangeFileEntry();
+        max_disp_files = window_height * max_column;
+  maybe_change_x = true;
+      }
+    }
+  }
+
+  if( baudrate() >= QUICK_BAUD_RATE ) typeahead(-1);
+}
+
 static void WalkTaggedFiles(
   int start_file,
   int cursor_pos,
@@ -2760,6 +2860,24 @@ static void WalkTaggedFiles(
  --crb3 12mar04
 */
 
+template<typename Context>
+  requires std::is_base_of_v<WalkContextBase, Context>
+static void SilentWalkTaggedFiles(
+  const std::function<int(FileEntry*, Context*)>& fkt,
+  Context* ctx
+)
+{
+  for( int i = 0; i < (int)file_entry_list.size(); i++ )
+  {
+    FileEntry *fe_ptr = file_entry_list[i].get();
+
+    if( fe_ptr->tagged && fe_ptr->matching )
+    {
+      fkt(fe_ptr, ctx);
+    }
+  }
+}
+
 static void SilentWalkTaggedFiles(
   const std::function<int(FileEntry*, WalkingPackage*)>& fkt,
   WalkingPackage* walking_package
@@ -2795,6 +2913,28 @@ ExecuteCommand must have its retval unzeroed.
 --crb3 31dec03
 
 */
+
+template<typename Context>
+  requires std::is_base_of_v<WalkContextBase, Context>
+static void SilentTagWalkTaggedFiles(
+  const std::function<int(FileEntry*, Context*)>& fkt,
+  Context* ctx
+)
+{
+  for( int i = 0; i < (int)file_entry_list.size(); i++ )
+  {
+    FileEntry *fe_ptr = file_entry_list[i].get();
+
+    if( fe_ptr->tagged && fe_ptr->matching )
+    {
+      const int result = fkt(fe_ptr, ctx);
+
+      if( result == 0 ) {
+        fe_ptr->tagged = false;
+      }
+    }
+  }
+}
 
 static void SilentTagWalkTaggedFiles(
   const std::function<int(FileEntry*, WalkingPackage*)>& fkt,
