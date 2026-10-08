@@ -9,7 +9,7 @@
 
 int MakeDirectory(DirEntry *father_dir_entry)
 {
-  char dir_name[PATH_LENGTH * 2 +1];
+  std::string dir_name;
   int result = -1;
 
   if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
@@ -21,8 +21,6 @@ int MakeDirectory(DirEntry *father_dir_entry)
   ClearHelp();
 
   MvAddStr(LINES - 2, 1, "Make Subdirectory: ");
-
-  *dir_name = '\0';
 
   if (InputString(dir_name, LINES - 2, 20, 0, COLS - 20 - 1) == CR)
   {

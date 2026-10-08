@@ -50,14 +50,16 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
 int GetPipeCommand(char *pipe_command)
 {
   int  result;
+  std::string command;
 
   result = -1;
 
   ClearHelp();
 
   MvAddStr(LINES - 2, 1, "Pipe-Command: ");
-  if (InputString(pipe_command, LINES - 2, 15, 0, COLS - 16) == CR)
+  if (InputString(command, LINES - 2, 15, 0, COLS - 16) == CR)
   {
+    *std::format_to(pipe_command, "{}", command) = '\0';
     result = 0;
   }
   move(LINES - 2, 1); clrtoeol();

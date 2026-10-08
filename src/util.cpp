@@ -628,7 +628,7 @@ std::string CutPathname(const std::string& src, std::size_t max_len)
 
 void Fnsplit(char *path, char *dir, char *name)
 {
-  int  i;
+  std::size_t i;
   char *name_begin;
   char *trunc_name;
 

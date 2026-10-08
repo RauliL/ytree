@@ -684,7 +684,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     case ViewMode::MODE_5 : if( fe_ptr )
       {
-        line_buffer.assign(std::max(old_cols + PATH_LENGTH, 200), '\0');
+        line_buffer.assign(std::max(old_cols + PATH_LENGTH, std::size_t{200}), '\0');
         BuildUserFileEntry(fe_ptr,  max_filename_len, max_linkname_len,
             GetProfileValueOrEmpty("USERVIEW"),
             200, line_buffer.data());
@@ -2555,7 +2555,7 @@ int HandleFileWindow(DirEntry *dir_entry)
           }
           else
           {
-                char command_line[COLS + 1];
+                char command_line[COMMAND_LINE_LENGTH + 1];
 
       need_dsp_help = true;
       *command_line = '\0';
@@ -2595,7 +2595,7 @@ int HandleFileWindow(DirEntry *dir_entry)
           }
           else
           {
-                char command_line[COLS + 1];
+                char command_line[COMMAND_LINE_LENGTH + 1];
 
       need_dsp_help = true;
       *command_line = '\0';

@@ -185,7 +185,7 @@ static inline void RefreshInputString(
 }
 
 int InputString(
-  char* s,
+  std::string& s,
   const int y,
   const int x,
   const std::size_t initial_pos,
@@ -226,7 +226,7 @@ int InputString(
           const auto rs = StrRight(
             ptr,
             StrVisualLength(ptr) - static_cast<int>(pos) - (insert_flag ? 0 : 1)
-);
+          );
 
           buffer = ls;
           buffer.append(char_buffer);
@@ -291,7 +291,7 @@ int InputString(
           const auto rs = StrRight(
             ptr,
             StrVisualLength(ptr) - static_cast<int>(pos) - 1
-);
+          );
 
           buffer = ls;
           buffer.append(rs);
@@ -435,8 +435,7 @@ int InputString(
 
   const auto expanded = tilde_expand(buffer);
 
-  std::strncpy(s, expanded.c_str(), max_length - 1);
-  s[max_length] = 0;
+  s = StrLeft(expanded.c_str(), max_length);
 
   return c;
 }
@@ -483,13 +482,11 @@ int InputChoise(const char *msg, const char *term)
 int GetTapeDeviceName()
 {
   int  result;
-  char path[PATH_LENGTH * 2 +1];
+  std::string path = statistic.tape_name;
 
   result = -1;
 
   ClearHelp();
-
-  *std::format_to(path, "{}", statistic.tape_name) = '\0';
 
   MvAddStr(LINES - 2, 1, "Tape-Device:");
   if (InputString(path, LINES - 2, 14, 0, COLS - 15) == CR)

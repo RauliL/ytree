@@ -131,30 +131,31 @@ int GetRenameParameter(const std::string* old_name, char *new_name)
     l = 13;
   }
 
-  *std::format_to(new_name, "{}", old_name ? *old_name : "*") = '\0';
+  std::string new_name_str = old_name ? *old_name : "*";
 
-
-  if (InputString(new_name, LINES - 2, l, 0, COLS - l - 1) != CR)
+  if (InputString(new_name_str, LINES - 2, l, 0, COLS - l - 1) != CR)
   {
     return -1;
   }
 
-  if(!std::strlen(new_name))
+  if(new_name_str.empty())
     return( -1 );
 
-  if (old_name && *old_name == new_name)
+  if (old_name && *old_name == new_name_str)
   {
     Message("Can't rename: New name same as old name.");
 
     return -1;
   }
 
-  if (std::strrchr(new_name, std::filesystem::path::preferred_separator))
+  if (new_name_str.find(std::filesystem::path::preferred_separator) != std::string::npos)
   {
     Message("Invalid new name:*No slashes when renaming!");
 
     return -1;
   }
+
+  *std::format_to(new_name, "{}", new_name_str) = '\0';
 
   return( 0 );
 }

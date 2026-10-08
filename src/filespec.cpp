@@ -75,15 +75,17 @@ int ReadFileSpec()
 {
   int result = -1;
 
-  char buffer[FILE_SPEC_LENGTH * 2 + 1];
+  std::string buffer = "*";
 
   ClearHelp();
 
-  *std::format_to(buffer, "{}", "*") = '\0';
   MvAddStr(LINES - 2, 1, "New filespec:");
   if (InputString(buffer, LINES - 2, 15, 0, FILE_SPEC_LENGTH) == CR)
   {
-    if( SetFileSpec(buffer) )
+    char file_spec_buf[FILE_SPEC_LENGTH * 2 + 1];
+
+    *std::format_to(file_spec_buf, "{}", buffer) = '\0';
+    if( SetFileSpec(file_spec_buf) )
     {
       Message("Invalid Filespec");
     }

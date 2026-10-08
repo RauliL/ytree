@@ -50,12 +50,14 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
 int GetCommandLine(char* command_line)
 {
   int result = -1;
+  std::string command;
 
   ClearHelp();
 
   MvAddStr(LINES - 2, 1, "Command: ");
-  if (InputString(command_line, LINES - 2, 10, 0, COLS - 11) == CR)
+  if (InputString(command, LINES - 2, 10, 0, COLS - 11) == CR)
   {
+    *std::format_to(command_line, "{}", command) = '\0';
     move(LINES - 2, 1); clrtoeol();
     result = 0;
   }
@@ -71,30 +73,25 @@ int GetSearchCommandLine(char *command_line)
 {
   int  result;
   int  pos;
-  char *cptr;
 
   result = -1;
 
   ClearHelp();
 
   MvAddStr(LINES - 2, 1, "Search untag command: ");
-  *std::format_to_n(
-    command_line,
-    COMMAND_LINE_LENGTH,
-    "{}",
-    GetProfileValueOrEmpty("SEARCHCOMMAND")
-  ).out = '\0';
+  std::string command = GetProfileValueOrEmpty("SEARCHCOMMAND");
 
-  cptr = std::strstr(command_line, "{}");
-  if(cptr) {
-    pos = (cptr - command_line) - 1;
+  if (const auto placeholder = command.find("{}"); placeholder != std::string::npos)
+  {
+    pos = static_cast<int>(placeholder) - 1;
     if(pos < 0)
       pos = 0;
   } else {
     pos = 0;
   }
-  if (InputString(command_line, LINES - 2, 23, pos, COLS - 24) == CR)
+  if (InputString(command, LINES - 2, 23, pos, COLS - 24) == CR)
   {
+    *std::format_to_n(command_line, COMMAND_LINE_LENGTH, "{}", command).out = '\0';
     move(LINES - 2, 1); clrtoeol();
     result = 0;
   }

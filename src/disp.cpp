@@ -2,8 +2,8 @@
 #include "patchlev.h"
 
 
-static void PrintMenuLine(WINDOW *win, int y, int x, const char *line);
-static void PrintLine(WINDOW *win, int y, int x, const char *line, int len);
+static void PrintMenuLine(WINDOW* win, int y, int x, const std::string& line);
+static void PrintLine(WINDOW *win, int y, int x, const std::string& line, int len);
 static void DisplayVersion();
 
 
@@ -46,7 +46,7 @@ static const char *extended_line = "| |                       |";
 
 
 static const char *last_line = "3-8-----------------------4";
-static const char *first_line ="1-5";
+static const std::string first_line = "1-5";
 
 
 static const std::string dir_help_disk_mode_0 = "DIR       (A)ttribute (D)elete  (F)ilespec  (G)roup (L)og (M)akedir                 (Q)uit";
@@ -353,42 +353,57 @@ void UnmapF2Window()
   touchwin(stdscr);
 }
 
-static void PrintMenuLine(WINDOW *win, int y, int x, const char *line)
+static void PrintMenuLine(WINDOW* win, int y, int x, const std::string& line)
 {
-  std::size_t i;
-  std::size_t p = std::strchr(line, '(') ? 2 : 0;
-  const std::size_t l = COLS + 2 + (std::strchr(line, '(') ? 2 : 0);
-  char buffer[l];
+  const auto has_paren = line.find('(') != std::string::npos;
+  std::size_t p = has_paren ? 2 : 0;
+  const std::size_t l = COLS + 2 + (has_paren ? 2 : 0);
+  std::size_t i = 1;
+  std::string buffer(l, '\0');
 
   buffer[0] = line[0];
   if (p == 0)
+  {
      p = COLS - 25;
-  else
+  } else {
      p = COLS - 27;
-  for (i = 1; i < p; i++)
-      buffer[i] = line[1];
+  }
+  for (; i < p; i++)
+  {
+    buffer[i] = line[1];
+  }
   std::strncpy(&buffer[i], &line[2], l - i);
-  buffer[l-1] = '\0';
+  buffer[l - 1] = '\0';
   PrintOptions(stdscr, y, x , buffer);
 }
 
-static void PrintLine(WINDOW *win, int y, int x, const char *line, int len)
+static void PrintLine(
+  WINDOW* win,
+  int y,
+  int x,
+  const std::string& line,
+  int len
+)
 {
-  int  i;
+  std::string buffer;
 
-  if(len > 0)
+  if (len <= 0)
   {
-    char buffer[len + 2];
-
-    buffer[0] = line[0];
-    for(i=1; i < (len); i++)
-        buffer[i] = line[1];
-    *std::format_to(&buffer[i], "{}", &line[2]) = '\0';
-    PrintOptions(stdscr, y, x , buffer);
+    return;
   }
+  buffer += line.empty() ? " " : std::string(1, line[0]);
+  buffer.append(
+    static_cast<std::size_t>(len - 1),
+    line.size() > 1 ? line[1] : ' '
+  );
+  if (line.size() > 2)
+  {
+    buffer += line.substr(2);
+  }
+  PrintOptions(stdscr, y, x, buffer);
 }
 
-void RefreshWindow(WINDOW *win)
+void RefreshWindow(WINDOW* win)
 {
   wnoutrefresh(win);
 }

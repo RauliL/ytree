@@ -114,12 +114,10 @@
 #define VI_KEY_NPAGE ( 'D' & 0x1F )
 #define VI_KEY_PPAGE ( 'U' & 0x1F )
 
-
-#define OWNER_NAME_MAX  64
-#define GROUP_NAME_MAX  64
-#define DISPLAY_OWNER_NAME_MAX  12
-#define DISPLAY_GROUP_NAME_MAX  12
-
+static constexpr std::size_t OWNER_NAME_MAX = 64;
+static constexpr std::size_t GROUP_NAME_MAX = 64;
+static constexpr std::size_t DISPLAY_OWNER_NAME_MAX = 12;
+static constexpr std::size_t DISPLAY_GROUP_NAME_MAX = 12;
 
 /* Sonderzeichen fuer Liniengrafik */
 /*---------------------------------*/
@@ -216,7 +214,7 @@ enum class Mode : int
 
 inline constexpr int MAX_MODES = 11;
 
-enum class CompressMethod
+enum class CompressMethod : int
 {
   FREEZE_COMPRESS = 1,
   MULTIPLE_FREEZE_COMPRESS = 2,
@@ -277,8 +275,7 @@ struct SortSpec
 #define ACCTIME_VIEWNAME  "act"
 #define CHGTIME_VIEWNAME  "sct"
 
-
-#define CLOCK_INTERVAL     1
+static constexpr std::time_t CLOCK_INTERVAL = 1;
 
 #define ERR_TO_NULL           " 2> /dev/null"
 #define ERR_TO_STDOUT         " 2>&1 "
@@ -329,19 +326,19 @@ struct SortSpec
 #define TIME_WINDOW_WIDTH    ((COLS > 15) ? 15 : COLS)
 #define TIME_WINDOW_HEIGHT   1
 
+static constexpr std::size_t PATH_LENGTH = 1024;
+static constexpr std::size_t FILE_SPEC_LENGTH = 12 + 1;
+static constexpr std::size_t DISK_NAME_LENGTH = 12 + 1;
+static constexpr std::size_t LL_LINE_LENGTH = 512;
+static constexpr std::size_t TAR_LINE_LENGTH = 512;
+static constexpr std::size_t RPM_LINE_LENGTH = 512;
+static constexpr std::size_t ZOO_LINE_LENGTH = 512;
+static constexpr std::size_t ZIP_LINE_LENGTH = 512;
+static constexpr std::size_t LHA_LINE_LENGTH = 512;
+static constexpr std::size_t ARC_LINE_LENGTH = 512;
+static constexpr std::size_t RAR_LINE_LENGTH = 512;
+static constexpr std::size_t COMMAND_LINE_LENGTH = 4096;
 
-#define PATH_LENGTH            1024
-#define FILE_SPEC_LENGTH       (12 + 1)
-#define DISK_NAME_LENGTH       (12 + 1)
-#define LL_LINE_LENGTH         512
-#define TAR_LINE_LENGTH        512
-#define RPM_LINE_LENGTH        512
-#define ZOO_LINE_LENGTH        512
-#define ZIP_LINE_LENGTH        512
-#define LHA_LINE_LENGTH        512
-#define ARC_LINE_LENGTH        512
-#define RAR_LINE_LENGTH        512
-#define COMMAND_LINE_LENGTH    4096
 enum class ViewMode : int
 {
   MODE_1 = 0,
@@ -351,8 +348,7 @@ enum class ViewMode : int
   MODE_5 = 4,
 };
 
-
-#define QUICK_BAUD_RATE      9600
+static constexpr int QUICK_BAUD_RATE = 9600;
 
 #define ESCAPE               goto FNC_XIT
 
@@ -545,7 +541,7 @@ extern void DisplayDiskTagged();
 extern void DisplayDiskName();
 extern void DisplayFileParameter(FileEntry *file_entry);
 extern void DisplayGlobalFileParameter(FileEntry *file_entry);
-extern void RefreshWindow(WINDOW *win);
+void RefreshWindow(WINDOW* win);
 int ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path, int depth);
 extern void UnReadTree(DirEntry *dir_entry);
 extern int  ReadTreeFromTAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
@@ -599,7 +595,7 @@ extern void QuitTo(DirEntry * dir_entry);
 void Quit();
 extern int  ReadFileSpec();
 int InputString(
-  char* s,
+  std::string& s,
   const int y,
   const int x,
   const std::size_t initial_pos,

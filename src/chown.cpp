@@ -42,7 +42,7 @@ int ChangeFileOwner(FileEntry *fe_ptr)
 
 int GetNewOwner(int st_uid)
 {
-  char owner[OWNER_NAME_MAX * 2 +1];
+  std::string owner;
   int  owner_id;
   int  id;
 
@@ -52,9 +52,9 @@ int GetNewOwner(int st_uid)
 
   if (const auto owner_name_ptr = GetPasswdName(id))
   {
-    std::strncpy(owner, owner_name_ptr->c_str(), sizeof(owner));
+    owner = *owner_name_ptr;
   } else {
-    std::snprintf(owner, sizeof(owner), "%d", id);
+    owner = std::to_string(id);
   }
 
   ClearHelp();

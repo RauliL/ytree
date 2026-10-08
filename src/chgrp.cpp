@@ -37,24 +37,17 @@ int ChangeFileGroup(FileEntry *fe_ptr)
   return( result );
 }
 
-
-
-
 int GetNewGroup(int st_gid)
 {
-  char group[GROUP_NAME_MAX * 2 +1];
-  int  id;
-  int  group_id;
-
-  group_id = -1;
-
-  id = ( st_gid == -1 ) ? (int) getgid() : st_gid;
+  std::string group;
+  const int id = st_gid == -1 ? static_cast<int>(getgid()) : st_gid;
+  int group_id = -1;
 
   if (const auto group_name_ptr = GetGroupName(id))
   {
-    std::strncpy(group, group_name_ptr->c_str(), sizeof(group));
+    group = *group_name_ptr;
   } else {
-    std::snprintf(group, sizeof(group), "%d", id);
+    group = std::to_string(id);
   }
 
   ClearHelp();
@@ -71,13 +64,11 @@ int GetNewGroup(int st_gid)
     }
   }
 
-  move(LINES - 2, 1); clrtoeol();
+  move(LINES - 2, 1);
+  clrtoeol();
 
-  return( group_id );
+  return group_id;
 }
-
-
-
 
 int SetFileGroup(FileEntry *fe_ptr, WalkingPackage *walking_package)
 {

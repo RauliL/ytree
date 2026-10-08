@@ -567,8 +567,7 @@ int LoginDisk(char *path)
 int GetNewLoginPath(char *path)
 {
   int result;
-  char *cptr;
-  char aux[PATH_LENGTH * 2 + 1]= "";
+  std::string aux = path;
 
   result = -1;
 
@@ -576,17 +575,21 @@ int GetNewLoginPath(char *path)
 
   MvAddStr(LINES - 2, 1, "NEW LOGIN-PATH:");
 
-  *std::format_to(aux, "{}", path) = '\0';
   if( mode == Mode::LL_FILE_MODE && *path == '<' )
   {
-    for( cptr = aux; (*cptr = *(cptr + 1)); cptr++ )
-      ;
-    if( aux[std::strlen(aux) - 1] == '>' ) aux[std::strlen(aux) - 1 ] = '\0';
+    if (!aux.empty())
+    {
+      aux.erase(0, 1);
+    }
+    if (!aux.empty() && aux.back() == '>')
+    {
+      aux.pop_back();
+    }
   }
 
   if (InputString(aux, LINES - 2, 17, 0, COLS - 24) == CR)
   {
-    NormPath(aux, path);
+    NormPath(aux.c_str(), path);
     result = 0;
   }
 
