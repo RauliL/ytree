@@ -539,6 +539,32 @@ std::string MakeExtractCommandLine(
         cmd
       );
     }
+    else if (*compress_method == CompressMethod::XZ_COMPRESS)
+    {
+      /* xz -dc < TAR_FILE | gtar xOf - FILE ?? */
+      /*---------------------------------------*/
+      return std::format(
+        "{} < '{}' | {} '{}' {}",
+        GetProfileValueOrEmpty("UNXZ"),
+        path,
+        GetProfileValueOrEmpty("TAREXPAND"),
+        file,
+        cmd
+      );
+    }
+    else if (*compress_method == CompressMethod::ZSTD_COMPRESS)
+    {
+      /* zstd -dc < TAR_FILE | gtar xOf - FILE ?? */
+      /*-----------------------------------------*/
+      return std::format(
+        "{} < '{}' | {} '{}' {}",
+        GetProfileValueOrEmpty("UNZSTD"),
+        path,
+        GetProfileValueOrEmpty("TAREXPAND"),
+        file,
+        cmd
+      );
+    }
   }
 
   /* gtar xOf - FILE < TAR_FILE ?? */
