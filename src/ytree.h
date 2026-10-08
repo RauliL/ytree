@@ -502,70 +502,6 @@ struct PipeWalkContext : WalkContextBase
   FILE *pipe_file = nullptr;
 };
 
-union FunctionData
-{
-  struct
-  {
-    char      new_modus[11];
-  } change_modus;
-
-  struct
-  {
-    unsigned  new_owner_id;
-  } change_owner;
-
-  struct
-  {
-    unsigned  new_group_id;
-  } change_group;
-
-  struct
-  {
-    char      *command;
-  } execute;
-
-  struct
-  {
-    Statistic *statistic_ptr;
-    DirEntry  *dest_dir_entry;
-    char      *to_file;
-    char      *to_path;
-    bool      path_copy;
-    bool      confirm;
-  } copy;
-
-  struct
-  {
-    char      *new_name;
-    bool      confirm;
-  } rename;
-
-  struct
-  {
-    DirEntry  *dest_dir_entry;
-    char      *to_file;
-    char      *to_path;
-    bool      confirm;
-  } mv;
-
-  struct
-  {
-    FILE      *pipe_file;
-  } pipe_cmd;
-
-  struct
-  {
-   FILE       *zipfile;
-   int        method;
-   } compress_cmd;
-};
-
-struct WalkingPackage
-{
-  FileEntry     *new_fe_ptr;
-  FunctionData  function_data;
-};
-
 extern WINDOW *dir_window;
 extern WINDOW *small_file_window;
 extern WINDOW *big_file_window;
@@ -658,7 +594,7 @@ int InputString(
 extern void RotateFileMode();
 int Execute(const DirEntry* dir_entry, const FileEntry* file_entry);
 extern int  Pipe(DirEntry *dir_entry, FileEntry *file_entry);
-extern int  PipeTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
+extern int  PipeTaggedFiles(FileEntry *fe_ptr, PipeWalkContext *ctx);
 extern int  GetPipeCommand(char *pipe_command);
 extern void GetKindOfSort();
 extern void SetKindOfSort(SortKey key, SortOrder order = SortOrder::Ascending);
@@ -667,9 +603,9 @@ extern int  ChangeDirModus(DirEntry *de_ptr);
 extern int  GetNewFileModus(int y, int x, char *modus, const char *term);
 extern int  GetModus(const char *modus);
 extern int  SetFileModus(FileEntry *fe_ptr, ChangeModusWalkContext *ctx);
-extern int  CopyTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
+extern int  CopyTaggedFiles(FileEntry *fe_ptr, CopyWalkContext *ctx);
 extern int  CopyFile(Statistic *statistic_ptr, FileEntry *fe_ptr, bool confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, bool path_copy);
-extern int  MoveTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
+extern int  MoveTaggedFiles(FileEntry *fe_ptr, MoveWalkContext *ctx);
 extern int  MoveFile(FileEntry *fe_ptr, bool confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, FileEntry **new_fe_ptr);
 extern int  InputChoise(const char *msg, const char *term);
 void Message(const std::string& msg);
@@ -690,14 +626,14 @@ extern void DisplayFileHelp();
 extern void ClearHelp();
 extern int  GetAvailBytes(std::int64_t *avail_bytes);
 extern int  DeleteDirectory(DirEntry *dir_entry);
-extern int  ExecuteCommand(FileEntry *fe_ptr, WalkingPackage *walking_package);
+extern int  ExecuteCommand(FileEntry *fe_ptr, ExecuteWalkContext *ctx);
 extern int  GetCommandLine(char *command_line);
 extern int  GetSearchCommandLine(char *command_line);
 extern int  DeleteFile(FileEntry *fe_ptr);
 extern int  RemoveFile(FileEntry *fe_ptr);
 extern int  RenameDirectory(DirEntry *de_ptr, const std::string& new_name);
 extern int  RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_fe_ptr);
-extern int  RenameTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package);
+extern int  RenameTaggedFiles(FileEntry *fe_ptr, RenameWalkContext *ctx);
 extern int  GetRenameParameter(const std::string* old_name, char *new_name);
 extern char *CTime(time_t f_time, char *buffer);
 extern int  LoginDisk(char *path);
