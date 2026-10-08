@@ -53,6 +53,8 @@ static std::unordered_map<std::string, Profile> profile =
   { "RPMEXPAND",      { DEFAULT_RPMEXPAND,     std::nullopt,     std::nullopt } },
   { "RPMLIST",        { DEFAULT_RPMLIST,       std::nullopt,     std::nullopt } },
   { "SEARCHCOMMAND",  { DEFAULT_SEARCHCOMMAND, std::nullopt,     std::nullopt } },
+  { "SEVENZIPEXPAND", { DEFAULT_SEVENZIPEXPAND,std::nullopt,     std::nullopt } },
+  { "SEVENZIPLIST",   { DEFAULT_SEVENZIPLIST,  std::nullopt,     std::nullopt } },
   { "TAPEDEV",        { DEFAULT_TAPEDEV,       "TAPE",           std::nullopt } },
   { "TAREXPAND",      { DEFAULT_TAREXPAND,     std::nullopt,     std::nullopt } },
   { "TARLIST",        { DEFAULT_TARLIST,       std::nullopt,     std::nullopt } },

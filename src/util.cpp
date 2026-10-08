@@ -42,6 +42,8 @@ static const std::unordered_map<std::string, CompressMethod> file_extensions =
   { ".ARC", CompressMethod::ARC_COMPRESS },
   { ".rar", CompressMethod::RAR_COMPRESS },
   { ".RAR", CompressMethod::RAR_COMPRESS },
+  { ".7z", CompressMethod::SEVENZIP_COMPRESS },
+  { ".7Z", CompressMethod::SEVENZIP_COMPRESS },
   { ".jar", CompressMethod::ZIP_COMPRESS },
   { ".zip", CompressMethod::ZIP_COMPRESS },
   { ".ZIP", CompressMethod::ZIP_COMPRESS },
