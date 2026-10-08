@@ -298,31 +298,29 @@ static int Copy(const std::string& to_path, const std::string& from_path)
   return 0;
 }
 
-int CopyTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
+int CopyTaggedFiles(FileEntry *fe_ptr, CopyWalkContext *ctx)
 {
   char new_name[PATH_LENGTH+1];
   int  result = -1;
 
-  walking_package->new_fe_ptr = fe_ptr;  /* unchanged */
+  ctx->new_fe_ptr = fe_ptr;  /* unchanged */
 
-  if( BuildFilename(fe_ptr->name,
-         walking_package->function_data.copy.to_file,
-         new_name
-) == 0 )
+  if( BuildFilename(fe_ptr->name, ctx->to_file, new_name) == 0 )
   {
     if( *new_name == '\0' )
     {
       Message("Can't copy file to*empty name");
     }
 
-    result = CopyFile(walking_package->function_data.copy.statistic_ptr,
-           fe_ptr,
-           walking_package->function_data.copy.confirm,
-           new_name,
-           walking_package->function_data.copy.dest_dir_entry,
-           walking_package->function_data.copy.to_path,
-           walking_package->function_data.copy.path_copy
-);
+    result = CopyFile(
+      ctx->statistic_ptr,
+      fe_ptr,
+      ctx->confirm,
+      new_name,
+      ctx->dest_dir_entry,
+      ctx->to_path,
+      ctx->path_copy
+    );
   }
 
   return( result );
