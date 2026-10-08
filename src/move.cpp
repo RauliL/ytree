@@ -209,16 +209,13 @@ static bool Move(const std::string& to_path, const std::string& from_path)
   return true;
 }
 
-int MoveTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
+int MoveTaggedFiles(FileEntry *fe_ptr, MoveWalkContext *ctx)
 {
   int  result = -1;
   char new_name[PATH_LENGTH+1];
 
 
-  if( BuildFilename(fe_ptr->name,
-                     walking_package->function_data.mv.to_file,
-         new_name
-) == 0 )
+  if( BuildFilename(fe_ptr->name, ctx->to_file, new_name) == 0 )
 
   {
     if (!*new_name)
@@ -227,13 +224,14 @@ int MoveTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
     }
     else
     {
-      result = MoveFile(fe_ptr,
-             walking_package->function_data.mv.confirm,
-             new_name,
-             walking_package->function_data.mv.dest_dir_entry,
-             walking_package->function_data.mv.to_path,
-             &walking_package->new_fe_ptr
-);
+      result = MoveFile(
+        fe_ptr,
+        ctx->confirm,
+        new_name,
+        ctx->dest_dir_entry,
+        ctx->to_path,
+        &ctx->new_fe_ptr
+      );
     }
   }
 
