@@ -17,7 +17,7 @@ static int SetDirGroup(DirEntry *de_ptr, int new_group_id);
 
 int ChangeFileGroup(FileEntry *fe_ptr)
 {
-  WalkingPackage walking_package;
+  ChangeGroupWalkContext ctx;
   int  group_id;
   int  result;
 
@@ -31,8 +31,8 @@ int ChangeFileGroup(FileEntry *fe_ptr)
 
   if( ( group_id = GetNewGroup(fe_ptr->stat_struct.st_gid) ) >= 0 )
   {
-    walking_package.function_data.change_group.new_group_id = group_id;
-    result = SetFileGroup(fe_ptr, &walking_package);
+    ctx.new_group_id = group_id;
+    result = SetFileGroup(fe_ptr, &ctx);
   }
   return( result );
 }
@@ -70,7 +70,7 @@ int GetNewGroup(int st_gid)
   return group_id;
 }
 
-int SetFileGroup(FileEntry *fe_ptr, WalkingPackage *walking_package)
+int SetFileGroup(FileEntry *fe_ptr, ChangeGroupWalkContext *ctx)
 {
   const auto path = GetFileNamePath(fe_ptr);
   struct stat stat_struct;
@@ -79,9 +79,9 @@ int SetFileGroup(FileEntry *fe_ptr, WalkingPackage *walking_package)
 
   result = -1;
 
-  walking_package->new_fe_ptr = fe_ptr; /* unchanged */
+  ctx->new_fe_ptr = fe_ptr; /* unchanged */
 
-  new_group_id = walking_package->function_data.change_group.new_group_id;
+  new_group_id = ctx->new_group_id;
 
   if (!chown(path.c_str(), fe_ptr->stat_struct.st_uid, new_group_id))
   {
