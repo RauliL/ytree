@@ -101,17 +101,17 @@ int GetSearchCommandLine(char *command_line)
   return( result );
 }
 
-int ExecuteCommand(FileEntry* fe_ptr, WalkingPackage* walking_package)
+int ExecuteCommand(FileEntry* fe_ptr, ExecuteWalkContext* ctx)
 {
   std::string command_line;
 
-  walking_package->new_fe_ptr = fe_ptr;
+  ctx->new_fe_ptr = fe_ptr;
 
-  for (int i = 0; walking_package->function_data.execute.command[i]; ++i)
+  for (std::size_t i = 0; i < ctx->command.length(); ++i)
   {
-    const auto c = walking_package->function_data.execute.command[i];
+    const auto c = ctx->command[i];
 
-    if (c == '{' && walking_package->function_data.execute.command[i + 1] == '}')
+    if (c == '{' && i + 1 < ctx->command.length() && ctx->command[i + 1] == '}')
     {
       command_line += GetFileNamePath(fe_ptr);
       ++i;
