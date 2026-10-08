@@ -1,13 +1,117 @@
 #include "ytree.h"
-#include "complete.h"
 #include "tilde.h"
 
-
-static char** Mtchs = nullptr;
+static std::vector<std::string> Mtchs;
 static int total_matches  = 0;
 static int cursor_pos     = 0;
 static int disp_begin_pos = 1;
 
+static std::string LongestCommonPrefix(const std::vector<std::string>& matches)
+{
+  if (matches.empty())
+  {
+    return {};
+  }
+
+  std::string prefix = matches.front();
+  for (std::size_t i = 1; i < matches.size(); ++i)
+  {
+    const auto& candidate = matches[i];
+    const auto n = std::min(prefix.size(), candidate.size());
+    std::size_t j = 0;
+    while (j < n && prefix[j] == candidate[j])
+    {
+      ++j;
+    }
+    prefix.resize(j);
+    if (prefix.empty())
+    {
+      break;
+    }
+  }
+  return prefix;
+}
+
+static std::vector<std::string> filename_completion_matches(const std::string& text)
+{
+  const auto expanded = tilde_expand(text);
+
+  std::string dir_part;
+  std::string name_prefix;
+  std::string display_prefix;
+
+  const auto sep = expanded.find_last_of('/');
+
+  std::error_code ec;
+  std::vector<std::string> matches;
+
+  if (sep == std::string::npos)
+  {
+    dir_part = ".";
+    name_prefix = expanded;
+    display_prefix.clear();
+  } else {
+    dir_part = expanded.substr(0, sep);
+    if (dir_part.empty())
+    {
+      dir_part = "/";
+    }
+    name_prefix = expanded.substr(sep + 1);
+    display_prefix = expanded.substr(0, sep + 1);
+  }
+
+  if (!std::filesystem::is_directory(dir_part, ec))
+  {
+    return {};
+  }
+
+  for (
+    std::filesystem::directory_iterator it(dir_part, ec), end;
+    !ec && it != end;
+    it.increment(ec)
+  )
+  {
+    const auto name = it->path().filename().string();
+
+    if (name == "." || name == "..")
+    {
+      continue;
+    }
+    else if (name.compare(0, name_prefix.size(), name_prefix) != 0)
+    {
+      continue;
+    }
+
+    auto entry = display_prefix + name;
+    std::error_code entry_ec;
+
+    if (std::filesystem::is_directory(it->path(), entry_ec))
+    {
+      entry.push_back('/');
+    }
+    matches.push_back(std::move(entry));
+  }
+
+  if (matches.empty())
+  {
+    return {};
+  }
+
+  std::sort(matches.begin(), matches.end());
+
+  const auto common = LongestCommonPrefix(matches);
+  std::vector<std::string> result;
+
+  result.reserve(matches.size() + 1);
+  result.push_back(common);
+  result.insert(
+    result.end(),
+    std::make_move_iterator(matches.begin()),
+    std::make_move_iterator(matches.end())
+  );
+
+  return result;
+}
 
 void PrintMtchEntry(int entry_no, int y, int color,
                    int start_x, int *hide_left, int *hide_right)
@@ -31,9 +135,9 @@ void PrintMtchEntry(int entry_no, int y, int color,
 
   *hide_left = *hide_right = 0;
 
-  if(Mtchs[entry_no])
+  if (entry_no >= 0 && static_cast<std::size_t>(entry_no) < Mtchs.size())
   {
-    std::strncpy(buffer,(char *) Mtchs[entry_no], BUFSIZ - 3);
+    std::strncpy(buffer, Mtchs[entry_no].c_str(), BUFSIZ - 3);
     buffer[BUFSIZ - 3] = '\0';
     n = std::strlen(buffer);
     wmove(matches_window,y,1);
@@ -84,9 +188,6 @@ void PrintMtchEntry(int entry_no, int y, int color,
   return;
 }
 
-
-
-
 int DisplayMatches()
 {
   int i, hilight_no, p_y;
@@ -111,41 +212,34 @@ int DisplayMatches()
   return 0;
 }
 
-char* GetMatches(const std::string& base)
+std::optional<std::string> GetMatches(const std::string& base)
 {
   int     ch;
   int     start_x;
-  char    *RetVal = nullptr;
-  char    *TMP;
+  std::optional<std::string> RetVal;
   int     hide_left, hide_right;
 
-  Mtchs = nullptr;
+  Mtchs.clear();
 
   const auto tmpval = tilde_expand(base);
-  if (!(Mtchs = filename_completion_matches(tmpval)))
+  auto match_list = filename_completion_matches(tmpval);
+  if (match_list.empty())
   {
-    return nullptr;
+    return std::nullopt;
   }
 
-  if (!(tmpval == Mtchs[0])){
-    TMP=static_cast<char*>(std::malloc(std::strlen(Mtchs[0])+1));
-    if (TMP != nullptr){
-      *std::format_to(TMP, "{}", Mtchs[0]) = '\0';
-      RetVal = TMP;
-    }else{
-      RetVal = nullptr;}
-    free_completion_matches(Mtchs);
-    Mtchs = nullptr;
-    return RetVal;
+  if (tmpval != match_list[0])
+  {
+    return match_list[0];
   }
 
-  for (total_matches=0; Mtchs[total_matches]; total_matches++);
+  total_matches = static_cast<int>(match_list.size());
   if (total_matches == 1)
   {
-    free_completion_matches(Mtchs);
-    Mtchs = nullptr;
-    return nullptr;
+    return std::nullopt;
   }
+
+  Mtchs = std::move(match_list);
 
   disp_begin_pos = 1;
   cursor_pos     = 0;
@@ -171,7 +265,7 @@ char* GetMatches(const std::string& base)
 
     switch( ch )
     {
-      case -1:       RetVal = nullptr;
+      case -1:       RetVal = std::nullopt;
                      break;
 
       case ' ':      break;  /* Quick-Key */
@@ -326,15 +420,10 @@ char* GetMatches(const std::string& base)
                      break;
       case LF :
       case CR :
-                     TMP=static_cast<char*>(std::malloc(std::strlen(Mtchs[ disp_begin_pos + cursor_pos])+1));
-         if (TMP != nullptr){
-            *std::format_to(TMP, "{}", Mtchs[disp_begin_pos + cursor_pos]) = '\0';
-                        RetVal = TMP;
-         }else
-                        RetVal = nullptr;
-         break;
+                     RetVal = Mtchs[disp_begin_pos + cursor_pos];
+                     break;
 
-      case ESC:      RetVal = nullptr;
+      case ESC:      RetVal = std::nullopt;
                      break;
 
       default :      beep();
@@ -342,9 +431,7 @@ char* GetMatches(const std::string& base)
     } /* switch */
   } while(ch != CR && ch != ESC && ch != -1);
   /* leaveok(stdscr, false); */
-  free_completion_matches(Mtchs);
-  Mtchs = nullptr;
+  Mtchs.clear();
   touchwin(stdscr);
   return RetVal;
 }
-

@@ -349,27 +349,23 @@ int InputString(
 
       case '\t':
       {
-        auto pp = GetMatches(buffer);
-
-        if (!pp)
+        if (auto pp = GetMatches(buffer))
         {
-          break;
-        }
-        if (*pp)
-        {
-          const auto ls = StrLeft(pp, max_length);
-
-          buffer = ls;
-          pos = StrVisualLength(ls);
-          MvWAddStr(stdscr, y, x, buffer);
-          for (auto i = pos; i < max_length; ++i)
+          if (!pp->empty())
           {
-            addch('_');
+            const auto ls = StrLeft(pp->c_str(), max_length);
+
+            buffer = ls;
+            pos = StrVisualLength(ls);
+            MvWAddStr(stdscr, y, x, buffer);
+            for (auto i = pos; i < max_length; ++i)
+            {
+              addch('_');
+            }
+            RefreshWindow(stdscr);
+            doupdate();
           }
-          RefreshWindow(stdscr);
-          doupdate();
         }
-        std::free(static_cast<void*>(pp));
         break;
       }
 

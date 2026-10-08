@@ -65,7 +65,6 @@ ADD_EXECUTABLE(
   chown.cpp
   clock.cpp
   color.cpp
-  complete.cpp
   copy.cpp
   delete.cpp
   dirwin.cpp

@@ -686,7 +686,7 @@ const char* GetHistory();
 void InsHistory(const std::string& str);
 void ReadHistory(const std::optional<std::filesystem::path>& custom_path);
 void SaveHistory();
-char* GetMatches(const std::string& base);
+std::optional<std::string> GetMatches(const std::string& base);
 extern int  KeyF2Get(DirEntry *start_dir_entry,
                int disp_begin_pos,
                int cursor_pos,
