@@ -1561,15 +1561,12 @@ int HandleFileWindow(DirEntry *dir_entry)
 
             if( GetNewFileModus(LINES - 2, 1, modus, "\r\033") == CR )
       {
-        *std::format_to(
-          walking_package.function_data.change_modus.new_modus,
-          "{}",
-          modus
-) = '\0';
+        ChangeModusWalkContext modus_ctx;
+        *std::format_to(modus_ctx.new_modus, "{}", modus) = '\0';
                           WalkTaggedFiles(dir_entry->start_file,
              dir_entry->cursor_pos,
              SetFileModus,
-             &walking_package
+             &modus_ctx
 );
 
         DisplayFiles(dir_entry,
@@ -1611,11 +1608,12 @@ int HandleFileWindow(DirEntry *dir_entry)
       need_dsp_help = true;
             if( ( owner_id = GetNewOwner(-1) ) >= 0 )
       {
-        walking_package.function_data.change_owner.new_owner_id = owner_id;
+        ChangeOwnerWalkContext owner_ctx;
+        owner_ctx.new_owner_id = owner_id;
                           WalkTaggedFiles(dir_entry->start_file,
              dir_entry->cursor_pos,
              SetFileOwner,
-             &walking_package
+             &owner_ctx
 );
 
         DisplayFiles(dir_entry,
@@ -1654,11 +1652,12 @@ int HandleFileWindow(DirEntry *dir_entry)
 
             if( ( group_id = GetNewGroup(-1) ) >= 0 )
       {
-        walking_package.function_data.change_group.new_group_id = group_id;
+        ChangeGroupWalkContext group_ctx;
+        group_ctx.new_group_id = group_id;
                           WalkTaggedFiles(dir_entry->start_file,
              dir_entry->cursor_pos,
              SetFileGroup,
-             &walking_package
+             &group_ctx
 );
 
         DisplayFiles(dir_entry,

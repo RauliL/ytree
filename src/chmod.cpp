@@ -11,7 +11,7 @@
 
 
 
-static int SetDirModus(DirEntry *de_ptr, WalkingPackage *walking_package);
+static int SetDirModus(DirEntry *de_ptr, const ChangeModusWalkContext& ctx);
 static int GetNewModus(int old_modus, const char *new_modus);
 
 
@@ -19,7 +19,7 @@ static int GetNewModus(int old_modus, const char *new_modus);
 int ChangeFileModus(FileEntry *fe_ptr)
 {
   char modus[11];
-  WalkingPackage walking_package;
+  ChangeModusWalkContext ctx;
   int  result;
 
   result = -1;
@@ -34,8 +34,8 @@ int ChangeFileModus(FileEntry *fe_ptr)
 
   if( GetNewFileModus(LINES - 2, 1, modus, "\r\033") == CR )
   {
-    *std::format_to(walking_package.function_data.change_modus.new_modus, "{}", modus) = '\0';
-    result = SetFileModus(fe_ptr, &walking_package);
+    *std::format_to(ctx.new_modus, "{}", modus) = '\0';
+    result = SetFileModus(fe_ptr, &ctx);
   }
 
   move(LINES - 2, 1); clrtoeol();
@@ -50,7 +50,7 @@ int ChangeFileModus(FileEntry *fe_ptr)
 int ChangeDirModus(DirEntry *de_ptr)
 {
   char modus[11];
-  WalkingPackage walking_package;
+  ChangeModusWalkContext ctx;
   int  result;
 
   result = -1;
@@ -65,8 +65,8 @@ int ChangeDirModus(DirEntry *de_ptr)
 
   if( GetNewFileModus(LINES - 2, 1, modus, "\r\033") == CR )
   {
-    *std::format_to(walking_package.function_data.change_modus.new_modus, "{}", modus) = '\0';
-    result = SetDirModus(de_ptr, &walking_package);
+    *std::format_to(ctx.new_modus, "{}", modus) = '\0';
+    result = SetDirModus(de_ptr, ctx);
   }
 
   move(LINES - 2, 1); clrtoeol();
@@ -148,7 +148,7 @@ int GetNewFileModus(int y, int x, char *modus, const char *term)
 
 
 
-int SetFileModus(FileEntry *fe_ptr, WalkingPackage *walking_package)
+int SetFileModus(FileEntry *fe_ptr, ChangeModusWalkContext *ctx)
 {
   const auto path = GetFileNamePath(fe_ptr);
   struct stat stat_struct;
@@ -157,11 +157,9 @@ int SetFileModus(FileEntry *fe_ptr, WalkingPackage *walking_package)
 
   result = -1;
 
-  walking_package->new_fe_ptr = fe_ptr; /* unchanged */
+  ctx->new_fe_ptr = fe_ptr; /* unchanged */
 
-  new_modus = GetNewModus(fe_ptr->stat_struct.st_mode,
-         walking_package->function_data.change_modus.new_modus
-);
+  new_modus = GetNewModus(fe_ptr->stat_struct.st_mode, ctx->new_modus);
 
   new_modus = new_modus | ( fe_ptr->stat_struct.st_mode &
         ~( S_IRWXO | S_IRWXG | S_IRWXU | S_ISGID | S_ISUID ) );
@@ -185,13 +183,10 @@ int SetFileModus(FileEntry *fe_ptr, WalkingPackage *walking_package)
   return( result );
 }
 
-static int SetDirModus(DirEntry *de_ptr, WalkingPackage *walking_package)
+static int SetDirModus(DirEntry *de_ptr, const ChangeModusWalkContext& ctx)
 {
   const auto path = GetPath(de_ptr);
-  auto new_modus = GetNewModus(
-    de_ptr->stat_struct.st_mode,
-    walking_package->function_data.change_modus.new_modus
-);
+  auto new_modus = GetNewModus(de_ptr->stat_struct.st_mode, ctx.new_modus);
 
   new_modus = new_modus | (de_ptr->stat_struct.st_mode & ~(
     S_IRWXO | S_IRWXG | S_IRWXU | S_ISGID | S_ISUID
