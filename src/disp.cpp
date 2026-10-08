@@ -315,13 +315,14 @@ void SwitchToBigFileWindow()
 
 void MapF2Window()
 {
-  char buffer[F2_WINDOW_WIDTH + 1];
-
   werase(f2_window);
-  std::memset(buffer, '=', F2_WINDOW_WIDTH);
-  buffer[F2_WINDOW_WIDTH] = '\0';
-
-  PrintSpecialString(f2_window, F2_WINDOW_HEIGHT - 1, 0, buffer, HST_COLOR);
+  PrintSpecialString(
+    f2_window,
+    F2_WINDOW_HEIGHT - 1,
+    0,
+    std::string(F2_WINDOW_WIDTH, '='),
+    HST_COLOR
+  );
   RefreshWindow(f2_window);
 }
 
@@ -352,8 +353,6 @@ void UnmapF2Window()
   touchwin(stdscr);
 }
 
-
-
 static void PrintMenuLine(WINDOW *win, int y, int x, const char *line)
 {
   std::size_t i;
@@ -372,8 +371,6 @@ static void PrintMenuLine(WINDOW *win, int y, int x, const char *line)
   buffer[l-1] = '\0';
   PrintOptions(stdscr, y, x , buffer);
 }
-
-
 
 static void PrintLine(WINDOW *win, int y, int x, const char *line, int len)
 {
@@ -395,4 +392,3 @@ void RefreshWindow(WINDOW *win)
 {
   wnoutrefresh(win);
 }
-
