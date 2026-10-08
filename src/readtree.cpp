@@ -23,7 +23,7 @@ static void UnReadSubTree(DirEntry *dir_entry);
 int ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path, int depth)
 {
   struct stat   stat_struct;
-  int		file_count;
+  int   file_count;
   std::vector<std::shared_ptr<DirEntry>> new_children;
   std::vector<std::shared_ptr<FileEntry>> new_files;
 

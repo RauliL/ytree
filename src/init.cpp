@@ -66,10 +66,10 @@ void ReCreateWindows()
     delwin(dir_window);
 
   dir_window = Subwin(stdscr,
-		       DIR_WINDOW_HEIGHT,
-		       DIR_WINDOW_WIDTH,
-		       DIR_WINDOW_Y,
-		       DIR_WINDOW_X
+           DIR_WINDOW_HEIGHT,
+           DIR_WINDOW_WIDTH,
+           DIR_WINDOW_Y,
+           DIR_WINDOW_X
 );
 
   keypad(dir_window, true);
@@ -82,10 +82,10 @@ void ReCreateWindows()
     delwin(small_file_window);
 
   small_file_window = Subwin(stdscr,
-			      FILE_WINDOW_1_HEIGHT,
-			      FILE_WINDOW_1_WIDTH,
-			      FILE_WINDOW_1_Y,
-		              FILE_WINDOW_1_X
+            FILE_WINDOW_1_HEIGHT,
+            FILE_WINDOW_1_WIDTH,
+            FILE_WINDOW_1_Y,
+                  FILE_WINDOW_1_X
 );
 
   if(!small_file_window)
@@ -101,10 +101,10 @@ void ReCreateWindows()
     delwin(big_file_window);
 
   big_file_window = Subwin(stdscr,
-			    FILE_WINDOW_2_HEIGHT,
-			    FILE_WINDOW_2_WIDTH,
-			    FILE_WINDOW_2_Y,
-		            FILE_WINDOW_2_X
+          FILE_WINDOW_2_HEIGHT,
+          FILE_WINDOW_2_WIDTH,
+          FILE_WINDOW_2_Y,
+                FILE_WINDOW_2_X
 );
 
   keypad(big_file_window, true);
@@ -116,10 +116,10 @@ void ReCreateWindows()
     delwin(error_window);
 
   error_window = Newwin(
-		       ERROR_WINDOW_HEIGHT,
-		       ERROR_WINDOW_WIDTH,
-		       ERROR_WINDOW_Y,
-		       ERROR_WINDOW_X
+           ERROR_WINDOW_HEIGHT,
+           ERROR_WINDOW_WIDTH,
+           ERROR_WINDOW_Y,
+           ERROR_WINDOW_X
 );
   WbkgdSet(error_window, COLOR_PAIR(WINERR_COLOR));
   clearok(error_window, true);

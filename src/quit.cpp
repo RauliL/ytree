@@ -47,9 +47,9 @@ trouble, so a given shell-pid will be unique for the xterm that
 owns it, even though they're all clustered in the user's homedir.
 
 changes:
-- ytree.h		add	prototype for QuitTo
-- filewin.c		add call to QuitTo, for Q and ^Q
-- dirwin.c		add call to QuitTo, for Q and ^Q (q still falls to main)
+- ytree.h   add prototype for QuitTo
+- filewin.c   add call to QuitTo, for Q and ^Q
+- dirwin.c    add call to QuitTo, for Q and ^Q (q still falls to main)
 
 i've mapped this to ^Q for now on my home machine, but it's probably best to
 use just SHIFT-Q for this, following the trend of mapping XtreeGold
@@ -76,7 +76,7 @@ function yt
 
 */
 
-#define MAXPATH	(PATH_LENGTH+1)
+#define MAXPATH (PATH_LENGTH+1)
 
 static int QuitFileCheck(char *fname);
 
@@ -132,15 +132,15 @@ static int QuitFileCheck(char *fname)
 {
   struct stat fstat;
 
-	if(stat(fname,&fstat))
-		return(1);
-	if(!S_ISREG(fstat.st_mode))
-		return(1);
-	if(!fstat.st_size)
-		return(2);
-	if(fstat.st_uid != getuid())
-		return(3);
-	return(0);
+  if(stat(fname,&fstat))
+    return(1);
+  if(!S_ISREG(fstat.st_mode))
+    return(1);
+  if(!fstat.st_size)
+    return(2);
+  if(fstat.st_uid != getuid())
+    return(3);
+  return(0);
 }
 
 void Quit()

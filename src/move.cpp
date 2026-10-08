@@ -3,11 +3,11 @@
 static bool Move(const std::string&, const std::string&);
 
 int MoveFile(FileEntry *fe_ptr,
-	     bool confirm,
-	     char *to_file,
-	     DirEntry *dest_dir_entry,
-	     char *to_dir_path,
-	     FileEntry **new_fe_ptr
+       bool confirm,
+       char *to_file,
+       DirEntry *dest_dir_entry,
+       char *to_dir_path,
+       FileEntry **new_fe_ptr
 )
 {
   const auto de_ptr = fe_ptr->Dir();
@@ -55,12 +55,12 @@ int MoveFile(FileEntry *fe_ptr,
 
       if( confirm )
       {
-	term = InputChoise("file exist; overwrite (Y/N) ? ", "YN\033");
+  term = InputChoise("file exist; overwrite (Y/N) ? ", "YN\033");
 
         if( term != 'Y' ) {
-	  result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
-	  ESCAPE;
-	}
+    result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
+    ESCAPE;
+  }
       }
 
       DeleteFile(dest_file_entry);
@@ -213,7 +213,7 @@ int MoveTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
 
   if( BuildFilename(fe_ptr->name,
                      walking_package->function_data.mv.to_file,
-		     new_name
+         new_name
 ) == 0 )
 
   {
@@ -224,11 +224,11 @@ int MoveTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
     else
     {
       result = MoveFile(fe_ptr,
-		         walking_package->function_data.mv.confirm,
-		         new_name,
-		         walking_package->function_data.mv.dest_dir_entry,
-		         walking_package->function_data.mv.to_path,
-		         &walking_package->new_fe_ptr
+             walking_package->function_data.mv.confirm,
+             new_name,
+             walking_package->function_data.mv.dest_dir_entry,
+             walking_package->function_data.mv.to_path,
+             &walking_package->new_fe_ptr
 );
     }
   }

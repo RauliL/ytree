@@ -121,7 +121,7 @@ int GetNewFileModus(int y, int x, char *modus, const char *term)
 
       if( modus[p] != 'x' && modus[p] != 's' )
       {
-	Message("Execute-Permission required*for set-ID");
+  Message("Execute-Permission required*for set-ID");
       }
       else
       {
@@ -160,11 +160,11 @@ int SetFileModus(FileEntry *fe_ptr, WalkingPackage *walking_package)
   walking_package->new_fe_ptr = fe_ptr; /* unchanged */
 
   new_modus = GetNewModus(fe_ptr->stat_struct.st_mode,
-			   walking_package->function_data.change_modus.new_modus
+         walking_package->function_data.change_modus.new_modus
 );
 
   new_modus = new_modus | ( fe_ptr->stat_struct.st_mode &
-	      ~( S_IRWXO | S_IRWXG | S_IRWXU | S_ISGID | S_ISUID ) );
+        ~( S_IRWXO | S_IRWXG | S_IRWXU | S_ISGID | S_ISUID ) );
 
   if (!chmod(path.c_str(), new_modus))
   {

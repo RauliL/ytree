@@ -109,9 +109,9 @@ static const char* FilesystemTypeName(const FsStat& fs)
 /*-----------------------------------------------*/
 
 int GetDiskParameter(const std::string& path,
-		      char *volume_name,
-		      std::int64_t *avail_bytes,
-		      std::int64_t *total_disk_space
+          char *volume_name,
+          std::int64_t *avail_bytes,
+          std::int64_t *total_disk_space
 )
 {
   FsStat fs{};

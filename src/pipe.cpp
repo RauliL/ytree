@@ -30,7 +30,7 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
       command_line = MakeExtractCommandLine(
         mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
         file_name_path.string(),
-			  input_buffer
+        input_buffer
       );
     }
     refresh();

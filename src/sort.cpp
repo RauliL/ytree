@@ -19,23 +19,23 @@ void GetKindOfSort()
   SortOrder order = SortOrder::Ascending;
 
   ClearHelp();
-  PrintOptions(stdscr, LINES - 2, 1, 
+  PrintOptions(stdscr, LINES - 2, 1,
             "Sort by (A)ccTime (C)hgTime (E)xtension (G)roup (M)odTime   (O)rder: [ascending]"
 );
   PrintOptions(stdscr, LINES - 1, 2, "       (N)ame o(W)ner (S)ize");
 
   RefreshWindow(stdscr);
   doupdate();
-  do 
+  do
   {
         c = Getch();
-	if(c == -1 || c == ESC)
-	  return;
+  if(c == -1 || c == ESC)
+    return;
 
         c = std::toupper(c);
 
-	if (c == 'Q')
-	  return;
+  if (c == 'Q')
+    return;
 
         switch( c )
         {

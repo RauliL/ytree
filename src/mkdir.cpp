@@ -139,29 +139,29 @@ int MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path,
       for( const auto& child : de_ptr->children )
       {
         if( child->name == token )
-	{
-	  /* Subtree gefunden */
-	  /*------------------*/
+  {
+    /* Subtree gefunden */
+    /*------------------*/
 
-	  sde_ptr = child.get();
-	  de_ptr = sde_ptr;
-	  break;
-	}
+    sde_ptr = child.get();
+    de_ptr = sde_ptr;
+    break;
+  }
       }
       if( sde_ptr == nullptr )
       {
-	/* Folgeverzeichnis nicht vorhanden */
-	/*----------------------------------*/
+  /* Folgeverzeichnis nicht vorhanden */
+  /*----------------------------------*/
 
 #ifdef DEBUG
   std::fprintf(stderr, "MakeDirEntry: \"%s\"\n", token);
 #endif /* DEBUG */
 
-	if( MakeDirEntry(de_ptr, token) )
-	{
-	  return( result );
-	}
-	continue;
+  if( MakeDirEntry(de_ptr, token) )
+  {
+    return( result );
+  }
+  continue;
       }
       token = Strtok_r(nullptr, preferred_separator_str, &old);
     }

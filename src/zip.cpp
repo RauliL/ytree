@@ -36,7 +36,7 @@ int ReadTreeFromZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 
     if( std::strlen(zip_line) > (unsigned) 58 &&
         (zip_line[56] == ':' ||
-	(zip_line[57] != 'd' && zip_line[58] == ':')))
+  (zip_line[57] != 'd' && zip_line[58] == ':')))
     {
       /* gueltiger Eintrag */
       /*-------------------*/
@@ -78,7 +78,7 @@ static int GetStatFromZIP(char *zip_line, char *name, struct stat *stat)
   int  i, id;
   struct tm tm_struct;
   static const char *month[] = { "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
-	 	           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
 
   std::memset(stat, 0, sizeof( struct stat ));

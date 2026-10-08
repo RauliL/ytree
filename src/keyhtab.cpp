@@ -100,13 +100,13 @@ int DisplayMatches()
     if (disp_begin_pos + i >= total_matches ) break;
     if (disp_begin_pos + i != hilight_no )
         PrintMtchEntry(disp_begin_pos + i, i, MTCH_COLOR,
-	              0, &hide_left, &hide_right);
+                0, &hide_left, &hide_right);
     else
       p_y = i;
   }
   if(p_y >= 0) {
     PrintMtchEntry(disp_begin_pos + p_y, p_y, HIMTCH_COLOR,
-	          0, &hide_left, &hide_right);
+            0, &hide_left, &hide_right);
   }
   return 0;
 }
@@ -163,9 +163,9 @@ char* GetMatches(const std::string& base)
     if(ch != -1 && ch != KEY_RIGHT && ch != KEY_LEFT) {
       if(start_x) {
         start_x = 0;
-	PrintMtchEntry(disp_begin_pos + cursor_pos,
-		       cursor_pos, HIMTCH_COLOR,
-		       start_x, &hide_left, &hide_right);
+  PrintMtchEntry(disp_begin_pos + cursor_pos,
+           cursor_pos, HIMTCH_COLOR,
+           start_x, &hide_left, &hide_right);
       }
     }
 
@@ -177,168 +177,168 @@ char* GetMatches(const std::string& base)
       case ' ':      break;  /* Quick-Key */
 
       case KEY_RIGHT: start_x++;
-		      PrintMtchEntry(disp_begin_pos + cursor_pos,
-			             cursor_pos, HIMTCH_COLOR,
-		                     start_x, &hide_left, &hide_right);
-		      if(hide_right < 0)
-		        start_x--;
-		      break;
+          PrintMtchEntry(disp_begin_pos + cursor_pos,
+                   cursor_pos, HIMTCH_COLOR,
+                         start_x, &hide_left, &hide_right);
+          if(hide_right < 0)
+            start_x--;
+          break;
 
       case KEY_LEFT:  if(start_x > 0)
-       		        start_x--;
-		      PrintMtchEntry(disp_begin_pos + cursor_pos,
-			             cursor_pos, HIMTCH_COLOR,
-		                     start_x, &hide_left, &hide_right);
-		      break;
+                  start_x--;
+          PrintMtchEntry(disp_begin_pos + cursor_pos,
+                   cursor_pos, HIMTCH_COLOR,
+                         start_x, &hide_left, &hide_right);
+          break;
 
       case '\t':
       case KEY_DOWN: if (disp_begin_pos + cursor_pos+1 >= total_matches)
-      		     {
-		       beep();
-		     }
-		     else
-		     { if( cursor_pos + 1 < MATCHES_WINDOW_HEIGHT )
-		       {
-			 PrintMtchEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, MTCH_COLOR,
-		                        start_x, &hide_left, &hide_right);
-			 cursor_pos++;
-			 PrintMtchEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, HIMTCH_COLOR,
-		                        start_x, &hide_left, &hide_right);
+               {
+           beep();
+         }
+         else
+         { if( cursor_pos + 1 < MATCHES_WINDOW_HEIGHT )
+           {
+       PrintMtchEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, MTCH_COLOR,
+                            start_x, &hide_left, &hide_right);
+       cursor_pos++;
+       PrintMtchEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, HIMTCH_COLOR,
+                            start_x, &hide_left, &hide_right);
                        }
-		       else
-		       {
-			 PrintMtchEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, MTCH_COLOR,
-		                        start_x, &hide_left, &hide_right);
-			 scroll(matches_window);
-			 disp_begin_pos++;
-			 PrintMtchEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, HIMTCH_COLOR,
-		                        start_x, &hide_left, &hide_right);
+           else
+           {
+       PrintMtchEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, MTCH_COLOR,
+                            start_x, &hide_left, &hide_right);
+       scroll(matches_window);
+       disp_begin_pos++;
+       PrintMtchEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, HIMTCH_COLOR,
+                            start_x, &hide_left, &hide_right);
                        }
-		     }
+         }
                      break;
       case KEY_BTAB:
       case KEY_UP  : if( disp_begin_pos + cursor_pos - 1 < 1 )
-		     {   beep(); }
-		     else
-		     {
-		       if( cursor_pos - 1 >= 0 )
-		       {
-			 PrintMtchEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, MTCH_COLOR,
-		                        start_x, &hide_left, &hide_right);
-			 cursor_pos--;
-			 PrintMtchEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, HIMTCH_COLOR,
-		                        start_x, &hide_left, &hide_right);
+         {   beep(); }
+         else
+         {
+           if( cursor_pos - 1 >= 0 )
+           {
+       PrintMtchEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, MTCH_COLOR,
+                            start_x, &hide_left, &hide_right);
+       cursor_pos--;
+       PrintMtchEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, HIMTCH_COLOR,
+                            start_x, &hide_left, &hide_right);
                        }
-		       else
-		       {
-			 PrintMtchEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, MTCH_COLOR,
-		                        start_x, &hide_left, &hide_right);
-			 wmove(matches_window, 0, 0);
-			 winsertln(matches_window);
-			 disp_begin_pos--;
-			 PrintMtchEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, HIMTCH_COLOR,
-		                        start_x, &hide_left, &hide_right);
+           else
+           {
+       PrintMtchEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, MTCH_COLOR,
+                            start_x, &hide_left, &hide_right);
+       wmove(matches_window, 0, 0);
+       winsertln(matches_window);
+       disp_begin_pos--;
+       PrintMtchEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, HIMTCH_COLOR,
+                            start_x, &hide_left, &hide_right);
                        }
-		     }
+         }
                      break;
       case KEY_NPAGE:
-      		     if( disp_begin_pos + cursor_pos >= total_matches - 1 )
-		     {  beep();  }
-		     else
-		     {
-		       if( cursor_pos < MATCHES_WINDOW_HEIGHT - 1 )
-		       {
-			 PrintMtchEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, MTCH_COLOR,
-		                        start_x, &hide_left, &hide_right);
-		         if( disp_begin_pos + MATCHES_WINDOW_HEIGHT > total_matches  - 1 )
-			   cursor_pos = total_matches - disp_begin_pos - 1;
-			 else
-			   cursor_pos = MATCHES_WINDOW_HEIGHT - 1;
-			 PrintMtchEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, HIMTCH_COLOR,
-		                        start_x, &hide_left, &hide_right);
-		       }
-		       else
-		       {
-			 if( disp_begin_pos + cursor_pos + MATCHES_WINDOW_HEIGHT < total_matches )
-			 {
-			   disp_begin_pos += MATCHES_WINDOW_HEIGHT;
-			   cursor_pos = MATCHES_WINDOW_HEIGHT - 1;
-			 }
-			 else
-			 {
-			   disp_begin_pos = total_matches - MATCHES_WINDOW_HEIGHT;
-			   if( disp_begin_pos < 1 ) disp_begin_pos = 1;
-			   cursor_pos = total_matches - disp_begin_pos - 1;
-			 }
+               if( disp_begin_pos + cursor_pos >= total_matches - 1 )
+         {  beep();  }
+         else
+         {
+           if( cursor_pos < MATCHES_WINDOW_HEIGHT - 1 )
+           {
+       PrintMtchEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, MTCH_COLOR,
+                            start_x, &hide_left, &hide_right);
+             if( disp_begin_pos + MATCHES_WINDOW_HEIGHT > total_matches  - 1 )
+         cursor_pos = total_matches - disp_begin_pos - 1;
+       else
+         cursor_pos = MATCHES_WINDOW_HEIGHT - 1;
+       PrintMtchEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, HIMTCH_COLOR,
+                            start_x, &hide_left, &hide_right);
+           }
+           else
+           {
+       if( disp_begin_pos + cursor_pos + MATCHES_WINDOW_HEIGHT < total_matches )
+       {
+         disp_begin_pos += MATCHES_WINDOW_HEIGHT;
+         cursor_pos = MATCHES_WINDOW_HEIGHT - 1;
+       }
+       else
+       {
+         disp_begin_pos = total_matches - MATCHES_WINDOW_HEIGHT;
+         if( disp_begin_pos < 1 ) disp_begin_pos = 1;
+         cursor_pos = total_matches - disp_begin_pos - 1;
+       }
                          DisplayMatches();
-		       }
-		     }
+           }
+         }
                      break;
       case KEY_PPAGE:
-		     if( disp_begin_pos + cursor_pos <= 1 )
-		     {  beep();  }
-		     else
-		     {
-		       if( cursor_pos > 0 )
-		       {
-			 PrintMtchEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, MTCH_COLOR,
-		                        start_x, &hide_left, &hide_right);
-			 cursor_pos = 0;
-			 PrintMtchEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, HIMTCH_COLOR,
-		                        start_x, &hide_left, &hide_right);
-		       }
-		       else
-		       {
-			 if( (disp_begin_pos -= MATCHES_WINDOW_HEIGHT) < 1 )
-			 {
-			   disp_begin_pos = 1;
-			 }
+         if( disp_begin_pos + cursor_pos <= 1 )
+         {  beep();  }
+         else
+         {
+           if( cursor_pos > 0 )
+           {
+       PrintMtchEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, MTCH_COLOR,
+                            start_x, &hide_left, &hide_right);
+       cursor_pos = 0;
+       PrintMtchEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, HIMTCH_COLOR,
+                            start_x, &hide_left, &hide_right);
+           }
+           else
+           {
+       if( (disp_begin_pos -= MATCHES_WINDOW_HEIGHT) < 1 )
+       {
+         disp_begin_pos = 1;
+       }
                          cursor_pos = 0;
                          DisplayMatches();
-		       }
-		     }
+           }
+         }
                      break;
       case KEY_HOME: if( disp_begin_pos == 1 && cursor_pos == 0 )
-		     {   beep();    }
-		     else
-		     {
-		       disp_begin_pos = 1;
-		       cursor_pos     = 0;
+         {   beep();    }
+         else
+         {
+           disp_begin_pos = 1;
+           cursor_pos     = 0;
                        DisplayMatches();
-		     }
+         }
                      break;
       case KEY_END :
                      disp_begin_pos = std::max(1, total_matches - MATCHES_WINDOW_HEIGHT);
-		     cursor_pos     = total_matches - disp_begin_pos - 1;
+         cursor_pos     = total_matches - disp_begin_pos - 1;
                      DisplayMatches();
                      break;
       case LF :
       case CR :
                      TMP=static_cast<char*>(std::malloc(std::strlen(Mtchs[ disp_begin_pos + cursor_pos])+1));
-		     if (TMP != nullptr){
-		        *std::format_to(TMP, "{}", Mtchs[disp_begin_pos + cursor_pos]) = '\0';
+         if (TMP != nullptr){
+            *std::format_to(TMP, "{}", Mtchs[disp_begin_pos + cursor_pos]) = '\0';
                         RetVal = TMP;
-		     }else
+         }else
                         RetVal = nullptr;
-		     break;
+         break;
 
       case ESC:      RetVal = nullptr;
                      break;
 
       default :      beep();
-		     break;
+         break;
     } /* switch */
   } while(ch != CR && ch != ESC && ch != -1);
   /* leaveok(stdscr, false); */

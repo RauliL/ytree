@@ -10,7 +10,7 @@
 int DeleteFile(FileEntry *fe_ptr)
 {
   const auto filepath = GetFileNamePath(fe_ptr);
-  char	   buffer[PATH_LENGTH+1];
+  char     buffer[PATH_LENGTH+1];
   int      result;
   int      term;
   std::error_code ec;

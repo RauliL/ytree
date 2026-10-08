@@ -38,7 +38,7 @@ static void MapErrorWindow(const std::string& header)
   PrintSpecialString(
     error_window,
     ERROR_WINDOW_HEIGHT - 3,
-		0,
+    0,
     "6--------------------------------------7",
     WINERR_COLOR
 );

@@ -37,7 +37,7 @@ int ReadTreeFromLHA(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 
     if( ( (std::strlen(lha_line) > (unsigned) 55 && lha_line[55] == ':' ) ||
           (std::strlen(lha_line) > (unsigned) 61 && lha_line[61] == ':' ) ) &&
-  	  lha_line[34] != '*' && !std::string_view(&lha_line[1]).starts_with("Total") )
+      lha_line[34] != '*' && !std::string_view(&lha_line[1]).starts_with("Total") )
     {
       /* gueltiger Eintrag */
       /*-------------------*/
@@ -81,7 +81,7 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
   int  i, id;
   struct tm tm_struct;
   static const char *month[] = { "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
-	 	           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
 
   std::memset(stat, 0, sizeof( struct stat ));

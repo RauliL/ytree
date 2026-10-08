@@ -414,8 +414,8 @@ static void Movenpage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
            else
               *cursor_pos = window_height - 1;
            *dir_entry = dir_entry_list[*disp_begin_pos + *cursor_pos].dir_entry.get();
-      	   (*dir_entry)->start_file = 0;
-      	   (*dir_entry)->cursor_pos = -1;
+           (*dir_entry)->start_file = 0;
+           (*dir_entry)->cursor_pos = -1;
            DisplayFileWindow(*dir_entry);
            RefreshWindow(file_window);
            PrintDirEntry(dir_window,
@@ -440,8 +440,8 @@ static void Movenpage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
               *cursor_pos = dir_entry_list.size() - *disp_begin_pos - 1;
           }
           *dir_entry = dir_entry_list[*disp_begin_pos + *cursor_pos].dir_entry.get();
-      	  (*dir_entry)->start_file = 0;
-      	  (*dir_entry)->cursor_pos = -1;
+          (*dir_entry)->start_file = 0;
+          (*dir_entry)->cursor_pos = -1;
           DisplayFileWindow(*dir_entry);
           RefreshWindow(file_window);
           DisplayTree(dir_window,*disp_begin_pos,*disp_begin_pos+*cursor_pos);
@@ -472,8 +472,8 @@ static void Moveppage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
 );
            *cursor_pos = 0;
            *dir_entry = dir_entry_list[*disp_begin_pos + *cursor_pos].dir_entry.get();
-      	   (*dir_entry)->start_file = 0;
-      	   (*dir_entry)->cursor_pos = -1;
+           (*dir_entry)->start_file = 0;
+           (*dir_entry)->cursor_pos = -1;
            DisplayFileWindow(*dir_entry);
            RefreshWindow(file_window);
            PrintDirEntry(dir_window,
@@ -492,8 +492,8 @@ static void Moveppage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
          }
          *cursor_pos = 0;
          *dir_entry = dir_entry_list[*disp_begin_pos + *cursor_pos].dir_entry.get();
-      	 (*dir_entry)->start_file = 0;
-      	 (*dir_entry)->cursor_pos = -1;
+         (*dir_entry)->start_file = 0;
+         (*dir_entry)->cursor_pos = -1;
          DisplayFileWindow(*dir_entry);
          RefreshWindow(file_window);
          DisplayTree(dir_window,*disp_begin_pos,*disp_begin_pos+*cursor_pos);
@@ -512,7 +512,7 @@ void MoveEnd(DirEntry **dir_entry)
     DisplayFileWindow(*dir_entry);
     RefreshWindow(file_window);
     DisplayTree(dir_window, statistic.disp_begin_pos,
-		statistic.disp_begin_pos + statistic.cursor_pos);
+    statistic.disp_begin_pos + statistic.cursor_pos);
     return;
 }
 
@@ -533,7 +533,7 @@ void MoveHome(DirEntry **dir_entry)
        DisplayFileWindow(*dir_entry);
        RefreshWindow(file_window);
        DisplayTree(dir_window, statistic.disp_begin_pos,
-		statistic.disp_begin_pos + statistic.cursor_pos);
+    statistic.disp_begin_pos + statistic.cursor_pos);
     }
     return;
 }
@@ -626,30 +626,30 @@ void HandlePlus(
 }
 
 void HandleReadSubTree(DirEntry *dir_entry, DirEntry *start_dir_entry,
-		       bool *need_dsp_help)
+           bool *need_dsp_help)
 {
     ScanSubTree(dir_entry);
     BuildDirEntryList(start_dir_entry);
     DisplayTree(dir_window, statistic.disp_begin_pos,
-		 statistic.disp_begin_pos + statistic.cursor_pos);
+     statistic.disp_begin_pos + statistic.cursor_pos);
     DisplayDiskStatistic();
     DisplayAvailBytes();
     *need_dsp_help = true;
 }
 
 void HandleUnreadSubTree(DirEntry *dir_entry, DirEntry *de_ptr,
-			 DirEntry *start_dir_entry, bool *need_dsp_help)
+       DirEntry *start_dir_entry, bool *need_dsp_help)
 {
     if( dir_entry->not_scanned || dir_entry->children.empty() ) {
-	beep();
+  beep();
     } else {
-	for( const auto& child : dir_entry->children ) {
-	    UnReadTree(child.get());
-	}
-	dir_entry->not_scanned = true;
-	BuildDirEntryList(start_dir_entry);
+  for( const auto& child : dir_entry->children ) {
+      UnReadTree(child.get());
+  }
+  dir_entry->not_scanned = true;
+  BuildDirEntryList(start_dir_entry);
         DisplayTree(dir_window, statistic.disp_begin_pos,
-		    statistic.disp_begin_pos + statistic.cursor_pos);
+        statistic.disp_begin_pos + statistic.cursor_pos);
         DisplayAvailBytes();
         *need_dsp_help = true;
     }
@@ -660,23 +660,23 @@ void HandleTagDir(DirEntry *dir_entry, bool value)
 {
     for(const auto& fe_sp : dir_entry->files)
     {
-	FileEntry *fe_ptr = fe_sp.get();
-	if( (fe_ptr->matching) && (fe_ptr->tagged != value ))
-	{
-	    fe_ptr->tagged = value;
-	    if (value)
-	    {
-		dir_entry->tagged_files++;
-		dir_entry->tagged_bytes += fe_ptr->stat_struct.st_size;
-	       	statistic.disk_tagged_files++;
-		statistic.disk_tagged_bytes += fe_ptr->stat_struct.st_size;
-	    }else{
-		dir_entry->tagged_files--;
-		dir_entry->tagged_bytes -= fe_ptr->stat_struct.st_size;
-	       	statistic.disk_tagged_files--;
-		statistic.disk_tagged_bytes -= fe_ptr->stat_struct.st_size;
-	    }
-	}
+  FileEntry *fe_ptr = fe_sp.get();
+  if( (fe_ptr->matching) && (fe_ptr->tagged != value ))
+  {
+      fe_ptr->tagged = value;
+      if (value)
+      {
+    dir_entry->tagged_files++;
+    dir_entry->tagged_bytes += fe_ptr->stat_struct.st_size;
+          statistic.disk_tagged_files++;
+    statistic.disk_tagged_bytes += fe_ptr->stat_struct.st_size;
+      }else{
+    dir_entry->tagged_files--;
+    dir_entry->tagged_bytes -= fe_ptr->stat_struct.st_size;
+          statistic.disk_tagged_files--;
+    statistic.disk_tagged_bytes -= fe_ptr->stat_struct.st_size;
+      }
+  }
     }
     dir_entry->start_file = 0;
     dir_entry->cursor_pos = -1;
@@ -723,36 +723,36 @@ void HandleShowAllTagged(DirEntry *dir_entry,DirEntry *start_dir_entry, bool *ne
 {
     if( statistic.disk_tagged_files )
     {
-	if(dir_entry->login_flag)
-	{
-	    dir_entry->login_flag = false;
-	} else {
-	    dir_entry->big_window  = true;
+  if(dir_entry->login_flag)
+  {
+      dir_entry->login_flag = false;
+  } else {
+      dir_entry->big_window  = true;
             dir_entry->global_flag = true;
-	    dir_entry->tagged_flag = true;
-	    dir_entry->start_file  = 0;
-	    dir_entry->cursor_pos  = 0;
-	}
-	if( HandleFileWindow(dir_entry) != LOGIN_ESC )
-	{
-	    DisplayDiskStatistic();
-	    dir_entry->start_file = 0;
-	    dir_entry->cursor_pos = -1;
+      dir_entry->tagged_flag = true;
+      dir_entry->start_file  = 0;
+      dir_entry->cursor_pos  = 0;
+  }
+  if( HandleFileWindow(dir_entry) != LOGIN_ESC )
+  {
+      DisplayDiskStatistic();
+      dir_entry->start_file = 0;
+      dir_entry->cursor_pos = -1;
             DisplayFileWindow(dir_entry);
             RefreshWindow(small_file_window);
             RefreshWindow(big_file_window);
-	    BuildDirEntryList(start_dir_entry);
+      BuildDirEntryList(start_dir_entry);
             DisplayTree(dir_window, statistic.disp_begin_pos,
-			statistic.disp_begin_pos + statistic.cursor_pos);
-	}else{
-	    BuildDirEntryList(statistic.tree.get());
+      statistic.disp_begin_pos + statistic.cursor_pos);
+  }else{
+      BuildDirEntryList(statistic.tree.get());
             DisplayTree(dir_window, statistic.disp_begin_pos,
-			statistic.disp_begin_pos + statistic.cursor_pos);
-	    *ch = 'L';
-	}
+      statistic.disp_begin_pos + statistic.cursor_pos);
+      *ch = 'L';
+  }
     }else{
-	dir_entry->login_flag = false;
-	beep();
+  dir_entry->login_flag = false;
+  beep();
     }
     *need_dsp_help = true;
     return;
@@ -762,36 +762,36 @@ void HandleShowAll(DirEntry *dir_entry, DirEntry *start_dir_entry, bool *need_ds
 {
     if( statistic.disk_matching_files )
     {
-	if(dir_entry->login_flag)
-	{
-	    dir_entry->login_flag = false;
-	} else {
-	    dir_entry->big_window  = true;
-	    dir_entry->global_flag = true;
-	    dir_entry->tagged_flag = false;
-	    dir_entry->start_file  = 0;
-	    dir_entry->cursor_pos  = 0;
-	}
-	if( HandleFileWindow(dir_entry) != LOGIN_ESC )
-	{
-	    DisplayDiskStatistic();
-	    dir_entry->start_file = 0;
-	    dir_entry->cursor_pos = -1;
+  if(dir_entry->login_flag)
+  {
+      dir_entry->login_flag = false;
+  } else {
+      dir_entry->big_window  = true;
+      dir_entry->global_flag = true;
+      dir_entry->tagged_flag = false;
+      dir_entry->start_file  = 0;
+      dir_entry->cursor_pos  = 0;
+  }
+  if( HandleFileWindow(dir_entry) != LOGIN_ESC )
+  {
+      DisplayDiskStatistic();
+      dir_entry->start_file = 0;
+      dir_entry->cursor_pos = -1;
             DisplayFileWindow(dir_entry);
             RefreshWindow(small_file_window);
             RefreshWindow(big_file_window);
-	    BuildDirEntryList(start_dir_entry);
+      BuildDirEntryList(start_dir_entry);
             DisplayTree(dir_window, statistic.disp_begin_pos,
-			statistic.disp_begin_pos + statistic.cursor_pos);
-	} else {
-	    BuildDirEntryList(statistic.tree.get());
+      statistic.disp_begin_pos + statistic.cursor_pos);
+  } else {
+      BuildDirEntryList(statistic.tree.get());
             DisplayTree(dir_window, statistic.disp_begin_pos,
-			statistic.disp_begin_pos + statistic.cursor_pos);
-	    *ch = 'L';
-	}
+      statistic.disp_begin_pos + statistic.cursor_pos);
+      *ch = 'L';
+  }
     } else {
-	dir_entry->login_flag = false;
-	beep();
+  dir_entry->login_flag = false;
+  beep();
     }
     *need_dsp_help = true;
     return;
@@ -801,38 +801,38 @@ void HandleSwitchWindow(DirEntry *dir_entry, DirEntry *start_dir_entry, bool *ne
 {
     if( dir_entry->matching_files )
     {
-	if(dir_entry->login_flag)
-	{
-	    dir_entry->login_flag = false;
-	} else {
-	    dir_entry->global_flag = false;
+  if(dir_entry->login_flag)
+  {
+      dir_entry->login_flag = false;
+  } else {
+      dir_entry->global_flag = false;
             dir_entry->tagged_flag = false;
-	    dir_entry->big_window  = bypass_small_window;
-	    dir_entry->start_file  = 0;
-	    dir_entry->cursor_pos  = 0;
-	}
-	if( HandleFileWindow(dir_entry) != LOGIN_ESC )
+      dir_entry->big_window  = bypass_small_window;
+      dir_entry->start_file  = 0;
+      dir_entry->cursor_pos  = 0;
+  }
+  if( HandleFileWindow(dir_entry) != LOGIN_ESC )
         {
-	    dir_entry->start_file = 0;
-	    dir_entry->cursor_pos = -1;
-	    DisplayFileWindow(dir_entry);
+      dir_entry->start_file = 0;
+      dir_entry->cursor_pos = -1;
+      DisplayFileWindow(dir_entry);
             RefreshWindow(small_file_window);
             RefreshWindow(big_file_window);
-	    BuildDirEntryList(start_dir_entry);
+      BuildDirEntryList(start_dir_entry);
             DisplayTree(dir_window, statistic.disp_begin_pos,
-			statistic.disp_begin_pos + statistic.cursor_pos);
-	    DisplayDiskStatistic();
-	} else {
-	    BuildDirEntryList(statistic.tree.get());
+      statistic.disp_begin_pos + statistic.cursor_pos);
+      DisplayDiskStatistic();
+  } else {
+      BuildDirEntryList(statistic.tree.get());
             DisplayTree(dir_window, statistic.disp_begin_pos,
-			statistic.disp_begin_pos + statistic.cursor_pos);
-	    *ch = 'L';
-	}
-	DisplayAvailBytes();
-	*need_dsp_help = true;
+      statistic.disp_begin_pos + statistic.cursor_pos);
+      *ch = 'L';
+  }
+  DisplayAvailBytes();
+  *need_dsp_help = true;
     } else {
-	dir_entry->login_flag = false;
-	beep();
+  dir_entry->login_flag = false;
+  beep();
     }
     return;
 }
@@ -964,10 +964,10 @@ int HandleDirWindow(DirEntry *start_dir_entry)
        GetMaxYX(dir_window, &window_height, &window_width);
        while(statistic.cursor_pos >= window_height) {
          statistic.cursor_pos--;
-	 statistic.disp_begin_pos++;
+   statistic.disp_begin_pos++;
        }
        DisplayTree(dir_window, statistic.disp_begin_pos,
-		    statistic.disp_begin_pos + statistic.cursor_pos
+        statistic.disp_begin_pos + statistic.cursor_pos
 );
        DisplayFileWindow(dir_entry);
        DisplayDiskStatistic();
@@ -988,7 +988,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
 
 #ifdef KEY_RESIZE
       case KEY_RESIZE: resize_request = true;
-      		       break;
+                 break;
 #endif
 
 #ifdef KEY_MOUSE
@@ -1015,132 +1015,132 @@ int HandleDirWindow(DirEntry *start_dir_entry)
       case KEY_HOME: MoveHome(&dir_entry);
                      break;
       case KEY_END : MoveEnd(&dir_entry);
-    		     break;
+             break;
       case KEY_RIGHT:
       case '+':      HandlePlus(dir_entry, de_ptr, new_login_path,
-    				start_dir_entry, &need_dsp_help);
-	             break;
+            start_dir_entry, &need_dsp_help);
+               break;
       case '\t':
       case '*':      HandleReadSubTree(dir_entry, start_dir_entry,
-    					&need_dsp_help);
-    		     break;
+              &need_dsp_help);
+             break;
       case KEY_LEFT:
       case '-':
       case KEY_BTAB: HandleUnreadSubTree(dir_entry, de_ptr, start_dir_entry,
-    					 &need_dsp_help);
-	             break;
+               &need_dsp_help);
+               break;
       case 'F':
       case 'f':      if(ReadFileSpec() == 0) {
-		       dir_entry->start_file = 0;
-		       dir_entry->cursor_pos = -1;
+           dir_entry->start_file = 0;
+           dir_entry->cursor_pos = -1;
                        DisplayFileWindow(dir_entry);
                        RefreshWindow(file_window);
-		       DisplayDiskStatistic();
-		     }
-		     need_dsp_help = true;
+           DisplayDiskStatistic();
+         }
+         need_dsp_help = true;
                      break;
       case 'T' :
       case 't' :     HandleTagDir(dir_entry, true);
-    		     break;
+             break;
 
       case 'U' :
       case 'u' :     HandleTagDir(dir_entry, false);
-    		     break;
+             break;
       case 'T' & 0x1F :
                      HandleTagAllDirs(dir_entry,true);
-		     break;
+         break;
       case 'U' & 0x1F :
-    		     HandleTagAllDirs(dir_entry,false);
-		     break;
+             HandleTagAllDirs(dir_entry,false);
+         break;
       case 'F' & 0x1F :
-		     RotateDirMode();
+         RotateDirMode();
                      /*DisplayFileWindow( dir_entry, 0, -1 );*/
                      DisplayTree(dir_window, statistic.disp_begin_pos,
                                   statistic.disp_begin_pos + statistic.cursor_pos
 );
                      /*RefreshWindow( file_window );*/
-		     DisplayDiskStatistic();
-		     need_dsp_help = true;
-		     break;
+         DisplayDiskStatistic();
+         need_dsp_help = true;
+         break;
       case 'S' & 0x1F :
-		     HandleShowAllTagged(dir_entry, start_dir_entry, &need_dsp_help, &ch);
-		     break;
+         HandleShowAllTagged(dir_entry, start_dir_entry, &need_dsp_help, &ch);
+         break;
 
       case 'S':
       case 's':      HandleShowAll(dir_entry, start_dir_entry, &need_dsp_help, &ch);
-		     break;
+         break;
       case LF :
       case CR :      HandleSwitchWindow(dir_entry, start_dir_entry, &need_dsp_help, &ch);
-		     break;
+         break;
       case 'X':
       case 'x':      Execute(dir_entry, nullptr);
-		     need_dsp_help = true;
-		     DisplayAvailBytes();
-		     break;
+         need_dsp_help = true;
+         DisplayAvailBytes();
+         break;
       case 'M':
       case 'm':      if( !MakeDirectory(dir_entry) )
-		     {
-		       BuildDirEntryList(start_dir_entry);
+         {
+           BuildDirEntryList(start_dir_entry);
                        DisplayTree(dir_window, statistic.disp_begin_pos,
-				    statistic.disp_begin_pos + statistic.cursor_pos
+            statistic.disp_begin_pos + statistic.cursor_pos
 );
-		       DisplayAvailBytes();
-		     }
-		     need_dsp_help = true;
-		     break;
+           DisplayAvailBytes();
+         }
+         need_dsp_help = true;
+         break;
       case 'D':
       case 'd':      if( !DeleteDirectory(dir_entry) ) {
-		       if( statistic.disp_begin_pos + statistic.cursor_pos > 0 )
-		       {
-		         if( statistic.cursor_pos > 0 ) statistic.cursor_pos--;
-		         else statistic.disp_begin_pos--;
-		       }
-      		     }
-		     /* Unabhaengig vom Erfolg aktualisieren */
-		     BuildDirEntryList(start_dir_entry);
-		     dir_entry = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry.get();
-		     dir_entry->start_file = 0;
-		     dir_entry->cursor_pos = -1;
+           if( statistic.disp_begin_pos + statistic.cursor_pos > 0 )
+           {
+             if( statistic.cursor_pos > 0 ) statistic.cursor_pos--;
+             else statistic.disp_begin_pos--;
+           }
+               }
+         /* Unabhaengig vom Erfolg aktualisieren */
+         BuildDirEntryList(start_dir_entry);
+         dir_entry = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry.get();
+         dir_entry->start_file = 0;
+         dir_entry->cursor_pos = -1;
                      DisplayFileWindow(dir_entry);
                      RefreshWindow(file_window);
-		     DisplayTree(dir_window, statistic.disp_begin_pos,
-				  statistic.disp_begin_pos + statistic.cursor_pos
+         DisplayTree(dir_window, statistic.disp_begin_pos,
+          statistic.disp_begin_pos + statistic.cursor_pos
 );
-		     DisplayAvailBytes();
-		     need_dsp_help = true;
-		     break;
+         DisplayAvailBytes();
+         need_dsp_help = true;
+         break;
       case 'r':
       case 'R':      if( !GetRenameParameter(&dir_entry->name, new_name) )
                      {
-		       if( !RenameDirectory(dir_entry, new_name) )
-		       {
-		         /* Rename OK */
-		         /*-----------*/
-		         BuildDirEntryList(start_dir_entry);
+           if( !RenameDirectory(dir_entry, new_name) )
+           {
+             /* Rename OK */
+             /*-----------*/
+             BuildDirEntryList(start_dir_entry);
                          DisplayTree(dir_window, statistic.disp_begin_pos,
-		                      statistic.disp_begin_pos + statistic.cursor_pos
+                          statistic.disp_begin_pos + statistic.cursor_pos
 );
-		         DisplayAvailBytes();
-		         dir_entry = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry.get();
-		       }
-		     }
-		     need_dsp_help = true;
-		     break;
+             DisplayAvailBytes();
+             dir_entry = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry.get();
+           }
+         }
+         need_dsp_help = true;
+         break;
       case 'G':
       case 'g':      ChangeDirGroup(dir_entry);
                      DisplayTree(dir_window, statistic.disp_begin_pos, statistic.disp_begin_pos + statistic.cursor_pos);
-		     need_dsp_help = true;
-		     break;
+         need_dsp_help = true;
+         break;
       case 'O':
       case 'o':      ChangeDirOwner(dir_entry);
                      DisplayTree(dir_window, statistic.disp_begin_pos, statistic.disp_begin_pos + statistic.cursor_pos);
-		     need_dsp_help = true;
-		     break;
+         need_dsp_help = true;
+         break;
       case 'A':
       case 'a':      ChangeDirModus(dir_entry);
                      DisplayTree(dir_window, statistic.disp_begin_pos, statistic.disp_begin_pos + statistic.cursor_pos);
-		     need_dsp_help = true;
-		     break;
+         need_dsp_help = true;
+         break;
 
       case 'Q' & 0x1F:
                      need_dsp_help = true;
@@ -1168,13 +1168,13 @@ int HandleDirWindow(DirEntry *start_dir_entry)
           DisplayMenu();
           doupdate();
           LoginDisk(new_login_path);
-		     }
-		     need_dsp_help = true;
-		     break;
+         }
+         need_dsp_help = true;
+         break;
 
       case 'L' & 0x1F:
-		     clearok(stdscr, true);
-		     break;
+         clearok(stdscr, true);
+         break;
 
       // Press 'p' or 'P' to log parent of current root.
       case 'P':
@@ -1240,7 +1240,7 @@ void ScanSubTree(DirEntry* dir_entry)
 
 int KeyF2Get(DirEntry *start_dir_entry,
              int disp_begin_pos,
-	     int cursor_pos,
+       int cursor_pos,
              char *path)
 {
   int ch;
@@ -1272,140 +1272,140 @@ int KeyF2Get(DirEntry *start_dir_entry,
       case ' ':      break;  /* Quick-Key */
       case KEY_DOWN:
         if (disp_begin_pos + cursor_pos + 1 >= static_cast<int>(dir_entry_list.size()))
-		     {
-		       beep();
-		     }
-		     else
-		     {
-		       if( cursor_pos + 1 < win_height )
-		       {
-			 PrintDirEntry(f2_window,
-			                disp_begin_pos + cursor_pos,
-					cursor_pos, false);
-			 cursor_pos++;
+         {
+           beep();
+         }
+         else
+         {
+           if( cursor_pos + 1 < win_height )
+           {
+       PrintDirEntry(f2_window,
+                      disp_begin_pos + cursor_pos,
+          cursor_pos, false);
+       cursor_pos++;
 
-			 PrintDirEntry(f2_window, disp_begin_pos + cursor_pos,
-					cursor_pos, true);
+       PrintDirEntry(f2_window, disp_begin_pos + cursor_pos,
+          cursor_pos, true);
                        }
-		       else
-		       {
-			 disp_begin_pos++;
+           else
+           {
+       disp_begin_pos++;
                          DisplayTree(f2_window, disp_begin_pos,
-				      disp_begin_pos + cursor_pos);
+              disp_begin_pos + cursor_pos);
                        }
-		     }
+         }
                      break;
 
       case KEY_UP  : if( disp_begin_pos + cursor_pos - 1 < 0 )
-		     {
-		       beep();
-		     }
-		     else
-		     {
-		       if( cursor_pos - 1 >= 0 )
-		       {
-			 PrintDirEntry(f2_window,
-			                disp_begin_pos + cursor_pos,
-					cursor_pos, false);
-			 cursor_pos--;
-			 PrintDirEntry(f2_window,
-			                disp_begin_pos + cursor_pos,
-					cursor_pos, true);
+         {
+           beep();
+         }
+         else
+         {
+           if( cursor_pos - 1 >= 0 )
+           {
+       PrintDirEntry(f2_window,
+                      disp_begin_pos + cursor_pos,
+          cursor_pos, false);
+       cursor_pos--;
+       PrintDirEntry(f2_window,
+                      disp_begin_pos + cursor_pos,
+          cursor_pos, true);
                        }
-		       else
-		       {
-			 disp_begin_pos--;
+           else
+           {
+       disp_begin_pos--;
                          DisplayTree(f2_window, disp_begin_pos,
-				      disp_begin_pos + cursor_pos);
+              disp_begin_pos + cursor_pos);
                        }
-		     }
+         }
                      break;
 
       case KEY_NPAGE:
-		     if (disp_begin_pos + cursor_pos >= static_cast<int>(dir_entry_list.size() - 1))
-		     {
-		       beep();
-		     }
-		     else
-		     {
-		       if( cursor_pos < win_height - 1 )
-		       {
-			 PrintDirEntry(f2_window,
-			                disp_begin_pos + cursor_pos,
-					cursor_pos, false);
-		         if (disp_begin_pos + win_height > static_cast<int>(dir_entry_list.size() - 1))
-			   cursor_pos = dir_entry_list.size() - disp_begin_pos - 1;
-			 else
-			   cursor_pos = win_height - 1;
-			 PrintDirEntry(f2_window,
-			                disp_begin_pos + cursor_pos,
-					cursor_pos, true);
-		       }
-		       else
-		       {
-			 if (disp_begin_pos + cursor_pos + win_height < static_cast<int>(dir_entry_list.size()))
-			 {
-			   disp_begin_pos += win_height;
-			   cursor_pos = win_height - 1;
-			 }
-			 else
-			 {
-			   disp_begin_pos = dir_entry_list.size() - win_height;
-			   if( disp_begin_pos < 0 ) disp_begin_pos = 0;
-			   cursor_pos = dir_entry_list.size() - disp_begin_pos - 1;
-			 }
+         if (disp_begin_pos + cursor_pos >= static_cast<int>(dir_entry_list.size() - 1))
+         {
+           beep();
+         }
+         else
+         {
+           if( cursor_pos < win_height - 1 )
+           {
+       PrintDirEntry(f2_window,
+                      disp_begin_pos + cursor_pos,
+          cursor_pos, false);
+             if (disp_begin_pos + win_height > static_cast<int>(dir_entry_list.size() - 1))
+         cursor_pos = dir_entry_list.size() - disp_begin_pos - 1;
+       else
+         cursor_pos = win_height - 1;
+       PrintDirEntry(f2_window,
+                      disp_begin_pos + cursor_pos,
+          cursor_pos, true);
+           }
+           else
+           {
+       if (disp_begin_pos + cursor_pos + win_height < static_cast<int>(dir_entry_list.size()))
+       {
+         disp_begin_pos += win_height;
+         cursor_pos = win_height - 1;
+       }
+       else
+       {
+         disp_begin_pos = dir_entry_list.size() - win_height;
+         if( disp_begin_pos < 0 ) disp_begin_pos = 0;
+         cursor_pos = dir_entry_list.size() - disp_begin_pos - 1;
+       }
                          DisplayTree(f2_window, disp_begin_pos,
-				      disp_begin_pos + cursor_pos);
-		       }
-		     }
+              disp_begin_pos + cursor_pos);
+           }
+         }
                      break;
 
       case KEY_PPAGE:
-		     if( disp_begin_pos + cursor_pos <= 0 )
-		     {
-		       beep();
-		     }
-		     else
-		     {
-		       if( cursor_pos > 0 )
-		       {
-			 PrintDirEntry(f2_window,
-			                disp_begin_pos + cursor_pos,
-					cursor_pos, false);
-			 cursor_pos = 0;
-			 PrintDirEntry(f2_window,
-			                disp_begin_pos + cursor_pos,
-					cursor_pos, true);
-		       }
-		       else
-		       {
-			 if( (disp_begin_pos -= win_height) < 0 )
-			 {
-			   disp_begin_pos = 0;
-			 }
+         if( disp_begin_pos + cursor_pos <= 0 )
+         {
+           beep();
+         }
+         else
+         {
+           if( cursor_pos > 0 )
+           {
+       PrintDirEntry(f2_window,
+                      disp_begin_pos + cursor_pos,
+          cursor_pos, false);
+       cursor_pos = 0;
+       PrintDirEntry(f2_window,
+                      disp_begin_pos + cursor_pos,
+          cursor_pos, true);
+           }
+           else
+           {
+       if( (disp_begin_pos -= win_height) < 0 )
+       {
+         disp_begin_pos = 0;
+       }
                          cursor_pos = 0;
                          DisplayTree(f2_window, disp_begin_pos,
-				      disp_begin_pos + cursor_pos);
-		       }
-		     }
+              disp_begin_pos + cursor_pos);
+           }
+         }
                      break;
 
       case KEY_HOME: if( disp_begin_pos == 0 && cursor_pos == 0 )
-		     { beep(); }
-		     else
-		     {
-		       disp_begin_pos = 0;
-		       cursor_pos     = 0;
+         { beep(); }
+         else
+         {
+           disp_begin_pos = 0;
+           cursor_pos     = 0;
                        DisplayTree(f2_window, disp_begin_pos,
-				    disp_begin_pos + cursor_pos);
-		     }
+            disp_begin_pos + cursor_pos);
+         }
                      break;
 
       case KEY_END:
         disp_begin_pos = std::max<int>(0, dir_entry_list.size() - win_height);
-		     cursor_pos     = dir_entry_list.size() - disp_begin_pos - 1;
+         cursor_pos     = dir_entry_list.size() - disp_begin_pos - 1;
                      DisplayTree(f2_window, disp_begin_pos,
-				  disp_begin_pos + cursor_pos);
+          disp_begin_pos + cursor_pos);
                      break;
 
       case LF:
@@ -1423,7 +1423,7 @@ int KeyF2Get(DirEntry *start_dir_entry,
       case 'q':      break;
 
       default :      beep();
-		     break;
+         break;
     } /* switch */
   } while( (ch != 'q') && (ch != ESC) && (ch != 'Q') && (ch != CR) && (ch != -1) );
 
@@ -1435,55 +1435,55 @@ int KeyF2Get(DirEntry *start_dir_entry,
 
 int RefreshDirWindow()
 {
-	DirEntry *de_ptr;
+  DirEntry *de_ptr;
   int i;
   int n;
-	int result = -1;
-	int window_width, window_height;
+  int result = -1;
+  int window_width, window_height;
 
-	de_ptr = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry.get();
-	BuildDirEntryList(dir_entry_list[0].dir_entry.get());
+  de_ptr = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry.get();
+  BuildDirEntryList(dir_entry_list[0].dir_entry.get());
 
-	/* Search old entry */
-	for (n = -1, i = 0; i < static_cast<int>(dir_entry_list.size()); ++i)
+  /* Search old entry */
+  for (n = -1, i = 0; i < static_cast<int>(dir_entry_list.size()); ++i)
   {
-		if (dir_entry_list[i].dir_entry.get() == de_ptr)
+    if (dir_entry_list[i].dir_entry.get() == de_ptr)
     {
-			n = i;
-			break;
-		}
-	}
+      n = i;
+      break;
+    }
+  }
 
-	if(n == -1) {
-		/* Directory disapeared */
+  if(n == -1) {
+    /* Directory disapeared */
     Error("Current directory disappeared");
-		result = -1;
-	} else {
+    result = -1;
+  } else {
 
-		if( n != (statistic.disp_begin_pos + statistic.cursor_pos)) {
-			/* Position changed */
-			if((n - statistic.disp_begin_pos) >= 0) {
-				statistic.cursor_pos = n - statistic.disp_begin_pos;
-			} else {
-				statistic.disp_begin_pos = n;
-				statistic.cursor_pos = 0;
-			}
-		}
+    if( n != (statistic.disp_begin_pos + statistic.cursor_pos)) {
+      /* Position changed */
+      if((n - statistic.disp_begin_pos) >= 0) {
+        statistic.cursor_pos = n - statistic.disp_begin_pos;
+      } else {
+        statistic.disp_begin_pos = n;
+        statistic.cursor_pos = 0;
+      }
+    }
 
-       		GetMaxYX(dir_window, &window_height, &window_width);
-	        while(statistic.cursor_pos >= window_height) {
-		  statistic.cursor_pos--;
-		  statistic.disp_begin_pos++;
-	        }
-		DisplayTree(dir_window, statistic.disp_begin_pos,
-		     	statistic.disp_begin_pos + statistic.cursor_pos
+          GetMaxYX(dir_window, &window_height, &window_width);
+          while(statistic.cursor_pos >= window_height) {
+      statistic.cursor_pos--;
+      statistic.disp_begin_pos++;
+          }
+    DisplayTree(dir_window, statistic.disp_begin_pos,
+          statistic.disp_begin_pos + statistic.cursor_pos
 );
 
-		DisplayAvailBytes();
-		result = 0;
-	}
+    DisplayAvailBytes();
+    result = 0;
+  }
 
-	return(result);
+  return(result);
 }
 
 

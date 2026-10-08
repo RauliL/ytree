@@ -7,6 +7,6 @@
  ***************************************************************************/
 
 
-#define	VERSION		"2.02"
-#define	PATCHLEVEL	0
-#define VERSIONDATE	"Mar 15 2020"
+#define VERSION   "2.02"
+#define PATCHLEVEL  0
+#define VERSIONDATE "Mar 15 2020"

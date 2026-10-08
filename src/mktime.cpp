@@ -34,9 +34,9 @@ static time_t mkgmtime(struct tm *tm);
 
 time_t Mktime(struct tm *tm)
 {
-  struct tm save_tm;		/* Copy of contents of `*tm'. */
-  struct tm *ltm;		/* Local time. */
-  time_t then;			/* The time to return. */
+  struct tm save_tm;    /* Copy of contents of `*tm'. */
+  struct tm *ltm;   /* Local time. */
+  time_t then;      /* The time to return. */
 
   then = mkgmtime(tm);
   if (then == -1)
@@ -81,12 +81,12 @@ static time_t mkgmtime(struct tm *tm)
 {
   int years, months, days, hours, minutes, seconds;
 
-  years = tm->tm_year + 1900;	/* year - 1900 -> year */
-  months = tm->tm_mon;		/* 0..11 */
-  days = tm->tm_mday - 1;	/* 1..31 -> 0..30 */
-  hours = tm->tm_hour;		/* 0..23 */
-  minutes = tm->tm_min;		/* 0..59 */
-  seconds = tm->tm_sec;		/* 0..61 in ANSI C. */
+  years = tm->tm_year + 1900; /* year - 1900 -> year */
+  months = tm->tm_mon;    /* 0..11 */
+  days = tm->tm_mday - 1; /* 1..31 -> 0..30 */
+  hours = tm->tm_hour;    /* 0..23 */
+  minutes = tm->tm_min;   /* 0..59 */
+  seconds = tm->tm_sec;   /* 0..61 in ANSI C. */
 
   if (years < 1970
       || months < 0 || months > 11
@@ -106,8 +106,8 @@ static time_t mkgmtime(struct tm *tm)
 
   /* Now set `days' to the number of days since Jan 1, 1970. */
   days += 365 * (years - 1970) + nleap(years);
-  tm->tm_wday = (days + 4) % 7;	/* Jan 1, 1970 was Thursday. */
+  tm->tm_wday = (days + 4) % 7; /* Jan 1, 1970 was Thursday. */
   tm->tm_isdst = 0;
-  
+
   return 86400 * days + 3600 * hours + 60 * minutes + seconds;
 }

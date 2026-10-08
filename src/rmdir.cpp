@@ -42,7 +42,7 @@ int DeleteDirectory(DirEntry *dir_entry)
         }
       }
       if( DeleteSingleDirectory(dir_entry) ) {
-	ESCAPE;
+  ESCAPE;
       }
       result = 0;
       ESCAPE;

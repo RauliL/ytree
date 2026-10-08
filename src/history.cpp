@@ -196,13 +196,13 @@ int DisplayHistory()
     if (disp_begin_pos + i >= total_hist() ) break;
     if (disp_begin_pos + i != hilight_no )
         PrintHstEntry(disp_begin_pos + i, i, HST_COLOR,
-	              0, &hide_left, &hide_right);
+                0, &hide_left, &hide_right);
     else
       p_y = i;
   }
   if(p_y >= 0) {
     PrintHstEntry(disp_begin_pos + p_y, p_y, HIHST_COLOR,
-	          0, &hide_left, &hide_right);
+            0, &hide_left, &hide_right);
   }
   return 0;
 }
@@ -231,9 +231,9 @@ const char* GetHistory()
     if(ch != -1 && ch != KEY_RIGHT && ch != KEY_LEFT) {
       if(start_x) {
         start_x = 0;
-	PrintHstEntry(disp_begin_pos + cursor_pos,
-		       cursor_pos, HIHST_COLOR,
-		       start_x, &hide_left, &hide_right);
+  PrintHstEntry(disp_begin_pos + cursor_pos,
+           cursor_pos, HIHST_COLOR,
+           start_x, &hide_left, &hide_right);
       }
     }
 
@@ -245,151 +245,151 @@ const char* GetHistory()
       case ' ':      break;  /* Quick-Key */
 
       case KEY_RIGHT: start_x++;
-		      PrintHstEntry(disp_begin_pos + cursor_pos,
-			             cursor_pos, HIHST_COLOR,
-		                     start_x, &hide_left, &hide_right);
-		      if(hide_right < 0)
-		        start_x--;
-		      break;
+          PrintHstEntry(disp_begin_pos + cursor_pos,
+                   cursor_pos, HIHST_COLOR,
+                         start_x, &hide_left, &hide_right);
+          if(hide_right < 0)
+            start_x--;
+          break;
 
       case KEY_LEFT:  if(start_x > 0)
-       		        start_x--;
-		      PrintHstEntry(disp_begin_pos + cursor_pos,
-			             cursor_pos, HIHST_COLOR,
-		                     start_x, &hide_left, &hide_right);
-		      break;
+                  start_x--;
+          PrintHstEntry(disp_begin_pos + cursor_pos,
+                   cursor_pos, HIHST_COLOR,
+                         start_x, &hide_left, &hide_right);
+          break;
 
       case '\t':
       case KEY_DOWN: if (disp_begin_pos + cursor_pos+1 >= total_hist())
-      		     {
-		       beep();
-		     }
-		     else
-		     { if( cursor_pos + 1 < HISTORY_WINDOW_HEIGHT )
-		       {
-			 PrintHstEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, HST_COLOR,
-		                        start_x, &hide_left, &hide_right);
-			 cursor_pos++;
-			 PrintHstEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, HIHST_COLOR,
-		                        start_x, &hide_left, &hide_right);
+               {
+           beep();
+         }
+         else
+         { if( cursor_pos + 1 < HISTORY_WINDOW_HEIGHT )
+           {
+       PrintHstEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, HST_COLOR,
+                            start_x, &hide_left, &hide_right);
+       cursor_pos++;
+       PrintHstEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, HIHST_COLOR,
+                            start_x, &hide_left, &hide_right);
                        }
-		       else
-		       {
-			 PrintHstEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, HST_COLOR,
-		                        start_x, &hide_left, &hide_right);
-			 scroll(history_window);
-			 disp_begin_pos++;
-			 PrintHstEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, HIHST_COLOR,
-		                        start_x, &hide_left, &hide_right);
+           else
+           {
+       PrintHstEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, HST_COLOR,
+                            start_x, &hide_left, &hide_right);
+       scroll(history_window);
+       disp_begin_pos++;
+       PrintHstEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, HIHST_COLOR,
+                            start_x, &hide_left, &hide_right);
                        }
-		     }
+         }
                      break;
       case KEY_BTAB:
       case KEY_UP  : if( disp_begin_pos + cursor_pos - 1 < 0 )
-		     {   beep(); }
-		     else
-		     {
-		       if( cursor_pos - 1 >= 0 )
-		       {
-			 PrintHstEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, HST_COLOR,
-		                        start_x, &hide_left, &hide_right);
-			 cursor_pos--;
-			 PrintHstEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, HIHST_COLOR,
-		                        start_x, &hide_left, &hide_right);
+         {   beep(); }
+         else
+         {
+           if( cursor_pos - 1 >= 0 )
+           {
+       PrintHstEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, HST_COLOR,
+                            start_x, &hide_left, &hide_right);
+       cursor_pos--;
+       PrintHstEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, HIHST_COLOR,
+                            start_x, &hide_left, &hide_right);
                        }
-		       else
-		       {
-			 PrintHstEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, HST_COLOR,
-		                        start_x, &hide_left, &hide_right);
-			 wmove(history_window, 0, 0);
-			 winsertln(history_window);
-			 disp_begin_pos--;
-			 PrintHstEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, HIHST_COLOR,
-		                        start_x, &hide_left, &hide_right);
+           else
+           {
+       PrintHstEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, HST_COLOR,
+                            start_x, &hide_left, &hide_right);
+       wmove(history_window, 0, 0);
+       winsertln(history_window);
+       disp_begin_pos--;
+       PrintHstEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, HIHST_COLOR,
+                            start_x, &hide_left, &hide_right);
                        }
-		     }
+         }
                      break;
       case KEY_NPAGE:
-      		     if( disp_begin_pos + cursor_pos >= total_hist() - 1 )
-		     {  beep();  }
-		     else
-		     {
-		       if( cursor_pos < HISTORY_WINDOW_HEIGHT - 1 )
-		       {
-			 PrintHstEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, HST_COLOR,
-		                        start_x, &hide_left, &hide_right);
-		         if( disp_begin_pos + HISTORY_WINDOW_HEIGHT > total_hist()  - 1 )
-			   cursor_pos = total_hist() - disp_begin_pos - 1;
-			 else
-			   cursor_pos = HISTORY_WINDOW_HEIGHT - 1;
-			 PrintHstEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, HIHST_COLOR,
-		                        start_x, &hide_left, &hide_right);
-		       }
-		       else
-		       {
-			 if( disp_begin_pos + cursor_pos + HISTORY_WINDOW_HEIGHT < total_hist() )
-			 {
-			   disp_begin_pos += HISTORY_WINDOW_HEIGHT;
-			   cursor_pos = HISTORY_WINDOW_HEIGHT - 1;
-			 }
-			 else
-			 {
-			   disp_begin_pos = total_hist() - HISTORY_WINDOW_HEIGHT;
-			   if( disp_begin_pos < 0 ) disp_begin_pos = 0;
-			   cursor_pos = total_hist() - disp_begin_pos - 1;
-			 }
+               if( disp_begin_pos + cursor_pos >= total_hist() - 1 )
+         {  beep();  }
+         else
+         {
+           if( cursor_pos < HISTORY_WINDOW_HEIGHT - 1 )
+           {
+       PrintHstEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, HST_COLOR,
+                            start_x, &hide_left, &hide_right);
+             if( disp_begin_pos + HISTORY_WINDOW_HEIGHT > total_hist()  - 1 )
+         cursor_pos = total_hist() - disp_begin_pos - 1;
+       else
+         cursor_pos = HISTORY_WINDOW_HEIGHT - 1;
+       PrintHstEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, HIHST_COLOR,
+                            start_x, &hide_left, &hide_right);
+           }
+           else
+           {
+       if( disp_begin_pos + cursor_pos + HISTORY_WINDOW_HEIGHT < total_hist() )
+       {
+         disp_begin_pos += HISTORY_WINDOW_HEIGHT;
+         cursor_pos = HISTORY_WINDOW_HEIGHT - 1;
+       }
+       else
+       {
+         disp_begin_pos = total_hist() - HISTORY_WINDOW_HEIGHT;
+         if( disp_begin_pos < 0 ) disp_begin_pos = 0;
+         cursor_pos = total_hist() - disp_begin_pos - 1;
+       }
                          DisplayHistory();
-		       }
-		     }
+           }
+         }
                      break;
       case KEY_PPAGE:
-		     if( disp_begin_pos + cursor_pos <= 0 )
-		     {  beep();  }
-		     else
-		     {
-		       if( cursor_pos > 0 )
-		       {
-			 PrintHstEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, HST_COLOR,
-		                        start_x, &hide_left, &hide_right);
-			 cursor_pos = 0;
-			 PrintHstEntry(disp_begin_pos + cursor_pos,
-					cursor_pos, HIHST_COLOR,
-		                        start_x, &hide_left, &hide_right);
-		       }
-		       else
-		       {
-			 if( (disp_begin_pos -= HISTORY_WINDOW_HEIGHT) < 0 )
-			 {
-			   disp_begin_pos = 0;
-			 }
+         if( disp_begin_pos + cursor_pos <= 0 )
+         {  beep();  }
+         else
+         {
+           if( cursor_pos > 0 )
+           {
+       PrintHstEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, HST_COLOR,
+                            start_x, &hide_left, &hide_right);
+       cursor_pos = 0;
+       PrintHstEntry(disp_begin_pos + cursor_pos,
+          cursor_pos, HIHST_COLOR,
+                            start_x, &hide_left, &hide_right);
+           }
+           else
+           {
+       if( (disp_begin_pos -= HISTORY_WINDOW_HEIGHT) < 0 )
+       {
+         disp_begin_pos = 0;
+       }
                          cursor_pos = 0;
                          DisplayHistory();
-		       }
-		     }
+           }
+         }
                      break;
       case KEY_HOME: if( disp_begin_pos == 0 && cursor_pos == 0 )
-		     {   beep();    }
-		     else
-		     {
-		       disp_begin_pos = 0;
-		       cursor_pos     = 0;
+         {   beep();    }
+         else
+         {
+           disp_begin_pos = 0;
+           cursor_pos     = 0;
                        DisplayHistory();
-		     }
+         }
                      break;
       case KEY_END :
                      disp_begin_pos = std::max(0, total_hist() - HISTORY_WINDOW_HEIGHT);
-		     cursor_pos     = total_hist() - disp_begin_pos - 1;
+         cursor_pos     = total_hist() - disp_begin_pos - 1;
                      DisplayHistory();
                      break;
       case LF :
@@ -401,13 +401,13 @@ const char* GetHistory()
                        else
                          RetVal = nullptr;
                      }
-		     break;
+         break;
 
       case ESC:      RetVal = nullptr;
                      break;
 
       default :      beep();
-		     break;
+         break;
     } /* switch */
   } while(ch != CR && ch != ESC && ch != -1);
   /* leaveok(stdscr, false); */

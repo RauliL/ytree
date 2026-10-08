@@ -40,7 +40,7 @@ static const char *logo[] = {
                         "   #####    ## #   ##     ##      ##      ",
                         "     ##     ###  ####     ####    ####    ",
                         "#####                                     "
-		      };
+          };
 
 static const char *extended_line = "| |                       |";
 
@@ -94,7 +94,7 @@ static std::string dir_help[MAX_MODES][2] =
       "COMMANDS                                                                    "
     },
     { /* Mode::USER_MODE */
-      dir_help_disk_mode_0,	/* Default unless changed by user prefs */
+      dir_help_disk_mode_0, /* Default unless changed by user prefs */
       dir_help_disk_mode_1
     }
   };
@@ -145,7 +145,7 @@ static std::string file_help[MAX_MODES][2] =
       "COMMANDS  (^F)ilemode                                                        "
     },
     { /* Mode::USER_MODE */
-      file_help_disk_mode_0,	/* Default unless changed by user prefs */
+      file_help_disk_mode_0,  /* Default unless changed by user prefs */
       file_help_disk_mode_1
     }
   };
@@ -158,10 +158,10 @@ static void DisplayVersion()
   std::snprintf(
     version,
     sizeof(version),
-		"ytree Version %sPL%d %s (Werner Bregulla)",
-		VERSION,
-		PATCHLEVEL,
-		VERSIONDATE
+    "ytree Version %sPL%d %s (Werner Bregulla)",
+    VERSION,
+    PATCHLEVEL,
+    VERSIONDATE
 );
   MvAddStr(
     LINES - 2,
@@ -266,9 +266,9 @@ void DisplayMenu()
   for( y=0; y < l; y++ )
   {
     MvWAddStr(dir_window,
-	       y + ((DIR_WINDOW_HEIGHT - l) >> 1),
-	       (DIR_WINDOW_WIDTH - c) >> 1,
-	       logo[y]
+         y + ((DIR_WINDOW_HEIGHT - l) >> 1),
+         (DIR_WINDOW_WIDTH - c) >> 1,
+         logo[y]
 );
   }
   DisplayVersion();
@@ -300,12 +300,12 @@ void SwitchToBigFileWindow()
 
 #else
   mvwaddch(stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT,
-	   DIR_WINDOW_X - 1,
-	   ACS_VLINE
+     DIR_WINDOW_X - 1,
+     ACS_VLINE
 );
   mvwaddch(stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT,
-	   DIR_WINDOW_X + DIR_WINDOW_WIDTH,
-	   ACS_VLINE
+     DIR_WINDOW_X + DIR_WINDOW_WIDTH,
+     ACS_VLINE
 );
 #endif /* COLOR_SUPPORT */
   file_window = big_file_window;
@@ -339,13 +339,13 @@ void UnmapF2Window()
 
 #else
     mvwaddch(stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT,
-	     DIR_WINDOW_X - 1,
-	     ACS_VLINE
+       DIR_WINDOW_X - 1,
+       ACS_VLINE
 );
 
     mvwaddch(stdscr, DIR_WINDOW_Y + DIR_WINDOW_HEIGHT,
-	     DIR_WINDOW_X + DIR_WINDOW_WIDTH,
-	     ACS_VLINE
+       DIR_WINDOW_X + DIR_WINDOW_WIDTH,
+       ACS_VLINE
 );
 #endif /* COLOR_SUPPORT */
   }
@@ -393,6 +393,6 @@ static void PrintLine(WINDOW *win, int y, int x, const char *line, int len)
 
 void RefreshWindow(WINDOW *win)
 {
-	wnoutrefresh(win);
+  wnoutrefresh(win);
 }
 

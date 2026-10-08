@@ -22,7 +22,7 @@ int CopyFile(Statistic *statistic_ptr,
   struct stat stat_struct;
   int         term;
   int         result;
-  int	      refresh_dirwindow = false;
+  int       refresh_dirwindow = false;
 
 
   result = -1;
@@ -135,11 +135,11 @@ int CopyFile(Statistic *statistic_ptr,
 
       if( confirm )
       {
-	term = InputChoise("file exist; overwrite (Y/N) ? ", "YN\033");
+  term = InputChoise("file exist; overwrite (Y/N) ? ", "YN\033");
 
         if( term != 'Y' )
         {
-	  result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
+    result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
           ESCAPE;
         }
       }
@@ -204,7 +204,7 @@ int CopyFile(Statistic *statistic_ptr,
 
   if( refresh_dirwindow)
   {
-  	RefreshDirWindow();
+    RefreshDirWindow();
   }
 
 FNC_XIT:
@@ -302,8 +302,8 @@ int CopyTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
   walking_package->new_fe_ptr = fe_ptr;  /* unchanged */
 
   if( BuildFilename(fe_ptr->name,
-		     walking_package->function_data.copy.to_file,
-		     new_name
+         walking_package->function_data.copy.to_file,
+         new_name
 ) == 0 )
   {
     if( *new_name == '\0' )
@@ -312,12 +312,12 @@ int CopyTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
     }
 
     result = CopyFile(walking_package->function_data.copy.statistic_ptr,
-		       fe_ptr,
-		       walking_package->function_data.copy.confirm,
-		       new_name,
-		       walking_package->function_data.copy.dest_dir_entry,
-		       walking_package->function_data.copy.to_path,
-		       walking_package->function_data.copy.path_copy
+           fe_ptr,
+           walking_package->function_data.copy.confirm,
+           new_name,
+           walking_package->function_data.copy.dest_dir_entry,
+           walking_package->function_data.copy.to_path,
+           walking_package->function_data.copy.path_copy
 );
   }
 

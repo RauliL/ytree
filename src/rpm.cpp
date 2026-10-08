@@ -43,9 +43,9 @@ int ReadTreeFromRPM(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
     {
       if (
         (path_name[std::strlen(path_name) - 1] == std::filesystem::path::preferred_separator) ||
-	      !std::strcmp(path_name, ".") ||
+        !std::strcmp(path_name, ".") ||
         S_ISDIR(stat.st_mode)
-	    )
+      )
       {
         /* Directory */
         /*-----------*/
@@ -54,15 +54,15 @@ int ReadTreeFromRPM(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
   std::fprintf(stderr, "DIR: %s\n", path_name);
 #endif
 
-	if( std::strcmp(path_name, "./") )
-	{
-	  /* "./" wird ignoriert */
-	  /*---------------------*/
+  if( std::strcmp(path_name, "./") )
+  {
+    /* "./" wird ignoriert */
+    /*---------------------*/
 
           TryInsertArchiveDirEntry(dir_entry, path_name, &stat);
-	  DisplayDiskStatistic();
-	  doupdate();
-	}
+    DisplayDiskStatistic();
+    doupdate();
+  }
       }
       else
       {
