@@ -114,10 +114,10 @@
 #define VI_KEY_NPAGE ( 'D' & 0x1F )
 #define VI_KEY_PPAGE ( 'U' & 0x1F )
 
-static constexpr std::size_t OWNER_NAME_MAX = 64;
-static constexpr std::size_t GROUP_NAME_MAX = 64;
-static constexpr std::size_t DISPLAY_OWNER_NAME_MAX = 12;
-static constexpr std::size_t DISPLAY_GROUP_NAME_MAX = 12;
+inline constexpr std::size_t OWNER_NAME_MAX = 64;
+inline constexpr std::size_t GROUP_NAME_MAX = 64;
+inline constexpr std::size_t DISPLAY_OWNER_NAME_MAX = 12;
+inline constexpr std::size_t DISPLAY_GROUP_NAME_MAX = 12;
 
 /* Sonderzeichen fuer Liniengrafik */
 /*---------------------------------*/
@@ -188,14 +188,14 @@ static constexpr std::size_t DISPLAY_GROUP_NAME_MAX = 12;
 /* Auswahl der benutzten UNIX-Kommandos */
 /*--------------------------------------*/
 
-#define DEFAULT_TREE       "."
+inline constexpr const char* DEFAULT_TREE = ".";
 
 #define Error(msg) ErrorEx(msg, __FILE__, __LINE__)
 #define FormatError(...) ErrorEx(std::format(__VA_ARGS__), __FILE__, __LINE__)
 #define FormatWarning(...) Warning(std::format(__VA_ARGS__))
 #define FormatMessage(...) Message(std::format(__VA_ARGS__))
 
-#define TAGGED_SYMBOL '*'
+inline constexpr char TAGGED_SYMBOL = '*';
 
 enum class Mode : int
 {
@@ -260,31 +260,30 @@ struct SortSpec
   SortOrder order = SortOrder::Ascending;
 };
 
-#define DEFAULT_FILE_SPEC "*"
+inline constexpr const char* DEFAULT_FILE_SPEC = "*";
 
-#define TAGSYMBOL_VIEWNAME  "tag"
-#define FILENAME_VIEWNAME "fnm"
-#define ATTRIBUTE_VIEWNAME  "atr"
-#define LINKCOUNT_VIEWNAME  "lct"
-#define FILESIZE_VIEWNAME "fsz"
-#define MODTIME_VIEWNAME  "mot"
-#define SYMLINK_VIEWNAME  "lnm"
-#define UID_VIEWNAME    "uid"
-#define GID_VIEWNAME    "gid"
-#define INODE_VIEWNAME    "ino"
-#define ACCTIME_VIEWNAME  "act"
-#define CHGTIME_VIEWNAME  "sct"
+inline constexpr const char* TAGSYMBOL_VIEWNAME = "tag";
+inline constexpr const char* FILENAME_VIEWNAME = "fnm";
+inline constexpr const char* ATTRIBUTE_VIEWNAME = "atr";
+inline constexpr const char* LINKCOUNT_VIEWNAME = "lct";
+inline constexpr const char* FILESIZE_VIEWNAME = "fsz";
+inline constexpr const char* MODTIME_VIEWNAME = "mot";
+inline constexpr const char* SYMLINK_VIEWNAME = "lnm";
+inline constexpr const char* UID_VIEWNAME = "uid";
+inline constexpr const char* GID_VIEWNAME = "gid";
+inline constexpr const char* INODE_VIEWNAME = "ino";
+inline constexpr const char* ACCTIME_VIEWNAME = "act";
+inline constexpr const char* CHGTIME_VIEWNAME = "sct";
 
-static constexpr std::time_t CLOCK_INTERVAL = 1;
+inline constexpr std::time_t CLOCK_INTERVAL = 1;
 
-#define ERR_TO_NULL           " 2> /dev/null"
-#define ERR_TO_STDOUT         " 2>&1 "
+inline constexpr const char* ERR_TO_NULL = " 2> /dev/null";
+inline constexpr const char* ERR_TO_STDOUT = " 2>&1 ";
 
-#define LF         10
-#define ESC        27
-#define LOGIN_ESC  '.'
-
-#define CR                     13
+inline constexpr int CR = 13;
+inline constexpr int LF = 10;
+inline constexpr int ESC = 27;
+inline constexpr char LOGIN_ESC = '.';
 
 #define DIR_WINDOW_X         1
 #define DIR_WINDOW_Y         2
@@ -326,18 +325,18 @@ static constexpr std::time_t CLOCK_INTERVAL = 1;
 #define TIME_WINDOW_WIDTH    ((COLS > 15) ? 15 : COLS)
 #define TIME_WINDOW_HEIGHT   1
 
-static constexpr std::size_t PATH_LENGTH = 1024;
-static constexpr std::size_t FILE_SPEC_LENGTH = 12 + 1;
-static constexpr std::size_t DISK_NAME_LENGTH = 12 + 1;
-static constexpr std::size_t LL_LINE_LENGTH = 512;
-static constexpr std::size_t TAR_LINE_LENGTH = 512;
-static constexpr std::size_t RPM_LINE_LENGTH = 512;
-static constexpr std::size_t ZOO_LINE_LENGTH = 512;
-static constexpr std::size_t ZIP_LINE_LENGTH = 512;
-static constexpr std::size_t LHA_LINE_LENGTH = 512;
-static constexpr std::size_t ARC_LINE_LENGTH = 512;
-static constexpr std::size_t RAR_LINE_LENGTH = 512;
-static constexpr std::size_t COMMAND_LINE_LENGTH = 4096;
+inline constexpr std::size_t PATH_LENGTH = 1024;
+inline constexpr std::size_t FILE_SPEC_LENGTH = 12 + 1;
+inline constexpr std::size_t DISK_NAME_LENGTH = 12 + 1;
+inline constexpr std::size_t LL_LINE_LENGTH = 512;
+inline constexpr std::size_t TAR_LINE_LENGTH = 512;
+inline constexpr std::size_t RPM_LINE_LENGTH = 512;
+inline constexpr std::size_t ZOO_LINE_LENGTH = 512;
+inline constexpr std::size_t ZIP_LINE_LENGTH = 512;
+inline constexpr std::size_t LHA_LINE_LENGTH = 512;
+inline constexpr std::size_t ARC_LINE_LENGTH = 512;
+inline constexpr std::size_t RAR_LINE_LENGTH = 512;
+inline constexpr std::size_t COMMAND_LINE_LENGTH = 4096;
 
 enum class ViewMode : int
 {
@@ -348,7 +347,7 @@ enum class ViewMode : int
   MODE_5 = 4,
 };
 
-static constexpr int QUICK_BAUD_RATE = 9600;
+inline constexpr int QUICK_BAUD_RATE = 9600;
 
 #define ESCAPE               goto FNC_XIT
 
