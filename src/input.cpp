@@ -168,6 +168,109 @@ void TruncateVisual(char* str, std::size_t max_len)
   std::memcpy(str, truncated.c_str(), truncated.size() + 1);
 }
 
+static bool IsInputWordBreak(char c)
+{
+  return std::isspace(static_cast<unsigned char>(c)) != 0;
+}
+
+static std::size_t UnixWordRuboutStart(const std::string& buffer, std::size_t pos)
+{
+  if (pos == 0)
+  {
+    return 0;
+  }
+
+  while (pos > 0)
+  {
+    const auto* const p = StrVisualIndex(buffer.c_str(), pos - 1);
+    if (!IsInputWordBreak(*p))
+    {
+      break;
+    }
+    --pos;
+  }
+
+  while (pos > 0)
+  {
+    const auto* const p = StrVisualIndex(buffer.c_str(), pos - 1);
+    if (IsInputWordBreak(*p))
+    {
+      break;
+    }
+    --pos;
+  }
+
+  return pos;
+}
+
+static std::size_t InputForwardWordEnd(const std::string& buffer, std::size_t pos)
+{
+  const auto vis_len = static_cast<std::size_t>(StrVisualLength(buffer));
+
+  while (pos < vis_len)
+  {
+    const auto* const p = StrVisualIndex(buffer.c_str(), pos);
+    if (!IsInputWordBreak(*p))
+    {
+      break;
+    }
+    ++pos;
+  }
+
+  while (pos < vis_len)
+  {
+    const auto* const p = StrVisualIndex(buffer.c_str(), pos);
+    if (IsInputWordBreak(*p))
+    {
+      break;
+    }
+    ++pos;
+  }
+
+  return pos;
+}
+
+static bool InputApplyWordMotion(
+  int key,
+  const std::string& buffer,
+  std::size_t& pos
+)
+{
+  const auto ch = static_cast<unsigned char>(key);
+  const auto letter = static_cast<char>(ch & 0x7f);
+
+  if ((ch & 0x80) == 0)
+  {
+    return false;
+  }
+
+  if (letter == 'f' || letter == 'F')
+  {
+    const auto new_pos = InputForwardWordEnd(buffer, pos);
+    if (new_pos == pos)
+    {
+      beep();
+    } else {
+      pos = new_pos;
+    }
+    return true;
+  }
+
+  if (letter == 'b' || letter == 'B')
+  {
+    const auto new_pos = UnixWordRuboutStart(buffer, pos);
+    if (new_pos == pos)
+    {
+      beep();
+    } else {
+      pos = new_pos;
+    }
+    return true;
+  }
+
+  return false;
+}
+
 static inline void RefreshInputString(
   const std::string& buffer,
   const int y,
@@ -257,6 +360,17 @@ int InputString(
         }
         break;
 
+#if defined(KEY_SLEFT)
+      case KEY_SLEFT:
+        if (const auto new_pos = UnixWordRuboutStart(buffer, pos); new_pos == pos)
+        {
+          beep();
+        } else {
+          pos = new_pos;
+        }
+        break;
+#endif
+
       case KEY_RIGHT:
         if (pos < static_cast<std::size_t>(StrVisualLength(buffer)))
         {
@@ -265,6 +379,51 @@ int InputString(
           break;
         }
         break;
+
+#if defined(KEY_SRIGHT)
+      case KEY_SRIGHT:
+        if (const auto new_pos = InputForwardWordEnd(buffer, pos); new_pos == pos)
+        {
+          beep();
+        } else {
+          pos = new_pos;
+        }
+        break;
+#endif
+
+      case ESC:
+      {
+        nodelay(stdscr, FALSE);
+        const int next = wgetch(stdscr);
+        nodelay(stdscr, TRUE);
+        if (next == ERR)
+        {
+          c = ESC;
+          break;
+        }
+        if (next == 'f' || next == 'F')
+        {
+          if (const auto new_pos = InputForwardWordEnd(buffer, pos); new_pos == pos)
+          {
+            beep();
+          } else {
+            pos = new_pos;
+          }
+          c = 0;
+        } else if (next == 'b' || next == 'B')
+        {
+          if (const auto new_pos = UnixWordRuboutStart(buffer, pos); new_pos == pos)
+          {
+            beep();
+          } else {
+            pos = new_pos;
+          }
+          c = 0;
+        } else {
+          c = ESC;
+        }
+        break;
+      }
 
       case KEY_BACKSPACE:
       case 'H' & 0x1f:
@@ -280,6 +439,41 @@ int InputString(
           --pos;
         } else {
           beep();
+        }
+        break;
+
+      case 'U' & 0x1f:
+        if (pos == 0)
+        {
+          beep();
+        } else {
+          const auto ptr = buffer.c_str();
+          const auto rs = StrRight(
+            ptr,
+            StrVisualLength(ptr) - static_cast<int>(pos)
+          );
+
+          buffer = rs;
+          pos = 0;
+        }
+        break;
+
+      case 'W' & 0x1f:
+        if (pos == 0)
+        {
+          beep();
+        } else {
+          const auto new_pos = UnixWordRuboutStart(buffer, pos);
+          const auto ptr = buffer.c_str();
+          const auto ls = StrLeft(ptr, new_pos);
+          const auto rs = StrRight(
+            ptr,
+            StrVisualLength(ptr) - static_cast<int>(pos)
+          );
+
+          buffer = ls;
+          buffer.append(rs);
+          pos = new_pos;
         }
         break;
 
@@ -401,7 +595,10 @@ int InputString(
 #endif
 
       default:
-        if (c >= ' ' && c < 0xff && c != 127)
+        if (InputApplyWordMotion(c, buffer, pos))
+        {
+          c = 0;
+        } else if (c >= ' ' && c < 0xff && c != 127)
         {
           if (max_length_reached)
           {
