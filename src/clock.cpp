@@ -1,5 +1,7 @@
 #include "ytree.h"
 
+#include <chrono>
+
 void InitClock()
 {
 #if defined(CLOCK_SUPPORT)
@@ -31,21 +33,11 @@ void ClockHandler(int sig)
 #if defined(CLOCK_SUPPORT)
   if (COLS > 15 && print_time)
   {
-    std::time_t hora;
-    struct tm* hora_tm;
-    char strtm[23];
+    const auto local_now = std::chrono::zoned_time{
+      std::chrono::current_zone(),
+      std::chrono::system_clock::now()
+    };
 
-    std::time(&hora);
-    hora_tm = std::localtime(&hora);
-
-    std::snprintf(
-      strtm,
-      sizeof(strtm),
-      "[time %.2d:%.2d:%.2d]",
-      hora_tm->tm_hour,
-      hora_tm->tm_min,
-      hora_tm->tm_sec
-);
 # if defined(COLOR_SUPPORT)
     mvwaddch(time_window, 0, 0, ACS_RTEE | COLOR_PAIR(MENU_COLOR) | A_BOLD);
     mvwaddch(time_window, 0, 14, ACS_LTEE | COLOR_PAIR(MENU_COLOR) | A_BOLD);
@@ -53,7 +45,14 @@ void ClockHandler(int sig)
     mvwaddch(time_window, 0, 0, ACS_RTEE);
     mvwaddch(time_window, 0, 14, ACS_LTEE);
 # endif
-    PrintMenuOptions(time_window, 0, 1, strtm, MENU_COLOR, HIMENUS_COLOR);
+    PrintMenuOptions(
+      time_window,
+      0,
+      1,
+      std::format("[time {:%H:%M:%S}]", local_now),
+      MENU_COLOR,
+      HIMENUS_COLOR
+    );
   }
   std::signal(SIGALRM, ClockHandler);
 #endif
