@@ -456,73 +456,104 @@ void PrintOptions(WINDOW *win, int y, int x, const std::string& str)
 }
 
 
-void PrintMenuOptions(WINDOW *win,int y, int x, char *str, int ncolor, int hcolor)
+void PrintMenuOptions(
+  WINDOW* win,
+  int y,
+  int x,
+  const std::string& str,
+  int ncolor,
+  int hcolor
+)
 {
-  int ch;
-  int color, hi_color, lo_color;
+  int color;
+  int hi_color;
+  int lo_color;
   std::string sbuf;
 
-  if(x < 0 || y < 0) {
+  if (x < 0 || y < 0)
+  {
      /* screen too small */
     return;
   }
 
 #ifdef COLOR_SUPPORT
-     lo_color = MENU_COLOR;
-     hi_color = HIMENUS_COLOR;
+  lo_color = MENU_COLOR;
+  hi_color = HIMENUS_COLOR;
 #else
-     lo_color = A_NORMAL;
-     hi_color = A_REVERSE;
+  lo_color = A_NORMAL;
+  hi_color = A_REVERSE;
 #endif
 
   color = lo_color;
   wmove(win, y, x);
 
-  for( ; *str; str++ )
+  for (const auto& c : str)
   {
-    ch = (int) *str;
+    auto ch = static_cast<int>(c);
 
-    switch( ch ) {
-        case '(': color = hi_color;
+    switch (ch)
+    {
+      case '(':
+        color = hi_color;
+        WAttrAddStr(
+          win,
 #ifdef COLOR_SUPPORT
-                  WAttrAddStr(win, COLOR_PAIR(color) | A_BOLD, sbuf);
+          COLOR_PAIR(color) | A_BOLD,
 #else
-                  WAttrAddStr(win, color, sbuf);
+          color,
 #endif
-      sbuf.clear();
-            continue;
+          sbuf
+        );
+        sbuf.clear();
+        continue;
 
-  case ')': color = lo_color;
+      case ')':
+        color = lo_color;
+        WAttrAddStr(
+          win,
 #ifdef COLOR_SUPPORT
-                  WAttrAddStr(win, COLOR_PAIR(color) | A_BOLD, sbuf);
+          COLOR_PAIR(color) | A_BOLD,
 #else
-                  WAttrAddStr(win, color, sbuf);
+          color,
 #endif
-      sbuf.clear();
-            continue;
+          sbuf
+        );
+        sbuf.clear();
+        continue;
 
 #ifdef COLOR_SUPPORT
-  case ']': color = lo_color;
-                  WAttrAddStr(win, COLOR_PAIR(color) | A_BOLD, sbuf);
-      sbuf.clear();
-            continue;
-  case '[': color = hi_color;
-                  WAttrAddStr(win, COLOR_PAIR(color) | A_BOLD, sbuf);
-      sbuf.clear();
-            continue;
+      case ']':
+        color = lo_color;
+        WAttrAddStr(win, COLOR_PAIR(color) | A_BOLD, sbuf);
+        sbuf.clear();
+        continue;
+
+      case '[':
+        color = hi_color;
+        WAttrAddStr(win, COLOR_PAIR(color) | A_BOLD, sbuf);
+        sbuf.clear();
+        continue;
 #else
-  case ']':
-  case '[': /* ignore */ continue;
+      case ']':
+      case '[':
+        /* ignore */
+        continue;
 #endif
-        default : sbuf += static_cast<char>(PRINT(*str));
+
+      default:
+        sbuf += static_cast<char>(PRINT(c));
     }
   }
 
+  WAttrAddStr(
+    win,
 #ifdef COLOR_SUPPORT
-  WAttrAddStr(win, COLOR_PAIR(color) | A_BOLD, sbuf);
+    COLOR_PAIR(color) | A_BOLD,
 #else
-  WAttrAddStr(win, color, sbuf);
+    color,
 #endif
+    sbuf
+  );
 }
 
 

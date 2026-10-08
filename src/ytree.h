@@ -655,7 +655,14 @@ extern int  GetNewLoginPath(char *path);
 void PrintSpecialString(WINDOW* win, int y, int x, const std::string& str, int color);
 void Print(WINDOW* win, int y, int x, const std::string& str, int color);
 extern void PrintOptions(WINDOW *,int, int, const std::string&);
-extern void PrintMenuOptions(WINDOW *,int, int, char *, int, int);
+void PrintMenuOptions(
+  WINDOW* win,
+  int x,
+  int y,
+  const std::string& str,
+  int ncolor,
+  int hcolor
+);
 extern char *FormFilename(char *dest, char *src, unsigned int max_len);
 extern char *CutFilename(char *dest, const std::string& src, unsigned int max_len);
 std::string CutPathname(const std::string& src, std::size_t max_len);
