@@ -2,21 +2,16 @@
 
 int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
 {
-  static char command_line[COMMAND_LINE_LENGTH + 1];
+  std::string command_line;
   int result = -1;
 
   if (file_entry && (file_entry->stat_struct.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
   {
-    *std::format_to_n(
-      command_line,
-      COMMAND_LINE_LENGTH,
-      "{}",
-      ShellQuote(file_entry->name)
-    ).out = '\0';
+    command_line = ShellQuote(file_entry->name);
   }
 
   MvAddStr(LINES - 2, 1, "Command:");
-  if (!GetCommandLine(command_line))
+  if (GetCommandLine(command_line))
   {
     const auto cwd = GetcwdOrDot();
 
@@ -47,58 +42,60 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
   return result;
 }
 
-int GetCommandLine(char* command_line)
+bool GetCommandLine(std::string& command_line)
 {
-  int result = -1;
-  std::string command;
+  bool result = false;
 
   ClearHelp();
 
   MvAddStr(LINES - 2, 1, "Command: ");
-  if (InputString(command, LINES - 2, 10, 0, COLS - 11) == CR)
+  if (InputString(command_line, LINES - 2, 10, 0, COLS - 11) == CR)
   {
-    *std::format_to(command_line, "{}", command) = '\0';
-    move(LINES - 2, 1); clrtoeol();
-    result = 0;
+    move(LINES - 2, 1);
+    clrtoeol();
+    result = true;
   }
 
-  move(LINES - 2, 1); clrtoeol();
+  move(LINES - 2, 1);
+  clrtoeol();
 
   return result;
 }
 
-
-
-int GetSearchCommandLine(char *command_line)
+bool GetSearchCommandLine(std::string& command_line)
 {
-  int  result;
-  int  pos;
-
-  result = -1;
+  auto command = GetProfileValueOrEmpty("SEARCHCOMMAND");
+  bool result = false;
+  int pos;
 
   ClearHelp();
 
   MvAddStr(LINES - 2, 1, "Search untag command: ");
-  std::string command = GetProfileValueOrEmpty("SEARCHCOMMAND");
-
-  if (const auto placeholder = command.find("{}"); placeholder != std::string::npos)
+  if (
+    const auto placeholder = command.find("{}");
+    placeholder != std::string::npos
+  )
   {
     pos = static_cast<int>(placeholder) - 1;
-    if(pos < 0)
+    if (pos < 0)
+    {
       pos = 0;
+    }
   } else {
     pos = 0;
   }
   if (InputString(command, LINES - 2, 23, pos, COLS - 24) == CR)
   {
-    *std::format_to_n(command_line, COMMAND_LINE_LENGTH, "{}", command).out = '\0';
-    move(LINES - 2, 1); clrtoeol();
-    result = 0;
+    command_line = command;
+    move(LINES - 2, 1);
+    clrtoeol();
+    result = true;
   }
 
-  move(LINES - 2, 1); clrtoeol();
+  move(LINES - 2, 1);
+  clrtoeol();
 
-  return( result );
+  return result;
 }
 
 int ExecuteCommand(FileEntry* fe_ptr, ExecuteWalkContext* ctx)
