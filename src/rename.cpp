@@ -221,16 +221,13 @@ static bool RenameFileEntry(
   return true;
 }
 
-int RenameTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
+int RenameTaggedFiles(FileEntry *fe_ptr, RenameWalkContext *ctx)
 {
   int  result = -1;
   char new_name[PATH_LENGTH+1];
 
 
-  if( BuildFilename(fe_ptr->name,
-                     walking_package->function_data.rename.new_name,
-             new_name
-) == 0 )
+  if( BuildFilename(fe_ptr->name, ctx->new_name, new_name) == 0 )
   {
     if( *new_name == '\0' )
     {
@@ -238,7 +235,7 @@ int RenameTaggedFiles(FileEntry *fe_ptr, WalkingPackage *walking_package)
     }
     else
     {
-      result = RenameFile(fe_ptr, new_name, &walking_package->new_fe_ptr);
+      result = RenameFile(fe_ptr, new_name, &ctx->new_fe_ptr);
     }
   }
   return( result );
