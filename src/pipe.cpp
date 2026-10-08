@@ -67,14 +67,14 @@ int GetPipeCommand(char *pipe_command)
   return( result );
 }
 
-int PipeTaggedFiles(FileEntry* fe_ptr, WalkingPackage* walking_package)
+int PipeTaggedFiles(FileEntry* fe_ptr, PipeWalkContext* ctx)
 {
   const auto from_path = GetRealFileNamePath(fe_ptr);
   int i;
   int n;
   char buffer[2048];
 
-  walking_package->new_fe_ptr = fe_ptr; // Unchanged.
+  ctx->new_fe_ptr = fe_ptr; // Unchanged.
 
   if ((i = open(from_path.c_str(), O_RDONLY)) == -1)
   {
@@ -85,12 +85,7 @@ int PipeTaggedFiles(FileEntry* fe_ptr, WalkingPackage* walking_package)
 
   while ((n = read(i, buffer, sizeof(buffer))) > 0)
   {
-    if (std::fwrite(
-      buffer,
-      n,
-      1,
-      walking_package->function_data.pipe_cmd.pipe_file
-) != 1)
+    if (std::fwrite(buffer, n, 1, ctx->pipe_file) != 1)
     {
       FormatMessage("Write-Error!*{}", std::strerror(errno));
       close(i);
