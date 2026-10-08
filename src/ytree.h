@@ -210,9 +210,10 @@ enum class Mode : int
   RAR_FILE_MODE = 8,
   TAPE_MODE = 9,
   USER_MODE = 10,
+  SEVENZIP_FILE_MODE = 11,
 };
 
-inline constexpr int MAX_MODES = 11;
+inline constexpr int MAX_MODES = 12;
 
 enum class CompressMethod : int
 {
@@ -234,6 +235,7 @@ enum class CompressMethod : int
   TAPE_DIR_GZIP_COMPRESS = 16,
   TAPE_DIR_BZIP_COMPRESS = 17,
   RAR_COMPRESS = 18,
+  SEVENZIP_COMPRESS = 19,
 };
 
 enum class SortKey
@@ -336,6 +338,7 @@ inline constexpr std::size_t ZIP_LINE_LENGTH = 512;
 inline constexpr std::size_t LHA_LINE_LENGTH = 512;
 inline constexpr std::size_t ARC_LINE_LENGTH = 512;
 inline constexpr std::size_t RAR_LINE_LENGTH = 512;
+inline constexpr std::size_t SEVENZIP_LINE_LENGTH = 512;
 inline constexpr std::size_t COMMAND_LINE_LENGTH = 4096;
 
 enum class ViewMode : int
@@ -540,6 +543,7 @@ extern int  ReadTreeFromZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 extern int  ReadTreeFromLHA(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
 extern int  ReadTreeFromARC(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
 extern int  ReadTreeFromRAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
+int ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f);
 bool GetDiskParameter(
   const std::string& path,
   std::string* volume_name,

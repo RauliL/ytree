@@ -54,6 +54,7 @@ int View(DirEntry* dir_entry, const std::filesystem::path& file_path)
 
     case TAPE_MODE:
     case RAR_FILE_MODE:
+    case SEVENZIP_FILE_MODE:
     case RPM_FILE_MODE:
     case TAR_FILE_MODE:
     case ZOO_FILE_MODE:

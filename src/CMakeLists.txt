@@ -101,6 +101,7 @@ ADD_EXECUTABLE(
   rename.cpp
   rmdir.cpp
   rpm.cpp
+  sevenzip.cpp
   sort.cpp
   stat.cpp
   system.cpp

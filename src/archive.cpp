@@ -427,6 +427,18 @@ std::string MakeExtractCommandLine(
         cmd
       );
     }
+    else if (*compress_method == CompressMethod::SEVENZIP_COMPRESS)
+    {
+      /* 7z x -so ARCHIVE FILE ?? */
+      /*--------------------------*/
+      return std::format(
+        "{} '{}' '{}' {}",
+        GetProfileValueOrEmpty("SEVENZIPEXPAND"),
+        path,
+        file,
+        cmd
+      );
+    }
     else if (*compress_method == CompressMethod::FREEZE_COMPRESS)
     {
       /* melt < TAR_FILE | gtar xOf - FILE ?? */

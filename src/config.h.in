@@ -50,6 +50,9 @@
 #define DEFAULT_RARLIST    "unrar l"
 #define DEFAULT_RAREXPAND  "unrar p -c- -INUL"
 
+#define DEFAULT_SEVENZIPLIST   "7z l -slt"
+#define DEFAULT_SEVENZIPEXPAND "7z x -so"
+
 #define DEFAULT_TAPEDEV    "/dev/rmt0"
 
 #define DEFAULT_SEARCHCOMMAND	"grep  {}"

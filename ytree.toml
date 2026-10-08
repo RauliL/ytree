@@ -47,6 +47,8 @@ HEXDUMP = "builtin"
 # ZOOLIST = "zoo vm"
 # RAREXPAND = "unrar p -c- -INUL"
 # RARLIST = "unrar l"
+# SEVENZIPEXPAND = "7z x -so"
+# SEVENZIPLIST = "7z l -slt"
 # RPMEXPAND = "builtin"
 # RPMLIST = "rpm -q --dump -l -p"
 

@@ -96,6 +96,10 @@ static std::string dir_help[MAX_MODES][2] =
     { /* Mode::USER_MODE */
       dir_help_disk_mode_0, /* Default unless changed by user prefs */
       dir_help_disk_mode_1
+    },
+    { /* Mode::SEVENZIP_FILE_MODE */
+      "7ZIP-DIR  (F)ilespec (L)og (S)howall (T)ag (U)ntag e(X)ecute   (^F) dirmode  (Q)uit         ",
+      "COMMANDS                                                                    "
     }
   };
 
@@ -147,6 +151,10 @@ static std::string file_help[MAX_MODES][2] =
     { /* Mode::USER_MODE */
       file_help_disk_mode_0,  /* Default unless changed by user prefs */
       file_help_disk_mode_1
+    },
+    { /* Mode::SEVENZIP_FILE_MODE */
+      "7ZIP-FILE (C)opy (F)ilespec (H)ex (P)ipe (S)ort (T)ag (U)ntag (V)iew pathcop(Y) (Q)uit         ",
+      "COMMANDS  (^F)ilemode                                                        "
     }
   };
 
