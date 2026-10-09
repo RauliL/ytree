@@ -478,7 +478,6 @@ extern bool  print_time;
 extern bool      resize_request;
 extern bool      bypass_small_window;
 extern std::optional<std::string> initial_directory;
-extern char    builtin_hexdump_cmd[];
 
 extern void DisplayMenu();
 extern void DisplayDiskStatistic();
