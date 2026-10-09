@@ -1,19 +1,6 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/chown.c,v 1.13 2005/01/22 16:32:29 werner Exp $
- *
- * Change Owner
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
-
-
+#include "./walker.hpp"
 
 static int SetDirOwner(DirEntry *de_ptr, int new_owner_id);
-
-
 
 int ChangeFileOwner(FileEntry *fe_ptr)
 {

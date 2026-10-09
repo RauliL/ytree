@@ -1,19 +1,6 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/chgrp.c,v 1.13 2005/01/22 16:32:29 werner Exp $
- *
- * Change Group
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
-
-
+#include "./walker.hpp"
 
 static int SetDirGroup(DirEntry *de_ptr, int new_group_id);
-
-
 
 int ChangeFileGroup(FileEntry *fe_ptr)
 {

@@ -454,60 +454,6 @@ struct Statistic
   std::string   disk_name;
 };
 
-struct WalkContextBase
-{
-  FileEntry *new_fe_ptr = nullptr;
-};
-
-struct ChangeModusWalkContext : WalkContextBase
-{
-  char new_modus[11]{};
-};
-
-struct ChangeOwnerWalkContext : WalkContextBase
-{
-  unsigned new_owner_id = 0;
-};
-
-struct ChangeGroupWalkContext : WalkContextBase
-{
-  unsigned new_group_id = 0;
-};
-
-struct ExecuteWalkContext : WalkContextBase
-{
-  std::string command;
-};
-
-struct CopyWalkContext : WalkContextBase
-{
-  Statistic *statistic_ptr = nullptr;
-  DirEntry  *dest_dir_entry = nullptr;
-  char      *to_file = nullptr;
-  char      *to_path = nullptr;
-  bool      path_copy = false;
-  bool      confirm = false;
-};
-
-struct RenameWalkContext : WalkContextBase
-{
-  char *new_name = nullptr;
-  bool confirm = false;
-};
-
-struct MoveWalkContext : WalkContextBase
-{
-  DirEntry *dest_dir_entry = nullptr;
-  char     *to_file = nullptr;
-  char     *to_path = nullptr;
-  bool     confirm = false;
-};
-
-struct PipeWalkContext : WalkContextBase
-{
-  FILE *pipe_file = nullptr;
-};
-
 struct ArchivePathSplit
 {
   std::string dir;
@@ -608,7 +554,6 @@ int InputString(
 extern void RotateFileMode();
 int Execute(const DirEntry* dir_entry, const FileEntry* file_entry);
 extern int  Pipe(DirEntry *dir_entry, FileEntry *file_entry);
-extern int  PipeTaggedFiles(FileEntry *fe_ptr, PipeWalkContext *ctx);
 bool GetPipeCommand(std::string& pipe_command);
 extern void GetKindOfSort();
 extern void SetKindOfSort(SortKey key, SortOrder order = SortOrder::Ascending);
@@ -616,10 +561,7 @@ extern int  ChangeFileModus(FileEntry *fe_ptr);
 extern int  ChangeDirModus(DirEntry *de_ptr);
 extern int  GetNewFileModus(int y, int x, char *modus, const char *term);
 extern int  GetModus(const char *modus);
-extern int  SetFileModus(FileEntry *fe_ptr, ChangeModusWalkContext *ctx);
-extern int  CopyTaggedFiles(FileEntry *fe_ptr, CopyWalkContext *ctx);
 extern int  CopyFile(Statistic *statistic_ptr, FileEntry *fe_ptr, bool confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, bool path_copy);
-extern int  MoveTaggedFiles(FileEntry *fe_ptr, MoveWalkContext *ctx);
 extern int  MoveFile(FileEntry *fe_ptr, bool confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, FileEntry **new_fe_ptr);
 extern int  InputChoise(const char *msg, const char *term);
 void Message(const std::string& msg);
@@ -638,25 +580,21 @@ bool GetMoveParameter(
 );
 extern int  ChangeFileOwner(FileEntry *fe_ptr);
 extern int  GetNewOwner(int st_uid);
-extern int  SetFileOwner(FileEntry *fe_ptr, ChangeOwnerWalkContext *ctx);
 extern int  ChangeDirOwner(DirEntry *de_ptr);
 extern int  ChangeFileGroup(FileEntry *fe_ptr);
 extern int  GetNewGroup(int st_gid);
-extern int  SetFileGroup(FileEntry *fe_ptr, ChangeGroupWalkContext *ctx);
 extern int  ChangeDirGroup(DirEntry *de_ptr);
 extern void DisplayDirHelp();
 extern void DisplayFileHelp();
 extern void ClearHelp();
 bool GetAvailBytes(std::int64_t* avail_bytes);
 extern int  DeleteDirectory(DirEntry *dir_entry);
-extern int  ExecuteCommand(FileEntry *fe_ptr, ExecuteWalkContext *ctx);
 bool GetCommandLine(std::string& command_line);
 bool GetSearchCommandLine(std::string& command_line);
 extern int  DeleteFile(FileEntry *fe_ptr);
 extern int  RemoveFile(FileEntry *fe_ptr);
 extern int  RenameDirectory(DirEntry *de_ptr, const std::string& new_name);
 extern int  RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_fe_ptr);
-extern int  RenameTaggedFiles(FileEntry *fe_ptr, RenameWalkContext *ctx);
 extern int  GetRenameParameter(const std::string* old_name, char *new_name);
 extern char *CTime(std::time_t f_time, char *buffer);
 bool LoginDisk(const std::string& path);
