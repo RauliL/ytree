@@ -11,7 +11,7 @@
 
 
 
-static int GetArchiveDirEntry(DirEntry *tree, char *path, DirEntry **dir_entry);
+static int GetArchiveDirEntry(DirEntry *tree, const char *path, DirEntry **dir_entry);
 
 
 static int InsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *path, struct stat *stat)
@@ -98,8 +98,6 @@ static int InsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *pa
 
 int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, struct stat *stat)
 {
-  char dir[PATH_LENGTH + 1];
-  char file[PATH_LENGTH + 1];
   DirEntry *de_ptr;
   struct stat stat_struct;
 
@@ -110,9 +108,9 @@ int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, st
   }
 
 
-  Fnsplit(path, dir, file);
+  const auto split = Fnsplit(path);
 
-  if( GetArchiveDirEntry(tree.get(), dir, &de_ptr) )
+  if( GetArchiveDirEntry(tree.get(), split.dir.c_str(), &de_ptr) )
   {
 #ifdef DEBUG
     std::fprintf(stderr, "can't get directory for file*%s*trying recover", path);
@@ -121,13 +119,13 @@ int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, st
     std::memset((char *) &stat_struct, 0, sizeof( struct stat ));
     stat_struct.st_mode = S_IFDIR;
 
-    if( TryInsertArchiveDirEntry(tree, dir, &stat_struct) )
+    if( TryInsertArchiveDirEntry(tree, split.dir.c_str(), &stat_struct) )
     {
       Error("Inserting directory failed");
 
       return -1;
     }
-    if( GetArchiveDirEntry(tree.get(), dir, &de_ptr) )
+    if( GetArchiveDirEntry(tree.get(), split.dir.c_str(), &de_ptr) )
     {
       FormatError("again: can't get directory for file*{}*giving up", path);
 
@@ -137,7 +135,7 @@ int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, st
 
   auto fe_ptr = std::make_shared<FileEntry>();
   fe_ptr->stat_struct = *stat;
-  fe_ptr->name = file;
+  fe_ptr->name = split.name;
 
   if( S_ISLNK(stat->st_mode) )
   {
@@ -161,7 +159,7 @@ int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, st
 
 
 
-static int GetArchiveDirEntry(DirEntry *tree, char *path, DirEntry **dir_entry)
+static int GetArchiveDirEntry(DirEntry *tree, const char *path, DirEntry **dir_entry)
 {
   int n;
   bool is_root = false;
@@ -215,11 +213,12 @@ static int GetArchiveDirEntry(DirEntry *tree, char *path, DirEntry **dir_entry)
 
 
 
-int TryInsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *dir, struct stat *stat)
+int TryInsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, const char *dir, struct stat *stat)
 {
   DirEntry *de_ptr;
   char dir_path[PATH_LENGTH + 1];
-  char *s, *t;
+  const char *s;
+  char *t;
 
   std::memset(dir_path, 0, sizeof( dir_path ));
 

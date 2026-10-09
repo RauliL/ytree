@@ -74,7 +74,7 @@ static int GetStatFromRAR(char *rar_line, char *name, struct stat *stat)
 {
   char *t, *old;
   int  id;
-  struct tm tm_struct;
+  std::tm tm_struct;
 
 
   std::memset(stat, 0, sizeof( struct stat ));

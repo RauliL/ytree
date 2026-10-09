@@ -70,17 +70,16 @@ void DisplayDirStatistic(DirEntry *dir_entry)
 {
   const auto path = GetPath(dir_entry);
   char format[32];
-  char buffer[PATH_LENGTH + 1];
   char auxbuff[PATH_LENGTH + 1];
 
-  *auxbuff = *buffer = '\0';
+  *auxbuff = '\0';
   std::snprintf(format, sizeof(format), "%%-%ds", COLS - 10);
   statistic.path = path.string() + (dir_entry->not_scanned ? "*" : "");
   std::snprintf(
     auxbuff,
     sizeof(auxbuff),
     format,
-    FormFilename(buffer, statistic.path, COLS - 10)
+    FormFilename(statistic.path, COLS - 10).c_str()
 );
   wmove(stdscr, 0, 6);
   wclrtoeol(stdscr);
@@ -130,7 +129,6 @@ void DisplayDirParameter(DirEntry *dir_entry)
 );
   auto f = p ? p + 1 : dir_entry->name.c_str();
   char format[32];
-  char buffer[PATH_LENGTH + 1];
   char auxbuff[PATH_LENGTH + 1];
 
   std::snprintf(format, sizeof(format), "%%-%ds", COLS - 10);
@@ -139,7 +137,7 @@ void DisplayDirParameter(DirEntry *dir_entry)
     auxbuff,
     sizeof(auxbuff),
     format,
-    FormFilename(buffer, statistic.path, COLS - 10)
+    FormFilename(statistic.path, COLS - 10).c_str()
 );
   wmove(stdscr, 0, 6);
   wclrtoeol(stdscr);
@@ -149,7 +147,7 @@ void DisplayDirParameter(DirEntry *dir_entry)
     auxbuff,
     sizeof(auxbuff),
     "[%-20s]",
-    CutFilename(buffer, f, 20)
+    CutFilename(f, 20).c_str()
 );
   PrintMenuOptions(stdscr, 18, COLS - 22, auxbuff, MENU_COLOR, HIMENUS_COLOR);
   PrettyPrintNumber(19, COLS - 17, (std::int64_t) dir_entry->total_bytes);
@@ -169,14 +167,20 @@ void DisplayGlobalFileParameter(FileEntry *file_entry)
   char format[32];
 
   std::snprintf(format, sizeof(format), "[%%-%ds]", COLS - 10);
-  *std::format_to(buffer1, "{}", path.string()) = '\0';
-  FormFilename(buffer2, buffer1, COLS - 10);
-  std::snprintf(buffer1, sizeof(buffer1), format, buffer2);
+  std::snprintf(
+    buffer1,
+    sizeof(buffer1),
+    format,
+    FormFilename(path.string(), COLS - 10).c_str()
+  );
   wmove(stdscr, 0, 6);
   wclrtoeol(stdscr);
   PrintMenuOptions(stdscr, 0, 6, buffer1, GLOBAL_COLOR, HIGLOBAL_COLOR);
-  CutFilename(buffer1, file_entry->name, 20);
-  if (std::snprintf(buffer2, PATH_LENGTH, "[%-20s]", buffer1))
+  if (std::snprintf(
+        buffer2,
+        PATH_LENGTH,
+        "[%-20s]",
+        CutFilename(file_entry->name, 20).c_str()))
     ;
   PrintMenuOptions(stdscr, 18, COLS - 22, buffer2, GLOBAL_COLOR, HIGLOBAL_COLOR);
   PrettyPrintNumber(19, COLS - 17, (std::int64_t) file_entry->stat_struct.st_size);
@@ -188,14 +192,13 @@ void DisplayGlobalFileParameter(FileEntry *file_entry)
 
 void DisplayFileParameter(FileEntry *file_entry)
 {
-  char buffer[21*6];
   char auxbuff[23*6];
 
   std::snprintf(
     auxbuff,
     sizeof(auxbuff),
     "[%-20s]",
-    CutFilename(buffer, file_entry->name, 20)
+    CutFilename(file_entry->name, 20).c_str()
   );
   PrintMenuOptions(stdscr, 18, COLS - 22, auxbuff, MENU_COLOR, HIMENUS_COLOR);
   PrettyPrintNumber(19, COLS - 17, (std::int64_t)file_entry->stat_struct.st_size);

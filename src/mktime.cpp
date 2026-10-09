@@ -25,20 +25,19 @@
    specification. */
 
 
-static time_t mkgmtime(struct tm *tm);
+static std::time_t mkgmtime(std::tm *tm);
 
 /* Return the equivalent in seconds past 12:00:00 a.m. Jan 1, 1970 GMT
    of the local time and date in the exploded time structure `tm',
    and set `tm->tm_yday', `tm->tm_wday', and `tm->tm_isdst'.
    Return -1 if any of the other fields in `tm' has an invalid value. */
 
-time_t Mktime(struct tm *tm)
+std::time_t Mktime(std::tm *tm)
 {
-  struct tm save_tm;    /* Copy of contents of `*tm'. */
-  struct tm *ltm;   /* Local time. */
-  time_t then;      /* The time to return. */
+  std::tm save_tm;    /* Copy of contents of `*tm'. */
+  std::tm *ltm;   /* Local time. */
+  auto then = mkgmtime(tm); // The time to return.
 
-  then = mkgmtime(tm);
   if (then == -1)
     return -1;
 
@@ -77,7 +76,7 @@ static char monlens[] =
    and set `tm->tm_yday', `tm->tm_wday', and `tm->tm_isdst'.
    Return -1 if any of the other fields in `tm' has an invalid value. */
 
-static time_t mkgmtime(struct tm *tm)
+static std::time_t mkgmtime(std::tm *tm)
 {
   int years, months, days, hours, minutes, seconds;
 

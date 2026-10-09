@@ -508,6 +508,12 @@ struct PipeWalkContext : WalkContextBase
   FILE *pipe_file = nullptr;
 };
 
+struct ArchivePathSplit
+{
+  std::string dir;
+  std::string name;
+};
+
 extern WINDOW *dir_window;
 extern WINDOW *small_file_window;
 extern WINDOW *big_file_window;
@@ -652,7 +658,7 @@ extern int  RenameDirectory(DirEntry *de_ptr, const std::string& new_name);
 extern int  RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_fe_ptr);
 extern int  RenameTaggedFiles(FileEntry *fe_ptr, RenameWalkContext *ctx);
 extern int  GetRenameParameter(const std::string* old_name, char *new_name);
-extern char *CTime(time_t f_time, char *buffer);
+extern char *CTime(std::time_t f_time, char *buffer);
 bool LoginDisk(const std::string& path);
 bool GetNewLoginPath(std::string& path);
 void PrintSpecialString(WINDOW* win, int y, int x, const std::string& str, int color);
@@ -666,18 +672,18 @@ void PrintMenuOptions(
   int ncolor,
   int hcolor
 );
-char* FormFilename(char* dest, const std::string& src, unsigned int max_len);
-extern char *CutFilename(char *dest, const std::string& src, unsigned int max_len);
+std::string FormFilename(const std::string& src, std::size_t max_len);
+std::string CutFilename(const std::string& src, std::size_t max_len);
 std::string CutPathname(const std::string& src, std::size_t max_len);
-extern void   Fnsplit(char *path, char *dir, char *name);
+ArchivePathSplit Fnsplit(std::string path);
 std::string MakeExtractCommandLine(
   const std::string& path,
   const std::string& file,
   const std::string& cmd
 );
 extern int MakeDirectory(DirEntry *father_dir_entry);
-extern time_t Mktime(struct tm *tm);
-extern int TryInsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *dir, struct stat *stat);
+extern std::time_t Mktime(std::tm *tm);
+extern int TryInsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, const char *dir, struct stat *stat);
 extern int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, struct stat *stat);
 extern int MinimizeArchiveTree(const std::shared_ptr<DirEntry>& tree);
 extern void HitReturnToContinue();
