@@ -839,388 +839,540 @@ void HandleSwitchWindow(DirEntry *dir_entry, DirEntry *start_dir_entry, bool *ne
     return;
 }
 
-
-int HandleDirWindow(DirEntry *start_dir_entry)
+struct DirWindowContext
 {
-  DirEntry  *dir_entry, *de_ptr;
-  int ch, unput_char;
-  bool need_dsp_help;
-  char new_login_path[PATH_LENGTH + 1];
+  DirEntry* start_dir_entry = nullptr;
+  DirEntry* dir_entry = nullptr;
+  DirEntry* de_ptr = nullptr;
+  int unput_char = 0;
+  bool need_dsp_help = true;
+  char new_login_path[PATH_LENGTH + 1]{};
+};
+
+static void DisplayDirTreeAtCursor()
+{
+  DisplayTree(
+    dir_window,
+    statistic.disp_begin_pos,
+    statistic.disp_begin_pos + statistic.cursor_pos
+  );
+}
+
+static void RefreshDirEntryFilePane(DirEntry* dir_entry)
+{
+  dir_entry->start_file = 0;
+  dir_entry->cursor_pos = -1;
+  DisplayFileWindow(dir_entry);
+  RefreshWindow(file_window);
+}
+
+static void SyncDirEntryFromList(DirEntry*& dir_entry)
+{
+  dir_entry = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry.get();
+}
+
+static void ApplyStartupDirectorySelection(DirWindowContext& ctx)
+{
+  if (!initial_directory)
+  {
+    return;
+  }
+
   std::optional<std::string> home;
 
-  unput_char = 0;
-  de_ptr = nullptr;
-
-  GetMaxYX(dir_window, &window_height, &window_width);
-
-  /* Merker loeschen */
-  /*-----------------*/
-
-  dir_mode = ViewMode::MODE_3;
-
-  need_dsp_help = true;
-
-  BuildDirEntryList(start_dir_entry);
-  if (initial_directory)
+  if (!initial_directory->compare("."))
   {
-    if (!initial_directory->compare("."))
+    statistic.disp_begin_pos = 0;
+    statistic.cursor_pos = 0;
+    ctx.unput_char = CR;
+  } else {
+    if (!initial_directory->empty() && initial_directory->at(1) == '.')
     {
-      statistic.disp_begin_pos = 0;
-      statistic.cursor_pos = 0;
-      unput_char = CR;
-    } else {
-      if (!initial_directory->empty() && initial_directory->at(1) == '.')
-      {
-        const auto login = start_dir_entry->name + initial_directory->substr(1);
+      const auto login = ctx.start_dir_entry->name + initial_directory->substr(1);
 
-        std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", login.c_str());
-      }
-      if (
-        !initial_directory->empty() &&
-        initial_directory->at(1) == '~' &&
-        (home = peelo::xdg::home_dir())
-      )
-      {
-        /* Entry of form "~/alpha/beta" */
-        const auto login = *home + initial_directory->substr(1);
+      std::snprintf(ctx.new_login_path, PATH_LENGTH + 1, "%s", login.c_str());
+    }
+    if (
+      !initial_directory->empty() &&
+      initial_directory->at(1) == '~' &&
+      (home = peelo::xdg::home_dir())
+    )
+    {
+      const auto login = *home + initial_directory->substr(1);
 
-        std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", login.c_str());
-      }
-      else {            /* Entry of form "beta" or "/full/path/alpha/beta" */
-        std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", initial_directory->c_str());
-      }
-      for (int i = 0; i < static_cast<int>(statistic.disk_total_directories); ++i)
-      {
-        std::string name;
+      std::snprintf(ctx.new_login_path, PATH_LENGTH + 1, "%s", login.c_str());
+    }
+    else {
+      std::snprintf(
+        ctx.new_login_path,
+        PATH_LENGTH + 1,
+        "%s",
+        initial_directory->c_str()
+      );
+    }
 
-        if (*new_login_path == std::filesystem::path::preferred_separator)
-        {
-          name = GetPath(dir_entry_list[i].dir_entry.get());
-        } else {
-          name = dir_entry_list[i].dir_entry->name;
-        }
-        if (name == new_login_path)
-        {
-          statistic.disp_begin_pos = i;
-          statistic.cursor_pos = 0;
-          unput_char = CR;
-          break;
-        }
+    for (int i = 0; i < static_cast<int>(statistic.disk_total_directories); ++i)
+    {
+      std::string name;
+
+      if (*ctx.new_login_path == std::filesystem::path::preferred_separator)
+      {
+        name = GetPath(dir_entry_list[i].dir_entry.get());
+      } else {
+        name = dir_entry_list[i].dir_entry->name;
+      }
+      if (name == ctx.new_login_path)
+      {
+        statistic.disp_begin_pos = i;
+        statistic.cursor_pos = 0;
+        ctx.unput_char = CR;
+        break;
       }
     }
-    initial_directory.reset();
   }
-  dir_entry = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry.get();
+
+  initial_directory.reset();
+}
+
+static void InitializeDirWindowDisplay(DirWindowContext& ctx)
+{
+  ctx.dir_entry = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry.get();
 
   DisplayDiskStatistic();
 
-  if(!dir_entry->login_flag) {
-    dir_entry->start_file = 0;
-    dir_entry->cursor_pos = -1;
+  if (!ctx.dir_entry->login_flag)
+  {
+    ctx.dir_entry->start_file = 0;
+    ctx.dir_entry->cursor_pos = -1;
   }
-  DisplayFileWindow(dir_entry);
+
+  DisplayFileWindow(ctx.dir_entry);
   RefreshWindow(file_window);
-  DisplayTree(dir_window, statistic.disp_begin_pos, statistic.disp_begin_pos + statistic.cursor_pos);
+  DisplayDirTreeAtCursor();
   touchwin(dir_window);
 
-  if( dir_entry->login_flag )
+  if (ctx.dir_entry->login_flag)
   {
-    if( (dir_entry->global_flag ) || (dir_entry->tagged_flag) )
+    if (ctx.dir_entry->global_flag || ctx.dir_entry->tagged_flag)
     {
-      unput_char = 'S';
+      ctx.unput_char = 'S';
     }
     else
     {
-      unput_char = CR;
+      ctx.unput_char = CR;
     }
   }
-  do
+}
+
+static int ReadDirWindowKey(int& unput_char)
+{
+  if (unput_char)
   {
-    if( need_dsp_help )
-    {
-      need_dsp_help = false;
-      DisplayDirHelp();
-    }
-    DisplayDirParameter(dir_entry);
-    RefreshWindow(dir_window);
-    if( unput_char )
-    {
-      ch = unput_char;
-      unput_char = '\0';
-    }
-    else
-    {
-      doupdate();
-      ch = (resize_request) ? -1 : Getch();
-      if( ch == LF ) ch = CR;
-    }
+    const int ch = unput_char;
+    unput_char = '\0';
+    return ch;
+  }
+
+  doupdate();
+  int ch = resize_request ? -1 : Getch();
+  if (ch == LF)
+  {
+    ch = CR;
+  }
+
 #ifdef VI_KEYS
-    ch = ViKey(ch);
-#endif /* VI_KEYS */
+  ch = ViKey(ch);
+#endif
 
+  return ch;
+}
 
-    if(resize_request) {
-       ReCreateWindows();
-       DisplayMenu();
-       GetMaxYX(dir_window, &window_height, &window_width);
-       while(statistic.cursor_pos >= window_height) {
-         statistic.cursor_pos--;
-   statistic.disp_begin_pos++;
-       }
-       DisplayTree(dir_window, statistic.disp_begin_pos,
-        statistic.disp_begin_pos + statistic.cursor_pos
-);
-       DisplayFileWindow(dir_entry);
-       DisplayDiskStatistic();
-       DisplayDirParameter(dir_entry);
-       need_dsp_help = true;
-       DisplayAvailBytes();
-       DisplayFileSpec();
-       DisplayDiskName();
-       resize_request = false;
-    }
+static void HandleDirWindowResize(DirEntry* dir_entry, bool& need_dsp_help)
+{
+  if (!resize_request)
+  {
+    return;
+  }
 
-   if (mode == Mode::USER_MODE) { /* DirUserMode returns (possibly remapped) ch, or -1 if it handles ch */
-      ch = DirUserMode(dir_entry, ch);
-   }
+  ReCreateWindows();
+  DisplayMenu();
+  GetMaxYX(dir_window, &window_height, &window_width);
+  while (statistic.cursor_pos >= window_height)
+  {
+    statistic.cursor_pos--;
+    statistic.disp_begin_pos++;
+  }
 
-    switch( ch )
+  DisplayDirTreeAtCursor();
+  DisplayFileWindow(dir_entry);
+  DisplayDiskStatistic();
+  DisplayDirParameter(dir_entry);
+  need_dsp_help = true;
+  DisplayAvailBytes();
+  DisplayFileSpec();
+  DisplayDiskName();
+  resize_request = false;
+}
+
+static void HandleDirKeyFileSpec(DirEntry* dir_entry, bool& need_dsp_help)
+{
+  if (ReadFileSpec())
+  {
+    RefreshDirEntryFilePane(dir_entry);
+    DisplayDiskStatistic();
+  }
+  need_dsp_help = true;
+}
+
+static void HandleDirKeyMakeDirectory(DirWindowContext& ctx)
+{
+  if (MakeDirectory(ctx.dir_entry))
+  {
+    BuildDirEntryList(ctx.start_dir_entry);
+    DisplayDirTreeAtCursor();
+    DisplayAvailBytes();
+  }
+  ctx.need_dsp_help = true;
+}
+
+static void HandleDirKeyDeleteDirectory(DirWindowContext& ctx)
+{
+  if (!DeleteDirectory(ctx.dir_entry))
+  {
+    if (statistic.disp_begin_pos + statistic.cursor_pos > 0)
     {
+      if (statistic.cursor_pos > 0)
+      {
+        statistic.cursor_pos--;
+      } else {
+        statistic.disp_begin_pos--;
+      }
+    }
+  }
 
+  BuildDirEntryList(ctx.start_dir_entry);
+  SyncDirEntryFromList(ctx.dir_entry);
+  RefreshDirEntryFilePane(ctx.dir_entry);
+  DisplayDirTreeAtCursor();
+  DisplayAvailBytes();
+  ctx.need_dsp_help = true;
+}
+
+static void HandleDirKeyRename(DirWindowContext& ctx)
+{
+  if (const auto renamed = GetRenameParameter(&ctx.dir_entry->name))
+  {
+    if (!RenameDirectory(ctx.dir_entry, *renamed))
+    {
+      BuildDirEntryList(ctx.start_dir_entry);
+      DisplayDirTreeAtCursor();
+      DisplayAvailBytes();
+      SyncDirEntryFromList(ctx.dir_entry);
+    }
+  }
+  ctx.need_dsp_help = true;
+}
+
+static void HandleDirKeyAttributeChange(
+  DirEntry* dir_entry,
+  bool& need_dsp_help,
+  int (*change)(DirEntry*)
+)
+{
+  change(dir_entry);
+  DisplayDirTreeAtCursor();
+  need_dsp_help = true;
+}
+
+static void HandleDirKeyChangeLogin(DirEntry* dir_entry, bool& need_dsp_help)
+{
+  std::string login_path;
+  if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
+  {
+    login_path = disk_statistic.login_path;
+  } else {
+    login_path = GetPath(dir_entry);
+  }
+
+  if (const auto new_path = GetNewLoginPath(login_path))
+  {
+    DisplayMenu();
+    doupdate();
+    LoginDisk(*new_path);
+  }
+  need_dsp_help = true;
+}
+
+static int HandleDirKeyLogParent(DirWindowContext& ctx, int ch)
+{
+  MoveHome(&ctx.dir_entry);
+
+  const auto path = GetPath(ctx.dir_entry);
+  std::snprintf(ctx.new_login_path, PATH_LENGTH + 1, "%s", path.c_str());
+
+  char* separator = std::strrchr(
+    ctx.new_login_path,
+    std::filesystem::path::preferred_separator
+  );
+  if (separator == nullptr)
+  {
+    return ch;
+  }
+
+  *separator = '\0';
+
+  if (ctx.new_login_path[0] == '\0')
+  {
+    ctx.new_login_path[0] = std::filesystem::path::preferred_separator;
+    ctx.new_login_path[1] = '\0';
+  }
+
+  disk_statistic.login_path.clear();
+  LoginDisk(ctx.new_login_path);
+  ctx.need_dsp_help = true;
+  return ch;
+}
+
+static std::optional<int> ProcessDirWindowKey(int ch, DirWindowContext& ctx)
+{
+  switch (ch)
+  {
 #ifdef KEY_RESIZE
-      case KEY_RESIZE: resize_request = true;
-                 break;
+    case KEY_RESIZE:
+      resize_request = true;
+      break;
 #endif
 
 #ifdef KEY_MOUSE
-      case KEY_MOUSE:  ch = HandleDirMouse(&statistic.disp_begin_pos,
-                                           &statistic.cursor_pos,
-                                           &dir_entry);
-                       if (ch == -1)
-                         break;
-                       unput_char = ch;
-                       break;
+    case KEY_MOUSE:
+      ch = HandleDirMouse(
+        &statistic.disp_begin_pos,
+        &statistic.cursor_pos,
+        &ctx.dir_entry
+      );
+      if (ch == -1)
+      {
+        break;
+      }
+      ctx.unput_char = ch;
+      break;
 #endif
 
-      case -1:        break;
+    case -1:
+      break;
 
-      case ' ':      /*break;   Quick-Key */
-      case KEY_DOWN: Movedown(&statistic.disp_begin_pos, &statistic.cursor_pos, &dir_entry);
-                     break;
-      case KEY_UP  : Moveup(&statistic.disp_begin_pos, &statistic.cursor_pos, &dir_entry);
-                     break;
-      case KEY_NPAGE:Movenpage(&statistic.disp_begin_pos, &statistic.cursor_pos, &dir_entry);
-                     break;
-      case KEY_PPAGE:Moveppage(&statistic.disp_begin_pos, &statistic.cursor_pos, &dir_entry);
-                     break;
-      case KEY_HOME: MoveHome(&dir_entry);
-                     break;
-      case KEY_END : MoveEnd(&dir_entry);
-             break;
-      case KEY_RIGHT:
-      case '+':      HandlePlus(dir_entry, de_ptr, new_login_path,
-            start_dir_entry, &need_dsp_help);
-               break;
-      case '\t':
-      case '*':      HandleReadSubTree(dir_entry, start_dir_entry,
-              &need_dsp_help);
-             break;
-      case KEY_LEFT:
-      case '-':
-      case KEY_BTAB: HandleUnreadSubTree(dir_entry, de_ptr, start_dir_entry,
-               &need_dsp_help);
-               break;
-      case 'F':
-      case 'f':      if(ReadFileSpec()) {
-           dir_entry->start_file = 0;
-           dir_entry->cursor_pos = -1;
-                       DisplayFileWindow(dir_entry);
-                       RefreshWindow(file_window);
-           DisplayDiskStatistic();
-         }
-         need_dsp_help = true;
-                     break;
-      case 'T' :
-      case 't' :     HandleTagDir(dir_entry, true);
-             break;
+    case ' ':
+    case KEY_DOWN:
+      Movedown(&statistic.disp_begin_pos, &statistic.cursor_pos, &ctx.dir_entry);
+      break;
 
-      case 'U' :
-      case 'u' :     HandleTagDir(dir_entry, false);
-             break;
-      case 'T' & 0x1F :
-                     HandleTagAllDirs(dir_entry,true);
-         break;
-      case 'U' & 0x1F :
-             HandleTagAllDirs(dir_entry,false);
-         break;
-      case 'F' & 0x1F :
-         RotateDirMode();
-                     /*DisplayFileWindow( dir_entry, 0, -1 );*/
-                     DisplayTree(dir_window, statistic.disp_begin_pos,
-                                  statistic.disp_begin_pos + statistic.cursor_pos
-);
-                     /*RefreshWindow( file_window );*/
-         DisplayDiskStatistic();
-         need_dsp_help = true;
-         break;
-      case 'S' & 0x1F :
-         HandleShowAllTagged(dir_entry, start_dir_entry, &need_dsp_help, &ch);
-         break;
+    case KEY_UP:
+      Moveup(&statistic.disp_begin_pos, &statistic.cursor_pos, &ctx.dir_entry);
+      break;
 
-      case 'S':
-      case 's':      HandleShowAll(dir_entry, start_dir_entry, &need_dsp_help, &ch);
-         break;
-      case LF :
-      case CR :      HandleSwitchWindow(dir_entry, start_dir_entry, &need_dsp_help, &ch);
-         break;
-      case 'X':
-      case 'x':      Execute(dir_entry, nullptr);
-         need_dsp_help = true;
-         DisplayAvailBytes();
-         break;
-      case 'M':
-      case 'm':      if( MakeDirectory(dir_entry) )
-         {
-           BuildDirEntryList(start_dir_entry);
-                       DisplayTree(dir_window, statistic.disp_begin_pos,
-            statistic.disp_begin_pos + statistic.cursor_pos
-);
-           DisplayAvailBytes();
-         }
-         need_dsp_help = true;
-         break;
-      case 'D':
-      case 'd':      if( !DeleteDirectory(dir_entry) ) {
-           if( statistic.disp_begin_pos + statistic.cursor_pos > 0 )
-           {
-             if( statistic.cursor_pos > 0 ) statistic.cursor_pos--;
-             else statistic.disp_begin_pos--;
-           }
-               }
-         /* Unabhaengig vom Erfolg aktualisieren */
-         BuildDirEntryList(start_dir_entry);
-         dir_entry = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry.get();
-         dir_entry->start_file = 0;
-         dir_entry->cursor_pos = -1;
-                     DisplayFileWindow(dir_entry);
-                     RefreshWindow(file_window);
-         DisplayTree(dir_window, statistic.disp_begin_pos,
-          statistic.disp_begin_pos + statistic.cursor_pos
-);
-         DisplayAvailBytes();
-         need_dsp_help = true;
-         break;
-      case 'r':
-      case 'R':      if( const auto renamed = GetRenameParameter(&dir_entry->name) )
-                     {
-           if( !RenameDirectory(dir_entry, *renamed) )
-           {
-             /* Rename OK */
-             /*-----------*/
-             BuildDirEntryList(start_dir_entry);
-                         DisplayTree(dir_window, statistic.disp_begin_pos,
-                          statistic.disp_begin_pos + statistic.cursor_pos
-);
-             DisplayAvailBytes();
-             dir_entry = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry.get();
-           }
-         }
-         need_dsp_help = true;
-         break;
-      case 'G':
-      case 'g':      ChangeDirGroup(dir_entry);
-                     DisplayTree(dir_window, statistic.disp_begin_pos, statistic.disp_begin_pos + statistic.cursor_pos);
-         need_dsp_help = true;
-         break;
-      case 'O':
-      case 'o':      ChangeDirOwner(dir_entry);
-                     DisplayTree(dir_window, statistic.disp_begin_pos, statistic.disp_begin_pos + statistic.cursor_pos);
-         need_dsp_help = true;
-         break;
-      case 'A':
-      case 'a':      ChangeDirModus(dir_entry);
-                     DisplayTree(dir_window, statistic.disp_begin_pos, statistic.disp_begin_pos + statistic.cursor_pos);
-         need_dsp_help = true;
-         break;
+    case KEY_NPAGE:
+      Movenpage(&statistic.disp_begin_pos, &statistic.cursor_pos, &ctx.dir_entry);
+      break;
 
-      case 'Q' & 0x1F:
-                     need_dsp_help = true;
-                     QuitTo(dir_entry);
-                     break;
+    case KEY_PPAGE:
+      Moveppage(&statistic.disp_begin_pos, &statistic.cursor_pos, &ctx.dir_entry);
+      break;
 
-      case 'Q':
-      case 'q':      need_dsp_help = true;
-                     break;
+    case KEY_HOME:
+      MoveHome(&ctx.dir_entry);
+      break;
+
+    case KEY_END:
+      MoveEnd(&ctx.dir_entry);
+      break;
+
+    case KEY_RIGHT:
+    case '+':
+      HandlePlus(
+        ctx.dir_entry,
+        ctx.de_ptr,
+        ctx.new_login_path,
+        ctx.start_dir_entry,
+        &ctx.need_dsp_help
+      );
+      break;
+
+    case '\t':
+    case '*':
+      HandleReadSubTree(ctx.dir_entry, ctx.start_dir_entry, &ctx.need_dsp_help);
+      break;
+
+    case KEY_LEFT:
+    case '-':
+    case KEY_BTAB:
+      HandleUnreadSubTree(
+        ctx.dir_entry,
+        ctx.de_ptr,
+        ctx.start_dir_entry,
+        &ctx.need_dsp_help
+      );
+      break;
+
+    case 'F':
+    case 'f':
+      HandleDirKeyFileSpec(ctx.dir_entry, ctx.need_dsp_help);
+      break;
+
+    case 'T':
+    case 't':
+      HandleTagDir(ctx.dir_entry, true);
+      break;
+
+    case 'U':
+    case 'u':
+      HandleTagDir(ctx.dir_entry, false);
+      break;
+
+    case 'T' & 0x1f:
+      HandleTagAllDirs(ctx.dir_entry, true);
+      break;
+
+    case 'U' & 0x1f:
+      HandleTagAllDirs(ctx.dir_entry, false);
+      break;
+
+    case 'F' & 0x1f:
+      RotateDirMode();
+      DisplayDirTreeAtCursor();
+      DisplayDiskStatistic();
+      ctx.need_dsp_help = true;
+      break;
+
+    case 'S' & 0x1f:
+      HandleShowAllTagged(ctx.dir_entry, ctx.start_dir_entry, &ctx.need_dsp_help, &ch);
+      break;
+
+    case 'S':
+    case 's':
+      HandleShowAll(ctx.dir_entry, ctx.start_dir_entry, &ctx.need_dsp_help, &ch);
+      break;
+
+    case LF:
+    case CR:
+      HandleSwitchWindow(ctx.dir_entry, ctx.start_dir_entry, &ctx.need_dsp_help, &ch);
+      break;
+
+    case 'X':
+    case 'x':
+      Execute(ctx.dir_entry, nullptr);
+      ctx.need_dsp_help = true;
+      DisplayAvailBytes();
+      break;
+
+    case 'M':
+    case 'm':
+      HandleDirKeyMakeDirectory(ctx);
+      break;
+
+    case 'D':
+    case 'd':
+      HandleDirKeyDeleteDirectory(ctx);
+      break;
+
+    case 'r':
+    case 'R':
+      HandleDirKeyRename(ctx);
+      break;
+
+    case 'G':
+    case 'g':
+      HandleDirKeyAttributeChange(ctx.dir_entry, ctx.need_dsp_help, ChangeDirGroup);
+      break;
+
+    case 'O':
+    case 'o':
+      HandleDirKeyAttributeChange(ctx.dir_entry, ctx.need_dsp_help, ChangeDirOwner);
+      break;
+
+    case 'A':
+    case 'a':
+      HandleDirKeyAttributeChange(ctx.dir_entry, ctx.need_dsp_help, ChangeDirModus);
+      break;
+
+    case 'Q' & 0x1f:
+      ctx.need_dsp_help = true;
+      QuitTo(ctx.dir_entry);
+      break;
+
+    case 'Q':
+    case 'q':
+      ctx.need_dsp_help = true;
+      break;
 
 #if !defined(VI_KEYS)
-      case 'l':
+    case 'l':
 #endif
-      case 'L':
-      {
-        std::string login_path;
-        if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
-        {
-          login_path = disk_statistic.login_path;
-        } else {
-          login_path = GetPath(dir_entry);
-        }
-        if (const auto new_path = GetNewLoginPath(login_path))
-        {
-          DisplayMenu();
-          doupdate();
-          LoginDisk(*new_path);
-        }
-        need_dsp_help = true;
-        break;
-      }
+    case 'L':
+      HandleDirKeyChangeLogin(ctx.dir_entry, ctx.need_dsp_help);
+      break;
 
-      case 'L' & 0x1F:
-         clearok(stdscr, true);
-         break;
+    case 'L' & 0x1f:
+      clearok(stdscr, true);
+      break;
 
-      // Press 'p' or 'P' to log parent of current root.
-      case 'P':
-      case 'p':
-      {
-        std::string path;
-        char* p;
+    case 'P':
+    case 'p':
+      return HandleDirKeyLogParent(ctx, ch);
 
-        MoveHome(&dir_entry);
-        path = GetPath(dir_entry);
-        std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", path.c_str());
+    default:
+      beep();
+      break;
+  }
 
-        if (!(p = std::strrchr(new_login_path, std::filesystem::path::preferred_separator)))
-        {
-          break;
-        }
-
-        // p is now pointing to rightmost file separator in new_login_path,
-        // just truncate this path.
-        *p = 0;
-
-        // Rightmost slash was first and only character?
-        if (!std::strlen(new_login_path))
-        {
-          new_login_path[0] = std::filesystem::path::preferred_separator;
-          new_login_path[1] = 0;
-        }
-
-        // Following needed to ignore old tree in memory.
-        disk_statistic.login_path.clear();
-
-        LoginDisk(new_login_path);
-        need_dsp_help = true;
-
-        return ch;
-      }
-
-      default:
-        beep();
-        break;
-    } /* switch */
-  } while( (ch != 'q') && (ch != 'Q') && (ch != 'l') && (ch != 'L') );
-  return( ch );
+  return std::nullopt;
 }
+
+static bool ShouldContinueDirWindow(int ch)
+{
+  return ch != 'q' && ch != 'Q' && ch != 'l' && ch != 'L';
+}
+
+int HandleDirWindow(DirEntry *start_dir_entry)
+{
+  DirWindowContext ctx;
+  ctx.start_dir_entry = start_dir_entry;
+
+  GetMaxYX(dir_window, &window_height, &window_width);
+  dir_mode = ViewMode::MODE_3;
+
+  BuildDirEntryList(start_dir_entry);
+  ApplyStartupDirectorySelection(ctx);
+  InitializeDirWindowDisplay(ctx);
+
+  int ch = 0;
+  do
+  {
+    if (ctx.need_dsp_help)
+    {
+      ctx.need_dsp_help = false;
+      DisplayDirHelp();
+    }
+
+    DisplayDirParameter(ctx.dir_entry);
+    RefreshWindow(dir_window);
+
+    ch = ReadDirWindowKey(ctx.unput_char);
+    HandleDirWindowResize(ctx.dir_entry, ctx.need_dsp_help);
+
+    if (mode == Mode::USER_MODE)
+    {
+      ch = DirUserMode(ctx.dir_entry, ch);
+    }
+
+    if (const auto exit_key = ProcessDirWindowKey(ch, ctx))
+    {
+      return *exit_key;
+    }
+  } while (ShouldContinueDirWindow(ch));
+
+  return ch;
+}
+
 
 void ScanSubTree(DirEntry* dir_entry)
 {
