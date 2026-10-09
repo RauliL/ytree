@@ -1,6 +1,8 @@
 #include "ytree.h"
 #include "tilde.h"
 
+#include "./mouse.hpp"
+
 
 /***************************************************************************
  * InputStr                                                                *

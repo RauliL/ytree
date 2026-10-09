@@ -2,6 +2,8 @@
 
 #include "ytree.h"
 
+#include "./mouse.hpp"
+
 struct DirEntryList
 {
   std::size_t indent;
