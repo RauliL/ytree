@@ -506,14 +506,12 @@ int InputString(
 
       case KEY_UP:
       {
-        const char* pp;
-
         nodelay(stdscr, FALSE);
-        pp = GetHistory();
+        const auto selected = GetHistory();
         nodelay(stdscr, TRUE);
-        if (pp && *pp)
+        if (selected && !selected->empty())
         {
-          const auto ls = StrLeft(pp, max_length);
+          const auto ls = StrLeft(selected->c_str(), max_length);
 
           buffer = ls;
           pos = StrVisualLength(ls);

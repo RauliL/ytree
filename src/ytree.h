@@ -642,7 +642,7 @@ bool GetBooleanProfileValue(const std::string& key);
 char GetNumberSeparator();
 void ScanSubTree(DirEntry* dir_entry);
 extern void GetMaxYX(WINDOW *win, int *height, int *width);
-const char* GetHistory();
+std::optional<std::string> GetHistory();
 void InsHistory(const std::string& str);
 void ReadHistory(const std::optional<std::filesystem::path>& custom_path);
 void SaveHistory();

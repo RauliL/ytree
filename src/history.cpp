@@ -209,210 +209,264 @@ int DisplayHistory()
   return 0;
 }
 
-const char* GetHistory()
+struct HistoryViewState
 {
-  int     ch;
-  int     start_x;
-  const char* RetVal = nullptr;
-  int     hide_left, hide_right;
+  int start_x = 0;
+  int hide_left = 0;
+  int hide_right = 0;
+};
 
+static int history_cursor_index()
+{
+  return disp_begin_pos + cursor_pos;
+}
+
+static void history_paint(int entry_no, int row, int color, HistoryViewState& view)
+{
+  PrintHstEntry(entry_no, row, color, view.start_x, &view.hide_left, &view.hide_right);
+}
+
+static void history_paint_cursor(HistoryViewState& view)
+{
+  history_paint(history_cursor_index(), cursor_pos, HIHST_COLOR, view);
+}
+
+static void history_reset_horizontal_scroll(HistoryViewState& view)
+{
+  if (view.start_x == 0)
+  {
+    return;
+  }
+  view.start_x = 0;
+  history_paint_cursor(view);
+}
+
+static void history_scroll_line_right(HistoryViewState& view)
+{
+  view.start_x++;
+  history_paint_cursor(view);
+  if (view.hide_right < 0)
+  {
+    view.start_x--;
+  }
+}
+
+static void history_scroll_line_left(HistoryViewState& view)
+{
+  if (view.start_x > 0)
+  {
+    view.start_x--;
+    history_paint_cursor(view);
+  }
+}
+
+static void history_move_down(HistoryViewState& view)
+{
+  if (history_cursor_index() + 1 >= total_hist())
+  {
+    beep();
+    return;
+  }
+
+  history_paint(history_cursor_index(), cursor_pos, HST_COLOR, view);
+
+  if (cursor_pos + 1 < HISTORY_WINDOW_HEIGHT)
+  {
+    cursor_pos++;
+    history_paint_cursor(view);
+    return;
+  }
+
+  scroll(history_window);
+  disp_begin_pos++;
+  history_paint_cursor(view);
+}
+
+static void history_move_up(HistoryViewState& view)
+{
+  if (history_cursor_index() - 1 < 0)
+  {
+    beep();
+    return;
+  }
+
+  history_paint(history_cursor_index(), cursor_pos, HST_COLOR, view);
+
+  if (cursor_pos - 1 >= 0)
+  {
+    cursor_pos--;
+    history_paint_cursor(view);
+    return;
+  }
+
+  wmove(history_window, 0, 0);
+  winsertln(history_window);
+  disp_begin_pos--;
+  history_paint_cursor(view);
+}
+
+static void history_page_down(HistoryViewState& view)
+{
+  if (history_cursor_index() >= total_hist() - 1)
+  {
+    beep();
+    return;
+  }
+
+  if (cursor_pos < HISTORY_WINDOW_HEIGHT - 1)
+  {
+    history_paint(history_cursor_index(), cursor_pos, HST_COLOR, view);
+    if (disp_begin_pos + HISTORY_WINDOW_HEIGHT > total_hist() - 1)
+    {
+      cursor_pos = total_hist() - disp_begin_pos - 1;
+    }
+    else
+    {
+      cursor_pos = HISTORY_WINDOW_HEIGHT - 1;
+    }
+    history_paint_cursor(view);
+    return;
+  }
+
+  if (history_cursor_index() + HISTORY_WINDOW_HEIGHT < total_hist())
+  {
+    disp_begin_pos += HISTORY_WINDOW_HEIGHT;
+    cursor_pos = HISTORY_WINDOW_HEIGHT - 1;
+  }
+  else
+  {
+    disp_begin_pos = std::max(0, total_hist() - HISTORY_WINDOW_HEIGHT);
+    cursor_pos = total_hist() - disp_begin_pos - 1;
+  }
+  DisplayHistory();
+}
+
+static void history_page_up(HistoryViewState& view)
+{
+  if (history_cursor_index() <= 0)
+  {
+    beep();
+    return;
+  }
+
+  if (cursor_pos > 0)
+  {
+    history_paint(history_cursor_index(), cursor_pos, HST_COLOR, view);
+    cursor_pos = 0;
+    history_paint_cursor(view);
+    return;
+  }
+
+  disp_begin_pos = std::max(0, disp_begin_pos - HISTORY_WINDOW_HEIGHT);
+  cursor_pos = 0;
+  DisplayHistory();
+}
+
+static void history_go_home()
+{
+  if (disp_begin_pos == 0 && cursor_pos == 0)
+  {
+    beep();
+    return;
+  }
+  disp_begin_pos = 0;
+  cursor_pos = 0;
+  DisplayHistory();
+}
+
+static void history_go_end()
+{
+  disp_begin_pos = std::max(0, total_hist() - HISTORY_WINDOW_HEIGHT);
+  cursor_pos = total_hist() - disp_begin_pos - 1;
+  DisplayHistory();
+}
+
+static bool history_is_exit_key(int ch)
+{
+  return ch == CR || ch == LF || ch == ESC || ch == -1;
+}
+
+std::optional<std::string> GetHistory()
+{
+  std::optional<std::string> selection;
+  HistoryViewState view;
 
   disp_begin_pos = 0;
-  cursor_pos     = 0;
-  start_x        = 0;
-  /* leaveok(stdscr, true); */
+  cursor_pos = 0;
   DisplayHistory();
 
-  do
+  for (int ch = 0; !history_is_exit_key(ch);)
   {
     RefreshWindow(history_window);
     doupdate();
     ch = Getch();
     ch = TranslateOverlayMouse(ch);
 
-    if(ch != -1 && ch != KEY_RIGHT && ch != KEY_LEFT) {
-      if(start_x) {
-        start_x = 0;
-  PrintHstEntry(disp_begin_pos + cursor_pos,
-           cursor_pos, HIHST_COLOR,
-           start_x, &hide_left, &hide_right);
-      }
+    if (ch != -1 && ch != KEY_RIGHT && ch != KEY_LEFT)
+    {
+      history_reset_horizontal_scroll(view);
     }
 
-    switch( ch )
+    switch (ch)
     {
-      case -1:       RetVal = nullptr;
-                     break;
+      case -1:
+      case ESC:
+        break;
 
-      case ' ':      break;  /* Quick-Key */
+      case ' ': /* Quick-Key */
+        break;
 
-      case KEY_RIGHT: start_x++;
-          PrintHstEntry(disp_begin_pos + cursor_pos,
-                   cursor_pos, HIHST_COLOR,
-                         start_x, &hide_left, &hide_right);
-          if(hide_right < 0)
-            start_x--;
-          break;
+      case KEY_RIGHT:
+        history_scroll_line_right(view);
+        break;
 
-      case KEY_LEFT:  if(start_x > 0)
-                  start_x--;
-          PrintHstEntry(disp_begin_pos + cursor_pos,
-                   cursor_pos, HIHST_COLOR,
-                         start_x, &hide_left, &hide_right);
-          break;
+      case KEY_LEFT:
+        history_scroll_line_left(view);
+        break;
 
       case '\t':
-      case KEY_DOWN: if (disp_begin_pos + cursor_pos+1 >= total_hist())
-               {
-           beep();
-         }
-         else
-         { if( cursor_pos + 1 < HISTORY_WINDOW_HEIGHT )
-           {
-       PrintHstEntry(disp_begin_pos + cursor_pos,
-          cursor_pos, HST_COLOR,
-                            start_x, &hide_left, &hide_right);
-       cursor_pos++;
-       PrintHstEntry(disp_begin_pos + cursor_pos,
-          cursor_pos, HIHST_COLOR,
-                            start_x, &hide_left, &hide_right);
-                       }
-           else
-           {
-       PrintHstEntry(disp_begin_pos + cursor_pos,
-          cursor_pos, HST_COLOR,
-                            start_x, &hide_left, &hide_right);
-       scroll(history_window);
-       disp_begin_pos++;
-       PrintHstEntry(disp_begin_pos + cursor_pos,
-          cursor_pos, HIHST_COLOR,
-                            start_x, &hide_left, &hide_right);
-                       }
-         }
-                     break;
+      case KEY_DOWN:
+        history_move_down(view);
+        break;
+
       case KEY_BTAB:
-      case KEY_UP  : if( disp_begin_pos + cursor_pos - 1 < 0 )
-         {   beep(); }
-         else
-         {
-           if( cursor_pos - 1 >= 0 )
-           {
-       PrintHstEntry(disp_begin_pos + cursor_pos,
-          cursor_pos, HST_COLOR,
-                            start_x, &hide_left, &hide_right);
-       cursor_pos--;
-       PrintHstEntry(disp_begin_pos + cursor_pos,
-          cursor_pos, HIHST_COLOR,
-                            start_x, &hide_left, &hide_right);
-                       }
-           else
-           {
-       PrintHstEntry(disp_begin_pos + cursor_pos,
-          cursor_pos, HST_COLOR,
-                            start_x, &hide_left, &hide_right);
-       wmove(history_window, 0, 0);
-       winsertln(history_window);
-       disp_begin_pos--;
-       PrintHstEntry(disp_begin_pos + cursor_pos,
-          cursor_pos, HIHST_COLOR,
-                            start_x, &hide_left, &hide_right);
-                       }
-         }
-                     break;
+      case KEY_UP:
+        history_move_up(view);
+        break;
+
       case KEY_NPAGE:
-               if( disp_begin_pos + cursor_pos >= total_hist() - 1 )
-         {  beep();  }
-         else
-         {
-           if( cursor_pos < HISTORY_WINDOW_HEIGHT - 1 )
-           {
-       PrintHstEntry(disp_begin_pos + cursor_pos,
-          cursor_pos, HST_COLOR,
-                            start_x, &hide_left, &hide_right);
-             if( disp_begin_pos + HISTORY_WINDOW_HEIGHT > total_hist()  - 1 )
-         cursor_pos = total_hist() - disp_begin_pos - 1;
-       else
-         cursor_pos = HISTORY_WINDOW_HEIGHT - 1;
-       PrintHstEntry(disp_begin_pos + cursor_pos,
-          cursor_pos, HIHST_COLOR,
-                            start_x, &hide_left, &hide_right);
-           }
-           else
-           {
-       if( disp_begin_pos + cursor_pos + HISTORY_WINDOW_HEIGHT < total_hist() )
-       {
-         disp_begin_pos += HISTORY_WINDOW_HEIGHT;
-         cursor_pos = HISTORY_WINDOW_HEIGHT - 1;
-       }
-       else
-       {
-         disp_begin_pos = total_hist() - HISTORY_WINDOW_HEIGHT;
-         if( disp_begin_pos < 0 ) disp_begin_pos = 0;
-         cursor_pos = total_hist() - disp_begin_pos - 1;
-       }
-                         DisplayHistory();
-           }
-         }
-                     break;
+        history_page_down(view);
+        break;
+
       case KEY_PPAGE:
-         if( disp_begin_pos + cursor_pos <= 0 )
-         {  beep();  }
-         else
-         {
-           if( cursor_pos > 0 )
-           {
-       PrintHstEntry(disp_begin_pos + cursor_pos,
-          cursor_pos, HST_COLOR,
-                            start_x, &hide_left, &hide_right);
-       cursor_pos = 0;
-       PrintHstEntry(disp_begin_pos + cursor_pos,
-          cursor_pos, HIHST_COLOR,
-                            start_x, &hide_left, &hide_right);
-           }
-           else
-           {
-       if( (disp_begin_pos -= HISTORY_WINDOW_HEIGHT) < 0 )
-       {
-         disp_begin_pos = 0;
-       }
-                         cursor_pos = 0;
-                         DisplayHistory();
-           }
-         }
-                     break;
-      case KEY_HOME: if( disp_begin_pos == 0 && cursor_pos == 0 )
-         {   beep();    }
-         else
-         {
-           disp_begin_pos = 0;
-           cursor_pos     = 0;
-                       DisplayHistory();
-         }
-                     break;
-      case KEY_END :
-                     disp_begin_pos = std::max(0, total_hist() - HISTORY_WINDOW_HEIGHT);
-         cursor_pos     = total_hist() - disp_begin_pos - 1;
-                     DisplayHistory();
-                     break;
-      case LF :
-      case CR :
-                     {
-                       const auto idx = disp_begin_pos + cursor_pos;
-                       if (idx >= 0 && idx < total_hist())
-                         RetVal = history[idx].c_str();
-                       else
-                         RetVal = nullptr;
-                     }
-         break;
+        history_page_up(view);
+        break;
 
-      case ESC:      RetVal = nullptr;
-                     break;
+      case KEY_HOME:
+        history_go_home();
+        break;
 
-      default :      beep();
-         break;
-    } /* switch */
-  } while(ch != CR && ch != ESC && ch != -1);
-  /* leaveok(stdscr, false); */
+      case KEY_END:
+        history_go_end();
+        break;
+
+      case LF:
+      case CR:
+      {
+        const auto idx = history_cursor_index();
+        if (idx >= 0 && idx < total_hist())
+        {
+          selection = history[idx];
+        }
+        break;
+      }
+
+      default:
+        beep();
+        break;
+    }
+  }
+
   touchwin(stdscr);
-  return RetVal;
+  return selection;
 }
