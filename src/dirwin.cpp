@@ -845,7 +845,6 @@ int HandleDirWindow(DirEntry *start_dir_entry)
   DirEntry  *dir_entry, *de_ptr;
   int ch, unput_char;
   bool need_dsp_help;
-  char new_name[PATH_LENGTH + 1];
   char new_login_path[PATH_LENGTH + 1];
   std::optional<std::string> home;
 
@@ -1032,7 +1031,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
                &need_dsp_help);
                break;
       case 'F':
-      case 'f':      if(ReadFileSpec() == 0) {
+      case 'f':      if(ReadFileSpec()) {
            dir_entry->start_file = 0;
            dir_entry->cursor_pos = -1;
                        DisplayFileWindow(dir_entry);
@@ -1080,7 +1079,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
          DisplayAvailBytes();
          break;
       case 'M':
-      case 'm':      if( !MakeDirectory(dir_entry) )
+      case 'm':      if( MakeDirectory(dir_entry) )
          {
            BuildDirEntryList(start_dir_entry);
                        DisplayTree(dir_window, statistic.disp_begin_pos,
@@ -1112,9 +1111,9 @@ int HandleDirWindow(DirEntry *start_dir_entry)
          need_dsp_help = true;
          break;
       case 'r':
-      case 'R':      if( !GetRenameParameter(&dir_entry->name, new_name) )
+      case 'R':      if( const auto renamed = GetRenameParameter(&dir_entry->name) )
                      {
-           if( !RenameDirectory(dir_entry, new_name) )
+           if( !RenameDirectory(dir_entry, *renamed) )
            {
              /* Rename OK */
              /*-----------*/
@@ -1165,11 +1164,11 @@ int HandleDirWindow(DirEntry *start_dir_entry)
         } else {
           login_path = GetPath(dir_entry);
         }
-        if (GetNewLoginPath(login_path))
+        if (const auto new_path = GetNewLoginPath(login_path))
         {
           DisplayMenu();
           doupdate();
-          LoginDisk(login_path);
+          LoginDisk(*new_path);
         }
         need_dsp_help = true;
         break;

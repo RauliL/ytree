@@ -1353,8 +1353,6 @@ int HandleFileWindow(DirEntry *dir_entry)
   int list_pos;
   std::int64_t file_size;
   int i;
-  int owner_id;
-  int group_id;
   int start_x = 0;
   char modus[11];
   bool path_copy;
@@ -1688,21 +1686,28 @@ int HandleFileWindow(DirEntry *dir_entry)
           else
           {
       need_dsp_help = true;
-            if( ( owner_id = GetNewOwner(-1) ) >= 0 )
+            if (const auto owner = GetNewOwner(-1))
       {
-        ChangeOwnerWalkContext owner_ctx;
-        owner_ctx.new_owner_id = owner_id;
-                          WalkTaggedFiles(dir_entry->start_file,
-             dir_entry->cursor_pos,
-             SetFileOwner,
-             &owner_ctx
-);
+        if (const auto owner_id_ptr = GetPasswdUid(*owner))
+        {
+          ChangeOwnerWalkContext owner_ctx;
+          owner_ctx.new_owner_id = *owner_id_ptr;
+          WalkTaggedFiles(
+            dir_entry->start_file,
+            dir_entry->cursor_pos,
+            SetFileOwner,
+            &owner_ctx
+          );
 
-        DisplayFiles(dir_entry,
-          dir_entry->start_file,
-          dir_entry->start_file + dir_entry->cursor_pos,
-          start_x
-);
+          DisplayFiles(
+            dir_entry,
+            dir_entry->start_file,
+            dir_entry->start_file + dir_entry->cursor_pos,
+            start_x
+          );
+        } else {
+          FormatMessage("Can't read Owner-ID:*{}", *owner);
+        }
       }
           }
           break;
@@ -1732,21 +1737,28 @@ int HandleFileWindow(DirEntry *dir_entry)
           {
       need_dsp_help = true;
 
-            if( ( group_id = GetNewGroup(-1) ) >= 0 )
+            if (const auto group = GetNewGroup(-1))
       {
-        ChangeGroupWalkContext group_ctx;
-        group_ctx.new_group_id = group_id;
-                          WalkTaggedFiles(dir_entry->start_file,
-             dir_entry->cursor_pos,
-             SetFileGroup,
-             &group_ctx
-);
+        if (const auto group_id_ptr = GetGroupId(*group))
+        {
+          ChangeGroupWalkContext group_ctx;
+          group_ctx.new_group_id = *group_id_ptr;
+          WalkTaggedFiles(
+            dir_entry->start_file,
+            dir_entry->cursor_pos,
+            SetFileGroup,
+            &group_ctx
+          );
 
-        DisplayFiles(dir_entry,
-          dir_entry->start_file,
-          dir_entry->start_file + dir_entry->cursor_pos,
-          start_x
-);
+          DisplayFiles(
+            dir_entry,
+            dir_entry->start_file,
+            dir_entry->start_file + dir_entry->cursor_pos,
+            start_x
+          );
+        } else {
+          FormatMessage("Can't read Group-ID:*\"{}\"", *group);
+        }
       }
           }
           break;
@@ -1993,8 +2005,11 @@ int HandleFileWindow(DirEntry *dir_entry)
             std::string copy_as;
             std::string copy_to;
 
-            if (!GetCopyParameter(fe_ptr->name, path_copy, copy_as, copy_to))
+            if (const auto copy_target = GetCopyParameter(fe_ptr->name, path_copy))
             {
+              copy_as = copy_target->to_file;
+              copy_to = copy_target->to_dir;
+            } else {
               beep();
               break;
             }
@@ -2119,8 +2134,11 @@ int HandleFileWindow(DirEntry *dir_entry)
         std::string copy_as;
         std::string copy_to;
 
-        if (!GetCopyParameter(std::nullopt, path_copy, copy_as, copy_to))
+        if (const auto copy_target = GetCopyParameter(std::nullopt, path_copy))
         {
+          copy_as = copy_target->to_file;
+          copy_to = copy_target->to_dir;
+        } else {
           beep();
           break;
         }
@@ -2245,8 +2263,11 @@ int HandleFileWindow(DirEntry *dir_entry)
             std::string move_as;
             std::string move_to;
 
-            if (!GetMoveParameter(fe_ptr->name, move_as, move_to))
+            if (const auto move_target = GetMoveParameter(fe_ptr->name))
             {
+              move_as = move_target->to_file;
+              move_to = move_target->to_dir;
+            } else {
               beep();
               break;
             }
@@ -2321,8 +2342,11 @@ int HandleFileWindow(DirEntry *dir_entry)
         std::string move_as;
         std::string move_to;
 
-        if (!GetMoveParameter(std::nullopt, move_as, move_to))
+        if (const auto move_target = GetMoveParameter(std::nullopt))
         {
+          move_as = move_target->to_file;
+          move_to = move_target->to_dir;
+        } else {
           beep();
           break;
         }
@@ -2464,9 +2488,9 @@ int HandleFileWindow(DirEntry *dir_entry)
           fe_ptr = file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
           de_ptr = fe_ptr->Dir().get();
 
-          if( !GetRenameParameter(&fe_ptr->name, new_name) )
+          if (const auto renamed = GetRenameParameter(&fe_ptr->name))
           {
-      if( !RenameFile(fe_ptr, new_name, &new_fe_ptr) )
+      if( !RenameFile(fe_ptr, *renamed, &new_fe_ptr) )
             {
         /* Rename OK */
         /*-----------*/
@@ -2496,11 +2520,14 @@ int HandleFileWindow(DirEntry *dir_entry)
           {
             need_dsp_help = true;
 
-      if( GetRenameParameter(nullptr, new_name) )
-                        {
+      const auto tagged_rename = GetRenameParameter(nullptr);
+      if (!tagged_rename)
+      {
         beep();
         break;
-            }
+      }
+
+      *std::format_to(new_name, "{}", *tagged_rename) = '\0';
 
       RenameWalkContext rename_ctx;
       rename_ctx.new_name = new_name;
@@ -2543,7 +2570,7 @@ int HandleFileWindow(DirEntry *dir_entry)
           break;
 
       case 'F':
-      case 'f':       if(ReadFileSpec() == 0) {
+      case 'f':       if(ReadFileSpec()) {
 
             dir_entry->start_file = 0;
             dir_entry->cursor_pos = 0;
@@ -2577,10 +2604,10 @@ int HandleFileWindow(DirEntry *dir_entry)
         {
           auto new_login_path = GetFileNamePath(fe_ptr).string();
 
-          if (GetNewLoginPath(new_login_path))
+          if (const auto login_path = GetNewLoginPath(new_login_path))
           {
             dir_entry->login_flag = true;
-            LoginDisk(new_login_path);
+            LoginDisk(*login_path);
             unput_char = LOGIN_ESC;
           }
           need_dsp_help = true;
@@ -2628,8 +2655,10 @@ int HandleFileWindow(DirEntry *dir_entry)
 
             need_dsp_help = true;
 
-            if (!GetPipeCommand(filepath))
+            if (const auto pipe_command = GetPipeCommand(filepath))
             {
+              filepath = *pipe_command;
+            } else {
               beep();
               break;
             }
@@ -2687,8 +2716,9 @@ int HandleFileWindow(DirEntry *dir_entry)
             std::string command_line;
 
             need_dsp_help = true;
-            if (GetSearchCommandLine(command_line))
+            if (const auto search_command = GetSearchCommandLine())
             {
+              command_line = *search_command;
               refresh();
               endwin();
               SuspendClock();
@@ -2724,8 +2754,9 @@ int HandleFileWindow(DirEntry *dir_entry)
             std::string command_line;
 
             need_dsp_help = true;
-            if (GetCommandLine(command_line))
+            if (const auto tagged_command = GetCommandLine(command_line))
             {
+              command_line = *tagged_command;
               refresh();
               endwin();
               ExecuteWalkContext execute_ctx;

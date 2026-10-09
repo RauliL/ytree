@@ -7,29 +7,33 @@
  ***************************************************************************/
 #include "ytree.h"
 
-int MakeDirectory(DirEntry *father_dir_entry)
+std::optional<std::string> MakeDirectory(DirEntry *father_dir_entry)
 {
-  std::string dir_name;
-  int result = -1;
-
   if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
   {
     beep();
-    return( result );
+    return std::nullopt;
   }
 
   ClearHelp();
 
   MvAddStr(LINES - 2, 1, "Make Subdirectory: ");
 
-  if (InputString(dir_name, LINES - 2, 20, 0, COLS - 20 - 1) == CR)
+  const auto name = InputString({}, LINES - 2, 20, 0, COLS - 20 - 1);
+  move(LINES - 2, 1);
+  clrtoeol();
+
+  if (!name)
   {
-    result = MakeDirEntry(father_dir_entry, dir_name);
+    return std::nullopt;
   }
 
-  move(LINES - 2, 1); clrtoeol();
+  if (MakeDirEntry(father_dir_entry, *name) != 0)
+  {
+    return std::nullopt;
+  }
 
-  return( result );
+  return name;
 }
 
 

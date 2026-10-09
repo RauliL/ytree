@@ -8,7 +8,7 @@
  * InputStr                                                                *
  * Liest eine Zeichenkette an Position (y,x) mit der max. Laenge length    *
  * Vorschlagswert fuer die Eingabe ist s selbst                            *
- * Zurueckgegeben wird das Zeichen, mit dem die Eingabe beendet wurde      *
+ * Bei Bestaetigung (Return) wird der bearbeitete Text zurueckgegeben.     *
  ***************************************************************************/
 
 std::string StrLeft(const char* str, std::size_t count)
@@ -289,8 +289,239 @@ static inline void RefreshInputString(
   wmove(stdscr, y, x + pos);
 }
 
-int InputString(
-  std::string& s,
+struct InputEditorState
+{
+  std::string buffer;
+  std::size_t pos = 0;
+  std::string char_buffer;
+  bool max_length_reached = false;
+};
+
+static std::size_t input_visual_length(const InputEditorState& state)
+{
+  return static_cast<std::size_t>(StrVisualLength(state.buffer));
+}
+
+static void input_commit_pending_chars(InputEditorState& state, const bool insert_flag)
+{
+  if (state.char_buffer.empty())
+  {
+    return;
+  }
+
+  const auto ptr = state.buffer.c_str();
+  const auto vis_len = input_visual_length(state);
+
+  if (insert_flag && state.pos >= vis_len)
+  {
+    state.buffer.append(state.char_buffer);
+  } else {
+    const auto ls = state.pos > 0 ? StrLeft(ptr, state.pos) : std::string{};
+    const auto rs = StrRight(
+      ptr,
+      static_cast<int>(vis_len) - static_cast<int>(state.pos) - (insert_flag ? 0 : 1)
+    );
+
+    state.buffer = ls;
+    state.buffer.append(state.char_buffer);
+    state.buffer.append(rs);
+  }
+
+  state.char_buffer.clear();
+  ++state.pos;
+}
+
+static void input_refresh(
+  const InputEditorState& state,
+  const int y,
+  const int x,
+  const std::size_t max_length
+)
+{
+  RefreshInputString(state.buffer, y, x, state.pos, max_length);
+}
+
+static void input_on_idle(
+  InputEditorState& state,
+  const bool insert_flag,
+  const int y,
+  const int x,
+  const std::size_t max_length
+)
+{
+  input_commit_pending_chars(state, insert_flag);
+  state.max_length_reached = input_visual_length(state) >= max_length;
+  input_refresh(state, y, x, max_length);
+}
+
+static void input_set_buffer(
+  InputEditorState& state,
+  const char* text,
+  const std::size_t max_length
+)
+{
+  state.buffer = StrLeft(text, max_length);
+  state.pos = static_cast<std::size_t>(StrVisualLength(state.buffer));
+}
+
+static void input_backspace(InputEditorState& state)
+{
+  if (state.pos == 0)
+  {
+    beep();
+    return;
+  }
+
+  const auto ptr = state.buffer.c_str();
+  const auto vis_len = static_cast<int>(input_visual_length(state));
+  const auto ls = StrLeft(ptr, state.pos - 1);
+  const auto rs = StrRight(ptr, vis_len - static_cast<int>(state.pos));
+
+  state.buffer = ls;
+  state.buffer.append(rs);
+  --state.pos;
+}
+
+static void input_kill_before_cursor(InputEditorState& state)
+{
+  if (state.pos == 0)
+  {
+    beep();
+    return;
+  }
+
+  const auto ptr = state.buffer.c_str();
+  const auto rs = StrRight(
+    ptr,
+    static_cast<int>(input_visual_length(state)) - static_cast<int>(state.pos)
+  );
+
+  state.buffer = rs;
+  state.pos = 0;
+}
+
+static void input_kill_word_before_cursor(InputEditorState& state)
+{
+  if (state.pos == 0)
+  {
+    beep();
+    return;
+  }
+
+  const auto new_pos = UnixWordRuboutStart(state.buffer, state.pos);
+  const auto ptr = state.buffer.c_str();
+  const auto ls = StrLeft(ptr, new_pos);
+  const auto rs = StrRight(
+    ptr,
+    static_cast<int>(input_visual_length(state)) - static_cast<int>(state.pos)
+  );
+
+  state.buffer = ls;
+  state.buffer.append(rs);
+  state.pos = new_pos;
+}
+
+static void input_delete_at_cursor(InputEditorState& state)
+{
+  const auto vis_len = input_visual_length(state);
+  if (state.pos >= vis_len)
+  {
+    beep();
+    return;
+  }
+
+  const auto ptr = state.buffer.c_str();
+  const auto ls = StrLeft(ptr, state.pos);
+  const auto rs = StrRight(
+    ptr,
+    static_cast<int>(vis_len) - static_cast<int>(state.pos) - 1
+  );
+
+  state.buffer = ls;
+  state.buffer.append(rs);
+}
+
+static void input_kill_after_cursor(InputEditorState& state)
+{
+  state.buffer = StrLeft(state.buffer.c_str(), state.pos);
+}
+
+static void input_move_word_forward(InputEditorState& state)
+{
+  if (const auto new_pos = InputForwardWordEnd(state.buffer, state.pos); new_pos == state.pos)
+  {
+    beep();
+  } else {
+    state.pos = new_pos;
+  }
+}
+
+static void input_move_word_backward(InputEditorState& state)
+{
+  if (const auto new_pos = UnixWordRuboutStart(state.buffer, state.pos); new_pos == state.pos)
+  {
+    beep();
+  } else {
+    state.pos = new_pos;
+  }
+}
+
+static void input_handle_escape(InputEditorState& state, int& c)
+{
+  nodelay(stdscr, FALSE);
+  const int next = wgetch(stdscr);
+  nodelay(stdscr, TRUE);
+
+  if (next == ERR)
+  {
+    c = ESC;
+    return;
+  }
+
+  if (next == 'f' || next == 'F')
+  {
+    input_move_word_forward(state);
+    c = 0;
+    return;
+  }
+
+  if (next == 'b' || next == 'B')
+  {
+    input_move_word_backward(state);
+    c = 0;
+    return;
+  }
+
+  c = ESC;
+}
+
+static void input_clear_field(
+  const int y,
+  const int x,
+  const std::string& buffer,
+  const std::size_t max_length
+)
+{
+  wmove(stdscr, y, x + buffer.length());
+  for (std::size_t i = 0; i < max_length - buffer.length(); ++i)
+  {
+    mvwaddch(stdscr, y, x + i, ' ');
+  }
+  wmove(stdscr, y, x);
+}
+
+static std::string input_finalize_value(
+  const InputEditorState& state,
+  const std::size_t max_length
+)
+{
+  InsHistory(state.buffer);
+  const auto expanded = tilde_expand(state.buffer);
+  return StrLeft(expanded.c_str(), max_length);
+}
+
+std::optional<std::string> InputString(
+  const std::string& initial,
   const int y,
   const int x,
   const std::size_t initial_pos,
@@ -298,65 +529,34 @@ int InputString(
 )
 {
   static bool insert_flag = true;
-  bool max_length_reached = false;
-  int c;
-  std::string buffer = s;
-  std::size_t pos = initial_pos;
-  std::string char_buffer;
+  InputEditorState state{ .buffer = initial, .pos = initial_pos };
 
-  /* Feld gefuellt ausgeben */
-  /*------------------------*/
   print_time = false;
   curs_set(1);
   leaveok(stdscr, FALSE);
   nodelay(stdscr, TRUE);
 
-  RefreshInputString(buffer, y, x, pos, max_length);
+  input_refresh(state, y, x, max_length);
 
-  do
+  int c = 0;
+  while (c != ESC && c != CR)
   {
     if ((c = wgetch(stdscr)) == ERR)
     {
-      if (!char_buffer.empty())
-      {
-        const auto ptr = buffer.c_str();
-
-        if (insert_flag && pos >= static_cast<std::size_t>(StrVisualLength(ptr)))
-        {
-          // Append symbol.
-          buffer.append(char_buffer);
-        } else {
-          // Insert / overwrite symbol at cursor position.
-          const auto ls = pos > 0 ? StrLeft(ptr, pos) : std::string{};
-          const auto rs = StrRight(
-            ptr,
-            StrVisualLength(ptr) - static_cast<int>(pos) - (insert_flag ? 0 : 1)
-          );
-
-          buffer = ls;
-          buffer.append(char_buffer);
-          buffer.append(rs);
-        }
-        char_buffer.clear();
-        ++pos;
-      }
-
-      max_length_reached =
-        static_cast<std::size_t>(StrVisualLength(buffer)) >= max_length;
-      RefreshInputString(buffer, y, x, pos, max_length);
+      input_on_idle(state, insert_flag, y, x, max_length);
       continue;
     }
 
     switch (c)
     {
       case 'C' & 0x1f:
-        c = 27;
+        c = ESC;
         break;
 
       case KEY_LEFT:
-        if (pos > 0)
+        if (state.pos > 0)
         {
-          --pos;
+          --state.pos;
         } else {
           beep();
         }
@@ -364,176 +564,69 @@ int InputString(
 
 #if defined(KEY_SLEFT)
       case KEY_SLEFT:
-        if (const auto new_pos = UnixWordRuboutStart(buffer, pos); new_pos == pos)
-        {
-          beep();
-        } else {
-          pos = new_pos;
-        }
+        input_move_word_backward(state);
         break;
 #endif
 
       case KEY_RIGHT:
-        if (pos < static_cast<std::size_t>(StrVisualLength(buffer)))
+        if (state.pos < input_visual_length(state))
         {
-          ++pos;
-        } else {
-          break;
+          ++state.pos;
         }
         break;
 
 #if defined(KEY_SRIGHT)
       case KEY_SRIGHT:
-        if (const auto new_pos = InputForwardWordEnd(buffer, pos); new_pos == pos)
-        {
-          beep();
-        } else {
-          pos = new_pos;
-        }
+        input_move_word_forward(state);
         break;
 #endif
 
       case ESC:
-      {
-        nodelay(stdscr, FALSE);
-        const int next = wgetch(stdscr);
-        nodelay(stdscr, TRUE);
-        if (next == ERR)
-        {
-          c = ESC;
-          break;
-        }
-        if (next == 'f' || next == 'F')
-        {
-          if (const auto new_pos = InputForwardWordEnd(buffer, pos); new_pos == pos)
-          {
-            beep();
-          } else {
-            pos = new_pos;
-          }
-          c = 0;
-        } else if (next == 'b' || next == 'B')
-        {
-          if (const auto new_pos = UnixWordRuboutStart(buffer, pos); new_pos == pos)
-          {
-            beep();
-          } else {
-            pos = new_pos;
-          }
-          c = 0;
-        } else {
-          c = ESC;
-        }
+        input_handle_escape(state, c);
         break;
-      }
 
       case KEY_BACKSPACE:
       case 'H' & 0x1f:
       case 0x7f:
-        if (pos > 0)
-        {
-          const auto ptr = buffer.c_str();
-          const auto ls = StrLeft(ptr, pos - 1);
-          const auto rs = StrRight(ptr, StrVisualLength(ptr) - pos);
-
-          buffer = ls;
-          buffer.append(rs);
-          --pos;
-        } else {
-          beep();
-        }
+        input_backspace(state);
         break;
 
       case 'U' & 0x1f:
-        if (pos == 0)
-        {
-          beep();
-        } else {
-          const auto ptr = buffer.c_str();
-          const auto rs = StrRight(
-            ptr,
-            StrVisualLength(ptr) - static_cast<int>(pos)
-          );
-
-          buffer = rs;
-          pos = 0;
-        }
+        input_kill_before_cursor(state);
         break;
 
       case 'W' & 0x1f:
-        if (pos == 0)
-        {
-          beep();
-        } else {
-          const auto new_pos = UnixWordRuboutStart(buffer, pos);
-          const auto ptr = buffer.c_str();
-          const auto ls = StrLeft(ptr, new_pos);
-          const auto rs = StrRight(
-            ptr,
-            StrVisualLength(ptr) - static_cast<int>(pos)
-          );
-
-          buffer = ls;
-          buffer.append(rs);
-          pos = new_pos;
-        }
+        input_kill_word_before_cursor(state);
         break;
 
       case KEY_DC:
-        if (pos < static_cast<std::size_t>(StrVisualLength(buffer)))
-        {
-          const auto ptr = buffer.c_str();
-          const auto ls = StrLeft(ptr, pos);
-          const auto rs = StrRight(
-            ptr,
-            StrVisualLength(ptr) - static_cast<int>(pos) - 1
-          );
-
-          buffer = ls;
-          buffer.append(rs);
-        } else {
-          beep();
-        }
+        input_delete_at_cursor(state);
         break;
 
       case KEY_DL:
-        {
-          const auto ls = StrLeft(buffer.c_str(), pos);
-
-          buffer = ls;
-          break;
-        }
+        input_kill_after_cursor(state);
+        break;
 
       case KEY_UP:
-      {
         nodelay(stdscr, FALSE);
-        const auto selected = GetHistory();
-        nodelay(stdscr, TRUE);
-        if (selected && !selected->empty())
+        if (const auto selected = GetHistory(); selected && !selected->empty())
         {
-          const auto ls = StrLeft(selected->c_str(), max_length);
-
-          buffer = ls;
-          pos = StrVisualLength(ls);
-          MvAddStr(y, x, buffer);
-          for (auto i = pos; i < max_length; ++i)
-          {
-            addch('_');
-          }
+          input_set_buffer(state, selected->c_str(), max_length);
+          input_refresh(state, y, x, max_length);
           RefreshWindow(stdscr);
           doupdate();
         }
+        nodelay(stdscr, TRUE);
         break;
-      }
 
       case KEY_HOME:
       case 'A' & 0x1f:
-        pos = 0;
+        state.pos = 0;
         break;
 
       case KEY_END:
       case 'E' & 0x1f:
-        pos = StrVisualLength(buffer);
+        state.pos = input_visual_length(state);
         break;
 
       case KEY_EIC:
@@ -542,26 +635,14 @@ int InputString(
         break;
 
       case '\t':
-      {
-        if (auto pp = GetMatches(buffer))
+        if (const auto match = GetMatches(state.buffer); match && !match->empty())
         {
-          if (!pp->empty())
-          {
-            const auto ls = StrLeft(pp->c_str(), max_length);
-
-            buffer = ls;
-            pos = StrVisualLength(ls);
-            MvWAddStr(stdscr, y, x, buffer);
-            for (auto i = pos; i < max_length; ++i)
-            {
-              addch('_');
-            }
-            RefreshWindow(stdscr);
-            doupdate();
-          }
+          input_set_buffer(state, match->c_str(), max_length);
+          input_refresh(state, y, x, max_length);
+          RefreshWindow(stdscr);
+          doupdate();
         }
         break;
-      }
 
 #if defined(KEY_F)
       case KEY_F(2):
@@ -576,10 +657,7 @@ int InputString(
         }
         if (*path)
         {
-          const auto ls = StrLeft(path, max_length);
-
-          buffer = ls;
-          pos = StrVisualLength(ls);
+          input_set_buffer(state, path, max_length);
         }
         break;
       }
@@ -595,42 +673,35 @@ int InputString(
 #endif
 
       default:
-        if (InputApplyWordMotion(c, buffer, pos))
+        if (InputApplyWordMotion(c, state.buffer, state.pos))
         {
           c = 0;
         } else if (c >= ' ' && c < 0xff && c != 127)
         {
-          if (max_length_reached)
+          if (state.max_length_reached)
           {
             beep();
           } else {
-            char_buffer.append(1, static_cast<char>(c));
+            state.char_buffer.append(1, static_cast<char>(c));
           }
         }
         break;
     }
   }
-  while (c != 27 && c != CR);
 
-  wmove(stdscr, y, x + buffer.length());
-  for (std::size_t i = 0; i < max_length - buffer.length(); ++i)
-  {
-    mvwaddch(stdscr, y, x + i, ' ');
-  }
-  wmove(stdscr, y, x);
+  input_clear_field(y, x, state.buffer, max_length);
 
   nodelay(stdscr, FALSE);
   leaveok(stdscr, TRUE);
   curs_set(0);
   print_time = true;
 
-  InsHistory(buffer);
-
-  const auto expanded = tilde_expand(buffer);
-
-  s = StrLeft(expanded.c_str(), max_length);
-
-  return c;
+  const auto value = input_finalize_value(state, max_length);
+  if (c == CR)
+  {
+    return value;
+  }
+  return std::nullopt;
 }
 
 int InputChoise(const char *msg, const char *term)
@@ -672,23 +743,15 @@ int InputChoise(const char *msg, const char *term)
 
 
 
-bool GetTapeDeviceName()
+std::optional<std::string> GetTapeDeviceName()
 {
-  std::string path = statistic.tape_name;
-
   ClearHelp();
 
   MvAddStr(LINES - 2, 1, "Tape-Device:");
-  if (InputString(path, LINES - 2, 14, 0, COLS - 15) == CR)
-  {
-    statistic.tape_name = path;
-    move(LINES - 2, 1); clrtoeol();
-    return true;
-  }
-
-  move(LINES - 2, 1); clrtoeol();
-
-  return false;
+  const auto tape = InputString(statistic.tape_name, LINES - 2, 14, 0, COLS - 15);
+  move(LINES - 2, 1);
+  clrtoeol();
+  return tape;
 }
 
 

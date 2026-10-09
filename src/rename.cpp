@@ -108,14 +108,14 @@ int RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_f
 
 
 
-int GetRenameParameter(const std::string* old_name, char *new_name)
+std::optional<std::string> GetRenameParameter(const std::string* old_name)
 {
   int l;
 
   if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
   {
     beep();
-    return( -1 );
+    return std::nullopt;
   }
 
   ClearHelp();
@@ -131,33 +131,36 @@ int GetRenameParameter(const std::string* old_name, char *new_name)
     l = 13;
   }
 
-  std::string new_name_str = old_name ? *old_name : "*";
-
-  if (InputString(new_name_str, LINES - 2, l, 0, COLS - l - 1) != CR)
+  const auto edited_name = InputString(
+    old_name ? *old_name : "*",
+    LINES - 2,
+    l,
+    0,
+    COLS - l - 1
+  );
+  if (!edited_name)
   {
-    return -1;
+    return std::nullopt;
   }
 
-  if(new_name_str.empty())
-    return( -1 );
+  if (edited_name->empty())
+  {
+    return std::nullopt;
+  }
 
-  if (old_name && *old_name == new_name_str)
+  if (old_name && *old_name == *edited_name)
   {
     Message("Can't rename: New name same as old name.");
-
-    return -1;
+    return std::nullopt;
   }
 
-  if (new_name_str.find(std::filesystem::path::preferred_separator) != std::string::npos)
+  if (edited_name->find(std::filesystem::path::preferred_separator) != std::string::npos)
   {
     Message("Invalid new name:*No slashes when renaming!");
-
-    return -1;
+    return std::nullopt;
   }
 
-  *std::format_to(new_name, "{}", new_name_str) = '\0';
-
-  return( 0 );
+  return edited_name;
 }
 
 static bool RenameDirEntry(

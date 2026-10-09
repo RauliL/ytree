@@ -10,8 +10,9 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
   ClearHelp();
 
   MvAddStr(LINES - 2, 1, "Pipe-Command:");
-  if (GetPipeCommand(input_buffer))
+  if (const auto command = GetPipeCommand(input_buffer))
   {
+    input_buffer = *command;
     input_buffer.insert(0, "| ");
     move(LINES - 2, 1);
     clrtoeol();
@@ -44,21 +45,15 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
   return result;
 }
 
-bool GetPipeCommand(std::string& pipe_command)
+std::optional<std::string> GetPipeCommand(const std::string& initial)
 {
-  bool result = false;
-
   ClearHelp();
 
   MvAddStr(LINES - 2, 1, "Pipe-Command: ");
-  if (InputString(pipe_command, LINES - 2, 15, 0, COLS - 16) == CR)
-  {
-    result = true;
-  }
+  const auto command = InputString(initial, LINES - 2, 15, 0, COLS - 16);
   move(LINES - 2, 1);
   clrtoeol();
-
-  return result;
+  return command;
 }
 
 int PipeTaggedFiles(FileEntry* fe_ptr, PipeWalkContext* ctx)

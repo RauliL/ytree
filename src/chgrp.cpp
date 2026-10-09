@@ -5,7 +5,6 @@ static int SetDirGroup(DirEntry *de_ptr, int new_group_id);
 int ChangeFileGroup(FileEntry *fe_ptr)
 {
   ChangeGroupWalkContext ctx;
-  int  group_id;
   int  result;
 
   result = -1;
@@ -16,19 +15,23 @@ int ChangeFileGroup(FileEntry *fe_ptr)
     return( result );
   }
 
-  if( ( group_id = GetNewGroup(fe_ptr->stat_struct.st_gid) ) >= 0 )
+  if (const auto group = GetNewGroup(fe_ptr->stat_struct.st_gid))
   {
-    ctx.new_group_id = group_id;
-    result = SetFileGroup(fe_ptr, &ctx);
+    if (const auto group_id_ptr = GetGroupId(*group))
+    {
+      ctx.new_group_id = *group_id_ptr;
+      result = SetFileGroup(fe_ptr, &ctx);
+    } else {
+      FormatMessage("Can't read Group-ID:*\"{}\"", *group);
+    }
   }
   return( result );
 }
 
-int GetNewGroup(int st_gid)
+std::optional<std::string> GetNewGroup(int st_gid)
 {
   std::string group;
   const int id = st_gid == -1 ? static_cast<int>(getgid()) : st_gid;
-  int group_id = -1;
 
   if (const auto group_name_ptr = GetGroupName(id))
   {
@@ -41,20 +44,10 @@ int GetNewGroup(int st_gid)
 
   MvAddStr(LINES - 2, 1, "New Group:");
 
-  if (InputString(group, LINES - 2, 12, 0, GROUP_NAME_MAX) == CR)
-  {
-    if (const auto group_id_ptr = GetGroupId(group))
-    {
-      group_id = *group_id_ptr;
-    } else {
-      FormatMessage("Can't read Group-ID:*\"{}\"", group);
-    }
-  }
-
+  const auto new_group = InputString(group, LINES - 2, 12, 0, GROUP_NAME_MAX);
   move(LINES - 2, 1);
   clrtoeol();
-
-  return group_id;
+  return new_group;
 }
 
 int SetFileGroup(FileEntry *fe_ptr, ChangeGroupWalkContext *ctx)
@@ -94,7 +87,6 @@ int SetFileGroup(FileEntry *fe_ptr, ChangeGroupWalkContext *ctx)
 
 int ChangeDirGroup(DirEntry *de_ptr)
 {
-  int  group_id;
   int  result;
 
   result = -1;
@@ -105,9 +97,14 @@ int ChangeDirGroup(DirEntry *de_ptr)
     return( result );
   }
 
-  if( ( group_id = GetNewGroup(de_ptr->stat_struct.st_gid) ) >= 0 )
+  if (const auto group = GetNewGroup(de_ptr->stat_struct.st_gid))
   {
-    result = SetDirGroup(de_ptr, group_id);
+    if (const auto group_id_ptr = GetGroupId(*group))
+    {
+      result = SetDirGroup(de_ptr, *group_id_ptr);
+    } else {
+      FormatMessage("Can't read Group-ID:*\"{}\"", *group);
+    }
   }
   return( result );
 }

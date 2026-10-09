@@ -165,8 +165,10 @@ bool LoginDisk(const std::string& path)
     /* zugehoeriges tape-device ermitteln */
     /*------------------------------------*/
 
-    if (!GetTapeDeviceName())
+    if (const auto tape = GetTapeDeviceName())
     {
+      statistic.tape_name = *tape;
+    } else {
       return false;
     }
   }
@@ -631,15 +633,15 @@ bool LoginDisk(const std::string& path)
 
 
 
-bool GetNewLoginPath(std::string& path)
+std::optional<std::string> GetNewLoginPath(const std::string& initial)
 {
-  std::string aux = path;
+  std::string aux = initial;
 
   ClearHelp();
 
   MvAddStr(LINES - 2, 1, "NEW LOGIN-PATH:");
 
-  if (mode == Mode::LL_FILE_MODE && !path.empty() && path.front() == '<')
+  if (mode == Mode::LL_FILE_MODE && !initial.empty() && initial.front() == '<')
   {
     if (!aux.empty())
     {
@@ -651,13 +653,12 @@ bool GetNewLoginPath(std::string& path)
     }
   }
 
-  if (InputString(aux, LINES - 2, 17, 0, COLS - 24) == CR)
+  if (const auto entered = InputString(aux, LINES - 2, 17, 0, COLS - 24))
   {
-    path = NormPath(aux);
-    return true;
+    return NormPath(*entered);
   }
 
-  return false;
+  return std::nullopt;
 }
 
 

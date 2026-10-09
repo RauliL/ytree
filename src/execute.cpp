@@ -11,8 +11,9 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
   }
 
   MvAddStr(LINES - 2, 1, "Command:");
-  if (GetCommandLine(command_line))
+  if (const auto command = GetCommandLine(command_line))
   {
+    command_line = *command;
     const auto cwd = GetcwdOrDot();
 
     if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
@@ -40,30 +41,20 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
   return result;
 }
 
-bool GetCommandLine(std::string& command_line)
+std::optional<std::string> GetCommandLine(const std::string& initial)
 {
-  bool result = false;
-
   ClearHelp();
 
   MvAddStr(LINES - 2, 1, "Command: ");
-  if (InputString(command_line, LINES - 2, 10, 0, COLS - 11) == CR)
-  {
-    move(LINES - 2, 1);
-    clrtoeol();
-    result = true;
-  }
-
+  const auto command = InputString(initial, LINES - 2, 10, 0, COLS - 11);
   move(LINES - 2, 1);
   clrtoeol();
-
-  return result;
+  return command;
 }
 
-bool GetSearchCommandLine(std::string& command_line)
+std::optional<std::string> GetSearchCommandLine()
 {
   auto command = GetProfileValueOrEmpty("SEARCHCOMMAND");
-  bool result = false;
   int pos;
 
   ClearHelp();
@@ -82,18 +73,10 @@ bool GetSearchCommandLine(std::string& command_line)
   } else {
     pos = 0;
   }
-  if (InputString(command, LINES - 2, 23, pos, COLS - 24) == CR)
-  {
-    command_line = command;
-    move(LINES - 2, 1);
-    clrtoeol();
-    result = true;
-  }
-
+  const auto edited = InputString(command, LINES - 2, 23, pos, COLS - 24);
   move(LINES - 2, 1);
   clrtoeol();
-
-  return result;
+  return edited;
 }
 
 int ExecuteCommand(FileEntry* fe_ptr, ExecuteWalkContext* ctx)
