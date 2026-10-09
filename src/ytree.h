@@ -609,7 +609,7 @@ extern void RotateFileMode();
 int Execute(const DirEntry* dir_entry, const FileEntry* file_entry);
 extern int  Pipe(DirEntry *dir_entry, FileEntry *file_entry);
 extern int  PipeTaggedFiles(FileEntry *fe_ptr, PipeWalkContext *ctx);
-extern int  GetPipeCommand(char *pipe_command);
+bool GetPipeCommand(std::string& pipe_command);
 extern void GetKindOfSort();
 extern void SetKindOfSort(SortKey key, SortOrder order = SortOrder::Ascending);
 extern int  ChangeFileModus(FileEntry *fe_ptr);

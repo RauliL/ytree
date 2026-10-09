@@ -1357,7 +1357,6 @@ int HandleFileWindow(DirEntry *dir_entry)
   int owner_id;
   int group_id;
   int start_x = 0;
-  char filepath[PATH_LENGTH +1];
   char modus[11];
   bool path_copy;
   int  term;
@@ -2615,58 +2614,58 @@ int HandleFileWindow(DirEntry *dir_entry)
           need_dsp_help = true;
           break;
 
-      case 'P' & 0x1F :
+      case 'P' & 0x1F:
           de_ptr = dir_entry;
 
-          if( !IsMatchingTaggedFiles() )
+          if (!IsMatchingTaggedFiles())
           {
-      beep();
+            beep();
           }
           else if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
           {
-      Message("i am sorry*^P not supported in Archive-mode");
-          }
-          else
-          {
+            Message("i am sorry*^P not supported in Archive-mode");
+          } else {
+            std::string filepath;
+
             need_dsp_help = true;
 
-      if( GetPipeCommand(filepath) )
-                        {
-        beep();
-        break;
+            if (!GetPipeCommand(filepath))
+            {
+              beep();
+              break;
+            }
+
+            PipeWalkContext pipe_ctx;
+            if (!(pipe_ctx.pipe_file = popen(filepath.c_str(), "w")))
+            {
+              FormatMessage("execution of command*{}*failed", filepath);
+              break;
             }
 
 
-
-      PipeWalkContext pipe_ctx;
-      if( ( pipe_ctx.pipe_file = popen(filepath, "w") ) == nullptr )
-      {
-        FormatMessage("execution of command*{}*failed", filepath);
-        break;
-      }
-
-
-      WalkTaggedFiles(dir_entry->start_file,
-           dir_entry->cursor_pos,
-           PipeTaggedFiles,
-           &pipe_ctx
-);
+            WalkTaggedFiles(
+              dir_entry->start_file,
+              dir_entry->cursor_pos,
+              PipeTaggedFiles,
+              &pipe_ctx
+            );
 
             clearok(stdscr, true);
 
-      if( pclose(pipe_ctx.pipe_file) )
-      {
-        Warning("pclose() failed");
-      }
+            if (pclose(pipe_ctx.pipe_file) )
+            {
+              Warning("pclose() failed");
+            }
 
-                        GetAvailBytes(&statistic.disk_space);
-                        DisplayAvailBytes();
+            GetAvailBytes(&statistic.disk_space);
+            DisplayAvailBytes();
 
-      DisplayFiles(dir_entry,
+            DisplayFiles(
+              dir_entry,
               dir_entry->start_file,
               dir_entry->start_file + dir_entry->cursor_pos,
               start_x
-);
+            );
           }
           break;
 
