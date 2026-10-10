@@ -1,20 +1,7 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/chmod.c,v 1.14 2001/06/15 16:36:36 werner Exp $
- *
- * Change Modus
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
-
-
+#include "./walker.hpp"
 
 static int SetDirModus(DirEntry *de_ptr, const ChangeModusWalkContext& ctx);
 static int GetNewModus(int old_modus, const char *new_modus);
-
-
 
 int ChangeFileModus(FileEntry *fe_ptr)
 {

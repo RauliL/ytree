@@ -574,58 +574,44 @@ void PrintMenuOptions(
   );
 }
 
-
-/*****************************************************************************
- *                              FormFilename                                 *
- *****************************************************************************/
-
-char* FormFilename(char* dest, const std::string& src, unsigned int max_len)
+std::string FormFilename(const std::string& src, std::size_t max_len)
 {
-  int i;
-  int begin;
-  unsigned int l;
+  const auto l = src.size();
 
-  l = static_cast<unsigned int>(src.size());
-  begin = 0;
-
-  if( l <= max_len )
+  if (l <= max_len)
   {
-    *std::format_to(dest, "{}", src) = '\0';
-    return dest;
+    return src;
   }
 
-  for(i=0; i < (int) max_len - 4; i++)
-    if( src[l - i] == std::filesystem::path::preferred_separator || src[l - i] == '\\' )
-      begin = l - i;
-  *std::format_to(dest, "/...{}", src.c_str() + begin) = '\0';
-  return dest;
+  std::size_t begin = 0;
+  if (max_len > 4)
+  {
+    for (std::size_t i = 0; i < max_len - 4; ++i)
+    {
+      const char c = src[l - i];
+      if (c == std::filesystem::path::preferred_separator || c == '\\')
+      {
+        begin = l - i;
+      }
+    }
+  }
+
+  return std::format("/...{}", src.substr(begin));
 }
 
-
-/*****************************************************************************
- *                              CutFilename                                  *
- *****************************************************************************/
-
-char *CutFilename(char *dest, const std::string& src, unsigned int max_len)
+std::string CutFilename(const std::string& src, std::size_t max_len)
 {
-  unsigned int l;
+  const auto l = static_cast<std::size_t>(StrVisualLength(src));
 
-  l = StrVisualLength(src);
-
-  if( l <= max_len )
+  if (l <= max_len)
   {
-    *std::format_to(dest, "{}", src) = '\0';
-    return dest;
+    return src;
   }
 
   const auto tmp = StrLeft(src.c_str(), max_len - 3);
-  *std::format_to(dest, "{}...", tmp) = '\0';
-  return dest;
+  return std::format("{}...", tmp);
 }
 
-/*****************************************************************************
- *                              CutPathname                                  *
- *****************************************************************************/
 std::string CutPathname(const std::string& src, std::size_t max_len)
 {
   const auto l = src.length();
@@ -638,40 +624,60 @@ std::string CutPathname(const std::string& src, std::size_t max_len)
   return "..." + src.substr(l - max_len + 3);
 }
 
-/*****************************************************************************
- *                                  Fnsplit                                  *
- *****************************************************************************/
-
-/* Aufsplitten des Dateinamens in die einzelnen Komponenten */
-
-void Fnsplit(char *path, char *dir, char *name)
+/**
+ * Split archive member path into parent directory (with trailing '/') and
+ * basename.
+ */
+ArchivePathSplit Fnsplit(std::string path)
 {
-  std::size_t i;
-  char *name_begin;
-  char *trunc_name;
+  ArchivePathSplit result;
 
-  while( *path == ' ' || *path == '\t' ) path++;
-
-  while( std::strchr(path, std::filesystem::path::preferred_separator) || std::strchr(path, '\\') )
-    *(dir++) = *(path++);
-
-  *dir = '\0';
-
-  name_begin = path;
-  trunc_name = name;
-
-  for(i=0; i < PATH_LENGTH && *path; i++ )
-    *(name++) = *(path++);
-
-  *name = '\0';
-
-  if (i == PATH_LENGTH && *path)
+  while (!path.empty() && (path.front() == ' ' || path.front() == '\t'))
   {
-    FormatWarning("filename too long:*{}*truncating to*{}", name_begin, trunc_name);
+    path.erase(0, 1);
   }
+
+  for (char& c : path)
+  {
+    if (c == '\\')
+    {
+      c = std::filesystem::path::preferred_separator;
+    }
+  }
+
+  if (path.empty())
+  {
+    return result;
+  }
+
+  const std::filesystem::path parsed(path);
+  result.name = parsed.filename().string();
+
+  const auto parent = parsed.parent_path();
+  if (!parent.empty() || parsed.has_root_path())
+  {
+    result.dir = parent.string();
+    const char sep = std::filesystem::path::preferred_separator;
+    if (result.dir.empty() || result.dir.back() != sep)
+    {
+      result.dir += sep;
+    }
+  }
+
+  if (result.name.size() > PATH_LENGTH)
+  {
+    const auto full_name = result.name;
+
+    result.name.resize(PATH_LENGTH);
+    FormatWarning(
+      "filename too long:*{}*truncating to*{}",
+      full_name,
+      result.name
+    );
+  }
+
+  return result;
 }
-
-
 
 int BuildFilename(const std::string& in_filename,
        const char *pattern,

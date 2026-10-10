@@ -1,8 +1,8 @@
-#include "ytree.h"
+#include "./walker.hpp"
 
 int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
 {
-  static char input_buffer[COMMAND_LINE_LENGTH + 1] = "| ";
+  std::string input_buffer;
   const auto file_name_path = GetRealFileNamePath(file_entry);
   std::string command_line;
   int result = -1;
@@ -10,8 +10,10 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
   ClearHelp();
 
   MvAddStr(LINES - 2, 1, "Pipe-Command:");
-  if (!GetPipeCommand(&input_buffer[2]))
+  if (const auto command = GetPipeCommand(input_buffer))
   {
+    input_buffer = *command;
+    input_buffer.insert(0, "| ");
     move(LINES - 2, 1);
     clrtoeol();
 
@@ -43,28 +45,15 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
   return result;
 }
 
-
-
-
-
-int GetPipeCommand(char *pipe_command)
+std::optional<std::string> GetPipeCommand(const std::string& initial)
 {
-  int  result;
-  std::string command;
-
-  result = -1;
-
   ClearHelp();
 
   MvAddStr(LINES - 2, 1, "Pipe-Command: ");
-  if (InputString(command, LINES - 2, 15, 0, COLS - 16) == CR)
-  {
-    *std::format_to(pipe_command, "{}", command) = '\0';
-    result = 0;
-  }
-  move(LINES - 2, 1); clrtoeol();
-
-  return( result );
+  const auto command = InputString(initial, LINES - 2, 15, 0, COLS - 16);
+  move(LINES - 2, 1);
+  clrtoeol();
+  return command;
 }
 
 int PipeTaggedFiles(FileEntry* fe_ptr, PipeWalkContext* ctx)

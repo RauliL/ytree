@@ -1,4 +1,4 @@
-#include "ytree.h"
+#include "./walker.hpp"
 
 static int Copy(const std::string& to_path, const std::string& from_path);
 static int CopyArchiveFile(const std::string& to_path, const std::string& from_path);
@@ -220,41 +220,39 @@ FNC_XIT:
 
 
 
-static bool GetAsToParameter(
+static std::optional<AsToParameter> GetAsToParameter(
   const std::string& header,
-  std::optional<std::string_view> from_file,
-  std::string& to_file,
-  std::string& to_dir
+  std::optional<std::string_view> from_file
 )
 {
   std::string to_file_input = from_file ? std::string(*from_file) : "*";
-  std::string to_dir_input;
 
   ClearHelp();
 
   MvAddStr(LINES - 3, 1, header);
   MvAddStr(LINES - 2, 1, "AS   ");
 
-  if (InputString(to_file_input, LINES - 2, 6, 0, COLS - 6) == CR)
+  const auto to_file_value = InputString(to_file_input, LINES - 2, 6, 0, COLS - 6);
+  if (!to_file_value)
   {
-    MvAddStr(LINES - 1, 1, "TO   ");
-    if (InputString(to_dir_input, LINES - 1, 6, 0, COLS - 6) == CR)
-    {
-      to_file = std::move(to_file_input);
-      to_dir = std::move(to_dir_input);
-      return true;
-    }
+    ClearHelp();
+    return std::nullopt;
   }
-  ClearHelp();
 
-  return false;
+  MvAddStr(LINES - 1, 1, "TO   ");
+  const auto to_dir_value = InputString({}, LINES - 1, 6, 0, COLS - 6);
+  if (!to_dir_value)
+  {
+    ClearHelp();
+    return std::nullopt;
+  }
+
+  return AsToParameter{ *to_file_value, *to_dir_value };
 }
 
-bool GetCopyParameter(
+std::optional<AsToParameter> GetCopyParameter(
   std::optional<std::string_view> from_file,
-  bool path_copy,
-  std::string& to_file,
-  std::string& to_dir
+  bool path_copy
 )
 {
   const std::string_view label = from_file ? *from_file : "TAGGED FILES";
@@ -262,19 +260,17 @@ bool GetCopyParameter(
     ? std::format("PATHCOPY {}", label)
     : std::format("COPY {}", label);
 
-  return GetAsToParameter(header, from_file, to_file, to_dir);
+  return GetAsToParameter(header, from_file);
 }
 
-bool GetMoveParameter(
-  std::optional<std::string_view> from_file,
-  std::string& to_file,
-  std::string& to_dir
+std::optional<AsToParameter> GetMoveParameter(
+  std::optional<std::string_view> from_file
 )
 {
   const std::string_view label = from_file ? *from_file : "TAGGED FILES";
   const auto header = std::format("MOVE {}", label);
 
-  return GetAsToParameter(header, from_file, to_file, to_dir);
+  return GetAsToParameter(header, from_file);
 }
 
 static int Copy(const std::string& to_path, const std::string& from_path)

@@ -1,14 +1,6 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/init.c,v 1.20 2003/08/31 11:11:00 werner Exp $
- *
- * Initialisierungen
- *
- ***************************************************************************/
-
-
 #include "ytree.h"
 
+#include "./mouse.hpp"
 
 static WINDOW *Subwin(WINDOW *orig, int nlines, int ncols,
                       int begin_y, int begin_x);

@@ -1,15 +1,6 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/view.c,v 1.26 2014/12/26 09:53:11 werner Exp $
- *
- * View-Kommando-Bearbeitung
- *
- ***************************************************************************/
-
-
 #include "ytree.h"
 
-#include <vector>
+#include "./mouse.hpp"
 
 typedef struct MODIF {
     long pos;

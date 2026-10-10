@@ -68,32 +68,33 @@ ReadFileSpec.
 Take in the user-specified new filespec.
 As modified, it defaults to '*'; the original version offered the
 current value as default, but that's just an up-arrow away.
-Returns 0 on success, -1 on failure (empty string).
+Returns the new filespec on success, or nullopt on cancel/invalid input.
 <<***************************************************************/
 
-int ReadFileSpec()
+std::optional<std::string> ReadFileSpec()
 {
-  int result = -1;
-
   std::string buffer = "*";
 
   ClearHelp();
 
   MvAddStr(LINES - 2, 1, "New filespec:");
-  if (InputString(buffer, LINES - 2, 15, 0, FILE_SPEC_LENGTH) == CR)
+  const auto filespec = InputString(buffer, LINES - 2, 15, 0, FILE_SPEC_LENGTH);
+  move(LINES - 2, 1);
+  clrtoeol();
+
+  if (!filespec)
   {
-    if (!SetFileSpec(buffer))
-    {
-      Message("Invalid Filespec");
-    }
-    else
-    {
-      statistic.file_spec = buffer;
-      result = 0;
-    }
+    return std::nullopt;
   }
-  move(LINES - 2, 1); clrtoeol();
-  return(result);
+
+  if (!SetFileSpec(*filespec))
+  {
+    Message("Invalid Filespec");
+    return std::nullopt;
+  }
+
+  statistic.file_spec = *filespec;
+  return filespec;
 }
 
 

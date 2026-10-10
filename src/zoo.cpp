@@ -74,7 +74,7 @@ static int GetStatFromZOO(char *zoo_line, char *name, struct stat *stat)
 {
   char *t, *old;
   int  i, id;
-  struct tm tm_struct;
+  std::tm tm_struct;
   static const char *month[] = { "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 

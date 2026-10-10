@@ -1,24 +1,10 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/chown.c,v 1.13 2005/01/22 16:32:29 werner Exp $
- *
- * Change Owner
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
-
-
+#include "./walker.hpp"
 
 static int SetDirOwner(DirEntry *de_ptr, int new_owner_id);
-
-
 
 int ChangeFileOwner(FileEntry *fe_ptr)
 {
   ChangeOwnerWalkContext ctx;
-  int  owner_id;
   int  result;
 
   result = -1;
@@ -29,10 +15,15 @@ int ChangeFileOwner(FileEntry *fe_ptr)
     return( result );
   }
 
-  if( ( owner_id = GetNewOwner(fe_ptr->stat_struct.st_uid) ) >= 0 )
+  if (const auto owner = GetNewOwner(fe_ptr->stat_struct.st_uid))
   {
-    ctx.new_owner_id = owner_id;
-    result = SetFileOwner(fe_ptr, &ctx);
+    if (const auto owner_id_ptr = GetPasswdUid(*owner))
+    {
+      ctx.new_owner_id = *owner_id_ptr;
+      result = SetFileOwner(fe_ptr, &ctx);
+    } else {
+      FormatMessage("Can't read Owner-ID:*{}", *owner);
+    }
   }
   return( result );
 }
@@ -40,15 +31,10 @@ int ChangeFileOwner(FileEntry *fe_ptr)
 
 
 
-int GetNewOwner(int st_uid)
+std::optional<std::string> GetNewOwner(int st_uid)
 {
   std::string owner;
-  int  owner_id;
-  int  id;
-
-  owner_id = -1;
-
-  id = (st_uid == -1) ? (int) getuid() : st_uid;
+  const int id = (st_uid == -1) ? static_cast<int>(getuid()) : st_uid;
 
   if (const auto owner_name_ptr = GetPasswdName(id))
   {
@@ -61,19 +47,10 @@ int GetNewOwner(int st_uid)
 
   MvAddStr(LINES - 2, 1, "New Owner:");
 
-  if (InputString(owner, LINES - 2, 12, 0, OWNER_NAME_MAX))
-  {
-    if (const auto owner_id_ptr = GetPasswdUid(owner))
-    {
-      owner_id = *owner_id_ptr;
-    } else {
-      FormatMessage("Can't read Owner-ID:*{}", owner);
-    }
-  }
-
-  move(LINES - 2, 1); clrtoeol();
-
-  return( owner_id );
+  const auto new_owner = InputString(owner, LINES - 2, 12, 0, OWNER_NAME_MAX);
+  move(LINES - 2, 1);
+  clrtoeol();
+  return new_owner;
 }
 
 
@@ -116,7 +93,6 @@ int SetFileOwner(FileEntry *fe_ptr, ChangeOwnerWalkContext *ctx)
 
 int ChangeDirOwner(DirEntry *de_ptr)
 {
-  int  owner_id;
   int  result;
 
   result = -1;
@@ -127,9 +103,14 @@ int ChangeDirOwner(DirEntry *de_ptr)
     return( result );
   }
 
-  if( ( owner_id = GetNewOwner(de_ptr->stat_struct.st_uid) ) >= 0 )
+  if (const auto owner = GetNewOwner(de_ptr->stat_struct.st_uid))
   {
-    result = SetDirOwner(de_ptr, owner_id);
+    if (const auto owner_id_ptr = GetPasswdUid(*owner))
+    {
+      result = SetDirOwner(de_ptr, *owner_id_ptr);
+    } else {
+      FormatMessage("Can't read Owner-ID:*{}", *owner);
+    }
   }
   return( result );
 }

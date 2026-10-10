@@ -29,7 +29,7 @@ void TrimTrailingCr(std::string& line)
   }
 }
 
-bool ParseModified(std::string_view value, struct tm* tm_struct)
+bool ParseModified(std::string_view value, std::tm* tm_struct)
 {
   // Formats: "YYYY-MM-DD HH:MM:SS" or with fractional seconds.
   if (value.size() < 19)
@@ -214,7 +214,8 @@ int ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
     }
     else if (StartsWith(line, kModifiedPrefix))
     {
-      struct tm tm_struct{};
+      std::tm tm_struct{};
+
       if (ParseModified(ValueAfter(line, kModifiedPrefix), &tm_struct))
       {
         st.st_mtime = Mktime(&tm_struct);

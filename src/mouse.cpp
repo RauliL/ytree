@@ -1,5 +1,7 @@
 #include "ytree.h"
 
+#include "./mouse.hpp"
+
 #ifdef NCURSES_MOUSE_VERSION
 
 void EnableMouse()

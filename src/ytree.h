@@ -454,58 +454,16 @@ struct Statistic
   std::string   disk_name;
 };
 
-struct WalkContextBase
+struct ArchivePathSplit
 {
-  FileEntry *new_fe_ptr = nullptr;
+  std::string dir;
+  std::string name;
 };
 
-struct ChangeModusWalkContext : WalkContextBase
+struct AsToParameter
 {
-  char new_modus[11]{};
-};
-
-struct ChangeOwnerWalkContext : WalkContextBase
-{
-  unsigned new_owner_id = 0;
-};
-
-struct ChangeGroupWalkContext : WalkContextBase
-{
-  unsigned new_group_id = 0;
-};
-
-struct ExecuteWalkContext : WalkContextBase
-{
-  std::string command;
-};
-
-struct CopyWalkContext : WalkContextBase
-{
-  Statistic *statistic_ptr = nullptr;
-  DirEntry  *dest_dir_entry = nullptr;
-  char      *to_file = nullptr;
-  char      *to_path = nullptr;
-  bool      path_copy = false;
-  bool      confirm = false;
-};
-
-struct RenameWalkContext : WalkContextBase
-{
-  char *new_name = nullptr;
-  bool confirm = false;
-};
-
-struct MoveWalkContext : WalkContextBase
-{
-  DirEntry *dest_dir_entry = nullptr;
-  char     *to_file = nullptr;
-  char     *to_path = nullptr;
-  bool     confirm = false;
-};
-
-struct PipeWalkContext : WalkContextBase
-{
-  FILE *pipe_file = nullptr;
+  std::string to_file;
+  std::string to_dir;
 };
 
 extern WINDOW *dir_window;
@@ -526,7 +484,6 @@ extern bool  print_time;
 extern bool      resize_request;
 extern bool      bypass_small_window;
 extern std::optional<std::string> initial_directory;
-extern char    builtin_hexdump_cmd[];
 
 extern void DisplayMenu();
 extern void DisplayDiskStatistic();
@@ -591,9 +548,9 @@ extern void DisplayAvailBytes();
 extern void DisplayFileSpec();
 extern void QuitTo(DirEntry * dir_entry);
 void Quit();
-extern int  ReadFileSpec();
-int InputString(
-  std::string& s,
+std::optional<std::string> ReadFileSpec();
+std::optional<std::string> InputString(
+  const std::string& initial,
   const int y,
   const int x,
   const std::size_t initial_pos,
@@ -602,59 +559,47 @@ int InputString(
 extern void RotateFileMode();
 int Execute(const DirEntry* dir_entry, const FileEntry* file_entry);
 extern int  Pipe(DirEntry *dir_entry, FileEntry *file_entry);
-extern int  PipeTaggedFiles(FileEntry *fe_ptr, PipeWalkContext *ctx);
-extern int  GetPipeCommand(char *pipe_command);
+std::optional<std::string> GetPipeCommand(const std::string& initial = {});
 extern void GetKindOfSort();
 extern void SetKindOfSort(SortKey key, SortOrder order = SortOrder::Ascending);
 extern int  ChangeFileModus(FileEntry *fe_ptr);
 extern int  ChangeDirModus(DirEntry *de_ptr);
 extern int  GetNewFileModus(int y, int x, char *modus, const char *term);
 extern int  GetModus(const char *modus);
-extern int  SetFileModus(FileEntry *fe_ptr, ChangeModusWalkContext *ctx);
-extern int  CopyTaggedFiles(FileEntry *fe_ptr, CopyWalkContext *ctx);
 extern int  CopyFile(Statistic *statistic_ptr, FileEntry *fe_ptr, bool confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, bool path_copy);
-extern int  MoveTaggedFiles(FileEntry *fe_ptr, MoveWalkContext *ctx);
 extern int  MoveFile(FileEntry *fe_ptr, bool confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, FileEntry **new_fe_ptr);
 extern int  InputChoise(const char *msg, const char *term);
 void Message(const std::string& msg);
 extern int  GetDirEntry(const std::shared_ptr<DirEntry>& tree, DirEntry *current_dir_entry, char *dir_path, DirEntry **dir_entry, char *to_path);
 extern int  GetFileEntry(DirEntry *de_ptr, char *file_name, FileEntry **file_entry);
-bool GetCopyParameter(
+std::optional<AsToParameter> GetCopyParameter(
   std::optional<std::string_view> from_file,
-  bool path_copy,
-  std::string& to_file,
-  std::string& to_dir
+  bool path_copy
 );
-bool GetMoveParameter(
-  std::optional<std::string_view> from_file,
-  std::string& to_file,
-  std::string& to_dir
+std::optional<AsToParameter> GetMoveParameter(
+  std::optional<std::string_view> from_file
 );
 extern int  ChangeFileOwner(FileEntry *fe_ptr);
-extern int  GetNewOwner(int st_uid);
-extern int  SetFileOwner(FileEntry *fe_ptr, ChangeOwnerWalkContext *ctx);
+std::optional<std::string> GetNewOwner(int st_uid);
 extern int  ChangeDirOwner(DirEntry *de_ptr);
 extern int  ChangeFileGroup(FileEntry *fe_ptr);
-extern int  GetNewGroup(int st_gid);
-extern int  SetFileGroup(FileEntry *fe_ptr, ChangeGroupWalkContext *ctx);
+std::optional<std::string> GetNewGroup(int st_gid);
 extern int  ChangeDirGroup(DirEntry *de_ptr);
 extern void DisplayDirHelp();
 extern void DisplayFileHelp();
 extern void ClearHelp();
 bool GetAvailBytes(std::int64_t* avail_bytes);
 extern int  DeleteDirectory(DirEntry *dir_entry);
-extern int  ExecuteCommand(FileEntry *fe_ptr, ExecuteWalkContext *ctx);
-bool GetCommandLine(std::string& command_line);
-bool GetSearchCommandLine(std::string& command_line);
+std::optional<std::string> GetCommandLine(const std::string& initial = {});
+std::optional<std::string> GetSearchCommandLine();
 extern int  DeleteFile(FileEntry *fe_ptr);
 extern int  RemoveFile(FileEntry *fe_ptr);
 extern int  RenameDirectory(DirEntry *de_ptr, const std::string& new_name);
 extern int  RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_fe_ptr);
-extern int  RenameTaggedFiles(FileEntry *fe_ptr, RenameWalkContext *ctx);
-extern int  GetRenameParameter(const std::string* old_name, char *new_name);
-extern char *CTime(time_t f_time, char *buffer);
+std::optional<std::string> GetRenameParameter(const std::string* old_name);
+extern char *CTime(std::time_t f_time, char *buffer);
 bool LoginDisk(const std::string& path);
-bool GetNewLoginPath(std::string& path);
+std::optional<std::string> GetNewLoginPath(const std::string& initial);
 void PrintSpecialString(WINDOW* win, int y, int x, const std::string& str, int color);
 void Print(WINDOW* win, int y, int x, const std::string& str, int color);
 extern void PrintOptions(WINDOW *,int, int, const std::string&);
@@ -666,18 +611,18 @@ void PrintMenuOptions(
   int ncolor,
   int hcolor
 );
-char* FormFilename(char* dest, const std::string& src, unsigned int max_len);
-extern char *CutFilename(char *dest, const std::string& src, unsigned int max_len);
+std::string FormFilename(const std::string& src, std::size_t max_len);
+std::string CutFilename(const std::string& src, std::size_t max_len);
 std::string CutPathname(const std::string& src, std::size_t max_len);
-extern void   Fnsplit(char *path, char *dir, char *name);
+ArchivePathSplit Fnsplit(std::string path);
 std::string MakeExtractCommandLine(
   const std::string& path,
   const std::string& file,
   const std::string& cmd
 );
-extern int MakeDirectory(DirEntry *father_dir_entry);
-extern time_t Mktime(struct tm *tm);
-extern int TryInsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *dir, struct stat *stat);
+std::optional<std::string> MakeDirectory(DirEntry *father_dir_entry);
+extern std::time_t Mktime(std::tm *tm);
+extern int TryInsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, const char *dir, struct stat *stat);
 extern int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, struct stat *stat);
 extern int MinimizeArchiveTree(const std::shared_ptr<DirEntry>& tree);
 extern void HitReturnToContinue();
@@ -686,7 +631,7 @@ extern int  ViKey(int ch);
 std::optional<CompressMethod> GetFileMethod(const std::string& filename);
 extern bool KeyPressed();
 extern bool EscapeKeyPressed();
-bool GetTapeDeviceName();
+std::optional<std::string> GetTapeDeviceName();
 extern int  MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry);
 extern int  MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name);
 std::string NormPath(const std::string& in_path);
@@ -699,7 +644,7 @@ bool GetBooleanProfileValue(const std::string& key);
 char GetNumberSeparator();
 void ScanSubTree(DirEntry* dir_entry);
 extern void GetMaxYX(WINDOW *win, int *height, int *width);
-const char* GetHistory();
+std::optional<std::string> GetHistory();
 void InsHistory(const std::string& str);
 void ReadHistory(const std::optional<std::filesystem::path>& custom_path);
 void SaveHistory();
@@ -735,40 +680,6 @@ std::int64_t AtoLL(const char* cptr);
 extern void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no);
 extern void ReCreateWindows();
 extern int  Getch();
-
-enum class MouseFocus
-{
-  Dir,
-  File,
-  Overlay
-};
-
-enum class MouseAction
-{
-  None,
-  Ignore,
-  Select,
-  Activate,
-  Tag,
-  ScrollUp,
-  ScrollDown,
-  SwitchToDir,
-  SwitchToFile
-};
-
-struct MouseEvent
-{
-  MouseAction action = MouseAction::None;
-  int row = 0;
-  int col = 0;
-};
-
-void EnableMouse();
-MouseEvent DecodeMouse(MouseFocus focus);
-
-/* Maps KEY_MOUSE scroll events to KEY_UP/KEY_DOWN; other mouse input to -1. */
-int TranslateOverlayMouse(int ch);
-
 extern int  DirUserMode(DirEntry *dir_entry, int ch);
 extern int  FileUserMode(FileEntry* file_entry, int ch);
 std::optional<std::string> GetUserFileAction(int chkey, int* pchremap);
