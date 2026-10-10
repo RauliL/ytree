@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="512"
+   height="512"
+   viewBox="0 0 512 512"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.3 (0d15f75042, 2025-12-25)"
+   sodipodi:docname="ytree.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     showborder="true"
+     showgrid="false"
+     inkscape:zoom="2.2382812"
+     inkscape:cx="255.77661"
+     inkscape:cy="256"
+     inkscape:window-width="2560"
+     inkscape:window-height="1350"
+     inkscape:window-x="0"
+     inkscape:window-y="28"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <inkscape:grid
+       id="grid1"
+       units="px"
+       originx="0"
+       originy="0"
+       spacingx="1"
+       spacingy="1"
+       empcolor="#3f3fff"
+       empopacity="0.25098039"
+       color="#3f3fff"
+       opacity="0.1254902"
+       empspacing="5"
+       enabled="true"
+       visible="false" />
+  </sodipodi:namedview>
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       style="font-weight:bold;font-size:774.148px;line-height:1.25;font-family:'Bitstream Vera Sans Mono';-inkscape-font-specification:'Bitstream Vera Sans Mono Bold';letter-spacing:0px;word-spacing:0px;fill:#a05a2c;fill-opacity:1;stroke:#502d16;stroke-width:1.99098;stroke-opacity:1"
+       d="M 1.8078291,2.9954937 H 134.64913 L 255.7937,206.37649 377.35602,2.9954937 H 510.19731 L 317.61921,309.76184 V 509.07522 H 194.38593 V 309.76184 Z"
+       id="text1"
+       aria-label="Y" />
+    <rect
+       style="fill:#00aa44;fill-opacity:1;stroke:#502d16;stroke-width:2;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1"
+       width="256.24335"
+       height="46.243351"
+       x="129"
+       y="353.72131" />
+    <rect
+       style="fill:#00aa44;fill-opacity:1;stroke:#502d16;stroke-width:2;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1-3"
+       width="256.24335"
+       height="46.243351"
+       x="129"
+       y="432" />
+  </g>
+</svg>
