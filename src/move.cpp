@@ -2,19 +2,19 @@
 
 static bool Move(const std::string&, const std::string&);
 
-int MoveFile(FileEntry *fe_ptr,
-       bool confirm,
-       char *to_file,
-       DirEntry *dest_dir_entry,
-       char *to_dir_path,
-       FileEntry **new_fe_ptr
+int MoveFile(
+  FileEntry* fe_ptr,
+  bool confirm,
+  const std::string& to_file,
+  DirEntry* dest_dir_entry,
+  const std::string& to_dir_path,
+  FileEntry** new_fe_ptr
 )
 {
   const auto de_ptr = fe_ptr->Dir();
   const auto from_path =
     (std::filesystem::path(GetPath(de_ptr.get())) / fe_ptr->name).string();
   std::int64_t file_size;
-  char        to_path[PATH_LENGTH+1];
   FileEntry   *dest_file_entry;
   struct stat stat_struct;
   int         term;
@@ -23,12 +23,10 @@ int MoveFile(FileEntry *fe_ptr,
   result = -1;
   *new_fe_ptr = nullptr;
 
-  const auto to_path_str =
+  const auto to_path =
     (std::filesystem::path(to_dir_path) / to_file).string();
-  std::strncpy(to_path, to_path_str.c_str(), PATH_LENGTH);
-  to_path[PATH_LENGTH] = '\0';
 
-  if (!std::strcmp(to_path, from_path.c_str()))
+  if (to_path == from_path)
   {
     Message("Can't move file into itself");
     ESCAPE;
@@ -83,9 +81,9 @@ int MoveFile(FileEntry *fe_ptr,
       }
     }
 
-    if (unlink(to_path))
+    if (unlink(to_path.c_str()))
     {
-      FormatMessage("Can't unlink*\"{}\"*{}", to_path, std::strerror(errno));
+      FormatMessage("Can't unlink*\"{}\"*{}", to_path.c_str(), std::strerror(errno));
       ESCAPE;
     }
   }
@@ -175,29 +173,23 @@ static bool Move(const std::string& to_path, const std::string& from_path)
 int MoveTaggedFiles(FileEntry *fe_ptr, MoveWalkContext *ctx)
 {
   int  result = -1;
-  char new_name[PATH_LENGTH+1];
 
-
-  if( BuildFilename(fe_ptr->name, ctx->to_file, new_name) == 0 )
-
+  const auto new_name = BuildFilename(fe_ptr->name, ctx->to_file);
+  if (new_name.empty())
   {
-    if (!*new_name)
-    {
-      Message("Can't move file to*empty name");
-    }
-    else
-    {
-      result = MoveFile(
-        fe_ptr,
-        ctx->confirm,
-        new_name,
-        ctx->dest_dir_entry,
-        ctx->to_path,
-        &ctx->new_fe_ptr
-      );
-    }
+    Message("Can't move file to*empty name");
+  }
+  else
+  {
+    result = MoveFile(
+      fe_ptr,
+      ctx->confirm,
+      new_name,
+      ctx->dest_dir_entry,
+      ctx->to_path,
+      &ctx->new_fe_ptr
+    );
   }
 
   return( result );
 }
-

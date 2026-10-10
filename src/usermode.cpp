@@ -19,17 +19,10 @@ int DirUserMode(DirEntry *dir_entry, int ch)
   {
     std::string command_line;
 
-    if (aux->find("%s") != std::string::npos)
+    if (const auto pos = aux->find("%s"); pos != std::string::npos)
     {
-      char tmp[COMMAND_LINE_LENGTH + 1];
-
-      std::snprintf(
-        tmp,
-        COMMAND_LINE_LENGTH,
-        aux->c_str(),
-        filepath.c_str()
-      );
-      command_line = tmp;
+      command_line = *aux;
+      command_line.replace(pos, 2, filepath.string());
     } else {
       command_line = Join(*aux, filepath.string());
     }
@@ -56,17 +49,10 @@ int FileUserMode(FileEntry* file_entry, int ch)
   {
     std::string command_line;
 
-    if (aux->find("%s") != std::string::npos)
+    if (const auto pos = aux->find("%s"); pos != std::string::npos)
     {
-      char tmp[COMMAND_LINE_LENGTH + 1];
-
-      std::snprintf(
-        tmp,
-        COMMAND_LINE_LENGTH,
-        aux->c_str(),
-        filepath.c_str()
-      );
-      command_line = tmp;
+      command_line = *aux;
+      command_line.replace(pos, 2, filepath.string());
     } else {
       command_line = Join(*aux, filepath.string());
     }

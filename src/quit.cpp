@@ -76,29 +76,23 @@ function yt
 
 */
 
-#define MAXPATH (PATH_LENGTH+1)
-
-static int QuitFileCheck(char *fname);
+static int QuitFileCheck(const std::string& fname);
 
 void QuitTo(DirEntry* dir_entry)
 {
   const auto nbuf = GetPath(dir_entry);
-  char qfilename[MAXPATH];
   const auto parpid = getppid();
   const auto pwp = getpwuid(getuid());
-
-  std::snprintf(
-    qfilename,
-    MAXPATH,
-    "%s%c.ytree-%d.chdir",
+  const auto qfilename = std::format(
+    "{}{}.ytree-{}.chdir",
     pwp->pw_dir,
     std::filesystem::path::preferred_separator,
     static_cast<int>(parpid)
-);
+  );
 
   if (!QuitFileCheck(qfilename))
   {
-    if (auto qfile = std::fopen(qfilename, "w"))
+    if (auto qfile = std::fopen(qfilename.c_str(), "w"))
     {
       std::fprintf(qfile, "cd %s\n", nbuf.c_str());
       std::fclose(qfile);
@@ -110,7 +104,7 @@ void QuitTo(DirEntry* dir_entry)
 
   if (!QuitFileCheck(qfilename))
   {
-    if (auto qfile = std::fopen(qfilename, "w"))
+    if (auto qfile = std::fopen(qfilename.c_str(), "w"))
     {
       if (const auto cwd = Getcwd())
       {
@@ -128,11 +122,11 @@ void QuitTo(DirEntry* dir_entry)
  * security breach.
  */
 
-static int QuitFileCheck(char *fname)
+static int QuitFileCheck(const std::string& fname)
 {
   struct stat fstat;
 
-  if(stat(fname,&fstat))
+  if(stat(fname.c_str(),&fstat))
     return(1);
   if(!S_ISREG(fstat.st_mode))
     return(1);

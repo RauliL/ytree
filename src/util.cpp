@@ -1,5 +1,6 @@
 #include "ytree.h"
 
+#include <chrono>
 #include <unordered_map>
 
 static const std::unordered_map<std::string, CompressMethod> file_extensions =
@@ -126,14 +127,15 @@ std::filesystem::path GetRealFileNamePath(const FileEntry* file_entry)
   return GetPath(file_entry->Dir().get()) / file_entry->name;
 }
 
-int GetDirEntry(const std::shared_ptr<DirEntry>& tree,
-                DirEntry *current_dir_entry,
-                char *dir_path,
-                DirEntry **dir_entry,
-                char *to_path
+int GetDirEntry(
+  const std::shared_ptr<DirEntry>& tree,
+  DirEntry* current_dir_entry,
+  const std::string& dir_path,
+  DirEntry** dir_entry,
+  std::string& to_path
 )
 {
-  char dest_path[PATH_LENGTH+1];
+  std::string dest_path;
   std::filesystem::path current_path;
   char *token, *old;
   DirEntry *de_ptr, *sde_ptr;
@@ -141,9 +143,7 @@ int GetDirEntry(const std::shared_ptr<DirEntry>& tree,
   std::error_code ec;
 
   *dir_entry = nullptr;
-  *to_path   = '\0';
-
-  std::snprintf(to_path, PATH_LENGTH + 1, "%s", dir_path);
+  to_path = dir_path;
 
   if (const auto cwd = Getcwd())
   {
@@ -154,7 +154,11 @@ int GetDirEntry(const std::shared_ptr<DirEntry>& tree,
     return -1;
   }
 
-  if (*dir_path != std::filesystem::path::preferred_separator)
+  const auto is_absolute =
+    !dir_path.empty() &&
+    dir_path.front() == std::filesystem::path::preferred_separator;
+
+  if (!is_absolute)
   {
     std::filesystem::current_path(GetPath(current_dir_entry), ec);
     if (ec)
@@ -174,15 +178,15 @@ int GetDirEntry(const std::shared_ptr<DirEntry>& tree,
     return -3;
   }
 
-  if (*dir_path != std::filesystem::path::preferred_separator)
+  if (!is_absolute)
   {
     if (const auto cwd = Getcwd())
     {
-      std::snprintf(dest_path, sizeof(dest_path), "%s", cwd->c_str());
+      dest_path = *cwd;
     }
-    std::snprintf(to_path, PATH_LENGTH + 1, "%s", dest_path);
+    to_path = dest_path;
   } else {
-    std::snprintf(dest_path, sizeof(dest_path), "%s", dir_path);
+    dest_path = dir_path;
   }
 
   std::filesystem::current_path(current_path, ec);
@@ -201,14 +205,16 @@ int GetDirEntry(const std::shared_ptr<DirEntry>& tree,
     tree->name[0] == std::filesystem::path::preferred_separator;
 
   if( tree_is_root ||
-      (tree->name.compare(0, n, dest_path, n) == 0 &&
-        ( dest_path[n] == std::filesystem::path::preferred_separator || dest_path[n] == '\0' ) ) )
+      (static_cast<int>(dest_path.size()) >= n &&
+       tree->name.compare(0, n, dest_path, 0, n) == 0 &&
+        ( static_cast<int>(dest_path.size()) == n ||
+          dest_path[n] == std::filesystem::path::preferred_separator ) ) )
   {
     /* Pfad befindet sich im (Sub)-Tree */
     /*----------------------------------*/
 
     de_ptr = tree.get();
-    token = Strtok_r(&dest_path[n], preferred_separator_str, &old);
+    token = Strtok_r(dest_path.data() + n, preferred_separator_str, &old);
     while( token )
     {
       sde_ptr = nullptr;
@@ -241,7 +247,11 @@ int GetDirEntry(const std::shared_ptr<DirEntry>& tree,
 
 
 
-int GetFileEntry(DirEntry *de_ptr, char *file_name, FileEntry **file_entry)
+int GetFileEntry(
+  DirEntry* de_ptr,
+  const std::string& file_name,
+  FileEntry** file_entry
+)
 {
   *file_entry = nullptr;
 
@@ -313,33 +323,22 @@ std::string GetAttributes(unsigned short modus)
   return buffer;
 }
 
-
-
-char *CTime(time_t f_time, char *buffer)
+std::string CTime(std::time_t f_time)
 {
-  const auto now = std::time(nullptr);
-  char   *cptr;
+  using namespace std::chrono;
 
-  if (now == -1)
-  {
-    Error("time() failed");
-    std::exit(EXIT_FAILURE);
-  }
+  const auto tp = system_clock::from_time_t(f_time);
+  const auto local = zoned_time{current_zone(), floor<seconds>(tp)};
 
-  cptr = std::ctime(&f_time);
-  std::strncpy(buffer, cptr+4, 12);
-  buffer[12] = '\0';
-
-  if( (now - f_time) > 31536000L )
+  if (system_clock::now() - tp > seconds{31536000L})
   {
     /* Differenz groesser als 1 Jahr */
     /*-------------------------------*/
 
-    std::strncpy(&buffer[7], cptr + 19, 5);
-
+    return std::format("{:%b %e  %Y}", local);
   }
 
-  return( buffer );
+  return std::format("{:%b %e %H:%M}", local);
 }
 
 void PrintSpecialString(
@@ -678,31 +677,26 @@ ArchivePathSplit Fnsplit(std::string path)
   return result;
 }
 
-int BuildFilename(const std::string& in_filename,
-       const char *pattern,
-       char *out_filename
+std::string BuildFilename(
+  const std::string& in_filename,
+  const std::string& pattern
 )
 {
-  const char *cptr;
-  int  result = 0;
+  std::string out_filename;
 
-
-  for( ; *pattern; pattern++ )
+  for (const char ch : pattern)
   {
-    if( *pattern == '*' )
+    if (ch == '*')
     {
-      cptr = in_filename.c_str();
-      for( ; (*out_filename = *cptr); out_filename++, cptr++ );
+      out_filename += in_filename;
     }
     else
     {
-      *out_filename++ = *pattern;
+      out_filename += ch;
     }
   }
 
-  *out_filename = '\0';
-
-  return( result );
+  return out_filename;
 }
 
 std::optional<CompressMethod> GetFileMethod(const std::string& filename)
@@ -845,12 +839,7 @@ int BuildUserFileEntry(
   char* line
 )
 {
-  char modify_time[13];
-  char change_time[13];
-  char access_time[13];
   int  n;
-  char owner[OWNER_NAME_MAX + 1];
-  char group[GROUP_NAME_MAX + 1];
   const char* sym_link_name = nullptr;
   const char* sptr;
   char* dptr;
@@ -867,22 +856,14 @@ int BuildUserFileEntry(
   tag = (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ';
   const auto attributes = GetAttributes(fe_ptr->stat_struct.st_mode);
 
-  CTime(fe_ptr->stat_struct.st_mtime, modify_time);
-  CTime(fe_ptr->stat_struct.st_ctime, change_time);
-  CTime(fe_ptr->stat_struct.st_atime, access_time);
+  const auto modify_time = CTime(fe_ptr->stat_struct.st_mtime);
+  const auto change_time = CTime(fe_ptr->stat_struct.st_ctime);
+  const auto access_time = CTime(fe_ptr->stat_struct.st_atime);
 
-  if (const auto owner_name_ptr = GetPasswdName(fe_ptr->stat_struct.st_uid))
-  {
-    std::strncpy(owner, owner_name_ptr->c_str(), sizeof(owner));
-  } else {
-    std::snprintf(owner, sizeof(owner), "%d", fe_ptr->stat_struct.st_uid);
-  }
-  if (const auto group_name_ptr = GetPasswdName(fe_ptr->stat_struct.st_gid))
-  {
-    std::strncpy(group, group_name_ptr->c_str(), sizeof(group));
-  } else {
-    std::snprintf(group, sizeof(group), "%d", fe_ptr->stat_struct.st_gid);
-  }
+  const auto owner = GetPasswdName(fe_ptr->stat_struct.st_uid)
+    .value_or(std::to_string(fe_ptr->stat_struct.st_uid));
+  const auto group = GetPasswdName(fe_ptr->stat_struct.st_gid)
+    .value_or(std::to_string(fe_ptr->stat_struct.st_gid));
 
   const auto fitted_name = FitVisualWidth(fe_ptr->name, max_filename_len, true);
   const auto fitted_link = FitVisualWidth(sym_link_name, max_linkname_len, true);

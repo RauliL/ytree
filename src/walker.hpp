@@ -31,23 +31,23 @@ struct CopyWalkContext : WalkContextBase
 {
   Statistic* statistic_ptr = nullptr;
   DirEntry* dest_dir_entry = nullptr;
-  char* to_file = nullptr;
-  char* to_path = nullptr;
+  std::string to_file;
+  std::string to_path;
   bool path_copy = false;
   bool confirm = false;
 };
 
 struct RenameWalkContext : WalkContextBase
 {
-  char* new_name = nullptr;
+  std::string new_name;
   bool confirm = false;
 };
 
 struct MoveWalkContext : WalkContextBase
 {
   DirEntry* dest_dir_entry = nullptr;
-  char* to_file = nullptr;
-  char* to_path = nullptr;
+  std::string to_file;
+  std::string to_path;
   bool confirm = false;
 };
 

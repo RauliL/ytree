@@ -227,19 +227,15 @@ static bool RenameFileEntry(
 int RenameTaggedFiles(FileEntry *fe_ptr, RenameWalkContext *ctx)
 {
   int  result = -1;
-  char new_name[PATH_LENGTH+1];
 
-
-  if( BuildFilename(fe_ptr->name, ctx->new_name, new_name) == 0 )
+  const auto new_name = BuildFilename(fe_ptr->name, ctx->new_name);
+  if (new_name.empty())
   {
-    if( *new_name == '\0' )
-    {
-      Message("Can't rename file to*empty name");
-    }
-    else
-    {
-      result = RenameFile(fe_ptr, new_name, &ctx->new_fe_ptr);
-    }
+    Message("Can't rename file to*empty name");
+  }
+  else
+  {
+    result = RenameFile(fe_ptr, new_name, &ctx->new_fe_ptr);
   }
   return( result );
 }

@@ -81,17 +81,10 @@ static int ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path)
 
   if (const auto aux = GetExtViewer(file_path))
   {
-    if (aux->find("%s") != std::string::npos)
+    if (const auto pos = aux->find("%s"); pos != std::string::npos)
     {
-      char tmp[COMMAND_LINE_LENGTH + 1];
-
-      std::snprintf(
-        tmp,
-        COMMAND_LINE_LENGTH,
-        aux->c_str(),
-        file_p_aux.c_str()
-      );
-      command_line = tmp;
+      command_line = *aux;
+      command_line.replace(pos, 2, file_p_aux);
     } else {
       command_line = Join(*aux, file_p_aux);
     }

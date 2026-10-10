@@ -16,12 +16,14 @@ static void PrettyPrintNumber(int y, int x, std::int64_t number);
 
 void DisplayDiskStatistic()
 {
-  static const char* fmt= "[%-17s]";
-  char buff[20];
-  *buff = '\0';
-
-  std::snprintf(buff, sizeof(buff), fmt, statistic.file_spec.c_str());
-  PrintMenuOptions(stdscr, 2, COLS - 18, buff, MENU_COLOR, HIMENUS_COLOR);
+  PrintMenuOptions(
+    stdscr,
+    2,
+    COLS - 18,
+    std::format("[{:<17}]", statistic.file_spec),
+    MENU_COLOR,
+    HIMENUS_COLOR
+  );
   PrettyPrintNumber(5,  COLS - 17, statistic.disk_space / (std::int64_t)1024);
   PrintOptions(stdscr, 7,  COLS - 24, "[DISK Statistics   ]");
   PrettyPrintNumber(9, COLS - 17, statistic.disk_total_files);
@@ -55,11 +57,14 @@ void DisplayFileSpec()
 
 void DisplayDiskName()
 {
-  static const char* fmt= "[%-17s]";
-  char buff[20];
-
-  std::snprintf(buff, sizeof(buff), fmt, statistic.disk_name.c_str());
-  PrintMenuOptions(stdscr, 4, COLS - 18, buff, MENU_COLOR, HIMENUS_COLOR);
+  PrintMenuOptions(
+    stdscr,
+    4,
+    COLS - 18,
+    std::format("[{:<17}]", statistic.disk_name),
+    MENU_COLOR,
+    HIMENUS_COLOR
+  );
   RefreshWindow(stdscr);
 }
 
@@ -69,21 +74,17 @@ void DisplayDiskName()
 void DisplayDirStatistic(DirEntry *dir_entry)
 {
   const auto path = GetPath(dir_entry);
-  char format[32];
-  char auxbuff[PATH_LENGTH + 1];
 
-  *auxbuff = '\0';
-  std::snprintf(format, sizeof(format), "%%-%ds", COLS - 10);
   statistic.path = path.string() + (dir_entry->not_scanned ? "*" : "");
-  std::snprintf(
-    auxbuff,
-    sizeof(auxbuff),
-    format,
-    FormFilename(statistic.path, COLS - 10).c_str()
-);
   wmove(stdscr, 0, 6);
   wclrtoeol(stdscr);
-  Print(stdscr, 0, 6, auxbuff, HIMENUS_COLOR);
+  Print(
+    stdscr,
+    0,
+    6,
+    std::format("{:<{}}", FormFilename(statistic.path, COLS - 10), COLS - 10),
+    HIMENUS_COLOR
+  );
   PrintOptions(stdscr, 7,  COLS - 24, "[DIR Statistics    ]");
   PrettyPrintNumber(9, COLS - 17, dir_entry->total_files);
   PrettyPrintNumber(10, COLS - 17, dir_entry->total_bytes);
@@ -128,28 +129,25 @@ void DisplayDirParameter(DirEntry *dir_entry)
     std::filesystem::path::preferred_separator
 );
   auto f = p ? p + 1 : dir_entry->name.c_str();
-  char format[32];
-  char auxbuff[PATH_LENGTH + 1];
 
-  std::snprintf(format, sizeof(format), "%%-%ds", COLS - 10);
   statistic.path = path.string() + (dir_entry->not_scanned ? "*" : "");
-  std::snprintf(
-    auxbuff,
-    sizeof(auxbuff),
-    format,
-    FormFilename(statistic.path, COLS - 10).c_str()
-);
   wmove(stdscr, 0, 6);
   wclrtoeol(stdscr);
-  Print(stdscr, 0, 6, auxbuff, HIMENUS_COLOR);
-  *auxbuff = '\0';
-  std::snprintf(
-    auxbuff,
-    sizeof(auxbuff),
-    "[%-20s]",
-    CutFilename(f, 20).c_str()
-);
-  PrintMenuOptions(stdscr, 18, COLS - 22, auxbuff, MENU_COLOR, HIMENUS_COLOR);
+  Print(
+    stdscr,
+    0,
+    6,
+    std::format("{:<{}}", FormFilename(statistic.path, COLS - 10), COLS - 10),
+    HIMENUS_COLOR
+  );
+  PrintMenuOptions(
+    stdscr,
+    18,
+    COLS - 22,
+    std::format("[{:<20}]", CutFilename(f, 20)),
+    MENU_COLOR,
+    HIMENUS_COLOR
+  );
   PrettyPrintNumber(19, COLS - 17, (std::int64_t) dir_entry->total_bytes);
   RefreshWindow(stdscr);
 }
@@ -162,27 +160,25 @@ void DisplayDirParameter(DirEntry *dir_entry)
 void DisplayGlobalFileParameter(FileEntry *file_entry)
 {
   const auto path = GetPath(file_entry->Dir().get());
-  char buffer1[PATH_LENGTH+1];
-  char buffer2[PATH_LENGTH+1];
-  char format[32];
 
-  std::snprintf(format, sizeof(format), "[%%-%ds]", COLS - 10);
-  std::snprintf(
-    buffer1,
-    sizeof(buffer1),
-    format,
-    FormFilename(path.string(), COLS - 10).c_str()
-  );
   wmove(stdscr, 0, 6);
   wclrtoeol(stdscr);
-  PrintMenuOptions(stdscr, 0, 6, buffer1, GLOBAL_COLOR, HIGLOBAL_COLOR);
-  if (std::snprintf(
-        buffer2,
-        PATH_LENGTH,
-        "[%-20s]",
-        CutFilename(file_entry->name, 20).c_str()))
-    ;
-  PrintMenuOptions(stdscr, 18, COLS - 22, buffer2, GLOBAL_COLOR, HIGLOBAL_COLOR);
+  PrintMenuOptions(
+    stdscr,
+    0,
+    6,
+    std::format("[{:<{}}]", FormFilename(path.string(), COLS - 10), COLS - 10),
+    GLOBAL_COLOR,
+    HIGLOBAL_COLOR
+  );
+  PrintMenuOptions(
+    stdscr,
+    18,
+    COLS - 22,
+    std::format("[{:<20}]", CutFilename(file_entry->name, 20)),
+    GLOBAL_COLOR,
+    HIGLOBAL_COLOR
+  );
   PrettyPrintNumber(19, COLS - 17, (std::int64_t) file_entry->stat_struct.st_size);
   RefreshWindow(stdscr);
 }
@@ -192,15 +188,14 @@ void DisplayGlobalFileParameter(FileEntry *file_entry)
 
 void DisplayFileParameter(FileEntry *file_entry)
 {
-  char auxbuff[23*6];
-
-  std::snprintf(
-    auxbuff,
-    sizeof(auxbuff),
-    "[%-20s]",
-    CutFilename(file_entry->name, 20).c_str()
+  PrintMenuOptions(
+    stdscr,
+    18,
+    COLS - 22,
+    std::format("[{:<20}]", CutFilename(file_entry->name, 20)),
+    MENU_COLOR,
+    HIMENUS_COLOR
   );
-  PrintMenuOptions(stdscr, 18, COLS - 22, auxbuff, MENU_COLOR, HIMENUS_COLOR);
   PrettyPrintNumber(19, COLS - 17, (std::int64_t)file_entry->stat_struct.st_size);
   RefreshWindow(stdscr);
 }
@@ -213,77 +208,79 @@ void PrettyPrintNumber(int y, int x, std::int64_t number)
   const auto mega     = (long) ( ( number % (std::int64_t) 1000000000 ) / (std::int64_t) 1000000 );
   const auto kilo     = (long) ( ( number % (std::int64_t) 1000000 ) / (std::int64_t) 1000 );
   const auto one      = (long)   ( number % (std::int64_t) 1000 );
-  char buffer[32];
-
-  *buffer = 0;
 
   if (terra)
   {
      /* "123123123123123" */
-     std::snprintf(
-       buffer,
-       sizeof(buffer),
-       "[%3ld%3ld%03ld%03ld%03ld]",
-       terra,
-       giga,
-       mega,
-       kilo,
-       one
-    );
-    PrintMenuOptions(stdscr, y, x, buffer, MENU_COLOR, HIMENUS_COLOR);
+     PrintMenuOptions(
+       stdscr,
+       y,
+       x,
+       std::format("[{:3}{:3}{:03}{:03}{:03}]", terra, giga, mega, kilo, one),
+       MENU_COLOR,
+       HIMENUS_COLOR
+     );
   }
   if (giga)
   {
      /* "123,123,123,123" */
-     std::snprintf(
-       buffer,
-       sizeof(buffer),
-       "[%3ld%c%03ld%c%03ld%c%03ld]",
-       giga,
-       number_separator,
-       mega,
-       number_separator,
-       kilo,
-       number_separator,
-       one
-    );
-    PrintMenuOptions(stdscr, y, x, buffer, MENU_COLOR, HIMENUS_COLOR);
+     PrintMenuOptions(
+       stdscr,
+       y,
+       x,
+       std::format(
+         "[{:3}{}{:03}{}{:03}{}{:03}]",
+         giga,
+         number_separator,
+         mega,
+         number_separator,
+         kilo,
+         number_separator,
+         one
+       ),
+       MENU_COLOR,
+       HIMENUS_COLOR
+     );
   }
   else if (mega)
   {
      /* "    123,123,123" */
-     std::snprintf(
-       buffer,
-       sizeof(buffer),
-       "[    %3ld%c%03ld%c%03ld]",
-       mega,
-       number_separator,
-       kilo,
-       number_separator,
-       one
-    );
-    PrintMenuOptions(stdscr, y, x, buffer, MENU_COLOR, HIMENUS_COLOR);
+     PrintMenuOptions(
+       stdscr,
+       y,
+       x,
+       std::format(
+         "[    {:3}{}{:03}{}{:03}]",
+         mega,
+         number_separator,
+         kilo,
+         number_separator,
+         one
+       ),
+       MENU_COLOR,
+       HIMENUS_COLOR
+     );
   }
   else if (kilo)
   {
      /* "        123,123" */
-     std::snprintf(
-       buffer,
-       sizeof(buffer),
-       "[        %3ld%c%03ld]",
-       kilo,
-       number_separator,
-       one
-    );
-    PrintMenuOptions(stdscr, y, x, buffer, MENU_COLOR, HIMENUS_COLOR);
+     PrintMenuOptions(
+       stdscr,
+       y,
+       x,
+       std::format("[        {:3}{}{:03}]", kilo, number_separator, one),
+       MENU_COLOR,
+       HIMENUS_COLOR
+     );
   } else {
      /* "            123" */
-     std::snprintf(
-       buffer,
-       sizeof(buffer),
-       "[            %3ld]",
-       one
-    );
-    PrintMenuOptions(stdscr, y, x, buffer, MENU_COLOR, HIMENUS_COLOR);
+     PrintMenuOptions(
+       stdscr,
+       y,
+       x,
+       std::format("[            {:3}]", one),
+       MENU_COLOR,
+       HIMENUS_COLOR
+     );
   }
 }

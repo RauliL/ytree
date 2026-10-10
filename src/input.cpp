@@ -704,7 +704,7 @@ std::optional<std::string> InputString(
   return std::nullopt;
 }
 
-int InputChoise(const char *msg, const char *term)
+int InputChoise(const std::string& msg, const char *term)
 {
   int  c;
 
@@ -712,7 +712,7 @@ int InputChoise(const char *msg, const char *term)
 
   curs_set(1);
   leaveok(stdscr, false);
-  mvprintw(LINES - 2, 1, "%s", msg);
+  mvprintw(LINES - 2, 1, "%s", msg.c_str());
   RefreshWindow(stdscr);
   doupdate();
   do

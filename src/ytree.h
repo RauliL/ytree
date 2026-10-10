@@ -566,12 +566,37 @@ extern int  ChangeFileModus(FileEntry *fe_ptr);
 extern int  ChangeDirModus(DirEntry *de_ptr);
 bool GetNewFileModus(int y, int x, std::string& modus, const char *term);
 int GetModus(const std::string& modus);
-extern int  CopyFile(Statistic *statistic_ptr, FileEntry *fe_ptr, bool confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, bool path_copy);
-extern int  MoveFile(FileEntry *fe_ptr, bool confirm, char *to_file, DirEntry *dest_dir_entry, char *to_dir_path, FileEntry **new_fe_ptr);
-extern int  InputChoise(const char *msg, const char *term);
+int CopyFile(
+  Statistic* statistic_ptr,
+  FileEntry* fe_ptr,
+  bool confirm,
+  const std::string& to_file,
+  DirEntry* dest_dir_entry,
+  const std::string& to_dir_path,
+  bool path_copy
+);
+int MoveFile(
+  FileEntry* fe_ptr,
+  bool confirm,
+  const std::string& to_file,
+  DirEntry* dest_dir_entry,
+  const std::string& to_dir_path,
+  FileEntry** new_fe_ptr
+);
+int InputChoise(const std::string& msg, const char *term);
 void Message(const std::string& msg);
-extern int  GetDirEntry(const std::shared_ptr<DirEntry>& tree, DirEntry *current_dir_entry, char *dir_path, DirEntry **dir_entry, char *to_path);
-extern int  GetFileEntry(DirEntry *de_ptr, char *file_name, FileEntry **file_entry);
+int GetDirEntry(
+  const std::shared_ptr<DirEntry>& tree,
+  DirEntry* current_dir_entry,
+  const std::string& dir_path,
+  DirEntry** dir_entry,
+  std::string& to_path
+);
+int GetFileEntry(
+  DirEntry* de_ptr,
+  const std::string& file_name,
+  FileEntry** file_entry
+);
 std::optional<AsToParameter> GetCopyParameter(
   std::optional<std::string_view> from_file,
   bool path_copy
@@ -597,7 +622,7 @@ extern int  RemoveFile(FileEntry *fe_ptr);
 extern int  RenameDirectory(DirEntry *de_ptr, const std::string& new_name);
 extern int  RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_fe_ptr);
 std::optional<std::string> GetRenameParameter(const std::string* old_name);
-extern char *CTime(std::time_t f_time, char *buffer);
+std::string CTime(std::time_t f_time);
 bool LoginDisk(const std::string& path);
 std::optional<std::string> GetNewLoginPath(const std::string& initial);
 void PrintSpecialString(WINDOW* win, int y, int x, const std::string& str, int color);
@@ -626,7 +651,10 @@ extern int TryInsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, const
 extern int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, struct stat *stat);
 extern int MinimizeArchiveTree(const std::shared_ptr<DirEntry>& tree);
 extern void HitReturnToContinue();
-extern int  BuildFilename(const std::string& in_filename, const char *pattern, char *out_filename);
+std::string BuildFilename(
+  const std::string& in_filename,
+  const std::string& pattern
+);
 extern int  ViKey(int ch);
 std::optional<CompressMethod> GetFileMethod(const std::string& filename);
 extern bool KeyPressed();

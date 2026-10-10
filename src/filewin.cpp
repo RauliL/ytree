@@ -453,17 +453,12 @@ char GetTypeOfFile(struct stat fst)
 
 static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, int start_x)
 {
-  char modify_time[13];
-  char change_time[13];
-  char access_time[13];
   char justify;
   char *line_ptr;
   int  n, pos_x = 0;
   FileEntry *fe_ptr;
   static std::string line_buffer;
   static int  old_cols = -1;
-  char owner[OWNER_NAME_MAX + 1];
-  char group[GROUP_NAME_MAX + 1];
   int  ef_window_width;
   const char* sym_link_name = nullptr;
   char type_of_file = ' ';
@@ -499,8 +494,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
     case ViewMode::MODE_1 : if( fe_ptr )
       {
         const auto attributes = GetAttributes(fe_ptr->stat_struct.st_mode);
-
-        CTime(fe_ptr->stat_struct.st_mtime, modify_time);
+        const auto modify_time = CTime(fe_ptr->stat_struct.st_mtime);
 
 
 
@@ -546,18 +540,10 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     case ViewMode::MODE_2 : if( fe_ptr )
       {
-        if (const auto owner_name_ptr = GetPasswdName(fe_ptr->stat_struct.st_uid))
-        {
-          std::strncpy(owner, owner_name_ptr->c_str(), sizeof(owner));
-        } else {
-          std::snprintf(owner, sizeof(owner), "%d", fe_ptr->stat_struct.st_uid);
-        }
-        if (const auto group_name_ptr = GetGroupName(fe_ptr->stat_struct.st_gid))
-        {
-          std::strncpy(group, group_name_ptr->c_str(), sizeof(group));
-        } else {
-          std::snprintf(group, sizeof(group), "%d", fe_ptr->stat_struct.st_gid);
-        }
+        const auto owner = GetPasswdName(fe_ptr->stat_struct.st_uid)
+          .value_or(std::to_string(fe_ptr->stat_struct.st_uid));
+        const auto group = GetGroupName(fe_ptr->stat_struct.st_gid)
+          .value_or(std::to_string(fe_ptr->stat_struct.st_gid));
 
                     if( S_ISLNK(fe_ptr->stat_struct.st_mode) )
         {
@@ -619,8 +605,8 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     case ViewMode::MODE_4 : if( fe_ptr )
       {
-        CTime(fe_ptr->stat_struct.st_ctime, change_time);
-        CTime(fe_ptr->stat_struct.st_atime, access_time);
+        const auto change_time = CTime(fe_ptr->stat_struct.st_ctime);
+        const auto access_time = CTime(fe_ptr->stat_struct.st_atime);
 
                     if( S_ISLNK(fe_ptr->stat_struct.st_mode) )
         {
@@ -1352,12 +1338,11 @@ struct FileWindowContext
   bool path_copy = false;
   int term = 0;
   int mask = 0;
-  char to_dir[PATH_LENGTH + 1]{};
-  char to_path[PATH_LENGTH + 1]{};
-  char to_file[PATH_LENGTH + 1]{};
+  std::string to_dir;
+  std::string to_path;
+  std::string to_file;
   bool need_dsp_help = true;
   bool maybe_change_x_step = true;
-  char new_name[PATH_LENGTH + 1]{};
   int dir_window_width = 0;
   int dir_window_height = 0;
 };
@@ -2053,8 +2038,8 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
               beep();
               break;
             }
-            *std::format_to(ctx.to_file, "{}", copy_as) = '\0';
-            *std::format_to(ctx.to_dir, "{}", copy_to) = '\0';
+            ctx.to_file = copy_as;
+            ctx.to_dir = copy_to;
           }
 
           if( mode == Mode::DISK_MODE || mode == Mode::USER_MODE )
@@ -2135,7 +2120,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
             }
       else
       {
-        *std::format_to(ctx.to_path, "{}", ctx.to_dir) = '\0';
+        ctx.to_path = ctx.to_dir;
       }
             if( !CopyFile(&disk_statistic,
                ctx.fe_ptr,
@@ -2182,8 +2167,8 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           beep();
           break;
         }
-        *std::format_to(ctx.to_file, "{}", copy_as) = '\0';
-        *std::format_to(ctx.to_dir, "{}", copy_to) = '\0';
+        ctx.to_file = copy_as;
+        ctx.to_dir = copy_to;
       }
 
 
@@ -2252,7 +2237,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
                     }
         else
         {
-          *std::format_to(ctx.to_path, "{}", ctx.to_dir) = '\0';
+          ctx.to_path = ctx.to_dir;
         }
 
         ctx.term = InputChoise("Confirm overwrite existing files (Y/N) ? ", "YN\033");
@@ -2311,8 +2296,8 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
               beep();
               break;
             }
-            *std::format_to(ctx.to_file, "{}", move_as) = '\0';
-            *std::format_to(ctx.to_dir, "{}", move_to) = '\0';
+            ctx.to_file = move_as;
+            ctx.to_dir = move_to;
           }
 
                       if( GetDirEntry(statistic.tree,
@@ -2390,8 +2375,8 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           beep();
           break;
         }
-        *std::format_to(ctx.to_file, "{}", move_as) = '\0';
-        *std::format_to(ctx.to_dir, "{}", move_to) = '\0';
+        ctx.to_file = move_as;
+        ctx.to_dir = move_to;
       }
 
 
@@ -2567,10 +2552,8 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
         break;
       }
 
-      *std::format_to(ctx.new_name, "{}", *tagged_rename) = '\0';
-
       RenameWalkContext rename_ctx;
-      rename_ctx.new_name = ctx.new_name;
+      rename_ctx.new_name = *tagged_rename;
       rename_ctx.confirm = false;
 
       WalkTaggedFiles(ctx.dir_entry->start_file,

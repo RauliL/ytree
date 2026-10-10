@@ -10,7 +10,6 @@
 int DeleteFile(FileEntry *fe_ptr)
 {
   const auto filepath = GetFileNamePath(fe_ptr);
-  char     buffer[PATH_LENGTH+1];
   int      result;
   int      term;
   std::error_code ec;
@@ -27,15 +26,14 @@ int DeleteFile(FileEntry *fe_ptr)
         goto UNLINK_DONE;
       }
 
-      std::snprintf(
-        buffer,
-        sizeof(buffer),
-        "overriding mode %04o for \"%s\" (Y/N) ? ",
-        fe_ptr->stat_struct.st_mode & 0777,
-        fe_ptr->name.c_str()
+      term = InputChoise(
+        std::format(
+          "overriding mode {:04o} for \"{}\" (Y/N) ? ",
+          fe_ptr->stat_struct.st_mode & 0777,
+          fe_ptr->name
+        ),
+        "YN\033"
 );
-
-      term = InputChoise(buffer, "YN\033");
 
       if( term != 'Y' )
       {

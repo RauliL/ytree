@@ -3,13 +3,14 @@
 static int Copy(const std::string& to_path, const std::string& from_path);
 static int CopyArchiveFile(const std::string& to_path, const std::string& from_path);
 
-int CopyFile(Statistic *statistic_ptr,
-             FileEntry *fe_ptr,
-             bool confirm,
-             char *to_file,
-             DirEntry *dest_dir_entry,
-             char *to_dir_path,       /* absoluter Pfad */
-             bool path_copy
+int CopyFile(
+  Statistic* statistic_ptr,
+  FileEntry* fe_ptr,
+  bool confirm,
+  const std::string& to_file,
+  DirEntry* dest_dir_entry,
+  const std::string& to_dir_path, /* absoluter Pfad */
+  bool path_copy
 )
 {
   std::int64_t file_size;
@@ -26,8 +27,11 @@ int CopyFile(Statistic *statistic_ptr,
 
   result = -1;
 
-  if (to_dir_path[0] != std::filesystem::path::preferred_separator ||
-      to_dir_path[1] != '\0')
+  const auto is_root =
+    to_dir_path.size() == 1 &&
+    to_dir_path.front() == std::filesystem::path::preferred_separator;
+
+  if (!is_root)
   {
     /* not ROOT */
     /*----------*/
@@ -309,28 +313,25 @@ static int Copy(const std::string& to_path, const std::string& from_path)
 
 int CopyTaggedFiles(FileEntry *fe_ptr, CopyWalkContext *ctx)
 {
-  char new_name[PATH_LENGTH+1];
   int  result = -1;
 
   ctx->new_fe_ptr = fe_ptr;  /* unchanged */
 
-  if( BuildFilename(fe_ptr->name, ctx->to_file, new_name) == 0 )
+  const auto new_name = BuildFilename(fe_ptr->name, ctx->to_file);
+  if (new_name.empty())
   {
-    if( *new_name == '\0' )
-    {
-      Message("Can't copy file to*empty name");
-    }
-
-    result = CopyFile(
-      ctx->statistic_ptr,
-      fe_ptr,
-      ctx->confirm,
-      new_name,
-      ctx->dest_dir_entry,
-      ctx->to_path,
-      ctx->path_copy
-    );
+    Message("Can't copy file to*empty name");
   }
+
+  result = CopyFile(
+    ctx->statistic_ptr,
+    fe_ptr,
+    ctx->confirm,
+    new_name,
+    ctx->dest_dir_entry,
+    ctx->to_path,
+    ctx->path_copy
+  );
 
   return( result );
 }

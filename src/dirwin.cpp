@@ -97,11 +97,6 @@ static void PrintDirEntry(WINDOW *win,
   int  color, hi_color;
   std::string buffer;
   std::string line_buffer;
-  char modify_time[13];
-  char change_time[13];
-  char access_time[13];
-  char owner[OWNER_NAME_MAX + 1];
-  char group[GROUP_NAME_MAX + 1];
   const DirEntry* de_ptr;
   bool suppress_output = false;
 
@@ -132,7 +127,7 @@ static void PrintDirEntry(WINDOW *win,
     case ViewMode::MODE_1:
       {
         const auto attributes = GetAttributes(de_ptr->stat_struct.st_mode);
-        CTime(de_ptr->stat_struct.st_mtime, modify_time);
+        const auto modify_time = CTime(de_ptr->stat_struct.st_mtime);
         line_buffer = std::format(
           "{:>10} {:3} {:8} {:>12}",
           attributes,
@@ -144,35 +139,27 @@ static void PrintDirEntry(WINDOW *win,
       break;
 
     case ViewMode::MODE_2 :
-                 if (const auto owner_name_ptr = GetPasswdName(de_ptr->stat_struct.st_uid))
                  {
-                   std::strncpy(owner, owner_name_ptr->c_str(), sizeof(owner));
-                 } else {
-                   std::snprintf(owner, sizeof(owner), "%d", de_ptr->stat_struct.st_uid);
-                 }
-                 if (const auto group_name_ptr = GetGroupName(de_ptr->stat_struct.st_gid))
-                 {
-                   std::strncpy(group, group_name_ptr->c_str(), sizeof(group));
-                 } else {
-                   std::snprintf(group, sizeof(group), "%d", de_ptr->stat_struct.st_gid);
-                 }
-                 line_buffer = std::format(
-                   "{:12}  {:<12} {:<12}",
-                   de_ptr->stat_struct.st_ino,
-                   owner,
-                   group
+                   const auto owner = GetPasswdName(de_ptr->stat_struct.st_uid)
+                     .value_or(std::to_string(de_ptr->stat_struct.st_uid));
+                   const auto group = GetGroupName(de_ptr->stat_struct.st_gid)
+                     .value_or(std::to_string(de_ptr->stat_struct.st_gid));
+                   line_buffer = std::format(
+                     "{:12}  {:<12} {:<12}",
+                     de_ptr->stat_struct.st_ino,
+                     owner,
+                     group
 );
+                 }
                  break;
     case ViewMode::MODE_3 :
     case ViewMode::MODE_5 : /* unused for dirs */
       break;
     case ViewMode::MODE_4 :
-                 CTime(de_ptr->stat_struct.st_ctime, change_time);
-                 CTime(de_ptr->stat_struct.st_atime, access_time);
                  line_buffer = std::format(
                    "Chg.: {:>12}  Acc.: {:>12}",
-                   change_time,
-                   access_time
+                   CTime(de_ptr->stat_struct.st_ctime),
+                   CTime(de_ptr->stat_struct.st_atime)
 );
                  break;
   }
