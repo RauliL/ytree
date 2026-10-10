@@ -80,7 +80,8 @@ void ApplyAttributes(std::string_view attributes, struct stat* st)
   if (unix_mode_pos != std::string_view::npos &&
       attributes.size() - unix_mode_pos >= 10)
   {
-    const auto mode = GetModus(std::string(attributes.substr(unix_mode_pos, 10)).c_str());
+    const auto mode = GetModus(std::string(attributes.substr(unix_mode_pos, 10)));
+
     st->st_mode = mode;
     if (is_dir)
     {

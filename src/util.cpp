@@ -263,55 +263,54 @@ int GetFileEntry(DirEntry *de_ptr, char *file_name, FileEntry **file_entry)
 
 
 
-char *GetAttributes(unsigned short modus, char *buffer)
+std::string GetAttributes(unsigned short modus)
 {
-  char *save_buffer = buffer;
+  std::string buffer;
+  buffer.reserve(10);
 
-       if( S_ISREG(modus) )  *buffer++ = '-';
-  else if( S_ISDIR(modus) )  *buffer++ = 'd';
-  else if( S_ISCHR(modus) )  *buffer++ = 'c';
-  else if( S_ISBLK(modus) )  *buffer++ = 'b';
-  else if( S_ISFIFO(modus) ) *buffer++ = 'p';
-  else if( S_ISLNK(modus) )  *buffer++ = 'l';
-  else if( S_ISSOCK(modus) ) *buffer++ = 's';  /* ??? */
-  else                         *buffer++ = '?';  /* unknown */
+       if( S_ISREG(modus) )  buffer += '-';
+  else if( S_ISDIR(modus) )  buffer += 'd';
+  else if( S_ISCHR(modus) )  buffer += 'c';
+  else if( S_ISBLK(modus) )  buffer += 'b';
+  else if( S_ISFIFO(modus) ) buffer += 'p';
+  else if( S_ISLNK(modus) )  buffer += 'l';
+  else if( S_ISSOCK(modus) ) buffer += 's';  /* ??? */
+  else                       buffer += '?';  /* unknown */
 
-  if( modus & S_IRUSR ) *buffer++ = 'r';
-  else *buffer++ = '-';
+  if( modus & S_IRUSR ) buffer += 'r';
+  else buffer += '-';
 
-  if( modus & S_IWUSR ) *buffer++ = 'w';
-  else *buffer++ = '-';
+  if( modus & S_IWUSR ) buffer += 'w';
+  else buffer += '-';
 
-  if( modus & S_IXUSR ) *buffer++ = 'x';
-  else *buffer++ = '-';
+  if( modus & S_IXUSR ) buffer += 'x';
+  else buffer += '-';
 
-  if( modus & S_ISUID ) *(buffer - 1) = 's';
-
-
-  if( modus & S_IRGRP ) *buffer++ = 'r';
-  else *buffer++ = '-';
-
-  if( modus & S_IWGRP ) *buffer++ = 'w';
-  else *buffer++ = '-';
-
-  if( modus & S_IXGRP ) *buffer++ = 'x';
-  else *buffer++ = '-';
-
-  if( modus & S_ISGID ) *(buffer - 1) = 's';
+  if( modus & S_ISUID ) buffer.back() = 's';
 
 
-  if( modus & S_IROTH ) *buffer++ = 'r';
-  else *buffer++ = '-';
+  if( modus & S_IRGRP ) buffer += 'r';
+  else buffer += '-';
 
-  if( modus & S_IWOTH ) *buffer++ = 'w';
-  else *buffer++ = '-';
+  if( modus & S_IWGRP ) buffer += 'w';
+  else buffer += '-';
 
-  if( modus & S_IXOTH ) *buffer++ = 'x';
-  else *buffer++ = '-';
+  if( modus & S_IXGRP ) buffer += 'x';
+  else buffer += '-';
 
-  *buffer = '\0';
+  if( modus & S_ISGID ) buffer.back() = 's';
 
-  return( save_buffer );
+
+  if( modus & S_IROTH ) buffer += 'r';
+  else buffer += '-';
+
+  if( modus & S_IWOTH ) buffer += 'w';
+  else buffer += '-';
+
+  if( modus & S_IXOTH ) buffer += 'x';
+  else buffer += '-';
+
+  return buffer;
 }
 
 
@@ -846,7 +845,6 @@ int BuildUserFileEntry(
   char* line
 )
 {
-  char attributes[11];
   char modify_time[13];
   char change_time[13];
   char access_time[13];
@@ -867,7 +865,7 @@ int BuildUserFileEntry(
 
 
   tag = (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ';
-  GetAttributes(fe_ptr->stat_struct.st_mode, attributes);
+  const auto attributes = GetAttributes(fe_ptr->stat_struct.st_mode);
 
   CTime(fe_ptr->stat_struct.st_mtime, modify_time);
   CTime(fe_ptr->stat_struct.st_ctime, change_time);

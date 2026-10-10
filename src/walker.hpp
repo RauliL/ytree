@@ -9,7 +9,7 @@ struct WalkContextBase
 
 struct ChangeModusWalkContext : WalkContextBase
 {
-  char new_modus[11]{};
+  std::string new_modus;
 };
 
 struct ChangeOwnerWalkContext : WalkContextBase

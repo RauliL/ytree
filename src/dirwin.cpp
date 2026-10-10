@@ -97,7 +97,6 @@ static void PrintDirEntry(WINDOW *win,
   int  color, hi_color;
   std::string buffer;
   std::string line_buffer;
-  char attributes[11];
   char modify_time[13];
   char change_time[13];
   char access_time[13];
@@ -131,19 +130,20 @@ static void PrintDirEntry(WINDOW *win,
   switch( dir_mode )
   {
     case ViewMode::MODE_1:
-      GetAttributes(de_ptr->stat_struct.st_mode, attributes);
-      CTime(de_ptr->stat_struct.st_mtime, modify_time);
-      line_buffer = std::format(
-        "{:>10} {:3} {:8} {:>12}",
-        attributes,
-        de_ptr->stat_struct.st_nlink,
-        static_cast<std::int64_t>(de_ptr->stat_struct.st_size),
-        modify_time
+      {
+        const auto attributes = GetAttributes(de_ptr->stat_struct.st_mode);
+        CTime(de_ptr->stat_struct.st_mtime, modify_time);
+        line_buffer = std::format(
+          "{:>10} {:3} {:8} {:>12}",
+          attributes,
+          de_ptr->stat_struct.st_nlink,
+          static_cast<std::int64_t>(de_ptr->stat_struct.st_size),
+          modify_time
 );
+      }
       break;
 
     case ViewMode::MODE_2 :
-                 GetAttributes(de_ptr->stat_struct.st_mode, attributes);
                  if (const auto owner_name_ptr = GetPasswdName(de_ptr->stat_struct.st_uid))
                  {
                    std::strncpy(owner, owner_name_ptr->c_str(), sizeof(owner));

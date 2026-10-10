@@ -1,11 +1,10 @@
 #include "./walker.hpp"
 
 static int SetDirModus(DirEntry *de_ptr, const ChangeModusWalkContext& ctx);
-static int GetNewModus(int old_modus, const char *new_modus);
+static int GetNewModus(int old_modus, const std::string& new_modus);
 
 int ChangeFileModus(FileEntry *fe_ptr)
 {
-  char modus[11];
   ChangeModusWalkContext ctx;
   int  result;
 
@@ -17,11 +16,11 @@ int ChangeFileModus(FileEntry *fe_ptr)
     return( result );
   }
 
-  GetAttributes(fe_ptr->stat_struct.st_mode, modus);
+  auto modus = GetAttributes(fe_ptr->stat_struct.st_mode);
 
-  if( GetNewFileModus(LINES - 2, 1, modus, "\r\033") == CR )
+  if( GetNewFileModus(LINES - 2, 1, modus, "\r\033") )
   {
-    *std::format_to(ctx.new_modus, "{}", modus) = '\0';
+    ctx.new_modus = modus;
     result = SetFileModus(fe_ptr, &ctx);
   }
 
@@ -36,7 +35,6 @@ int ChangeFileModus(FileEntry *fe_ptr)
 
 int ChangeDirModus(DirEntry *de_ptr)
 {
-  char modus[11];
   ChangeModusWalkContext ctx;
   int  result;
 
@@ -48,11 +46,11 @@ int ChangeDirModus(DirEntry *de_ptr)
     return( result );
   }
 
-  GetAttributes(de_ptr->stat_struct.st_mode, modus);
+  auto modus = GetAttributes(de_ptr->stat_struct.st_mode);
 
-  if( GetNewFileModus(LINES - 2, 1, modus, "\r\033") == CR )
+  if( GetNewFileModus(LINES - 2, 1, modus, "\r\033") )
   {
-    *std::format_to(ctx.new_modus, "{}", modus) = '\0';
+    ctx.new_modus = modus;
     result = SetDirModus(de_ptr, ctx);
   }
 
@@ -64,7 +62,7 @@ int ChangeDirModus(DirEntry *de_ptr)
 
 
 
-int GetNewFileModus(int y, int x, char *modus, const char *term)
+bool GetNewFileModus(int y, int x, std::string& modus, const char *term)
 {
   int c, p;
   static char rwx[] = "rwx";
@@ -129,7 +127,7 @@ int GetNewFileModus(int y, int x, char *modus, const char *term)
   move(y, x); clrtoeol();
   curs_set(0);
 
-  return( c );
+  return c == CR;
 }
 
 
@@ -199,9 +197,10 @@ static int SetDirModus(DirEntry *de_ptr, const ChangeModusWalkContext& ctx)
   return -1;
 }
 
-static int GetNewModus(int old_modus, const char *modus)
+static int GetNewModus(int old_modus, const std::string& modus_str)
 {
   int new_modus;
+  const char *modus = modus_str.c_str();
 
   new_modus = 0;
 
@@ -242,7 +241,7 @@ static int GetNewModus(int old_modus, const char *modus)
 
 
 
-int GetModus(const char *modus)
+int GetModus(const std::string& modus)
 {
   return( GetNewModus(0, modus) );
 }

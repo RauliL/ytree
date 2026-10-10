@@ -17,7 +17,6 @@ int CopyFile(Statistic *statistic_ptr,
   const auto from_dir = GetPath(fe_ptr->Dir().get());
   std::filesystem::path to_fs_path;
   std::string to_path;
-  char        buffer[20];
   FileEntry   *dest_file_entry;
   struct stat stat_struct;
   int         term;
@@ -169,7 +168,7 @@ int CopyFile(Statistic *statistic_ptr,
 
     if( chmod(to_path.c_str(), fe_ptr->stat_struct.st_mode) == -1 )
     {
-      FormatWarning("Can't chmod file*\"{}\"*to mode {}*IGNORED", to_path.c_str(), GetAttributes(fe_ptr->stat_struct.st_mode, buffer));
+      FormatWarning("Can't chmod file*\"{}\"*to mode {}*IGNORED", to_path.c_str(), GetAttributes(fe_ptr->stat_struct.st_mode));
     }
 
     if( dest_dir_entry )

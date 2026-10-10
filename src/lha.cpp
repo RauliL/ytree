@@ -76,7 +76,6 @@ int ReadTreeFromLHA(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
 {
   char *t, *old;
-  char modus[11];
   bool dos_mode = false;
   int  i, id;
   std::tm tm_struct;
@@ -95,9 +94,7 @@ static int GetStatFromLHA(char *lha_line, char *name, struct stat *stat)
 
   if( std::strlen(t) == 9 && *t != '[' )
   {
-    *modus = '-';
-    std::strcpy(&modus[1], t);
-    stat->st_mode = GetModus(modus);
+    stat->st_mode = GetModus(std::string("-") + t);
   }
   else if( *t == '[' )
   {

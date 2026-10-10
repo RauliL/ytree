@@ -453,7 +453,6 @@ char GetTypeOfFile(struct stat fst)
 
 static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, int start_x)
 {
-  char attributes[11];
   char modify_time[13];
   char change_time[13];
   char access_time[13];
@@ -499,9 +498,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   {
     case ViewMode::MODE_1 : if( fe_ptr )
       {
-        GetAttributes(fe_ptr->stat_struct.st_mode,
-                              attributes
-);
+        const auto attributes = GetAttributes(fe_ptr->stat_struct.st_mode);
 
         CTime(fe_ptr->stat_struct.st_mtime, modify_time);
 
@@ -549,10 +546,6 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     case ViewMode::MODE_2 : if( fe_ptr )
       {
-        GetAttributes(fe_ptr->stat_struct.st_mode,
-                              attributes
-);
-
         if (const auto owner_name_ptr = GetPasswdName(fe_ptr->stat_struct.st_uid))
         {
           std::strncpy(owner, owner_name_ptr->c_str(), sizeof(owner));
@@ -1355,7 +1348,7 @@ struct FileWindowContext
   std::int64_t file_size = 0;
   int i = 0;
   int start_x = 0;
-  char modus[11]{};
+  std::string modus;
   bool path_copy = false;
   int term = 0;
   int mask = 0;
@@ -1684,12 +1677,12 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 
         ctx.mask = S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 
-      GetAttributes(ctx.mask, ctx.modus);
+      ctx.modus = GetAttributes(ctx.mask);
 
-            if( GetNewFileModus(LINES - 2, 1, ctx.modus, "\r\033") == CR )
+            if( GetNewFileModus(LINES - 2, 1, ctx.modus, "\r\033") )
       {
         ChangeModusWalkContext modus_ctx;
-        *std::format_to(modus_ctx.new_modus, "{}", ctx.modus) = '\0';
+        modus_ctx.new_modus = ctx.modus;
                           WalkTaggedFiles(ctx.dir_entry->start_file,
              ctx.dir_entry->cursor_pos,
              SetFileModus,
