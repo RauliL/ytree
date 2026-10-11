@@ -53,20 +53,18 @@ bool LoginDisk(const std::string& path)
       }
       statistic = disk_statistic;
       SetFileSpec(statistic.file_spec);
-      return true;   /* Tree already in memory */
+
+      return true; // Tree already in memory.
     }
   }
 
-
-  if( STAT_(path.c_str(), &stat_struct) )
+  if (!DoStat(path, stat_struct))
   {
-    /* Stat failed */
-    /*-------------*/
+    // Stat failed.
     FormatMessage("Can't access*\"{}\"*{}", path, std::strerror(errno));
 
     return false;
   }
-
 
   /* Assigning a fresh Statistic releases the previous tree (shared_ptr). */
   statistic = {};

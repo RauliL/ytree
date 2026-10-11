@@ -68,7 +68,7 @@ int SetFileGroup(FileEntry *fe_ptr, ChangeGroupWalkContext *ctx)
     /* Erfolgreich modifiziert */
     /*-------------------------*/
 
-    if (STAT_(path.c_str(), &stat_struct))
+    if (!DoStat(path, stat_struct))
     {
       Error("stat() failed");
     } else {
@@ -119,7 +119,7 @@ static int SetDirGroup(DirEntry *de_ptr, int new_group_id)
 
     /* Erfolgreich modifiziert */
     /*-------------------------*/
-    if (STAT_(path.c_str(), &st))
+    if (!DoStat(path, st))
     {
       Warning("stat() failed");
     } else {

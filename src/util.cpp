@@ -1008,18 +1008,9 @@ std::filesystem::path GetcwdOrDot()
   return std::filesystem::path(".");
 }
 
-static inline bool Stat(const std::string& path, struct stat& st)
-{
-#ifdef S_IFLNK
-  return !lstat(path.c_str(), &st);
-#else
-  return !stat(path.c_str(), &st);
-#endif
-}
-
 void StatOrAbort(const std::string& path, struct stat& st)
 {
-  if (!Stat(path, st))
+  if (!DoStat(path, st))
   {
     Error("stat() failed*ABORT");
     std::exit(EXIT_FAILURE);

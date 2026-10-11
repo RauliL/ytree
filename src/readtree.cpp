@@ -1,32 +1,20 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/readtree.c,v 1.13 2000/07/13 18:26:06 werner Exp $
- *
- * Funktionen zum Lesen des Dateibaumes
- *
- ***************************************************************************/
-
-
 #include "ytree.h"
 
-
-
 static void UnReadSubTree(DirEntry *dir_entry);
-
-
 
 /* Dateibaum lesen: path = "Root"-Pfad
  * dir_entry wird von der Funktion gefuellt
  */
-
-
-int ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path, int depth)
+int ReadTree(
+  const std::shared_ptr<DirEntry>& dir_entry,
+  const std::string& path,
+  int depth
+)
 {
   struct stat   stat_struct;
   int   file_count;
   std::vector<std::shared_ptr<DirEntry>> new_children;
   std::vector<std::shared_ptr<FileEntry>> new_files;
-
 
   /* dir_entry initialisieren */
   /*--------------------------*/
@@ -78,9 +66,11 @@ int ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path
   for (; it != end; it.increment(ec))
   {
     if (ec)
+    {
       break;
+    }
 
-    std::string entry_name = it->path().filename().string();
+    auto entry_name = it->path().filename().string();
     std::string new_path;
 
     if (entry_name == "." || entry_name == "..")
@@ -88,28 +78,29 @@ int ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path
       continue;
     }
 
-    if( EscapeKeyPressed() )
+    if (EscapeKeyPressed())
     {
       Quit();  /* Abfrage ob ytree verlassen werden soll */
     }
 
-    if( ( file_count++ % 100 ) == 0 ) {
+    if ((file_count++ % 100) == 0)
+    {
       DisplayDiskStatistic();
       doupdate();
     }
 
-    new_path = it->path().string();
+    new_path = it->path();
 
-    if (STAT_(new_path.c_str(), &stat_struct))
+    if (!DoStat(new_path, stat_struct))
     {
       if (errno != EACCES)
       {
-        FormatError("stat() failed on*{}*IGNORED", new_path.c_str());
+        FormatError("stat() failed on*{}*IGNORED", new_path);
       }
       continue;
     }
 
-    if( S_ISDIR(stat_struct.st_mode) )
+    if (S_ISDIR(stat_struct.st_mode))
     {
       /* Directory-Entry */
       /*-----------------*/
@@ -121,26 +112,25 @@ int ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path
       ReadTree(den_ptr, new_path, depth - 1);
 
       new_children.push_back(den_ptr);
-    }
-    else
-    {
+    } else {
       /* File-Entry */
       /*------------*/
-
-      char link_path[PATH_LENGTH + 1];
+      auto fen_ptr = std::make_shared<FileEntry>();
 
       /* Test, ob Eintrag Symbolischer Link ist */
       /*----------------------------------------*/
 
-      auto fen_ptr = std::make_shared<FileEntry>();
       fen_ptr->name = entry_name;
       fen_ptr->stat_struct = stat_struct;
 
       if (S_ISLNK(stat_struct.st_mode))
       {
+        char link_path[PATH_LENGTH + 1];
+        const auto n = readlink(new_path.c_str(), link_path, sizeof(link_path));
+
         /* Ja, symbolischer Name wird an "echten" Namen angehaengt */
         /*---------------------------------------------------------*/
-        if (const auto n = readlink(new_path.c_str(), link_path, sizeof(link_path)); n == -1)
+        if (n == -1)
         {
           fen_ptr->symlink_target = "unknown";
         } else {
@@ -163,8 +153,11 @@ int ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path
   std::stable_sort(
     new_children.begin(),
     new_children.end(),
-    [](const std::shared_ptr<DirEntry>& a, const std::shared_ptr<DirEntry>& b) { return a->name < b->name; }
-);
+    [](const std::shared_ptr<DirEntry>& a, const std::shared_ptr<DirEntry>& b)
+    {
+      return a->name < b->name;
+    }
+  );
 
   dir_entry->files = std::move(new_files);
   dir_entry->children = std::move(new_children);
@@ -172,14 +165,12 @@ int ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path
   DisplayDiskStatistic();
   doupdate();
 
-  return( 0 );
+  return 0;
 }
 
-
-
-static void RemoveAllFiles(DirEntry *dir_entry)
+static void RemoveAllFiles(DirEntry* dir_entry)
 {
-  while( !dir_entry->files.empty() )
+  while (!dir_entry->files.empty())
   {
     RemoveFile(dir_entry->files.back().get());
   }
@@ -203,24 +194,23 @@ void UnReadTree(DirEntry *dir_entry)
   }
 }
 
-
 /* Loescht alle Unterverzeichnisse von parent */
 /*--------------------------------------------*/
-
 static void UnReadSubTree(DirEntry *parent)
 {
   auto children = std::move(parent->children);
 
   parent->children.clear();
 
-  for( const auto& de_ptr : children )
+  for (const auto& de_ptr : children)
   {
     RemoveAllFiles(de_ptr.get());
     UnReadSubTree(de_ptr.get());
 
-    if( !parent->not_scanned )
-      statistic.disk_total_directories--;
-
-    /* de_ptr is released when "children" goes out of scope */
+    if (!parent->not_scanned)
+    {
+      --statistic.disk_total_directories;
+    }
+    // de_ptr is released when "children" goes out of scope.
   }
 }

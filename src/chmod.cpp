@@ -153,7 +153,7 @@ int SetFileModus(FileEntry *fe_ptr, ChangeModusWalkContext *ctx)
   {
     /* Erfolgreich modifiziert */
     /*-------------------------*/
-    if (STAT_(path.c_str(), &stat_struct))
+    if (!DoStat(path, stat_struct))
     {
       Error("stat() failed");
     } else {
@@ -183,7 +183,7 @@ static int SetDirModus(DirEntry *de_ptr, const ChangeModusWalkContext& ctx)
 
     /* Erfolgreich modifiziert */
     /*-------------------------*/
-    if (STAT_(path.c_str(), &st))
+    if (!DoStat(path, st))
     {
       Error("stat() Failed");
     } else {
@@ -238,15 +238,7 @@ static int GetNewModus(int old_modus, const std::string& modus_str)
   return( new_modus );
 }
 
-
-
-
 int GetModus(const std::string& modus)
 {
-  return( GetNewModus(0, modus) );
+  return GetNewModus(0, modus);
 }
-
-
-
-
-

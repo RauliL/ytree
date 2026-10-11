@@ -73,7 +73,7 @@ int SetFileOwner(FileEntry *fe_ptr, ChangeOwnerWalkContext *ctx)
   {
     /* Erfolgreich modifiziert */
     /*-------------------------*/
-    if (STAT_(path.c_str(), &stat_struct))
+    if (!DoStat(path, stat_struct))
     {
       Error("stat() Failed");
     } else {
@@ -125,7 +125,7 @@ static int SetDirOwner(DirEntry* de_ptr, int new_owner_id)
 
     /* Erfolgreich modifiziert */
     /*-------------------------*/
-    if (STAT_(path.c_str(), &st))
+    if (!DoStat(path, st))
     {
       Error("stat() failed");
     } else {

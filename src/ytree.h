@@ -63,10 +63,7 @@
 #define KEY_END   KEY_EOL
 #endif
 
-#ifdef S_IFLNK
-#define STAT_(a, b) lstat(a, b)
-#else
-#define STAT_(a, b) stat(a, b)
+#ifndef S_IFLNK
 #define readlink(a, b, c)  (-1)
 #endif /* S_IFLNK */
 
@@ -723,6 +720,7 @@ void TruncateVisual(char* str, std::size_t max_len);
 int StrVisualLength(std::string_view str);
 void WAttrAddStr(WINDOW* win, int attr, const std::string& str);
 void StatOrAbort(const std::string& path, struct stat& st);
+bool DoStat(const std::filesystem::path& path, struct stat& st);
 std::optional<std::filesystem::path> GetXdgCachePath();
 std::optional<std::filesystem::path> GetXdgConfigPath();
 
