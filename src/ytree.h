@@ -364,6 +364,10 @@ struct FileEntry
   /* Owning directory, or null if it has expired. */
   std::shared_ptr<DirEntry> Dir() const { return dir_entry.lock(); }
 
+  std::filesystem::path GetPath() const;
+
+  std::filesystem::path GetRealPath() const;
+
   std::optional<std::string> GetExtension() const
   {
     const auto extension = std::filesystem::path(name).extension();
@@ -506,8 +510,6 @@ std::optional<std::string> GetGroupName(gid_t gid);
 std::optional<int> GetGroupId(const std::string& name);
 std::optional<std::string> GetPasswdName(uid_t uid);
 std::optional<int> GetPasswdUid(const std::string& name);
-std::filesystem::path GetFileNamePath(const FileEntry* file_entry);
-std::filesystem::path GetRealFileNamePath(const FileEntry* file_entry);
 int SystemCall(const std::string& command_line);
 int QuerySystemCall(const std::string& command_line);
 int SilentSystemCall(const std::string& command_line);

@@ -1,28 +1,20 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/delete.c,v 1.12 2001/06/15 16:36:36 werner Exp $
- *
- * Loeschen von Dateien / Verzeichnissen
- *
- ***************************************************************************/
 #include "ytree.h"
 
-int DeleteFile(FileEntry *fe_ptr)
+int DeleteFile(FileEntry* fe_ptr)
 {
-  const auto filepath = GetFileNamePath(fe_ptr);
-  int      result;
-  int      term;
+  const auto filepath = fe_ptr->GetPath();
+  int result = -1;
   std::error_code ec;
-
-  result = -1;
 
   if (!S_ISLNK(fe_ptr->stat_struct.st_mode))
   {
     if (!IsWriteable(filepath))
     {
+      int term;
+
       if (!std::filesystem::exists(filepath))
       {
-        /* Datei existiert nicht ==> fertig */
+        // Datei existiert nicht ==> fertig
         goto UNLINK_DONE;
       }
 
@@ -33,12 +25,17 @@ int DeleteFile(FileEntry *fe_ptr)
           fe_ptr->name
         ),
         "YN\033"
-);
+      );
 
-      if( term != 'Y' )
+      if (term != 'Y')
       {
-        FormatMessage("Can't delete file*\"{}\"*{}", filepath.c_str(), std::strerror(errno));
-        ESCAPE;
+        FormatMessage(
+          "Can't delete file*\"{}\"*{}",
+          filepath.string(),
+          std::strerror(errno)
+        );
+
+        return result;
       }
     }
   }
@@ -46,26 +43,22 @@ int DeleteFile(FileEntry *fe_ptr)
   std::filesystem::remove(filepath, ec);
   if (ec)
   {
-    FormatMessage("Can't delete file*\"{}\"*{}", filepath.c_str(), ec.message().c_str());
-    ESCAPE;
+    FormatMessage(
+      "Can't delete file*\"{}\"*{}",
+      filepath.string(),
+      ec.message()
+    );
+
+    return result;
   }
 
 UNLINK_DONE:
-
-  /* File austragen */
-  /*----------------*/
-
+  // File austragen
   result = RemoveFile(fe_ptr);
   GetAvailBytes(&statistic.disk_space);
 
-FNC_XIT:
-
-  return( result );
+  return result;
 }
-
-
-
-
 
 int RemoveFile(FileEntry *fe_ptr)
 {

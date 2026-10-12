@@ -3,6 +3,37 @@
 #include <peelo/xdg.hpp>
 #include <system_error>
 
+static inline bool IsAbsolute(const std::string& path)
+{
+  return !path.empty() &&
+    path[0] == std::filesystem::path::preferred_separator;
+}
+
+std::filesystem::path FileEntry::GetPath() const
+{
+  return ::GetPath(Dir().get()) / name;
+}
+
+std::filesystem::path FileEntry::GetRealPath() const
+{
+  if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
+  {
+    return GetPath();
+  }
+
+  if (S_ISLNK(stat_struct.st_mode))
+  {
+    if (IsAbsolute(symlink_target))
+    {
+      return symlink_target;
+    }
+
+    return ::GetPath(Dir().get()) / symlink_target;
+  }
+
+  return ::GetPath(Dir().get()) / name;
+}
+
 bool DoStat(const std::filesystem::path& path, struct stat& st)
 {
 #if defined(S_IFLNK)

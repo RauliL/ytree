@@ -91,7 +91,7 @@ int ExecuteCommand(FileEntry* fe_ptr, ExecuteWalkContext* ctx)
 
     if (c == '{' && i + 1 < ctx->command.length() && ctx->command[i + 1] == '}')
     {
-      command_line += GetFileNamePath(fe_ptr);
+      command_line += fe_ptr->GetPath();
       ++i;
     } else {
       command_line.append(1, static_cast<char>(c));

@@ -14,7 +14,7 @@ int CopyFile(
 )
 {
   std::int64_t file_size;
-  const auto from_path = GetRealFileNamePath(fe_ptr);
+  const auto from_path = fe_ptr->GetRealPath();
   const auto from_dir = GetPath(fe_ptr->Dir().get());
   std::filesystem::path to_fs_path;
   std::string to_path;

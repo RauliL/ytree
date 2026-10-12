@@ -54,7 +54,7 @@ std::optional<std::string> GetNewGroup(int st_gid)
 
 int SetFileGroup(FileEntry *fe_ptr, ChangeGroupWalkContext *ctx)
 {
-  const auto path = GetFileNamePath(fe_ptr);
+  const auto path = fe_ptr->GetPath();
   struct stat stat_struct;
   int  result;
   int  new_group_id;

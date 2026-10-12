@@ -130,19 +130,14 @@ bool GetNewFileModus(int y, int x, std::string& modus, const char *term)
   return c == CR;
 }
 
-
-
-
 int SetFileModus(FileEntry *fe_ptr, ChangeModusWalkContext *ctx)
 {
-  const auto path = GetFileNamePath(fe_ptr);
+  const auto path = fe_ptr->GetPath();
   struct stat stat_struct;
-  int  result;
-  int  new_modus;
+  int result = -1;
+  int new_modus;
 
-  result = -1;
-
-  ctx->new_fe_ptr = fe_ptr; /* unchanged */
+  ctx->new_fe_ptr = fe_ptr; // unchanged
 
   new_modus = GetNewModus(fe_ptr->stat_struct.st_mode, ctx->new_modus);
 
@@ -165,7 +160,7 @@ int SetFileModus(FileEntry *fe_ptr, ChangeModusWalkContext *ctx)
     FormatMessage("Cant't change modus:*{}", std::strerror(errno));
   }
 
-  return( result );
+  return result;
 }
 
 static int SetDirModus(DirEntry *de_ptr, const ChangeModusWalkContext& ctx)

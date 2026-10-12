@@ -1981,7 +1981,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
       case 'v':
         ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
         ctx.de_ptr = ctx.fe_ptr->Dir().get();
-        View(ctx.dir_entry, GetRealFileNamePath(ctx.fe_ptr));
+        View(ctx.dir_entry, ctx.fe_ptr->GetRealPath());
         ctx.need_dsp_help = true;
         break;
 
@@ -1989,7 +1989,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
       case 'h':
         ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
         ctx.de_ptr = ctx.fe_ptr->Dir().get();
-        ViewHex(GetRealFileNamePath(ctx.fe_ptr));
+        ViewHex(ctx.fe_ptr->GetRealPath());
         ctx.need_dsp_help = true;
         break;
 
@@ -1997,7 +1997,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
       case 'e':
         ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
         ctx.de_ptr = ctx.fe_ptr->Dir().get();
-        Edit(ctx.de_ptr, GetFileNamePath(ctx.fe_ptr));
+        Edit(ctx.de_ptr, ctx.fe_ptr->GetPath());
         break;
 
       case 'Y' :
@@ -2610,7 +2610,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
         ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
         if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
         {
-          auto new_login_path = GetFileNamePath(ctx.fe_ptr).string();
+          auto new_login_path = ctx.fe_ptr->GetPath().string();
 
           if (const auto login_path = GetNewLoginPath(new_login_path))
           {

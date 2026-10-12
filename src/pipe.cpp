@@ -3,7 +3,7 @@
 int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
 {
   std::string input_buffer;
-  const auto file_name_path = GetRealFileNamePath(file_entry);
+  const auto file_name_path = file_entry->GetRealPath();
   std::string command_line;
   int result = -1;
 
@@ -58,7 +58,7 @@ std::optional<std::string> GetPipeCommand(const std::string& initial)
 
 int PipeTaggedFiles(FileEntry* fe_ptr, PipeWalkContext* ctx)
 {
-  const auto from_path = GetRealFileNamePath(fe_ptr);
+  const auto from_path = fe_ptr->GetRealPath();
   int i;
   int n;
   char buffer[2048];

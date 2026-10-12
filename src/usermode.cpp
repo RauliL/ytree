@@ -42,5 +42,5 @@ int DirUserMode(DirEntry *dir_entry, int ch)
 
 int FileUserMode(FileEntry* file_entry, int ch)
 {
-  return RunUserMode(ch, GetUserFileAction, GetRealFileNamePath(file_entry));
+  return RunUserMode(ch, GetUserFileAction, file_entry->GetRealPath());
 }

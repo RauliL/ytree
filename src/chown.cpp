@@ -55,19 +55,14 @@ std::optional<std::string> GetNewOwner(int st_uid)
   return new_owner;
 }
 
-
-
-
-int SetFileOwner(FileEntry *fe_ptr, ChangeOwnerWalkContext *ctx)
+int SetFileOwner(FileEntry* fe_ptr, ChangeOwnerWalkContext* ctx)
 {
-  const auto path = GetFileNamePath(fe_ptr);
+  const auto path = fe_ptr->GetPath();
   struct stat stat_struct;
-  int  result;
-  int  new_owner_id;
+  int result = -1;
+  int new_owner_id;
 
-  result = -1;
-
-  ctx->new_fe_ptr = fe_ptr; /* unchanged */
+  ctx->new_fe_ptr = fe_ptr; // unchanged
 
   new_owner_id = ctx->new_owner_id;
 
@@ -86,12 +81,8 @@ int SetFileOwner(FileEntry *fe_ptr, ChangeOwnerWalkContext *ctx)
     FormatMessage("Can't change Owner:*{}", std::strerror(errno));
   }
 
-  return( result );
+  return result;
 }
-
-
-
-
 
 int ChangeDirOwner(DirEntry *de_ptr)
 {

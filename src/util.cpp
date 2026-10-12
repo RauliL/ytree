@@ -101,32 +101,6 @@ std::filesystem::path GetPath(const DirEntry* dir_entry)
   return result;
 }
 
-std::filesystem::path GetFileNamePath(const FileEntry* file_entry)
-{
-  return GetPath(file_entry->Dir().get()) / file_entry->name;
-}
-
-std::filesystem::path GetRealFileNamePath(const FileEntry* file_entry)
-{
-  if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
-  {
-    return GetFileNamePath(file_entry);
-  }
-
-  if (S_ISLNK(file_entry->stat_struct.st_mode))
-  {
-    if (!file_entry->symlink_target.empty() &&
-        file_entry->symlink_target[0] == std::filesystem::path::preferred_separator)
-    {
-      return file_entry->symlink_target;
-    }
-
-    return GetPath(file_entry->Dir().get()) / file_entry->symlink_target;
-  }
-
-  return GetPath(file_entry->Dir().get()) / file_entry->name;
-}
-
 int GetDirEntry(
   const std::shared_ptr<DirEntry>& tree,
   DirEntry* current_dir_entry,

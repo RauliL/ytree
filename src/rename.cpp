@@ -61,7 +61,7 @@ int RenameFile(
 )
 {
   const auto de_ptr = fe_ptr->Dir();
-  const auto from_path = GetFileNamePath(fe_ptr);
+  const auto from_path = fe_ptr->GetPath();
   const auto to_path =
     (std::filesystem::path(GetPath(de_ptr.get())) / new_name).string();
   struct stat stat_struct;
