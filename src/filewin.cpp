@@ -453,34 +453,31 @@ char GetTypeOfFile(struct stat fst)
 
 static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, int start_x)
 {
-  char justify;
+  static std::string line_buffer;
+  static int old_cols = -1;
+
+  char justify = reverse_sort ? '+' : '-';
   char *line_ptr;
   int  n, pos_x = 0;
-  FileEntry *fe_ptr;
-  static std::string line_buffer;
-  static int  old_cols = -1;
-  int  ef_window_width;
+  std::shared_ptr<FileEntry> fe_ptr;
+  int ef_window_width = window_width - 2; /* Effektive Window-Width */
   const char* sym_link_name = nullptr;
   char type_of_file = ' ';
 
-
-  ef_window_width = window_width - 2; /* Effektive Window-Width */
-
-  (reverse_sort) ? (justify='+') : (justify='-');
-
-  if( old_cols != COLS )
+  if (old_cols != COLS)
   {
     old_cols = COLS;
     line_buffer.resize(COLS + PATH_LENGTH);
   }
 
-  fe_ptr = file_entry_list[entry_no].get();
+  fe_ptr = file_entry_list[entry_no];
 
-  if( fe_ptr && S_ISLNK(fe_ptr->stat_struct.st_mode) )
+  if (fe_ptr && S_ISLNK(fe_ptr->stat_struct.st_mode))
+  {
     sym_link_name = fe_ptr->symlink_target.c_str();
-  else
+  } else {
     sym_link_name = "";
-
+  }
 
   type_of_file = fe_ptr ? GetTypeOfFile(fe_ptr->stat_struct) : ' ';
 
@@ -489,7 +486,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
     : std::string{};
   const auto fitted_link = FitVisualWidth(sym_link_name, max_linkname_len, true);
 
-  switch( file_mode )
+  switch (file_mode)
   {
     case ViewMode::MODE_1 : if( fe_ptr )
       {
@@ -647,11 +644,8 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     case ViewMode::MODE_5 : if( fe_ptr )
       {
-        line_buffer.assign(std::max(old_cols + PATH_LENGTH, std::size_t{200}), '\0');
-        BuildUserFileEntry(fe_ptr,  max_filename_len, max_linkname_len,
-            GetProfileValueOrEmpty("USERVIEW"),
-            200, line_buffer.data());
-        line_buffer.resize(std::strlen(line_buffer.c_str()));
+        line_buffer = BuildUserFileEntry(fe_ptr, max_filename_len, max_linkname_len,
+            GetProfileValueOrEmpty("USERVIEW"), 200);
       }
       else
       {
@@ -713,13 +707,7 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   mvwaddstr(file_window, y, pos_x + 1, line_ptr);
   if( hilight ) wattrset(file_window, 0);
 #endif /* NO_HIGHLIGHT */
-
-
 }
-
-
-
-
 
 void DisplayFileWindow(DirEntry *dir_entry)
 {
@@ -728,9 +716,6 @@ void DisplayFileWindow(DirEntry *dir_entry)
   DisplayFiles(dir_entry, dir_entry->start_file,
                 dir_entry->start_file + dir_entry->cursor_pos, 0);
 }
-
-
-
 
 static void DisplayFiles(DirEntry *de_ptr, int start_file_no, int hilight_no, int start_x)
 {
@@ -3104,5 +3089,3 @@ static void ListJump(DirEntry * dir_entry, const char *str)
     doupdate();
     ListJump(dir_entry, (incremental) ? newStr.c_str() : "");
 }
-
-

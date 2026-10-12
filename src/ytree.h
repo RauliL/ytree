@@ -672,13 +672,12 @@ std::optional<std::string> GetExtViewer(const std::filesystem::path& filename);
 extern void InitClock();
 extern void SuspendClock();
 std::string ShellQuote(const std::string& src);
-int BuildUserFileEntry(
-  FileEntry* fe_ptr,
+std::string BuildUserFileEntry(
+  const std::shared_ptr<FileEntry>& fe_ptr,
   int max_filename_len,
   int max_linkname_len,
   const std::string& tmpl,
-  int linelen,
-  char* line
+  int linelen
 );
 int GetUserFileEntryLength(
   int max_filename_len,

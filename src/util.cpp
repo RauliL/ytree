@@ -830,30 +830,25 @@ std::string ShellQuote(const std::string& src)
   return result;
 }
 
-int BuildUserFileEntry(
-  FileEntry* fe_ptr,
+std::string BuildUserFileEntry(
+  const std::shared_ptr<FileEntry>& fe_ptr,
   int max_filename_len,
   int max_linkname_len,
   const std::string& tmpl,
-  int linelen,
-  char* line
+  int linelen
 )
 {
-  int  n;
-  const char* sym_link_name = nullptr;
-  const char* sptr;
-  char* dptr;
-  char tag;
-  char buffer[4096]; /* enough??? */
+  std::string result;
+  const char* sym_link_name = "";
 
+  result.reserve(tmpl.size() + 256);
 
-  if( fe_ptr && S_ISLNK(fe_ptr->stat_struct.st_mode) )
+  if (fe_ptr && S_ISLNK(fe_ptr->stat_struct.st_mode))
+  {
     sym_link_name = fe_ptr->symlink_target.c_str();
-  else
-    sym_link_name = "";
+  }
 
-
-  tag = (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ';
+  const char tag = fe_ptr->tagged ? TAGGED_SYMBOL : ' ';
   const auto attributes = GetAttributes(fe_ptr->stat_struct.st_mode);
 
   const auto modify_time = CTime(fe_ptr->stat_struct.st_mtime);
@@ -868,56 +863,52 @@ int BuildUserFileEntry(
   const auto fitted_name = FitVisualWidth(fe_ptr->name, max_filename_len, true);
   const auto fitted_link = FitVisualWidth(sym_link_name, max_linkname_len, true);
 
-  for(sptr = tmpl.c_str(), dptr = buffer; *sptr;)
+  for (std::size_t i = 0; i < tmpl.size();)
   {
-    if(*sptr == '%') {
-      sptr++;
-      if(std::string_view(sptr).starts_with(TAGSYMBOL_VIEWNAME)) {
-        *dptr = tag; n=1;
-      } else if(std::string_view(sptr).starts_with(FILENAME_VIEWNAME)) {
-        n = static_cast<int>(std::format_to(dptr, "{}", fitted_name) - dptr);
-      } else if(std::string_view(sptr).starts_with(ATTRIBUTE_VIEWNAME)) {
-        n = static_cast<int>(std::format_to(dptr, "{:>10}", attributes) - dptr);
-      } else if(std::string_view(sptr).starts_with(LINKCOUNT_VIEWNAME)) {
-        n = static_cast<int>(std::format_to(dptr, "{:3}", (int)fe_ptr->stat_struct.st_nlink) - dptr);
-      } else if(std::string_view(sptr).starts_with(FILESIZE_VIEWNAME)) {
-        n = static_cast<int>(std::format_to(dptr, "{:7}", (std::int64_t) fe_ptr->stat_struct.st_size) - dptr);
-      } else if(std::string_view(sptr).starts_with(MODTIME_VIEWNAME)) {
-        n = static_cast<int>(std::format_to(dptr, "{:>12}", modify_time) - dptr);
-      } else if(std::string_view(sptr).starts_with(SYMLINK_VIEWNAME)) {
-        n = static_cast<int>(std::format_to(dptr, "{}", fitted_link) - dptr);
-      } else if(std::string_view(sptr).starts_with(UID_VIEWNAME)) {
-        n = static_cast<int>(std::format_to(dptr, "{:<8}", owner) - dptr);
-      } else if(std::string_view(sptr).starts_with(GID_VIEWNAME)) {
-        n = static_cast<int>(std::format_to(dptr, "{:<8}", group) - dptr);
-      } else if(std::string_view(sptr).starts_with(INODE_VIEWNAME)) {
-        n = static_cast<int>(std::format_to(dptr, "{:7}", (std::int64_t)fe_ptr->stat_struct.st_ino) - dptr);
-      } else if(std::string_view(sptr).starts_with(ACCTIME_VIEWNAME)) {
-        n = static_cast<int>(std::format_to(dptr, "{:>12}", access_time) - dptr);
-      } else if(std::string_view(sptr).starts_with(CHGTIME_VIEWNAME)) {
-        n = static_cast<int>(std::format_to(dptr, "{:>12}", change_time) - dptr);
-      } else {
-  n = -1;
+    if (tmpl[i] != '%')
+    {
+      result += tmpl[i++];
+      continue;
+    }
+
+    ++i;
+    const auto rest = std::string_view(tmpl).substr(i);
+    const auto append_and_skip = [&](const char* view_name, const auto& formatted)
+  {
+      if (!rest.starts_with(view_name))
+      {
+        return false;
       }
-      if(n == -1) {
-        *dptr++ = '%';
-  } else {
-        dptr += n;
-        if(*sptr) sptr++;
-        if(*sptr) sptr++;
-        if(*sptr) sptr++;
-      }
+      result += formatted;
+      i += std::strlen(view_name);
+
+      return true;
+    };
+
+    if(append_and_skip(TAGSYMBOL_VIEWNAME, std::string(1, tag))
+        || append_and_skip(FILENAME_VIEWNAME, std::format("{}", fitted_name))
+        || append_and_skip(ATTRIBUTE_VIEWNAME, std::format("{:>10}", attributes))
+        || append_and_skip(LINKCOUNT_VIEWNAME, std::format("{:3}", (int)fe_ptr->stat_struct.st_nlink))
+        || append_and_skip(FILESIZE_VIEWNAME, std::format("{:7}", (std::int64_t) fe_ptr->stat_struct.st_size))
+        || append_and_skip(MODTIME_VIEWNAME, std::format("{:>12}", modify_time))
+        || append_and_skip(SYMLINK_VIEWNAME, std::format("{}", fitted_link))
+        || append_and_skip(UID_VIEWNAME, std::format("{:<8}", owner))
+        || append_and_skip(GID_VIEWNAME, std::format("{:<8}", group))
+        || append_and_skip(INODE_VIEWNAME, std::format("{:7}", (std::int64_t)fe_ptr->stat_struct.st_ino))
+        || append_and_skip(ACCTIME_VIEWNAME, std::format("{:>12}", access_time))
+        || append_and_skip(CHGTIME_VIEWNAME, std::format("{:>12}", change_time))) {
     } else {
-      *dptr++ = *sptr++;
+      result += '%';
     }
   }
-  *dptr = '\0';
-  std::strncpy(line, buffer, linelen);
-  line[linelen - 1] = '\0';
-  return(0);
+
+  if(linelen > 0 && result.size() >= static_cast<std::size_t>(linelen))
+  {
+    result.resize(static_cast<std::size_t>(linelen - 1));
+  }
+
+  return result;
 }
-
-
 
 int GetUserFileEntryLength(
   int max_filename_len,
