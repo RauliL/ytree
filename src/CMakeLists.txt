@@ -35,6 +35,11 @@ OPTION(
   "Whether support for UTF-8 should be enabled or not."
   ON
 )
+OPTION(
+  VI_KEYS
+  "Whether Vi keys should be enabled or not."
+  OFF
+)
 
 SET(CURSES_NEED_NCURSES TRUE)
 IF(WITH_UTF8)

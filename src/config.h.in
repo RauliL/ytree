@@ -10,6 +10,7 @@
 #cmakedefine CLOCK_SUPPORT
 #cmakedefine YTREE_HAS_STD_CHRONO_TZ
 #cmakedefine WITH_UTF8
+#cmakedefine VI_KEYS
 
 /* Default (max) TreeDepth on startup */
 #define DEFAULT_TREEDEPTH     "1"

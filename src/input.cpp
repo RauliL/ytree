@@ -812,7 +812,7 @@ static constexpr int VI_KEY_DOWN = 'j';
 static constexpr int VI_KEY_RIGHT = 'l';
 static constexpr int VI_KEY_LEFT = 'h';
 static constexpr int VI_KEY_NPAGE = 'D' & 0x1F;
-static constexpr int VI_KEY_PPAGE = 'U' & 0x1F;M
+static constexpr int VI_KEY_PPAGE = 'U' & 0x1F;
 
 int ViKey(int ch)
 {
