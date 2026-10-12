@@ -51,6 +51,20 @@ IF(NOT CURSES_FOUND)
   ENDIF()
 ENDIF()
 
+INCLUDE(CheckCXXSourceCompiles)
+CHECK_CXX_SOURCE_COMPILES("
+#include <chrono>
+int main()
+{
+  const auto local = std::chrono::zoned_time{
+    std::chrono::current_zone(),
+    std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now())
+  };
+  (void)local;
+  return 0;
+}
+" YTREE_HAS_STD_CHRONO_TZ)
+
 CONFIGURE_FILE(
   ${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
   ${CMAKE_CURRENT_SOURCE_DIR}/config.h

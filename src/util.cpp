@@ -325,12 +325,13 @@ std::string GetAttributes(unsigned short modus)
 
 std::string CTime(std::time_t f_time)
 {
+#if defined(YTREE_HAS_STD_CHRONO_TZ)
   using namespace std::chrono;
 
   const auto tp = system_clock::from_time_t(f_time);
   const auto local = zoned_time{current_zone(), floor<seconds>(tp)};
 
-  if (system_clock::now() - tp > seconds{31536000L})
+  if(system_clock::now() - tp > seconds{31536000L})
   {
     /* Differenz groesser als 1 Jahr */
     /*-------------------------------*/
@@ -339,6 +340,20 @@ std::string CTime(std::time_t f_time)
   }
 
   return std::format("{:%b %e %H:%M}", local);
+#else
+  std::tm local_tm{};
+  if(localtime_r(&f_time, &local_tm) == nullptr)
+    return "?";
+
+  const bool show_year = std::time(nullptr) - f_time > 31536000L;
+  const char* format = show_year ? "%b %e  %Y" : "%b %e %H:%M";
+
+  char buffer[64];
+  if(std::strftime(buffer, sizeof(buffer), format, &local_tm) == 0)
+    return "?";
+
+  return buffer;
+#endif
 }
 
 void PrintSpecialString(

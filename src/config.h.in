@@ -8,6 +8,7 @@
 #cmakedefine COLOR_SUPPORT
 #cmakedefine COLOR_THEME_GRUVBOX
 #cmakedefine CLOCK_SUPPORT
+#cmakedefine YTREE_HAS_STD_CHRONO_TZ
 #cmakedefine WITH_UTF8
 
 /* Default (max) TreeDepth on startup */
