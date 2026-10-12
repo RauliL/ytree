@@ -5,22 +5,22 @@
 
 #include "./config.h"
 
+#include <algorithm>
 #include <cctype>
 #include <cerrno>
 #include <climits>
 #include <clocale>
 #include <cmath>
-#include <cstdint>
 #include <csetjmp>
 #include <csignal>
-#include <cstdlib>
+#include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <ctime>
 #if defined(WITH_UTF8)
 # include <cwchar>
 #endif
-#include <algorithm>
 #include <filesystem>
 #include <format>
 #include <memory>
@@ -103,19 +103,6 @@
 #endif /* S_IFSOCK */
 #endif /* S_ISSOCK */
 
-
-#define VI_KEY_UP    'k'
-#define VI_KEY_DOWN  'j'
-#define VI_KEY_RIGHT 'l'
-#define VI_KEY_LEFT  'h'
-#define VI_KEY_NPAGE ( 'D' & 0x1F )
-#define VI_KEY_PPAGE ( 'U' & 0x1F )
-
-inline constexpr std::size_t OWNER_NAME_MAX = 64;
-inline constexpr std::size_t GROUP_NAME_MAX = 64;
-inline constexpr std::size_t DISPLAY_OWNER_NAME_MAX = 12;
-inline constexpr std::size_t DISPLAY_GROUP_NAME_MAX = 12;
-
 /* Sonderzeichen fuer Liniengrafik */
 /*---------------------------------*/
 
@@ -155,8 +142,6 @@ inline constexpr std::size_t DISPLAY_GROUP_NAME_MAX = 12;
 #ifndef ACS_LARROW
 #define ACS_LARROW  '<'
 #endif
-
-
 
 /* Color Definitionen */
 
@@ -340,7 +325,6 @@ inline constexpr std::size_t LHA_LINE_LENGTH = 512;
 inline constexpr std::size_t ARC_LINE_LENGTH = 512;
 inline constexpr std::size_t RAR_LINE_LENGTH = 512;
 inline constexpr std::size_t SEVENZIP_LINE_LENGTH = 512;
-inline constexpr std::size_t COMMAND_LINE_LENGTH = 4096;
 
 enum class ViewMode : int
 {
@@ -652,7 +636,7 @@ std::string BuildFilename(
   const std::string& in_filename,
   const std::string& pattern
 );
-extern int  ViKey(int ch);
+int ViKey(int ch);
 std::optional<CompressMethod> GetFileMethod(const std::string& filename);
 extern bool KeyPressed();
 extern bool EscapeKeyPressed();

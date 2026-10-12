@@ -807,22 +807,46 @@ bool EscapeKeyPressed()
 
 #ifdef VI_KEYS
 
+static constexpr int VI_KEY_UP = 'k';
+static constexpr int VI_KEY_DOWN = 'j';
+static constexpr int VI_KEY_RIGHT = 'l';
+static constexpr int VI_KEY_LEFT = 'h';
+static constexpr int VI_KEY_NPAGE = 'D' & 0x1F;
+static constexpr int VI_KEY_PPAGE = 'U' & 0x1F;M
+
 int ViKey(int ch)
 {
-  switch( ch )
+  switch (ch)
   {
-    case VI_KEY_UP:    ch = KEY_UP;    break;
-    case VI_KEY_DOWN:  ch = KEY_DOWN;  break;
-    case VI_KEY_RIGHT: ch = KEY_RIGHT; break;
-    case VI_KEY_LEFT:  ch = KEY_LEFT;  break;
-    case VI_KEY_PPAGE: ch = KEY_PPAGE; break;
-    case VI_KEY_NPAGE: ch = KEY_NPAGE; break;
+    case VI_KEY_UP:
+      ch = KEY_UP;
+      break;
+
+    case VI_KEY_DOWN:
+      ch = KEY_DOWN;
+      break;
+
+    case VI_KEY_RIGHT:
+      ch = KEY_RIGHT;
+      break;
+
+    case VI_KEY_LEFT:
+      ch = KEY_LEFT;
+      break;
+
+    case VI_KEY_PPAGE:
+      ch = KEY_PPAGE;
+      break;
+
+    case VI_KEY_NPAGE:
+      ch = KEY_NPAGE;
+      break;
   }
-  return(ch);
+
+  return ch;
 }
 
 #endif /* VI_KEYS */
-
 
 int Getch()
 {
@@ -839,4 +863,3 @@ int Getch()
 
   return(c);
 }
-

@@ -1,10 +1,9 @@
 #include "ytree.h"
 
-#include <toml++/toml.hpp>
-
 #include <sstream>
 #include <unordered_map>
-#include <vector>
+
+#include <toml++/toml.hpp>
 
 struct Profile
 {
@@ -221,6 +220,7 @@ static std::string NormalizeExtension(std::string extension)
 void ReadProfile(const std::optional<std::filesystem::path>& custom_path)
 {
   std::filesystem::path filename;
+  toml::table table;
 
   if (custom_path)
   {
@@ -233,7 +233,6 @@ void ReadProfile(const std::optional<std::filesystem::path>& custom_path)
     return;
   }
 
-  toml::table table;
   try
   {
     table = toml::parse_file(filename.string());

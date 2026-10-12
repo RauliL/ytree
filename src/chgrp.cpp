@@ -1,5 +1,7 @@
 #include "./walker.hpp"
 
+static constexpr std::size_t GROUP_NAME_MAX = 64;
+
 static int SetDirGroup(DirEntry *de_ptr, int new_group_id);
 
 int ChangeFileGroup(FileEntry *fe_ptr)

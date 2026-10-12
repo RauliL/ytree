@@ -1,5 +1,7 @@
 #include "./walker.hpp"
 
+static constexpr std::size_t OWNER_NAME_MAX = 64;
+
 static int SetDirOwner(DirEntry *de_ptr, int new_owner_id);
 
 int ChangeFileOwner(FileEntry *fe_ptr)
