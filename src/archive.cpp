@@ -1,59 +1,50 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/archive.c,v 1.16 2000/05/20 20:41:11 werner Exp $
- *
- * Allg. Funktionen zum Bearbeiten von Archiven
- *
- ***************************************************************************/
-
-
 #include "ytree.h"
-
-
 
 static int GetArchiveDirEntry(DirEntry *tree, const char *path, DirEntry **dir_entry);
 
-
-static int InsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *path, struct stat *stat)
+static int InsertArchiveDirEntry(
+  const std::shared_ptr<DirEntry>& tree,
+  const std::string& path,
+  struct stat *stat
+)
 {
-  DirEntry *df_ptr;
-  char father_path[PATH_LENGTH + 1];
-  char *p;
-  char name[PATH_LENGTH + 1];
-
+  DirEntry* df_ptr;
+  const auto sep = std::filesystem::path::preferred_separator;
 
 #ifdef DEBUG
-  std::fprintf(stderr, "Insert Dir \"%s\"\n", path);
+  std::fprintf(stderr, "Insert Dir \"%s\"\n", path.c_str());
 #endif
 
   /* Format: .../dir/ */
   /*------------------*/
 
-  *std::format_to(father_path, "{}", path) = '\0';
+  std::string father_path = path;
+  const auto trailing_sep = father_path.rfind(sep);
 
-  if( ( p = std::strrchr(father_path, std::filesystem::path::preferred_separator) ) ) *p = '\0';
-  else
+  if (trailing_sep == std::string::npos)
   {
-    FormatError("patch mismatch*missing '{}' in*{}", std::filesystem::path::preferred_separator, path);
+    FormatError("patch mismatch*missing '{}' in*{}", sep, path);
 
     return -1;
   }
+  father_path.resize(trailing_sep);
 
-  p = std::strrchr(father_path, std::filesystem::path::preferred_separator);
+  const auto parent_sep = father_path.rfind(sep);
+  std::string name;
 
-  if( p == nullptr )
+  if (parent_sep == std::string::npos)
   {
     df_ptr = tree.get();
-    if( path[0] == std::filesystem::path::preferred_separator && path[1] == '\0' )
-      *std::format_to(name, "{}", path) = '\0';
-    else
-      *std::format_to(name, "{}", father_path) = '\0';
-  }
-  else
-  {
-    *std::format_to(name, "{}", ++p) = '\0';
-    *p = '\0';
-    if( GetArchiveDirEntry(tree.get(), father_path, &df_ptr) )
+    if (path.size() == 1 && path[0] == sep)
+    {
+      name = path;
+    } else {
+      name = father_path;
+  } else {
+    name = father_path.substr(parent_sep + 1);
+    father_path.resize(parent_sep + 1);  /* keep trailing separator */
+
+    if (GetArchiveDirEntry(tree.get(), father_path.c_str(), &df_ptr))
     {
       FormatError("can't find subdir*{}", father_path);
 
@@ -62,14 +53,12 @@ static int InsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *pa
   }
 
   auto de_ptr = std::make_shared<DirEntry>();
-  de_ptr->name = name;
+  de_ptr->name = std::move(name);
   de_ptr->stat_struct = *stat;
 
 #ifdef DEBUG
-  std::fprintf(stderr, "new dir: \"%s\"\n", name);
+  std::fprintf(stderr, "new dir: \"%s\"\n", de_ptr->name.c_str());
 #endif
-
-
 
   /* Directory einklinken */
   /*----------------------*/
@@ -83,18 +72,17 @@ static int InsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, char *pa
     std::find_if(
       df_ptr->children.begin(),
       df_ptr->children.end(),
-      [&de_ptr](const std::shared_ptr<DirEntry>& ds_ptr) { return ds_ptr->name > de_ptr->name; }
-),
+      [&de_ptr](const std::shared_ptr<DirEntry>& ds_ptr) {
+        return ds_ptr->name > de_ptr->name;
+      }
+    ),
     de_ptr
-);
+  );
 
   statistic.disk_total_directories++;
-  return( 0 );
+
+  return 0;
 }
-
-
-
-
 
 int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, struct stat *stat)
 {

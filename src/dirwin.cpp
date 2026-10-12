@@ -581,7 +581,7 @@ static int HandleDirMouse(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_e
   }
 }
 
-void HandlePlus(
+static void HandlePlus(
   DirEntry* dir_entry,
   DirEntry* de_ptr,
   char* new_login_path,
