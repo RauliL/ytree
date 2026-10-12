@@ -19,33 +19,23 @@ static int GetStatFromRAR(std::string_view rar_line, std::string& name, struct s
 
 int ReadTreeFromRAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
-  char rar_line[RAR_LINE_LENGTH + 1];
   struct stat st;
   bool dir_flag = false;
 
   dir_entry->name.clear();
 
-  while (std::fgets(rar_line, RAR_LINE_LENGTH, f) != nullptr)
+  while (auto line = ReadLine(f))
   {
-    /* \n loeschen */
-    /*-------------*/
-
-    std::string line = rar_line;
-    if (!line.empty() && line.back() == '\n')
-    {
-      line.pop_back();
-    }
-
-    if (line.size() > 48 && line[48] == ':')
+    if (line->size() > 48 && (*line)[48] == ':')
     {
       /* gueltiger Eintrag */
       /*-------------------*/
 
       std::string path_name;
 
-      if (GetStatFromRAR(line, path_name, &st))
+      if (GetStatFromRAR(*line, path_name, &st))
       {
-        FormatMessage("unknown rarinfo*{}", line);
+        FormatMessage("unknown rarinfo*{}", *line);
       }
       else
       {

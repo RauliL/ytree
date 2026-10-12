@@ -26,29 +26,19 @@ static int GetStatFromRPM(
 
 int ReadTreeFromRPM(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
-  char rpm_line[RPM_LINE_LENGTH + 1];
   struct stat st;
   bool dir_flag = false;
 
   dir_entry->name.clear();
 
-  while (std::fgets(rpm_line, RPM_LINE_LENGTH, f) != nullptr)
+  while (auto line = ReadLine(f))
   {
-    /* \n loeschen */
-    /*-------------*/
-
-    std::string line = rpm_line;
-    if (!line.empty() && line.back() == '\n')
-    {
-      line.pop_back();
-    }
-
     std::string path_name;
     std::string symlink_target;
 
-    if (GetStatFromRPM(line, path_name, symlink_target, &st))
+    if (GetStatFromRPM(*line, path_name, symlink_target, &st))
     {
-      FormatMessage("unknown rpminfo*{}", line);
+      FormatMessage("unknown rpminfo*{}", *line);
     }
     else
     {

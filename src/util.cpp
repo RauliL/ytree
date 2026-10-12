@@ -994,3 +994,34 @@ void StatOrAbort(const std::string& path, struct stat& st)
     std::exit(EXIT_FAILURE);
   }
 }
+
+std::optional<std::string> ReadLine(FILE* f)
+{
+  std::string line;
+  char buf[256];
+
+  while (std::fgets(buf, sizeof(buf), f) != nullptr)
+  {
+    line.append(buf);
+    if (!line.empty() && line.back() == '\n')
+    {
+      line.pop_back();
+      if (!line.empty() && line.back() == '\r')
+      {
+        line.pop_back();
+      }
+      return line;
+    }
+  }
+
+  if (line.empty())
+  {
+    return std::nullopt;
+  }
+
+  if (line.back() == '\r')
+  {
+    line.pop_back();
+  }
+  return line;
+}

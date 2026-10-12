@@ -316,15 +316,6 @@ inline constexpr char LOGIN_ESC = '.';
 inline constexpr std::size_t PATH_LENGTH = 1024;
 inline constexpr std::size_t FILE_SPEC_LENGTH = 12 + 1;
 inline constexpr std::size_t DISK_NAME_LENGTH = 12 + 1;
-inline constexpr std::size_t LL_LINE_LENGTH = 512;
-inline constexpr std::size_t TAR_LINE_LENGTH = 512;
-inline constexpr std::size_t RPM_LINE_LENGTH = 512;
-inline constexpr std::size_t ZOO_LINE_LENGTH = 512;
-inline constexpr std::size_t ZIP_LINE_LENGTH = 512;
-inline constexpr std::size_t LHA_LINE_LENGTH = 512;
-inline constexpr std::size_t ARC_LINE_LENGTH = 512;
-inline constexpr std::size_t RAR_LINE_LENGTH = 512;
-inline constexpr std::size_t SEVENZIP_LINE_LENGTH = 512;
 
 enum class ViewMode : int
 {
@@ -520,7 +511,6 @@ std::filesystem::path GetRealFileNamePath(const FileEntry* file_entry);
 int SystemCall(const std::string& command_line);
 int QuerySystemCall(const std::string& command_line);
 int SilentSystemCall(const std::string& command_line);
-int SilentSystemCallEx(const std::string& command_line, bool enable_clock);
 int View(DirEntry* dir_entry, const std::filesystem::path& file_path);
 int ViewHex(const std::filesystem::path& file_path);
 int InternalView(const std::filesystem::path& file_path);
@@ -735,6 +725,7 @@ int GetUserFileEntryLength(
   const std::string& tmpl
 );
 std::int64_t AtoLL(std::string_view s);
+std::optional<std::string> ReadLine(FILE* f);
 extern void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no);
 extern void ReCreateWindows();
 extern int  Getch();

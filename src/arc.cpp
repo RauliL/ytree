@@ -19,33 +19,23 @@ static int GetStatFromARC(std::string_view arc_line, std::string& name, struct s
 
 int ReadTreeFromARC(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
-  char arc_line[ARC_LINE_LENGTH + 1];
   struct stat st;
   bool dir_flag = false;
 
   dir_entry->name.clear();
 
-  while (std::fgets(arc_line, ARC_LINE_LENGTH, f) != nullptr)
+  while (auto line = ReadLine(f))
   {
-    /* \n loeschen */
-    /*-------------*/
-
-    std::string line = arc_line;
-    if (!line.empty() && line.back() == '\n')
-    {
-      line.pop_back();
-    }
-
-    if (line.size() > 63 && line[63] == ':')
+    if (line->size() > 63 && (*line)[63] == ':')
     {
       /* gueltiger Eintrag */
       /*-------------------*/
 
       std::string path_name;
 
-      if (GetStatFromARC(line, path_name, &st))
+      if (GetStatFromARC(*line, path_name, &st))
       {
-        FormatMessage("unknown arcinfo*{}", line);
+        FormatMessage("unknown arcinfo*{}", *line);
       }
       else
       {

@@ -98,5 +98,5 @@ int ExecuteCommand(FileEntry* fe_ptr, ExecuteWalkContext* ctx)
     }
   }
 
-  return SilentSystemCallEx(command_line, false);
+  return SilentSystemCall(command_line);
 }

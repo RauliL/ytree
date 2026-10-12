@@ -19,33 +19,23 @@ static int GetStatFromZOO(std::string_view zoo_line, std::string& name, struct s
 
 int ReadTreeFromZOO(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
-  char zoo_line[ZOO_LINE_LENGTH + 1];
   struct stat st;
   bool dir_flag = false;
 
   dir_entry->name.clear();
 
-  while (std::fgets(zoo_line, ZOO_LINE_LENGTH, f) != nullptr)
+  while (auto line = ReadLine(f))
   {
-    /* \n loeschen */
-    /*-------------*/
-
-    std::string line = zoo_line;
-    if (!line.empty() && line.back() == '\n')
-    {
-      line.pop_back();
-    }
-
-    if (line.size() > 50)
+    if (line->size() > 50)
     {
       /* gueltiger Eintrag */
       /*-------------------*/
 
       std::string path_name;
 
-      if (GetStatFromZOO(line, path_name, &st))
+      if (GetStatFromZOO(*line, path_name, &st))
       {
-        FormatMessage("unknown zooinfo*{}", line);
+        FormatMessage("unknown zooinfo*{}", *line);
       }
       else
       {

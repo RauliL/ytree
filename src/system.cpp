@@ -56,21 +56,11 @@ extern struct itimerval value, ovalue;
 
 int SilentSystemCall(const std::string& command_line)
 {
-  return SilentSystemCallEx(command_line, true);
-}
-
-int SilentSystemCallEx(const std::string& command_line, bool enable_clock)
-{
   int result;
 
-  (void)enable_clock;
-
   SuspendClock();
-
   PrepareTerminalForShell();
-
   result = std::system(command_line.c_str());
-
   GetAvailBytes(&statistic.disk_space);
 
   return result;

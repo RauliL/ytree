@@ -25,29 +25,19 @@ static int GetStatFromTAR(
 
 int ReadTreeFromTAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
-  char tar_line[TAR_LINE_LENGTH + 1];
   struct stat st;
   bool dir_flag = false;
 
   dir_entry->name.clear();
 
-  while (std::fgets(tar_line, TAR_LINE_LENGTH, f) != nullptr)
+  while (auto line = ReadLine(f))
   {
-    /* \n loeschen */
-    /*-------------*/
-
-    std::string line = tar_line;
-    if (!line.empty() && line.back() == '\n')
-    {
-      line.pop_back();
-    }
-
     std::string path_name;
     std::string symlink_target;
 
-    if (GetStatFromTAR(line, path_name, symlink_target, &st))
+    if (GetStatFromTAR(*line, path_name, symlink_target, &st))
     {
-      FormatMessage("unknown tarinfo*{}", line);
+      FormatMessage("unknown tarinfo*{}", *line);
     }
     else
     {
@@ -55,7 +45,7 @@ int ReadTreeFromTAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
         (!path_name.empty() &&
          path_name.back() == std::filesystem::path::preferred_separator) ||
         path_name == "." ||
-        line.starts_with('d')
+        line->starts_with('d')
       )
       {
         /* Directory */

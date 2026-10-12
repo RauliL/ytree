@@ -466,7 +466,7 @@ bool LoginDisk(const std::string& path)
     command_line += ERR_TO_NULL;
 
 #ifdef DEBUG
-  std::fprintf(stderr, "system( \"%s\" )\n", command_line.c_str());
+    std::fprintf(stderr, "system( \"%s\" )\n", command_line.c_str());
 #endif
 
     pid = fork();
@@ -486,16 +486,16 @@ bool LoginDisk(const std::string& path)
 
       close(p[0]);
       close(1);
-      if(dup(p[1]) == -1)
+      if (dup(p[1]) == -1)
       {
   /* fprintf(stderr, "dup failed\n" ); */
       }
       close(p[1]);
 
-      if( result == 0 && SilentSystemCallEx(command_line, false) )
+      if (result == 0 && SilentSystemCall(command_line))
       {
         result = 1;
-  /* fprintf(stderr, "system(%s)*failed\n", command_line ); */
+        // std::fprintf(stderr, "system(%s)*failed\n", command_line);
       }
       std::exit(result);
     }

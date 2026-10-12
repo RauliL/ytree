@@ -20,35 +20,25 @@ static int GetStatFromZIP(std::string_view zip_line, std::string& name, struct s
 
 int ReadTreeFromZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
-  char zip_line[ZIP_LINE_LENGTH + 1];
   struct stat st;
   bool dir_flag = false;
 
   dir_entry->name.clear();
 
-  while (std::fgets(zip_line, ZIP_LINE_LENGTH, f) != nullptr)
+  while (auto line = ReadLine(f))
   {
-    /* \n loeschen */
-    /*-------------*/
-
-    std::string line = zip_line;
-    if (!line.empty() && line.back() == '\n')
-    {
-      line.pop_back();
-    }
-
-    if (line.size() > 58 &&
-        (line[56] == ':' ||
-         (line[57] != 'd' && line[58] == ':')))
+    if (line->size() > 58 &&
+        ((*line)[56] == ':' ||
+         ((*line)[57] != 'd' && (*line)[58] == ':')))
     {
       /* gueltiger Eintrag */
       /*-------------------*/
 
       std::string path_name;
 
-      if (GetStatFromZIP(line, path_name, &st))
+      if (GetStatFromZIP(*line, path_name, &st))
       {
-        FormatMessage("unknown zipinfo*{}", line);
+        FormatMessage("unknown zipinfo*{}", *line);
       }
       else
       {

@@ -21,14 +21,6 @@ std::string_view ValueAfter(std::string_view line, std::string_view prefix)
   return line.substr(prefix.size());
 }
 
-void TrimTrailingCr(std::string& line)
-{
-  if (!line.empty() && line.back() == '\r')
-  {
-    line.pop_back();
-  }
-}
-
 bool ParseModified(std::string_view value, std::tm* tm_struct)
 {
   // Formats: "YYYY-MM-DD HH:MM:SS" or with fractional seconds.
@@ -146,7 +138,6 @@ bool FlushEntry(
 
 int ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
 {
-  char line_buf[SEVENZIP_LINE_LENGTH + 1];
   std::string path_name;
   struct stat st{};
   bool in_entries = false;
@@ -159,25 +150,18 @@ int ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
   st.st_uid = static_cast<uid_t>(getuid());
   st.st_gid = static_cast<gid_t>(getgid());
 
-  while (std::fgets(line_buf, SEVENZIP_LINE_LENGTH, f) != nullptr)
+  while (auto line = ReadLine(f))
   {
-    std::string line = line_buf;
-    if (!line.empty() && line.back() == '\n')
-    {
-      line.pop_back();
-    }
-    TrimTrailingCr(line);
-
     if (!in_entries)
     {
-      if (line == kEntriesSeparator)
+      if (*line == kEntriesSeparator)
       {
         in_entries = true;
       }
       continue;
     }
 
-    if (line.empty())
+    if (line->empty())
     {
       if (!FlushEntry(dir_entry, path_name, st, have_path))
       {
@@ -191,13 +175,13 @@ int ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
       continue;
     }
 
-    if (StartsWith(line, kPathPrefix))
+    if (StartsWith(*line, kPathPrefix))
     {
       if (!FlushEntry(dir_entry, path_name, st, have_path))
       {
         return -1;
       }
-      path_name = std::string(ValueAfter(line, kPathPrefix));
+      path_name = std::string(ValueAfter(*line, kPathPrefix));
       have_path = true;
       std::memset(&st, 0, sizeof(st));
       st.st_nlink = 1;
@@ -205,26 +189,26 @@ int ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
       st.st_gid = static_cast<gid_t>(getgid());
       st.st_mode = S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
     }
-    else if (StartsWith(line, kSizePrefix))
+    else if (StartsWith(*line, kSizePrefix))
     {
-      const auto value = ValueAfter(line, kSizePrefix);
+      const auto value = ValueAfter(*line, kSizePrefix);
       if (!value.empty() && std::isdigit(static_cast<unsigned char>(value.front())))
       {
         st.st_size = AtoLL(value);
       }
     }
-    else if (StartsWith(line, kModifiedPrefix))
+    else if (StartsWith(*line, kModifiedPrefix))
     {
       std::tm tm_struct{};
 
-      if (ParseModified(ValueAfter(line, kModifiedPrefix), &tm_struct))
+      if (ParseModified(ValueAfter(*line, kModifiedPrefix), &tm_struct))
       {
         st.st_mtime = Mktime(&tm_struct);
       }
     }
-    else if (StartsWith(line, kAttributesPrefix))
+    else if (StartsWith(*line, kAttributesPrefix))
     {
-      ApplyAttributes(ValueAfter(line, kAttributesPrefix), &st);
+      ApplyAttributes(ValueAfter(*line, kAttributesPrefix), &st);
     }
   }
 

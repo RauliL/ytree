@@ -21,35 +21,25 @@ static int GetStatFromLHA(std::string_view lha_line, std::string& name, struct s
 
 int ReadTreeFromLHA(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
-  char lha_line[LHA_LINE_LENGTH + 1];
   struct stat st;
   bool dir_flag = false;
 
   dir_entry->name.clear();
 
-  while (std::fgets(lha_line, LHA_LINE_LENGTH, f) != nullptr)
+  while (auto line = ReadLine(f))
   {
-    /* \n loeschen */
-    /*-------------*/
-
-    std::string line = lha_line;
-    if (!line.empty() && line.back() == '\n')
-    {
-      line.pop_back();
-    }
-
-    if (((line.size() > 55 && line[55] == ':') ||
-         (line.size() > 61 && line[61] == ':')) &&
-        line[34] != '*' && !std::string_view(line).substr(1).starts_with("Total"))
+    if (((line->size() > 55 && (*line)[55] == ':') ||
+         (line->size() > 61 && (*line)[61] == ':')) &&
+        (*line)[34] != '*' && !std::string_view(*line).substr(1).starts_with("Total"))
     {
       /* gueltiger Eintrag */
       /*-------------------*/
 
       std::string path_name;
 
-      if (GetStatFromLHA(line, path_name, &st))
+      if (GetStatFromLHA(*line, path_name, &st))
       {
-        FormatMessage("unknown lhainfo*{}", line);
+        FormatMessage("unknown lhainfo*{}", *line);
       }
       else
       {
