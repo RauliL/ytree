@@ -629,7 +629,12 @@ std::string MakeExtractCommandLine(
 std::optional<std::string> MakeDirectory(DirEntry *father_dir_entry);
 extern std::time_t Mktime(std::tm *tm);
 extern int TryInsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, const char *dir, struct stat *stat);
-extern int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, struct stat *stat);
+int InsertArchiveFileEntry(
+  const std::shared_ptr<DirEntry>& tree,
+  const std::string& path,
+  struct stat *stat,
+  std::string symlink_target = {}
+);
 extern int MinimizeArchiveTree(const std::shared_ptr<DirEntry>& tree);
 extern void HitReturnToContinue();
 std::string BuildFilename(
@@ -644,7 +649,52 @@ std::optional<std::string> GetTapeDeviceName();
 extern int  MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry);
 extern int  MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name);
 std::string NormPath(const std::string& in_path);
-extern char *Strtok_r(char *str, const char *delim, char **old);
+
+/* Non-destructive strtok replacement: splits a string_view on delimiters. */
+class StringTokenizer
+{
+public:
+  explicit StringTokenizer(std::string_view input) : rest_(input) {}
+
+  std::optional<std::string_view> Next(std::string_view delimiters)
+  {
+    while (!rest_.empty() &&
+           delimiters.find(rest_.front()) != std::string_view::npos)
+    {
+      rest_.remove_prefix(1);
+    }
+
+    if (rest_.empty())
+    {
+      return std::nullopt;
+    }
+
+    const auto pos = rest_.find_first_of(delimiters);
+    std::string_view token;
+
+    if (pos == std::string_view::npos)
+    {
+      token = rest_;
+      rest_ = {};
+    }
+    else
+    {
+      token = rest_.substr(0, pos);
+      rest_.remove_prefix(pos + 1);
+    }
+
+    return token;
+  }
+
+private:
+  std::string_view rest_;
+};
+
+inline int SvAtoi(std::string_view s)
+{
+  return static_cast<int>(std::strtol(std::string(s).c_str(), nullptr, 10));
+}
+
 void ReadProfile(const std::optional<std::filesystem::path>& custom_path);
 std::optional<std::string> GetProfileValue(const std::string& key);
 double GetDoubleProfileValue(const std::string& key);
@@ -684,7 +734,7 @@ int GetUserFileEntryLength(
   int max_linkname_len,
   const std::string& tmpl
 );
-std::int64_t AtoLL(const char* cptr);
+std::int64_t AtoLL(std::string_view s);
 extern void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no);
 extern void ReCreateWindows();
 extern int  Getch();

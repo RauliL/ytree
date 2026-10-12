@@ -132,7 +132,7 @@ bool FlushEntry(
       return false;
     }
   }
-  else if (InsertArchiveFileEntry(dir_entry, path_name.data(), &st))
+  else if (InsertArchiveFileEntry(dir_entry, path_name, &st))
   {
     FormatMessage("unknown 7z file*{}", path_name);
     return false;
@@ -210,7 +210,7 @@ int ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
       const auto value = ValueAfter(line, kSizePrefix);
       if (!value.empty() && std::isdigit(static_cast<unsigned char>(value.front())))
       {
-        st.st_size = AtoLL(std::string(value).c_str());
+        st.st_size = AtoLL(value);
       }
     }
     else if (StartsWith(line, kModifiedPrefix))

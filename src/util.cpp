@@ -137,7 +137,6 @@ int GetDirEntry(
 {
   std::string dest_path;
   std::filesystem::path current_path;
-  char *token, *old;
   DirEntry *de_ptr, *sde_ptr;
   int n;
   std::error_code ec;
@@ -214,34 +213,34 @@ int GetDirEntry(
     /*----------------------------------*/
 
     de_ptr = tree.get();
-    token = Strtok_r(dest_path.data() + n, preferred_separator_str, &old);
-    while( token )
+    StringTokenizer tokenizer(std::string_view(dest_path).substr(n));
+
+    while (const auto token = tokenizer.Next(preferred_separator_str))
     {
       sde_ptr = nullptr;
-      for( const auto& child : de_ptr->children )
+      for (const auto& child : de_ptr->children)
       {
-        if( child->name == token )
-  {
-    /* Subtree gefunden */
-    /*------------------*/
+        if (child->name == *token)
+        {
+          /* Subtree gefunden */
+          /*------------------*/
 
-    sde_ptr = child.get();
-    de_ptr = sde_ptr;
-    break;
-  }
+          sde_ptr = child.get();
+          de_ptr = sde_ptr;
+          break;
+        }
       }
-      if( sde_ptr == nullptr )
+      if (sde_ptr == nullptr)
       {
 #ifdef DEBUG
-  FormatError("Can't find directory; token={}", token);
+        FormatError("Can't find directory; token={}", *token);
 #endif
-  return( -3 );
+        return -3;
       }
-      token = Strtok_r(nullptr, preferred_separator_str, &old);
     }
     *dir_entry = de_ptr;
   }
-  return( 0 );
+  return 0;
 }
 
 
@@ -753,35 +752,6 @@ std::string NormPath(const std::string& in_path)
 
 
 
-/* reentrantes strtok */
-char *Strtok_r(char *str, const char *delim, char **old)
-{
-  char *result;
-  int  l, m;
-
-  if( str == nullptr )
-    str = *old;
-
-  if( str == nullptr )
-    return( nullptr );
-
-  l = std::strlen(str);
-  if( ( result = std::strtok(str, delim) ) != nullptr ) {
-    m = std::strlen(result);
-    if( (m + 1) >= l)
-      *old = nullptr;
-    else
-      *old = result + m + 1;
-
-  } else
-    *old = nullptr;
-
-  return( result );
-}
-
-
-
-
 void GetMaxYX(WINDOW *win, int *height, int *width)
 {
   if( win == dir_window )
@@ -985,9 +955,11 @@ int GetUserFileEntryLength(
   return len;
 }
 
-std::int64_t AtoLL(const char *cptr)
+std::int64_t AtoLL(std::string_view s)
 {
-  return static_cast<std::int64_t>(std::strtoll(cptr, nullptr, 10));
+  return static_cast<std::int64_t>(
+    std::strtoll(std::string(s).c_str(), nullptr, 10)
+  );
 }
 
 std::optional<std::filesystem::path> Getcwd()

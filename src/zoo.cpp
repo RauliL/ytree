@@ -10,7 +10,7 @@
 #include "ytree.h"
 
 
-static int GetStatFromZOO(char *zoo_line, char *name, struct stat *stat);
+static int GetStatFromZOO(std::string_view zoo_line, std::string& name, struct stat *stat);
 
 
 
@@ -20,27 +20,32 @@ static int GetStatFromZOO(char *zoo_line, char *name, struct stat *stat);
 int ReadTreeFromZOO(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
   char zoo_line[ZOO_LINE_LENGTH + 1];
-  char path_name[PATH_LENGTH +1];
-  struct stat stat;
-  bool   dir_flag = false;
+  struct stat st;
+  bool dir_flag = false;
 
   dir_entry->name.clear();
 
-  while( std::fgets(zoo_line, ZOO_LINE_LENGTH, f) != nullptr )
+  while (std::fgets(zoo_line, ZOO_LINE_LENGTH, f) != nullptr)
   {
     /* \n loeschen */
     /*-------------*/
 
-    zoo_line[ std::strlen(zoo_line) - 1 ] = '\0';
+    std::string line = zoo_line;
+    if (!line.empty() && line.back() == '\n')
+    {
+      line.pop_back();
+    }
 
-    if( std::strlen(zoo_line) > (unsigned) 50 )
+    if (line.size() > 50)
     {
       /* gueltiger Eintrag */
       /*-------------------*/
 
-      if( GetStatFromZOO(zoo_line, path_name, &stat) )
+      std::string path_name;
+
+      if (GetStatFromZOO(line, path_name, &st))
       {
-        FormatMessage("unknown zooinfo*{}", zoo_line);
+        FormatMessage("unknown zooinfo*{}", line);
       }
       else
       {
@@ -48,125 +53,143 @@ int ReadTreeFromZOO(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
         /*------*/
 
 #ifdef DEBUG
-  std::fprintf(stderr, "FILE: \"%s\"\n", path_name);
+        std::fprintf(stderr, "FILE: \"%s\"\n", path_name.c_str());
 #endif
-        InsertArchiveFileEntry(dir_entry, path_name, &stat);
+        InsertArchiveFileEntry(dir_entry, path_name, &st);
       }
     }
   }
 
-
-  if( dir_flag == false )
+  if (dir_flag == false)
   {
     statistic.disk_total_directories++;
-    std::memset((char *) &dir_entry->stat_struct, 0, sizeof( struct stat ));
+    std::memset(&dir_entry->stat_struct, 0, sizeof(struct stat));
     dir_entry->stat_struct.st_mode = S_IFDIR;
   }
-  return( MinimizeArchiveTree(dir_entry) );
+  return MinimizeArchiveTree(dir_entry);
 }
 
 
 
 
-
-
-static int GetStatFromZOO(char *zoo_line, char *name, struct stat *stat)
+static int GetStatFromZOO(std::string_view zoo_line, std::string& name, struct stat *stat)
 {
-  char *t, *old;
-  int  i, id;
-  std::tm tm_struct;
-  static const char *month[] = { "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
-               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+  int i, id;
+  std::tm tm_struct{};
+  static constexpr std::string_view month[] = {
+    "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  };
 
-
-  std::memset(stat, 0, sizeof( struct stat ));
-
+  std::memset(stat, 0, sizeof(struct stat));
   stat->st_nlink = 1;
 
-  t = Strtok_r(zoo_line, " \t", &old); if( t == nullptr ) return( -1 );
+  StringTokenizer tok(zoo_line);
+
+  auto t = tok.Next(" \t");
+  if (!t) return -1;
 
   /* Dateilaenge */
   /*-------------*/
 
-  if( !std::isdigit(*t) ) return( -1 );
-  stat->st_size = AtoLL(t);
-  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
+  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0]))) return -1;
+  stat->st_size = AtoLL(*t);
+
+  t = tok.Next(" \t");
+  if (!t) return -1;
 
   /* CF */
   /*----*/
 
-  if( !std::isdigit(*t) ) return( -1 );
-  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
+  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0]))) return -1;
+
+  t = tok.Next(" \t");
+  if (!t) return -1;
 
   /* Size Now */
   /*----------*/
 
-  if( !std::isdigit(*t) ) return( -1 );
-  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
+  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0]))) return -1;
+
+  t = tok.Next(" \t");
+  if (!t) return -1;
 
   /* M-Datum */
   /*---------*/
 
-  tm_struct.tm_mday = std::atoi(t);
-  t = Strtok_r(nullptr, " \t:", &old); if( t == nullptr ) return( -1 );
+  tm_struct.tm_mday = SvAtoi(*t);
 
-  for( i=0; i < 12; i++ )
+  t = tok.Next(" \t:");
+  if (!t) return -1;
+
+  for (i = 0; i < 12; i++)
   {
-    if( !std::strcmp(t, month[i]) ) break;
+    if (*t == month[i]) break;
   }
-  if( i >= 12 ) i = 0;
+  if (i >= 12) i = 0;
 
   tm_struct.tm_mon = i;
-  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
 
-  tm_struct.tm_year = std::atoi(t);
-  if(tm_struct.tm_year < 70)
-     tm_struct.tm_year += 100;
+  t = tok.Next(" \t");
+  if (!t) return -1;
 
-  t = Strtok_r(nullptr, " \t:", &old); if( t == nullptr ) return( -1 );
+  tm_struct.tm_year = SvAtoi(*t);
+  if (tm_struct.tm_year < 70)
+    tm_struct.tm_year += 100;
 
-  tm_struct.tm_hour = std::atoi(t);
-  t = Strtok_r(nullptr, " \t:", &old); if( t == nullptr ) return( -1 );
+  t = tok.Next(" \t:");
+  if (!t) return -1;
 
-  tm_struct.tm_min = std::atoi(t);
-  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
+  tm_struct.tm_hour = SvAtoi(*t);
 
-  tm_struct.tm_sec = std::atoi(t);
-  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
+  t = tok.Next(" \t:");
+  if (!t) return -1;
+
+  tm_struct.tm_min = SvAtoi(*t);
+
+  t = tok.Next(" \t");
+  if (!t) return -1;
+
+  tm_struct.tm_sec = SvAtoi(*t);
+
+  t = tok.Next(" \t");
+  if (!t) return -1;
 
   tm_struct.tm_isdst = -1;
 
   stat->st_atime = 0;
   stat->st_ctime = 0;
-
   stat->st_mtime = Mktime(&tm_struct);
 
   /* Attributes */
   /*------------*/
 
-  std::sscanf(t, "%o", (unsigned int *) &stat->st_mode);
-  stat->st_mode |= S_IFREG;
-  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
+  {
+    unsigned int mode = 0;
+    std::sscanf(std::string(*t).c_str(), "%o", &mode);
+    stat->st_mode = static_cast<mode_t>(mode) | S_IFREG;
+  }
+
+  t = tok.Next(" \t");
+  if (!t) return -1;
 
   /* Owner */
   /*-------*/
 
-  id = getuid();
-  if( id == -1 ) id = std::atoi(t);
-  stat->st_uid = (unsigned) id;
+  id = static_cast<int>(getuid());
+  if (id == -1) id = SvAtoi(*t);
+  stat->st_uid = static_cast<uid_t>(id);
 
   /* Group */
   /*-------*/
 
-  id = getgid();
-  stat->st_gid = (unsigned) id;
+  id = static_cast<int>(getgid());
+  stat->st_gid = static_cast<gid_t>(id);
 
   /* Dateiname */
   /*-----------*/
 
-  std::strcpy(name, t);
+  name = *t;
 
-  return( 0 );
+  return 0;
 }
-
-

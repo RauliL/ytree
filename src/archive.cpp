@@ -38,16 +38,20 @@ static int InsertArchiveDirEntry(
     if (path.size() == 1 && path[0] == sep)
     {
       name = path;
-    } else {
+    }
+    else
+    {
       name = father_path;
-  } else {
+    }
+  }
+  else
+  {
     name = father_path.substr(parent_sep + 1);
     father_path.resize(parent_sep + 1);  /* keep trailing separator */
 
     if (GetArchiveDirEntry(tree.get(), father_path.c_str(), &df_ptr))
     {
       FormatError("can't find subdir*{}", father_path);
-
       return -1;
     }
   }
@@ -84,39 +88,41 @@ static int InsertArchiveDirEntry(
   return 0;
 }
 
-int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, struct stat *stat)
+int InsertArchiveFileEntry(
+  const std::shared_ptr<DirEntry>& tree,
+  const std::string& path,
+  struct stat *stat,
+  std::string symlink_target
+)
 {
   DirEntry *de_ptr;
   struct stat stat_struct;
 
-
-  if( KeyPressed() )
+  if (KeyPressed())
   {
     Quit();  /* Abfrage, ob ytree verlassen werden soll */
   }
 
-
   const auto split = Fnsplit(path);
 
-  if( GetArchiveDirEntry(tree.get(), split.dir.c_str(), &de_ptr) )
+  if (GetArchiveDirEntry(tree.get(), split.dir.c_str(), &de_ptr))
   {
 #ifdef DEBUG
-    std::fprintf(stderr, "can't get directory for file*%s*trying recover", path);
+    std::fprintf(stderr, "can't get directory for file*%s*trying recover",
+                 path.c_str());
 #endif
 
-    std::memset((char *) &stat_struct, 0, sizeof( struct stat ));
+    std::memset(&stat_struct, 0, sizeof(struct stat));
     stat_struct.st_mode = S_IFDIR;
 
-    if( TryInsertArchiveDirEntry(tree, split.dir.c_str(), &stat_struct) )
+    if (TryInsertArchiveDirEntry(tree, split.dir.c_str(), &stat_struct))
     {
       Error("Inserting directory failed");
-
       return -1;
     }
-    if( GetArchiveDirEntry(tree.get(), split.dir.c_str(), &de_ptr) )
+    if (GetArchiveDirEntry(tree.get(), split.dir.c_str(), &de_ptr))
     {
       FormatError("again: can't get directory for file*{}*giving up", path);
-
       return -1;
     }
   }
@@ -125,9 +131,9 @@ int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, st
   fe_ptr->stat_struct = *stat;
   fe_ptr->name = split.name;
 
-  if( S_ISLNK(stat->st_mode) )
+  if (S_ISLNK(stat->st_mode))
   {
-    fe_ptr->symlink_target = &path[std::strlen(path) + 1];
+    fe_ptr->symlink_target = std::move(symlink_target);
   }
 
   fe_ptr->dir_entry = de_ptr->weak_from_this();
@@ -140,7 +146,7 @@ int InsertArchiveFileEntry(const std::shared_ptr<DirEntry>& tree, char *path, st
   /*------------*/
 
   de_ptr->files.push_back(fe_ptr);
-  return( 0 );
+  return 0;
 }
 
 

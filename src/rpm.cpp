@@ -12,7 +12,12 @@
 
 
 
-static int GetStatFromRPM(char *rpm_line, char *name, struct stat *stat);
+static int GetStatFromRPM(
+  std::string_view rpm_line,
+  std::string& name,
+  std::string& symlink_target,
+  struct stat *stat
+);
 
 
 
@@ -22,47 +27,54 @@ static int GetStatFromRPM(char *rpm_line, char *name, struct stat *stat);
 int ReadTreeFromRPM(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
   char rpm_line[RPM_LINE_LENGTH + 1];
-  char path_name[PATH_LENGTH +1];
-  struct stat stat;
-  bool   dir_flag = false;
+  struct stat st;
+  bool dir_flag = false;
 
   dir_entry->name.clear();
 
-  while( std::fgets(rpm_line, RPM_LINE_LENGTH, f) != nullptr )
+  while (std::fgets(rpm_line, RPM_LINE_LENGTH, f) != nullptr)
   {
     /* \n loeschen */
     /*-------------*/
 
-    rpm_line[ std::strlen(rpm_line) - 1 ] = '\0';
-
-    if( GetStatFromRPM(rpm_line, path_name, &stat) )
+    std::string line = rpm_line;
+    if (!line.empty() && line.back() == '\n')
     {
-      FormatMessage("unknown rpminfo*{}", rpm_line);
+      line.pop_back();
+    }
+
+    std::string path_name;
+    std::string symlink_target;
+
+    if (GetStatFromRPM(line, path_name, symlink_target, &st))
+    {
+      FormatMessage("unknown rpminfo*{}", line);
     }
     else
     {
       if (
-        (path_name[std::strlen(path_name) - 1] == std::filesystem::path::preferred_separator) ||
-        !std::strcmp(path_name, ".") ||
-        S_ISDIR(stat.st_mode)
+        (!path_name.empty() &&
+         path_name.back() == std::filesystem::path::preferred_separator) ||
+        path_name == "." ||
+        S_ISDIR(st.st_mode)
       )
       {
         /* Directory */
         /*-----------*/
 
 #ifdef DEBUG
-  std::fprintf(stderr, "DIR: %s\n", path_name);
+        std::fprintf(stderr, "DIR: %s\n", path_name.c_str());
 #endif
 
-  if( std::strcmp(path_name, "./") )
-  {
-    /* "./" wird ignoriert */
-    /*---------------------*/
+        if (path_name != "./")
+        {
+          /* "./" wird ignoriert */
+          /*---------------------*/
 
-          TryInsertArchiveDirEntry(dir_entry, path_name, &stat);
-    DisplayDiskStatistic();
-    doupdate();
-  }
+          TryInsertArchiveDirEntry(dir_entry, path_name.c_str(), &st);
+          DisplayDiskStatistic();
+          doupdate();
+        }
       }
       else
       {
@@ -70,106 +82,121 @@ int ReadTreeFromRPM(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
         /*------*/
 
 #ifdef DEBUG
-  std::fprintf(stderr, "FILE: \"%s\"\n", path_name);
+        std::fprintf(stderr, "FILE: \"%s\"\n", path_name.c_str());
 #endif
-        InsertArchiveFileEntry(dir_entry, path_name, &stat);
+        InsertArchiveFileEntry(dir_entry, path_name, &st, std::move(symlink_target));
       }
     }
   }
 
-  if( dir_flag == false )
+  if (dir_flag == false)
   {
     statistic.disk_total_directories++;
-    std::memset((char *) &dir_entry->stat_struct, 0, sizeof( struct stat ));
+    std::memset(&dir_entry->stat_struct, 0, sizeof(struct stat));
     dir_entry->stat_struct.st_mode = S_IFDIR;
   }
-  return( MinimizeArchiveTree(dir_entry) );
+  return MinimizeArchiveTree(dir_entry);
 }
 
 
 
 
-
-static int GetStatFromRPM(char *rpm_line, char *name, struct stat *stat)
+static int GetStatFromRPM(
+  std::string_view rpm_line,
+  std::string& name,
+  std::string& symlink_target,
+  struct stat *stat
+)
 {
-  const char* t;
-  char* old;
-  int  id;
+  int id;
 
-
-  std::memset(stat, 0, sizeof( struct stat ));
-
+  std::memset(stat, 0, sizeof(struct stat));
   stat->st_nlink = 1;
+  symlink_target.clear();
 
-  t = Strtok_r(rpm_line, " \t", &old); if( t == nullptr ) return( -1 );
+  StringTokenizer tok(rpm_line);
+
+  auto t = tok.Next(" \t");
+  if (!t) return -1;
 
   /* Dateiname */
   /*-----------*/
 
-  std::strcpy(name, t);
-  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
+  name = *t;
+
+  t = tok.Next(" \t");
+  if (!t) return -1;
 
   /* Dateilaenge */
   /*-------------*/
 
-  if( !std::isdigit(*t) ) return( -1 );
-  stat->st_size = AtoLL(t);
-  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
+  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0]))) return -1;
+  stat->st_size = AtoLL(*t);
+
+  t = tok.Next(" \t");
+  if (!t) return -1;
 
   /* M-Datum */
   /*---------*/
 
   stat->st_atime = 0;
   stat->st_ctime = 0;
+  stat->st_mtime = SvAtoi(*t);
 
-  stat->st_mtime = std::atoi(t);
-  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
+  t = tok.Next(" \t");
+  if (!t) return -1;
 
   /* M5 */
-  if(std::strlen(t) > 20) {
-    t = Strtok_r(nullptr, " \t/", &old); if( t == nullptr ) return( -1 );
+  if (t->size() > 20)
+  {
+    t = tok.Next(" \t/");
+    if (!t) return -1;
   }
 
   /* Attribute */
   /*-----------*/
 
-  stat->st_mode = std::strtoul(t, nullptr, 8);
-  t = Strtok_r(nullptr, " \t/", &old); if( t == nullptr ) return( -1 );
+  stat->st_mode = static_cast<mode_t>(
+    std::strtoul(std::string(*t).c_str(), nullptr, 8)
+  );
 
+  t = tok.Next(" \t/");
+  if (!t) return -1;
 
   /* Owner */
   /*-------*/
-  if (const auto owner_id_ptr = GetPasswdUid(t))
+  if (const auto owner_id_ptr = GetPasswdUid(std::string(*t)))
   {
     id = *owner_id_ptr;
-  } else {
-    id = std::atoi(t);
   }
-  stat->st_uid = (unsigned) id;
+  else
+  {
+    id = SvAtoi(*t);
+  }
+  stat->st_uid = static_cast<uid_t>(id);
 
-  t = Strtok_r(nullptr, " \t", &old); if( t == nullptr ) return( -1 );
+  t = tok.Next(" \t");
+  if (!t) return -1;
 
   /* Group */
   /*-------*/
-  if (const auto group_id_ptr = GetGroupId(t))
+  if (const auto group_id_ptr = GetGroupId(std::string(*t)))
   {
     id = *group_id_ptr;
-  } else {
-    id = std::atoi(t);
   }
-  stat->st_gid = (unsigned) id;
+  else
+  {
+    id = SvAtoi(*t);
+  }
+  stat->st_gid = static_cast<gid_t>(id);
 
-
-  if( S_ISLNK(stat->st_mode) )
+  if (S_ISLNK(stat->st_mode))
   {
     /* Symbolischer Link */
     /*-------------------*/
 
-    t = "symlink";
-    std::strcpy(&name[ std::strlen(name) + 1 ], t);
+    symlink_target = "symlink";
   }
 
-  return( 0 );
+  return 0;
 }
-
-

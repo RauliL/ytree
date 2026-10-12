@@ -111,9 +111,8 @@ int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name)
 int MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry)
 {
   DirEntry *de_ptr, *sde_ptr;
-  char     *token, *old;
-  int      n;
-  int      result = -1;
+  int n;
+  int result = -1;
 
   auto path = NormPath(dir_path);
   *dest_dir_entry = nullptr;
@@ -125,46 +124,55 @@ int MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path,
     tree->name.size() == 1 &&
     tree->name[0] == std::filesystem::path::preferred_separator;
 
-  if( tree_is_root ||
-      ( tree->name.compare(0, n, path, 0, n) == 0 &&
-       ( path[n] == std::filesystem::path::preferred_separator || path[n] == '\0' ) ) )
+  if (tree_is_root ||
+      (tree->name.compare(0, n, path, 0, n) == 0 &&
+       (path[n] == std::filesystem::path::preferred_separator || path[n] == '\0')))
   {
     /* Pfad befindet sich im (Sub)-Tree */
     /*----------------------------------*/
 
     de_ptr = tree.get();
-    token = Strtok_r(path.data() + n, preferred_separator_str, &old);
-    while( token )
+    StringTokenizer tokenizer(std::string_view(path).substr(n));
+
+    while (const auto token = tokenizer.Next(preferred_separator_str))
     {
       sde_ptr = nullptr;
-      for( const auto& child : de_ptr->children )
+      for (const auto& child : de_ptr->children)
       {
-        if( child->name == token )
-  {
-    /* Subtree gefunden */
-    /*------------------*/
+        if (child->name == *token)
+        {
+          /* Subtree gefunden */
+          /*------------------*/
 
-    sde_ptr = child.get();
-    de_ptr = sde_ptr;
-    break;
-  }
+          sde_ptr = child.get();
+          de_ptr = sde_ptr;
+          break;
+        }
       }
-      if( sde_ptr == nullptr )
+      if (sde_ptr == nullptr)
       {
-  /* Folgeverzeichnis nicht vorhanden */
-  /*----------------------------------*/
+        /* Folgeverzeichnis nicht vorhanden */
+        /*----------------------------------*/
 
 #ifdef DEBUG
-  std::fprintf(stderr, "MakeDirEntry: \"%s\"\n", token);
+        std::fprintf(stderr, "MakeDirEntry: \"%.*s\"\n",
+                     static_cast<int>(token->size()), token->data());
 #endif /* DEBUG */
 
-  if( MakeDirEntry(de_ptr, token) )
-  {
-    return( result );
-  }
-  continue;
+        if (MakeDirEntry(de_ptr, std::string(*token)))
+        {
+          return result;
+        }
+
+        for (const auto& child : de_ptr->children)
+        {
+          if (child->name == *token)
+          {
+            de_ptr = child.get();
+            break;
+          }
+        }
       }
-      token = Strtok_r(nullptr, preferred_separator_str, &old);
     }
     *dest_dir_entry = de_ptr;
     result = 0;
@@ -187,7 +195,7 @@ int MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path,
     result = 0;
   }
 
-  return( result );
+  return result;
 }
 
 
