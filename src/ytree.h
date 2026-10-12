@@ -705,6 +705,11 @@ int StrVisualLength(std::string_view str);
 void WAttrAddStr(WINDOW* win, int attr, const std::string& str);
 void StatOrAbort(const std::string& path, struct stat& st);
 bool DoStat(const std::filesystem::path& path, struct stat& st);
+void DoStat(
+  const std::filesystem::path& path,
+  struct stat& st,
+  std::error_code& ec
+);
 std::optional<std::filesystem::path> GetXdgCachePath();
 std::optional<std::filesystem::path> GetXdgConfigPath();
 

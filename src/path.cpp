@@ -1,6 +1,7 @@
 #include "ytree.h"
 
 #include <peelo/xdg.hpp>
+#include <system_error>
 
 bool DoStat(const std::filesystem::path& path, struct stat& st)
 {
@@ -9,6 +10,28 @@ bool DoStat(const std::filesystem::path& path, struct stat& st)
 #else
   return !stat(path.c_str(), &st);
 #endif
+}
+
+void DoStat(
+  const std::filesystem::path& path,
+  struct stat& st,
+  std::error_code& ec
+)
+{
+  bool result;
+
+  ec.clear();
+
+#if defined(S_IFLNK)
+  result = !lstat(path.c_str(), &st);
+#else
+  result = !stat(path.c_str(), &st);
+#endif
+
+  if (!result)
+  {
+    ec.assign(errno, std::system_category());
+  }
 }
 
 std::optional<std::filesystem::path> GetXdgConfigPath()

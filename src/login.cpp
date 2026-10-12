@@ -8,6 +8,7 @@
 
 
 #include "ytree.h"
+#include <system_error>
 /* #include <sys/wait.h> */  /* maybe wait.h is available */
 
 
@@ -58,10 +59,12 @@ bool LoginDisk(const std::string& path)
     }
   }
 
-  if (!DoStat(path, stat_struct))
+  std::error_code ec;
+  DoStat(path, stat_struct, ec);
+  if (ec)
   {
     // Stat failed.
-    FormatMessage("Can't access*\"{}\"*{}", path, std::strerror(errno));
+    FormatMessage("Can't access*\"{}\"*{}", path, ec.message());
 
     return false;
   }
@@ -658,5 +661,3 @@ std::optional<std::string> GetNewLoginPath(const std::string& initial)
 
   return std::nullopt;
 }
-
-

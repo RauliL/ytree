@@ -91,9 +91,11 @@ int ReadTree(
 
     new_path = it->path();
 
-    if (!DoStat(new_path, stat_struct))
+    std::error_code ec;
+    DoStat(new_path, stat_struct, ec);
+    if (ec)
     {
-      if (errno != EACCES)
+      if (ec.value() != EACCES)
       {
         FormatError("stat() failed on*{}*IGNORED", new_path);
       }
