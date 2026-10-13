@@ -27,6 +27,8 @@ int CopyFile(
 
   result = -1;
 
+  const ScopeGuard clear_prompt_lines([] { ClearBottomPromptLines(); });
+
   const auto is_root =
     to_dir_path.size() == 1 &&
     to_dir_path.front() == std::filesystem::path::preferred_separator;
@@ -143,7 +145,7 @@ int CopyFile(
         if( term != 'Y' )
         {
     result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
-          ESCAPE;
+          return result;
         }
       }
 
@@ -160,7 +162,7 @@ int CopyFile(
     if (term != 'Y')
     {
       result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
-      ESCAPE;
+      return result;
     }
   }
 
@@ -210,13 +212,7 @@ int CopyFile(
     RefreshDirWindow();
   }
 
-FNC_XIT:
-
-  move(LINES - 3, 1); clrtoeol();
-  move(LINES - 2, 1); clrtoeol();
-  move(LINES - 1, 1); clrtoeol();
-
-  return( result );
+  return result;
 }
 
 

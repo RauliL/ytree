@@ -23,19 +23,21 @@ int MoveFile(
   result = -1;
   *new_fe_ptr = nullptr;
 
+  const ScopeGuard clear_prompt_lines([] { ClearBottomPromptLines(); });
+
   const auto to_path =
     (std::filesystem::path(to_dir_path) / to_file).string();
 
   if (to_path == from_path)
   {
     Message("Can't move file into itself");
-    ESCAPE;
+    return result;
   }
 
   if (!IsWriteable(from_path))
   {
     FormatMessage("Unmoveable file*\"{}\"*{}", from_path.c_str(), std::strerror(errno));
-    ESCAPE;
+    return result;
   }
 
 
@@ -57,7 +59,7 @@ int MoveFile(
 
         if( term != 'Y' ) {
     result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
-    ESCAPE;
+    return result;
   }
       }
 
@@ -77,14 +79,14 @@ int MoveFile(
       if (term != 'Y')
       {
         result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
-        ESCAPE;
+        return result;
       }
     }
 
     if (unlink(to_path.c_str()))
     {
       FormatMessage("Can't unlink*\"{}\"*{}", to_path.c_str(), std::strerror(errno));
-      ESCAPE;
+      return result;
     }
   }
 
@@ -131,13 +133,7 @@ int MoveFile(
     result = 0;
   }
 
-FNC_XIT:
-
-  move(LINES - 3, 1); clrtoeol();
-  move(LINES - 2, 1); clrtoeol();
-  move(LINES - 1, 1); clrtoeol();
-
-  return( result );
+  return result;
 }
 
 

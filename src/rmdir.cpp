@@ -26,14 +26,14 @@ int DeleteDirectory(DirEntry *dir_entry)
       if( !dir_entry->children.empty() ) {
         ScanSubTree(dir_entry);
         if( DeleteSubTree(dir_entry) ) {
-          ESCAPE;
+          return result;
         }
       }
       if( DeleteSingleDirectory(dir_entry) ) {
-  ESCAPE;
+        return result;
       }
       result = 0;
-      ESCAPE;
+      return result;
     }
   }
   else if( InputChoise("Delete this directory (Y/N) ? ", "YN\033") == 'Y' )
@@ -62,9 +62,7 @@ int DeleteDirectory(DirEntry *dir_entry)
     }
   }
 
-FNC_XIT:
-
-  return( result );
+  return result;
 }
 
 
@@ -85,19 +83,15 @@ static int DeleteSubTree(DirEntry *dir_entry)
     DirEntry *de_ptr = de_sp.get();
     if( !de_ptr->children.empty() ) {
       if( DeleteSubTree(de_ptr) ) {
-        ESCAPE;
+        return result;
       }
     }
     if( DeleteSingleDirectory(de_ptr) ) {
-      ESCAPE;
+      return result;
     }
   }
 
-  result = 0;
-
-FNC_XIT:
-
-    return( result );
+  return 0;
 }
 
 

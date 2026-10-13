@@ -45,7 +45,7 @@ void StartColors()
 {
   start_color();
   if ((COLORS < 8) || (COLOR_PAIRS < 19)) {
-    ESCAPE; /* no color support */
+    return; /* no color support */
   }
 
 #ifdef COLOR_THEME_GRUVBOX
@@ -90,8 +90,6 @@ void StartColors()
 #endif /* COLOR_THEME_GRUVBOX */
 
   color_enabled = true;
-FNC_XIT: ;
-
 }
 
 

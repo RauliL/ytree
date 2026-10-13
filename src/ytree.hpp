@@ -19,6 +19,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include <dirent.h>
@@ -318,7 +319,41 @@ enum class ViewMode : int
 
 inline constexpr int QUICK_BAUD_RATE = 9600;
 
-#define ESCAPE               goto FNC_XIT
+template<class Fn>
+class ScopeGuard
+{
+public:
+  explicit ScopeGuard(Fn fn)
+    : fn_(std::move(fn)) {}
+
+  ScopeGuard(ScopeGuard&& other) noexcept
+    : fn_(std::move(other.fn_))
+    , engaged_(other.engaged_)
+  {
+    other.engaged_ = false;
+  }
+
+  ~ScopeGuard()
+  {
+    if (engaged_)
+      fn_();
+  }
+
+  ScopeGuard(const ScopeGuard&) = delete;
+  ScopeGuard& operator=(const ScopeGuard&) = delete;
+
+  void release()
+  {
+    engaged_ = false;
+  }
+
+private:
+  Fn fn_;
+  bool engaged_{true};
+};
+
+template<class Fn>
+ScopeGuard(Fn) -> ScopeGuard<Fn>;
 
 #define PRINT(ch) (std::iscntrl(ch) && (((unsigned char)(ch)) < ' ')) ? (ACS_BLOCK) : ((unsigned char)(ch))
 /* #define PRINT(ch) (ch) */
@@ -779,4 +814,14 @@ std::string Join(Args&&... args)
   (append(args), ...);
 
   return result;
+}
+
+inline void ClearBottomPromptLines()
+{
+  move(LINES - 3, 1);
+  clrtoeol();
+  move(LINES - 2, 1);
+  clrtoeol();
+  move(LINES - 1, 1);
+  clrtoeol();
 }
