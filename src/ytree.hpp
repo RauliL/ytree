@@ -3,16 +3,8 @@
 #define _LARGEFILE64_SOURCE 1
 #define _FILE_OFFSET_BITS 64
 
-#include "./config.h"
+#include "./config.hpp"
 
-#include <algorithm>
-#include <cctype>
-#include <cerrno>
-#include <climits>
-#include <clocale>
-#include <cmath>
-#include <csetjmp>
-#include <csignal>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -24,11 +16,9 @@
 #include <filesystem>
 #include <format>
 #include <memory>
-#include <new>
 #include <optional>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <vector>
 
 #include <dirent.h>

@@ -1,25 +1,22 @@
-#include "ytree.h"
+#include "./ytree.hpp"
 
-#include <string>
-#include <string_view>
+static constexpr std::string_view kEntriesSeparator = "----------";
+static constexpr std::string_view kPathPrefix = "Path = ";
+static constexpr std::string_view kSizePrefix = "Size = ";
+static constexpr std::string_view kModifiedPrefix = "Modified = ";
+static constexpr std::string_view kAttributesPrefix = "Attributes = ";
 
-namespace {
-
-constexpr std::string_view kEntriesSeparator = "----------";
-constexpr std::string_view kPathPrefix = "Path = ";
-constexpr std::string_view kSizePrefix = "Size = ";
-constexpr std::string_view kModifiedPrefix = "Modified = ";
-constexpr std::string_view kAttributesPrefix = "Attributes = ";
-
-bool StartsWith(std::string_view line, std::string_view prefix)
+static inline bool StartsWith(std::string_view line, std::string_view prefix)
 {
   return line.size() >= prefix.size() && line.compare(0, prefix.size(), prefix) == 0;
 }
 
-std::string_view ValueAfter(std::string_view line, std::string_view prefix)
+static inline std::string_view ValueAfter(std::string_view line, std::string_view prefix)
 {
   return line.substr(prefix.size());
 }
+
+namespace {
 
 bool ParseModified(std::string_view value, std::tm* tm_struct)
 {

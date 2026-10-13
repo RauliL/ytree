@@ -1,22 +1,9 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/zoo.c,v 1.11 2000/05/20 20:41:11 werner Exp $
- *
- * Funktionen zum Lesen des Dateibaumes aus ZOO-Dateien
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
-
+#include "./ytree.hpp"
 
 static int GetStatFromZOO(std::string_view zoo_line, std::string& name, struct stat *stat);
 
-
-
 /* Dateibaum aus ZOO-Listing lesen */
 /*---------------------------------*/
-
 int ReadTreeFromZOO(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
   struct stat st;

@@ -1,20 +1,8 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/rmdir.c,v 1.11 2001/06/15 16:36:36 werner Exp $
- *
- * Loeschen von Verzeichnissen
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
-
-
+#include "./ytree.hpp"
 
 static int DeleteSubTree(DirEntry *dir_entry);
 static int DeleteSingleDirectory(DirEntry *dir_entry);
 static void UnlinkDirEntry(DirEntry *dir_entry);
-
 
 int DeleteDirectory(DirEntry *dir_entry)
 {

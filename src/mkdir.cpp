@@ -1,11 +1,4 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/mkdir.c,v 1.17 2005/01/22 16:32:29 werner Exp $
- *
- * Erstellen von Verzeichnissen
- *
- ***************************************************************************/
-#include "ytree.h"
+#include "./ytree.hpp"
 
 std::optional<std::string> MakeDirectory(DirEntry *father_dir_entry)
 {
@@ -197,5 +190,3 @@ int MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path,
 
   return result;
 }
-
-

@@ -1,6 +1,5 @@
-#include "ytree.h"
-
 #include "./mouse.hpp"
+#include "./ytree.hpp"
 
 #ifdef NCURSES_MOUSE_VERSION
 

@@ -1,23 +1,9 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/zip.c,v 1.11 2000/05/20 20:41:11 werner Exp $
- *
- * Funktionen zum Lesen des Dateibaumes aus ZIP-Dateien
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
-
-
+#include "./ytree.hpp"
 
 static int GetStatFromZIP(std::string_view zip_line, std::string& name, struct stat *stat);
 
-
-
 /* Dateibaum aus ZIP-Listing lesen */
 /*---------------------------------*/
-
 int ReadTreeFromZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
   struct stat st;

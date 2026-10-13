@@ -1,18 +1,6 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/stat.c,v 1.19 2016/09/04 14:41:12 werner Exp $
- *
- * Statistik-Modul
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
-
-
+#include "./ytree.hpp"
 
 static void PrettyPrintNumber(int y, int x, std::int64_t number);
-
 
 void DisplayDiskStatistic()
 {

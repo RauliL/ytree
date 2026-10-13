@@ -1,30 +1,30 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.14)
+cmake_minimum_required(VERSION 3.14)
 
-PROJECT(YTree LANGUAGES C CXX)
+project(YTree LANGUAGES C CXX)
 
-SET(CMAKE_CXX_STANDARD 20)
-SET(CMAKE_CXX_STANDARD_REQUIRED ON)
-SET(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-INCLUDE(FetchContent)
-FETCHCONTENT_DECLARE(
+include(FetchContent)
+fetchcontent_declare(
   PeeloXdg
   GIT_REPOSITORY
     https://github.com/peelonet/peelo-xdg.git
   GIT_TAG
     v1.2.1
 )
-FETCHCONTENT_MAKEAVAILABLE(PeeloXdg)
+fetchcontent_makeavailable(PeeloXdg)
 
-FETCHCONTENT_DECLARE(
+fetchcontent_declare(
   tomlplusplus
   GIT_REPOSITORY
     https://github.com/marzer/tomlplusplus.git
   GIT_TAG
     v3.4.0
 )
-FETCHCONTENT_MAKEAVAILABLE(tomlplusplus)
+fetchcontent_makeavailable(tomlplusplus)
 
-ADD_SUBDIRECTORY(man)
-ADD_SUBDIRECTORY(share)
-ADD_SUBDIRECTORY(src)
+add_subdirectory(man)
+add_subdirectory(share)
+add_subdirectory(src)

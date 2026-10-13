@@ -1,6 +1,5 @@
-#include "ytree.h"
-
 #include "./mouse.hpp"
+#include "./ytree.hpp"
 
 typedef struct MODIF {
     long pos;

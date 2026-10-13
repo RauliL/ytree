@@ -1,4 +1,4 @@
-#include "ytree.h"
+#include "./ytree.hpp"
 
 static int GetArchiveDirEntry(DirEntry *tree, const char *path, DirEntry **dir_entry);
 

@@ -1,20 +1,6 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/lha.c,v 1.12 2000/05/20 20:41:11 werner Exp $
- *
- * Funktionen zum Lesen des Dateibaumes aus LHA-Dateien
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
-
-
+#include "./ytree.hpp"
 
 static int GetStatFromLHA(std::string_view lha_line, std::string& name, struct stat *stat);
-
-
-
 
 /* Dateibaum aus LHA-Listing lesen */
 /*---------------------------------*/

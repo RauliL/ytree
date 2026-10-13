@@ -1,16 +1,4 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/filespec.c,v 1.13 2005/01/22 16:32:29 werner Exp $
- *
- * Setzt neue Datei-Spezifikation
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
-
-
-
+#include "./ytree.hpp"
 
 bool SetFileSpec(const std::string& file_spec)
 {
@@ -26,9 +14,6 @@ bool SetFileSpec(const std::string& file_spec)
 
   return true;
 }
-
-
-
 
 void SetMatchingParam(DirEntry *dir_entry)
 {
@@ -96,5 +81,3 @@ std::optional<std::string> ReadFileSpec()
   statistic.file_spec = *filespec;
   return filespec;
 }
-
-

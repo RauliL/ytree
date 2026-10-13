@@ -1,18 +1,6 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/rar.c,v 1.3 2000/06/10 13:15:41 werner Exp $
- *
- * Funktionen zum Lesen des Dateibaumes aus RAR-Dateien
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
-
+#include "./ytree.hpp"
 
 static int GetStatFromRAR(std::string_view rar_line, std::string& name, struct stat *stat);
-
-
 
 /* Dateibaum aus RAR-Listing lesen */
 /*---------------------------------*/

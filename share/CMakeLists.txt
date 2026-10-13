@@ -1,20 +1,19 @@
-INSTALL(
+install(
   FILES
     ytree.desktop
   DESTINATION
     share/applications
 )
 
-
-INSTALL(
+install(
   FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/ytree.svg
   DESTINATION
     share/icons/hicolor/scalable/apps
 )
 
-FOREACH(ICON_SIZE 16 32 48 64 128 256)
-  INSTALL(
+foreach(ICON_SIZE 16 32 48 64 128 256)
+  install(
     FILES
       ${CMAKE_CURRENT_SOURCE_DIR}/ytree${ICON_SIZE}.png
     DESTINATION
@@ -22,4 +21,4 @@ FOREACH(ICON_SIZE 16 32 48 64 128 256)
     RENAME
       ytree.png
   )
-ENDFOREACH()
+endforeach()

@@ -1,63 +1,74 @@
-LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../cmake")
+include(CheckCXXSourceCompiles)
 
-OPTION(
+option(
   COLOR_SUPPORT
   "Whether colors should be enabled or not."
   ON
 )
-SET(
-  COLOR_THEME
-  "gruvbox"
-  CACHE STRING
-  "Color theme when COLOR_SUPPORT is ON (original or gruvbox)."
-)
-SET_PROPERTY(
-  CACHE COLOR_THEME
-  PROPERTY STRINGS
-    original
-    gruvbox
-)
-STRING(TOLOWER "${COLOR_THEME}" COLOR_THEME_LOWER)
-IF(COLOR_THEME_LOWER STREQUAL "gruvbox")
-  SET(COLOR_THEME_GRUVBOX TRUE)
-ELSEIF(COLOR_THEME_LOWER STREQUAL "original")
-  SET(COLOR_THEME_GRUVBOX FALSE)
-ELSE()
-  MESSAGE(FATAL_ERROR "COLOR_THEME must be 'original' or 'gruvbox' (got '${COLOR_THEME}')")
-ENDIF()
-OPTION(
+option(
   CLOCK_SUPPORT
   "Whether experimental clock should be enabled or not."
   OFF
 )
-OPTION(
+option(
   WITH_UTF8
   "Whether support for UTF-8 should be enabled or not."
   ON
 )
-OPTION(
+option(
   VI_KEYS
   "Whether Vi keys should be enabled or not."
   OFF
 )
 
-SET(CURSES_NEED_NCURSES TRUE)
-IF(WITH_UTF8)
-  SET(CURSES_NEED_WIDE TRUE)
-ENDIF()
+set(
+  COLOR_THEME
+  "gruvbox"
+  CACHE STRING
+  "Color theme when COLOR_SUPPORT is ON (original or gruvbox)."
+)
+set_property(
+  CACHE
+    COLOR_THEME
+  PROPERTY
+    STRINGS
+    original
+    gruvbox
+)
+string(TOLOWER "${COLOR_THEME}" COLOR_THEME_LOWER)
+if(COLOR_THEME_LOWER STREQUAL "gruvbox")
+  set(COLOR_THEME_GRUVBOX TRUE)
+elseif(COLOR_THEME_LOWER STREQUAL "original")
+  set(COLOR_THEME_GRUVBOX FALSE)
+else()
+  message(
+    FATAL_ERROR
+    "COLOR_THEME must be 'original' or 'gruvbox' (got '${COLOR_THEME}')"
+  )
+endif()
 
-INCLUDE(FindCurses)
+set(CURSES_NEED_NCURSES TRUE)
+if(WITH_UTF8)
+  set(CURSES_NEED_WIDE TRUE)
+endif()
 
-IF(NOT CURSES_FOUND)
-  IF(WITH_UTF8)
-    MESSAGE(FATAL_ERROR "wide ncurses development package is required (e.g. libncurses-dev / libncursesw-dev)")
-  ELSE()
-    MESSAGE(FATAL_ERROR "ncurses development package is required (e.g. libncurses-dev)")
-  ENDIF()
-ENDIF()
+include(FindCurses)
 
-INCLUDE(CheckCXXSourceCompiles)
-CHECK_CXX_SOURCE_COMPILES("
+if(NOT CURSES_FOUND)
+  if(WITH_UTF8)
+    message(
+      FATAL_ERROR
+      "wide ncurses development package is required (e.g. libncurses-dev / libncursesw-dev)"
+    )
+  else()
+    message(
+      FATAL_ERROR
+      "ncurses development package is required (e.g. libncurses-dev)"
+    )
+  endif()
+endif()
+
+check_cxx_source_compiles("
 #include <chrono>
 int main()
 {
@@ -70,12 +81,12 @@ int main()
 }
 " YTREE_HAS_STD_CHRONO_TZ)
 
-CONFIGURE_FILE(
-  ${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
-  ${CMAKE_CURRENT_SOURCE_DIR}/config.h
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/config.hpp.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/config.hpp
 )
 
-ADD_EXECUTABLE(
+add_executable(
   ytree
   arc.cpp
   archive.cpp
@@ -133,25 +144,25 @@ ADD_EXECUTABLE(
   zoo.cpp
 )
 
-TARGET_COMPILE_FEATURES(
+target_compile_features(
   ytree
   PRIVATE
     cxx_std_20
 )
 
-TARGET_COMPILE_OPTIONS(
+target_compile_options(
   ytree
   PRIVATE
     $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall;-Werror>
 )
 
-TARGET_INCLUDE_DIRECTORIES(
+target_include_directories(
   ytree
   PRIVATE
     $<BUILD_INTERFACE:${CURSES_INCLUDE_DIR}>
 )
 
-TARGET_LINK_LIBRARIES(
+target_link_libraries(
   ytree
   PRIVATE
     ${CURSES_LIBRARIES}
@@ -159,7 +170,7 @@ TARGET_LINK_LIBRARIES(
     tomlplusplus::tomlplusplus
 )
 
-INSTALL(
+install(
   TARGETS
     ytree
   RUNTIME DESTINATION

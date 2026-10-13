@@ -1,16 +1,4 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/mktime.c,v 1.8 1997/08/13 12:24:58 werner Rel $
- *
- * David MacKenzie, Michael Haertel
- * Replacement for mktime
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
-
-
+#include "./ytree.hpp"
 
 /* free mktime function
    Copyright 1988, 1989 by David MacKenzie <djm@ai.mit.edu>

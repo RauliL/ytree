@@ -1,4 +1,4 @@
-#include "ytree.h"
+#include "./ytree.hpp"
 
 int DeleteFile(FileEntry* fe_ptr)
 {
@@ -106,10 +106,3 @@ int RemoveFile(FileEntry *fe_ptr)
 
   return( 0 );
 }
-
-
-
-
-
-
-

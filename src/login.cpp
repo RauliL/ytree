@@ -1,21 +1,4 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/login.c,v 1.23 2014/12/26 09:53:11 werner Exp $
- *
- * Dateibaum lesen
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
-#include <system_error>
-/* #include <sys/wait.h> */  /* maybe wait.h is available */
-
-
-
-
-/* Login Disk: true on success, false on failure. */
-
+#include "./ytree.hpp"
 
 bool LoginDisk(const std::string& path)
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "./ytree.h"
+#include "./ytree.hpp"
 
 struct WalkContextBase
 {

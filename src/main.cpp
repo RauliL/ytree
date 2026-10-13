@@ -1,11 +1,4 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/main.c,v 1.20 2008/07/24 17:43:04 werner Exp $
- *
- * Hauptmodul
- *
- ***************************************************************************/
-#include "ytree.h"
+#include "./ytree.hpp"
 
 int main(int argc, char **argv)
 {
@@ -89,5 +82,3 @@ int main(int argc, char **argv)
     if( HandleDirWindow(statistic.tree.get()) == 'q' ) Quit();
   }
 }
-
-

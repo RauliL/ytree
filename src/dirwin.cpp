@@ -1,8 +1,7 @@
 #include <peelo/xdg.hpp>
 
-#include "ytree.h"
-
 #include "./mouse.hpp"
+#include "./ytree.hpp"
 
 struct DirEntryList
 {
@@ -1626,5 +1625,3 @@ int RefreshDirWindow()
 
   return(result);
 }
-
-

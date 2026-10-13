@@ -1,6 +1,5 @@
-#include "ytree.h"
-
 #include "./mouse.hpp"
+#include "./ytree.hpp"
 
 static WINDOW *Subwin(WINDOW *orig, int nlines, int ncols,
                       int begin_y, int begin_x);
@@ -219,6 +218,3 @@ static WINDOW *Newwin(int nlines, int ncols,
 
   return(win);
 }
-
-
-

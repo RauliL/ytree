@@ -1,16 +1,4 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/rpm.c,v 1.3 2000/05/20 20:41:11 werner Exp $
- *
- * Read RPM-Files
- * Currently no extraction supported
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
-
-
+#include "./ytree.hpp"
 
 static int GetStatFromRPM(
   std::string_view rpm_line,
@@ -19,11 +7,8 @@ static int GetStatFromRPM(
   struct stat *stat
 );
 
-
-
 /* Dateibaum aus RPM-Listing lesen */
 /*---------------------------------*/
-
 int ReadTreeFromRPM(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
   struct stat st;

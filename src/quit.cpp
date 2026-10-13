@@ -1,14 +1,4 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/quit.c,v 1.13 2003/03/16 13:13:29 werner Exp $
- *
- * Verlassen von ytree
- *
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
+#include "./ytree.hpp"
 
 /*
 quit-to-directory (xtree: alt-Q)(ytree: shift-Q, ^Q)

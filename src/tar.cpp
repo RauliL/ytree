@@ -1,15 +1,4 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/tar.c,v 1.11 2000/05/20 20:41:11 werner Exp $
- *
- * Funktionen zum Lesen des Dateibaumes aus TAR-Dateien
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
-
-
+#include "./ytree.hpp"
 
 static int GetStatFromTAR(
   std::string_view tar_line,
@@ -18,11 +7,8 @@ static int GetStatFromTAR(
   struct stat *stat
 );
 
-
-
 /* Dateibaum aus TAR-Listing lesen */
 /*---------------------------------*/
-
 int ReadTreeFromTAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
 {
   struct stat st;

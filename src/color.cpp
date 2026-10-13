@@ -1,14 +1,4 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/color.c,v 1.2 1997/08/13 12:24:58 werner Rel $
- *
- * Dynamic Colors-Support
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
-
+#include "./ytree.hpp"
 
 #ifdef COLOR_SUPPORT
 

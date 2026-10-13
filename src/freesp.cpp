@@ -1,13 +1,4 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/freesp.c,v 1.25 2012/09/11 16:40:02 werner Exp $
- *
- * Ermittlung der freien Plattenkapazitaet
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
+#include "./ytree.hpp"
 
 #if defined(__linux__) || defined(__GNU__)
 # include <sys/vfs.h>

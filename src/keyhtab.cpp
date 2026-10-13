@@ -1,7 +1,6 @@
-#include "ytree.h"
-#include "tilde.h"
-
 #include "./mouse.hpp"
+#include "./tilde.hpp"
+#include "./ytree.hpp"
 
 static std::vector<std::string> Mtchs;
 static int total_matches  = 0;

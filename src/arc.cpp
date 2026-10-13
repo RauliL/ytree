@@ -1,18 +1,6 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/arc.c,v 1.11 2000/05/20 20:41:11 werner Exp $
- *
- * Funktionen zum Lesen des Dateibaumes aus ARC-Dateien
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
-
+#include "./ytree.hpp"
 
 static int GetStatFromARC(std::string_view arc_line, std::string& name, struct stat *stat);
-
-
 
 /* Dateibaum aus ARC-Listing lesen */
 /*---------------------------------*/

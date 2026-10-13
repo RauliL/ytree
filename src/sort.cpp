@@ -1,16 +1,4 @@
-/***************************************************************************
- *
- * $Header: /usr/local/cvsroot/utils/ytree/sort.c,v 1.11 2001/04/16 13:34:26 werner Exp $
- *
- * Umschalten des Sortierkriteriums
- *
- ***************************************************************************/
-
-
-#include "ytree.h"
-
-
-
+#include "./ytree.hpp"
 
 void GetKindOfSort()
 {
