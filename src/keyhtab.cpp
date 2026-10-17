@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "./mouse.hpp"
 #include "./tilde.hpp"
 #include "./ytree.hpp"
