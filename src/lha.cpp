@@ -1,7 +1,5 @@
 #include "./ytree.hpp"
 
-static int GetStatFromLHA(std::string_view lha_line, std::string& name, struct stat *stat);
-
 /**
  * Dateibaum aus LHA-Listing lesen.
  */
@@ -16,7 +14,7 @@ bool ReadTreeFromLHA(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
              line[34] != '*' &&
              !line.substr(1).starts_with("Total");
     },
-    GetStatFromLHA,
+    archive_meta::ParseLhaListing,
     "lhainfo"
   );
 }
@@ -170,25 +168,4 @@ std::optional<archive_meta::NamedEntry> archive_meta::ParseLhaListing(
   entry.name = *t;
 
   return entry;
-}
-
-static int GetStatFromLHA(std::string_view lha_line, std::string& name, struct stat *stat)
-{
-  const auto parsed = archive_meta::ParseLhaListing(lha_line);
-  if (!parsed)
-  {
-    return -1;
-  }
-
-  name = parsed->name;
-  *stat = parsed->meta.ToStat();
-
-  /* Legacy: DOS LHA listings previously faked process owner. */
-  if (!parsed->meta.uid)
-  {
-    stat->st_uid = static_cast<uid_t>(getuid());
-    stat->st_gid = static_cast<gid_t>(getgid());
-  }
-
-  return 0;
 }

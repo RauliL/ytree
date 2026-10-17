@@ -117,26 +117,20 @@ bool FlushEntry(
     return true;
   }
 
-  auto st = meta.ToStat();
-
-  /* Legacy display: 7z has no owner; keep previous fake until UI uses EntryMeta. */
-  st.st_uid = static_cast<uid_t>(getuid());
-  st.st_gid = static_cast<gid_t>(getgid());
-
-  if (IsArchiveDirectoryEntry(path_name, st))
+  if (IsArchiveDirectoryEntry(path_name, meta))
   {
     if (path_name.back() != std::filesystem::path::preferred_separator)
     {
       path_name.push_back(std::filesystem::path::preferred_separator);
     }
-    if (!TryInsertArchiveDirEntry(dir_entry, path_name.data(), st))
+    if (!TryInsertArchiveDirEntry(dir_entry, path_name.data(), meta))
     {
       FormatMessage("unknown 7z dir*{}", path_name);
 
       return false;
     }
   }
-  else if (InsertArchiveFileEntry(dir_entry, path_name, &st))
+  else if (InsertArchiveFileEntry(dir_entry, path_name, meta))
   {
     FormatMessage("unknown 7z file*{}", path_name);
 

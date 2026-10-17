@@ -373,7 +373,6 @@ struct DirEntry;
 struct FileEntry
 {
   std::weak_ptr<DirEntry> dir_entry; /* back-reference to owning directory */
-  struct stat stat_struct{};
   EntryMeta meta{};
   bool tagged = false;
   bool matching = false;
@@ -383,23 +382,19 @@ struct FileEntry
   /* Owning directory, or null if it has expired. */
   std::shared_ptr<DirEntry> Dir() const { return dir_entry.lock(); }
 
-  /** Keep stat_struct and meta in sync from a POSIX stat result. */
+  /** Set metadata from a POSIX stat result (filesystem paths). */
   void SetStat(const struct stat& st)
   {
-    stat_struct = st;
     meta = EntryMeta::FromStat(st);
   }
 
-  /** Keep stat_struct and meta in sync from portable metadata. */
   void SetMeta(const EntryMeta& m)
   {
     meta = m;
-    stat_struct = m.ToStat();
   }
 
-  void CopyStatFrom(const FileEntry& other)
+  void CopyMetaFrom(const FileEntry& other)
   {
-    stat_struct = other.stat_struct;
     meta = other.meta;
   }
 
@@ -433,7 +428,6 @@ struct DirEntry : std::enable_shared_from_this<DirEntry>
   unsigned int tagged_files = 0;
   int cursor_pos = 0;
   int start_file = 0;
-  struct stat stat_struct{};
   EntryMeta meta{};
   bool access_denied = false;
   bool global_flag = false;
@@ -447,23 +441,19 @@ struct DirEntry : std::enable_shared_from_this<DirEntry>
   /* Parent directory, or null for the root (or if it has expired). */
   std::shared_ptr<DirEntry> Parent() const { return parent.lock(); }
 
-  /** Keep stat_struct and meta in sync from a POSIX stat result. */
+  /** Set metadata from a POSIX stat result (filesystem paths). */
   void SetStat(const struct stat& st)
   {
-    stat_struct = st;
     meta = EntryMeta::FromStat(st);
   }
 
-  /** Keep stat_struct and meta in sync from portable metadata. */
   void SetMeta(const EntryMeta& m)
   {
     meta = m;
-    stat_struct = m.ToStat();
   }
 
-  void CopyStatFrom(const DirEntry& other)
+  void CopyMetaFrom(const DirEntry& other)
   {
-    stat_struct = other.stat_struct;
     meta = other.meta;
   }
 };
@@ -674,41 +664,35 @@ extern std::time_t Mktime(std::tm *tm);
 bool TryInsertArchiveDirEntry(
   const std::shared_ptr<DirEntry>& tree,
   const char* dir,
-  struct stat& stat
+  const EntryMeta& meta
 );
 int InsertArchiveFileEntry(
   const std::shared_ptr<DirEntry>& tree,
   const std::string& path,
-  struct stat *stat,
+  const EntryMeta& meta,
   std::string symlink_target = {}
 );
 void MinimizeArchiveTree(const std::shared_ptr<DirEntry>& tree);
 void FinalizeArchiveTree(const std::shared_ptr<DirEntry>& dir_entry);
 
 using ArchiveLineFilter = bool (*)(std::string_view line);
-using ArchiveStatParser = int (*)(std::string_view line, std::string& name, struct stat* st);
-using ArchiveStatParserWithLink = int (*)(
-  std::string_view line,
-  std::string& name,
-  std::string& symlink_target,
-  struct stat* st
-);
+using ArchiveMetaParser = std::optional<archive_meta::NamedEntry> (*)(std::string_view line);
 
 bool ReadArchiveListingFilesOnly(
   const std::shared_ptr<DirEntry>& dir_entry,
   FILE* f,
   ArchiveLineFilter is_entry,
-  ArchiveStatParser parse,
+  ArchiveMetaParser parse,
   std::string_view unknown_tag
 );
 bool ReadArchiveListingWithDirs(
   const std::shared_ptr<DirEntry>& dir_entry,
   FILE* f,
-  ArchiveStatParserWithLink parse,
+  ArchiveMetaParser parse,
   std::string_view unknown_tag
 );
 
-bool IsArchiveDirectoryEntry(const std::string& path, const struct stat& st);
+bool IsArchiveDirectoryEntry(const std::string& path, const EntryMeta& meta);
 
 inline constexpr std::string_view kArchiveMonthNames[12] = {
   "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
@@ -725,12 +709,6 @@ inline std::optional<int> ArchiveMonthIndex(std::string_view name)
     }
   }
   return std::nullopt;
-}
-
-inline void InitArchiveStat(struct stat* st)
-{
-  std::memset(st, 0, sizeof(*st));
-  st->st_nlink = 1;
 }
 extern void HitReturnToContinue();
 std::string BuildFilename(

@@ -1,18 +1,16 @@
 #include "./ytree.hpp"
 
-static int GetStatFromTAR(
-  std::string_view tar_line,
-  std::string& name,
-  std::string& symlink_target,
-  struct stat *stat
-);
-
 /**
  * Dateibaum aus TAR-Listing lesen.
  */
 bool ReadTreeFromTAR(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
 {
-  return ReadArchiveListingWithDirs(dir_entry, f, GetStatFromTAR, "tarinfo");
+  return ReadArchiveListingWithDirs(
+    dir_entry,
+    f,
+    archive_meta::ParseTarListing,
+    "tarinfo"
+  );
 }
 
 std::optional<archive_meta::NamedEntry> archive_meta::ParseTarListing(
@@ -150,24 +148,4 @@ std::optional<archive_meta::NamedEntry> archive_meta::ParseTarListing(
   }
 
   return entry;
-}
-
-static int GetStatFromTAR(
-  std::string_view tar_line,
-  std::string& name,
-  std::string& symlink_target,
-  struct stat *stat
-)
-{
-  const auto parsed = archive_meta::ParseTarListing(tar_line);
-  if (!parsed)
-  {
-    return -1;
-  }
-
-  name = parsed->name;
-  symlink_target = parsed->symlink_target;
-  *stat = parsed->meta.ToStat();
-
-  return 0;
 }

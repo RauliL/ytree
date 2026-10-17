@@ -1,7 +1,5 @@
 #include "./ytree.hpp"
 
-static int GetStatFromZOO(std::string_view zoo_line, std::string& name, struct stat *stat);
-
 /**
  * Dateibaum aus ZOO-Listing lesen.
  */
@@ -13,7 +11,7 @@ bool ReadTreeFromZOO(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
     [](std::string_view line) {
       return line.size() > 50;
     },
-    GetStatFromZOO,
+    archive_meta::ParseZooListing,
     "zooinfo"
   );
 }
@@ -116,28 +114,10 @@ std::optional<archive_meta::NamedEntry> archive_meta::ParseZooListing(
   t = tok.Next(" \t");
   if (!t) return std::nullopt;
 
-  /* Owner/group are not in the listing — leave unset. */
-
   /* Dateiname */
   /*-----------*/
 
   entry.name = *t;
 
   return entry;
-}
-
-static int GetStatFromZOO(std::string_view zoo_line, std::string& name, struct stat *stat)
-{
-  const auto parsed = archive_meta::ParseZooListing(zoo_line);
-  if (!parsed)
-  {
-    return -1;
-  }
-
-  name = parsed->name;
-  *stat = parsed->meta.ToStat();
-  stat->st_uid = static_cast<uid_t>(getuid());
-  stat->st_gid = static_cast<gid_t>(getgid());
-
-  return 0;
 }

@@ -1,9 +1,5 @@
 #include "./ytree.hpp"
 
-#include "./entry_meta.hpp"
-
-static int GetStatFromZIP(std::string_view zip_line, std::string& name, struct stat *stat);
-
 /**
  * Dateibaum aus ZIP-Listing lesen.
  */
@@ -16,7 +12,7 @@ bool ReadTreeFromZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
       return line.size() > 58 &&
              (line[56] == ':' || (line[57] != 'd' && line[58] == ':'));
     },
-    GetStatFromZIP,
+    archive_meta::ParseZipListing,
     "zipinfo"
   );
 }
@@ -129,10 +125,7 @@ std::optional<archive_meta::NamedEntry> archive_meta::ParseZipListing(
   tm_struct.tm_sec = 0;
   tm_struct.tm_isdst = -1;
 
-  /* Only mtime is present in zipinfo output; leave atime/ctime unset. */
   entry.meta.mtime = std::chrono::system_clock::from_time_t(Mktime(&tm_struct));
-
-  /* Owner/group are not in the listing — leave unset (no getuid() fake). */
 
   /* Dateiname */
   /*-----------*/
@@ -140,23 +133,4 @@ std::optional<archive_meta::NamedEntry> archive_meta::ParseZipListing(
   entry.name = *t;
 
   return entry;
-}
-
-static int GetStatFromZIP(std::string_view zip_line, std::string& name, struct stat *stat)
-{
-  const auto parsed = archive_meta::ParseZipListing(zip_line);
-
-  if (!parsed)
-  {
-    return -1;
-  }
-
-  name = parsed->name;
-  *stat = parsed->meta.ToStat();
-
-  /* Legacy display: zipinfo has no owner; keep previous fake until UI uses EntryMeta. */
-  stat->st_uid = static_cast<uid_t>(getuid());
-  stat->st_gid = static_cast<gid_t>(getgid());
-
-  return 0;
 }

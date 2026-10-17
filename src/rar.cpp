@@ -1,7 +1,5 @@
 #include "./ytree.hpp"
 
-static int GetStatFromRAR(std::string_view rar_line, std::string& name, struct stat *stat);
-
 /**
  * Dateibaum aus RAR-Listing lesen.
  */
@@ -13,7 +11,7 @@ bool ReadTreeFromRAR(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
     [](std::string_view line) {
       return line.size() > 48 && line[48] == ':';
     },
-    GetStatFromRAR,
+    archive_meta::ParseRarListing,
     "rarinfo"
   );
 }
@@ -96,24 +94,5 @@ std::optional<archive_meta::NamedEntry> archive_meta::ParseRarListing(
   t = tok.Next(" \t");
   if (!t) return std::nullopt;
 
-  /* Attributes — listing has no Unix mode; use a regular default. */
-  /* Owner/group are not in the listing — leave unset. */
-
   return entry;
-}
-
-static int GetStatFromRAR(std::string_view rar_line, std::string& name, struct stat *stat)
-{
-  const auto parsed = archive_meta::ParseRarListing(rar_line);
-  if (!parsed)
-  {
-    return -1;
-  }
-
-  name = parsed->name;
-  *stat = parsed->meta.ToStat();
-  stat->st_uid = static_cast<uid_t>(getuid());
-  stat->st_gid = static_cast<gid_t>(getgid());
-
-  return 0;
 }

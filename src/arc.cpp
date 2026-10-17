@@ -1,7 +1,5 @@
 #include "./ytree.hpp"
 
-static int GetStatFromARC(std::string_view arc_line, std::string& name, struct stat *stat);
-
 /**
  * Dateibaum aus ARC-Listing lesen.
  */
@@ -13,7 +11,7 @@ bool ReadTreeFromARC(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
     [](std::string_view line) {
       return line.size() > 63 && line[63] == ':';
     },
-    GetStatFromARC,
+    archive_meta::ParseArcListing,
     "arcinfo"
   );
 }
@@ -115,23 +113,5 @@ std::optional<archive_meta::NamedEntry> archive_meta::ParseArcListing(
 
   entry.meta.mtime = std::chrono::system_clock::from_time_t(Mktime(&tm_struct));
 
-  /* Attributes default via RegularFile(); owner/group unset. */
-
   return entry;
-}
-
-static int GetStatFromARC(std::string_view arc_line, std::string& name, struct stat *stat)
-{
-  const auto parsed = archive_meta::ParseArcListing(arc_line);
-  if (!parsed)
-  {
-    return -1;
-  }
-
-  name = parsed->name;
-  *stat = parsed->meta.ToStat();
-  stat->st_uid = static_cast<uid_t>(getuid());
-  stat->st_gid = static_cast<gid_t>(getgid());
-
-  return 0;
 }

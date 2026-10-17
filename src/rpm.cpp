@@ -1,18 +1,16 @@
 #include "./ytree.hpp"
 
-static int GetStatFromRPM(
-  std::string_view rpm_line,
-  std::string& name,
-  std::string& symlink_target,
-  struct stat *stat
-);
-
 /**
  * Dateibaum aus RPM-Listing lesen.
  */
 bool ReadTreeFromRPM(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
 {
-  return ReadArchiveListingWithDirs(dir_entry, f, GetStatFromRPM, "rpminfo");
+  return ReadArchiveListingWithDirs(
+    dir_entry,
+    f,
+    archive_meta::ParseRpmListing,
+    "rpminfo"
+  );
 }
 
 std::optional<archive_meta::NamedEntry> archive_meta::ParseRpmListing(
@@ -115,24 +113,4 @@ std::optional<archive_meta::NamedEntry> archive_meta::ParseRpmListing(
   }
 
   return entry;
-}
-
-static int GetStatFromRPM(
-  std::string_view rpm_line,
-  std::string& name,
-  std::string& symlink_target,
-  struct stat *stat
-)
-{
-  const auto parsed = archive_meta::ParseRpmListing(rpm_line);
-  if (!parsed)
-  {
-    return -1;
-  }
-
-  name = parsed->name;
-  symlink_target = parsed->symlink_target;
-  *stat = parsed->meta.ToStat();
-
-  return 0;
 }
