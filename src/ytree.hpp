@@ -558,7 +558,7 @@ extern void RotateFileMode();
 int Execute(const DirEntry* dir_entry, const FileEntry* file_entry);
 extern int  Pipe(DirEntry *dir_entry, FileEntry *file_entry);
 std::optional<std::string> GetPipeCommand(const std::string& initial = {});
-extern void GetKindOfSort();
+std::optional<SortSpec> GetKindOfSort();
 extern void SetKindOfSort(SortKey key, SortOrder order = SortOrder::Ascending);
 extern int  ChangeFileModus(FileEntry *fe_ptr);
 extern int  ChangeDirModus(DirEntry *de_ptr);

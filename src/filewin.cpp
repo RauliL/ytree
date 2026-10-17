@@ -758,94 +758,101 @@ static void DisplayFiles(DirEntry *de_ptr, int start_file_no, int hilight_no, in
 
 }
 
-
-static void fmovedown(int *start_file, int *cursor_pos, int *start_x, DirEntry *dir_entry)
+static void MoveDown(
+  int& start_file,
+  int& cursor_pos,
+  const int start_x,
+  DirEntry* dir_entry)
 {
-   if( *start_file + *cursor_pos + 1 >= (int)file_entry_list.size() )
-   {
-      /* File nicht vorhanden */
-      /*----------------------*/
-      beep();
-   }
-   else
-   {
-      if( *cursor_pos < max_disp_files - 1 )
-      {
-          /* DOWN ohne scroll moeglich */
-          /*---------------------------*/
-          PrintFileEntry(*start_file + *cursor_pos,
-                          *cursor_pos % window_height,
-                          *cursor_pos / window_height,
-                          false,
-                          *start_x
-);
-          (*cursor_pos)++;
-          PrintFileEntry(*start_file + *cursor_pos,
-                          *cursor_pos % window_height,
-                          *cursor_pos / window_height,
-                          true ,
-                          *start_x
-);
-      }
-      else
-      {
-          /* Scrollen */
-          /*----------*/
-          (*start_file)++;
-          DisplayFiles(dir_entry,
-                        *start_file,
-                        *start_file + *cursor_pos,
-                        *start_x
-);
-      }
-   }
-   return;
+  if (start_file + cursor_pos + 1 >= static_cast<int>(file_entry_list.size()))
+  {
+    // File nicht vorhanden.
+    beep();
+    return;
+  }
+
+  if (cursor_pos < max_disp_files - 1)
+  {
+    // DOWN ohne scroll moeglich.
+    PrintFileEntry(
+      start_file + cursor_pos,
+      cursor_pos % window_height,
+      cursor_pos / window_height,
+      false,
+      start_x
+    );
+    ++cursor_pos;
+    PrintFileEntry(
+      start_file + cursor_pos,
+      cursor_pos % window_height,
+      cursor_pos / window_height,
+      true ,
+      start_x
+    );
+    return;
+  }
+
+  // Scrollen.
+  ++start_file;
+  DisplayFiles(
+    dir_entry,
+    start_file,
+    start_file + cursor_pos,
+    start_x
+  );
 }
 
-static void fmoveup(int *start_file, int *cursor_pos, int *start_x, DirEntry *dir_entry)
+static void MoveUp(
+  int& start_file,
+  int& cursor_pos,
+  const int start_x,
+  DirEntry* dir_entry
+)
 {
-   if( *start_file + *cursor_pos < 1 )
-   {
-      /* File nicht vorhanden */
-      /*----------------------*/
-      beep();
-   }
-   else
-   {
-      if( *cursor_pos > 0 )
-      {
-         /* UP ohne scroll moeglich */
-         /*-------------------------*/
-         PrintFileEntry(*start_file + *cursor_pos,
-                         *cursor_pos % window_height,
-                         *cursor_pos / window_height,
-                         false,
-                         *start_x
-);
-         (*cursor_pos)--;
-         PrintFileEntry(*start_file + *cursor_pos,
-                         *cursor_pos % window_height,
-                         *cursor_pos / window_height,
-                         true,
-                         *start_x
-);
-      }
-      else
-      {
-         /* Scrollen */
-         /*----------*/
-         (*start_file)--;
-         DisplayFiles(dir_entry,
-                       *start_file,
-                       *start_file + *cursor_pos,
-                       *start_x
-);
-      }
-   }
-   return;
+  if (start_file + cursor_pos < 1)
+  {
+    // File nicht vorhanden,
+    beep();
+    return;
+  }
+
+  if (cursor_pos > 0)
+  {
+    // UP ohne scroll moeglich.
+    PrintFileEntry(
+      start_file + cursor_pos,
+      cursor_pos % window_height,
+      cursor_pos / window_height,
+      false,
+      start_x
+    );
+    --cursor_pos;
+    PrintFileEntry(
+      start_file + cursor_pos,
+      cursor_pos % window_height,
+      cursor_pos / window_height,
+      true,
+      start_x
+    );
+    return;
+  }
+
+  // Scrollen.
+  --start_file;
+  DisplayFiles(
+    dir_entry,
+    start_file,
+    start_file + cursor_pos,
+    start_x
+  );
 }
 
-static void fmoveright(int *start_file, int *cursor_pos, int *start_x,DirEntry *dir_entry)
+static void MoveRight(
+  int* start_file,
+  int* cursor_pos,
+  int* start_x,
+  DirEntry* dir_entry
+)
 {
    if( x_step == 1 )
    {
@@ -910,11 +917,15 @@ static void fmoveright(int *start_file, int *cursor_pos, int *start_x,DirEntry *
 );
       }
    }
-   return;
 }
 
 
-static void fmoveleft(int *start_file, int *cursor_pos, int *start_x, DirEntry *dir_entry)
+static void MoveLeft(
+  int* start_file,
+  int* cursor_pos,
+  int* start_x,
+  DirEntry* dir_entry
+)
 {
      if( x_step == 1 )
      {
@@ -1531,39 +1542,66 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 {
   switch (ch)
   {
-
 #ifdef KEY_RESIZE
-
-      case KEY_RESIZE: resize_request = true;
-                       break;
+    case KEY_RESIZE:
+      resize_request = true;
+      break;
 #endif
 
 #ifdef KEY_MOUSE
-      case KEY_MOUSE:  ch = HandleFileMouse(&ctx.dir_entry->start_file,
-                                            &ctx.dir_entry->cursor_pos,
-                                            &ctx.start_x,
-                                            ctx.dir_entry);
-                       if (ch == -1)
-                         break;
-                       ctx.unput_char = ch;
-                       break;
+    case KEY_MOUSE:
+      ch = HandleFileMouse(
+        &ctx.dir_entry->start_file,
+        &ctx.dir_entry->cursor_pos,
+        &ctx.start_x,
+        ctx.dir_entry
+      );
+      if (ch == -1)
+      {
+        break;
+      }
+      ctx.unput_char = ch;
+      break;
 #endif
 
-      case -1:         break;
+    case -1:
+      break;
 
-      case ' ' :   /*   break;  Quick-Key */
+    case ' ':
+    case KEY_DOWN:
+      MoveDown(
+        ctx.dir_entry->start_file,
+        ctx.dir_entry->cursor_pos,
+        ctx.start_x,
+        ctx.dir_entry
+      );
+      break;
 
-      case KEY_DOWN :  fmovedown(&ctx.dir_entry->start_file, &ctx.dir_entry->cursor_pos, &ctx.start_x, ctx.dir_entry);
-          break;
+    case KEY_UP:
+      MoveUp(
+        ctx.dir_entry->start_file,
+        ctx.dir_entry->cursor_pos,
+        ctx.start_x,
+        ctx.dir_entry
+      );
+      break;
 
-      case KEY_UP   : fmoveup(&ctx.dir_entry->start_file, &ctx.dir_entry->cursor_pos, &ctx.start_x, ctx.dir_entry);
-          break;
+    case KEY_RIGHT:
+      MoveRight(
+        &ctx.dir_entry->start_file,
+        &ctx.dir_entry->cursor_pos,
+        &ctx.start_x, ctx.dir_entry
+      );
+      break;
 
-      case KEY_RIGHT: fmoveright(&ctx.dir_entry->start_file, &ctx.dir_entry->cursor_pos, &ctx.start_x, ctx.dir_entry);
-          break;
-
-      case KEY_LEFT : fmoveleft(&ctx.dir_entry->start_file, &ctx.dir_entry->cursor_pos, &ctx.start_x, ctx.dir_entry);
-          break;
+    case KEY_LEFT:
+      MoveLeft(
+        &ctx.dir_entry->start_file,
+        &ctx.dir_entry->cursor_pos,
+        &ctx.start_x,
+        ctx.dir_entry
+      );
+      break;
 
       case KEY_NPAGE: fmovenpage(&ctx.dir_entry->start_file, &ctx.dir_entry->cursor_pos, &ctx.start_x, ctx.dir_entry);
           break;
@@ -2562,20 +2600,25 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           break;
 
       case 'S':
-      case 's':       GetKindOfSort();
+      case 's':
+        if (const auto sort = GetKindOfSort())
+        {
+          statistic.kind_of_sort = *sort;
+        }
 
-          ctx.dir_entry->start_file = 0;
-          ctx.dir_entry->cursor_pos = 0;
+        ctx.dir_entry->start_file = 0;
+        ctx.dir_entry->cursor_pos = 0;
 
-          SortFileEntryList();
+        SortFileEntryList();
 
-          DisplayFiles(ctx.dir_entry,
-            ctx.dir_entry->start_file,
-            ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-            ctx.start_x
-);
-          ctx.need_dsp_help = true;
-          break;
+        DisplayFiles(
+          ctx.dir_entry,
+          ctx.dir_entry->start_file,
+          ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
+          ctx.start_x
+        );
+        ctx.need_dsp_help = true;
+        break;
 
       case 'F':
       case 'f':       if(ReadFileSpec()) {
@@ -3077,12 +3120,11 @@ static void ListJump(DirEntry * dir_entry, const char *str)
 );
     }
     for ( j=tmp2; j < i; j++ )
-        fmovedown
-        (
-            &dir_entry->start_file,
-            &dir_entry->cursor_pos,
-            &start_x,
-            dir_entry
+        MoveDown(
+          dir_entry->start_file,
+          dir_entry->cursor_pos,
+          start_x,
+          dir_entry
         );
     RefreshWindow(stdscr);
     RefreshWindow(file_window);
