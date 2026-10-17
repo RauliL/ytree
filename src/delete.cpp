@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "./ytree.hpp"
 
 int DeleteFile(FileEntry* fe_ptr)

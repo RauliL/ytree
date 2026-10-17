@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "./ytree.hpp"
 
 std::optional<std::string> MakeDirectory(DirEntry *father_dir_entry)

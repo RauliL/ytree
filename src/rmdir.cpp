@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "./ytree.hpp"
 
 static int DeleteSubTree(DirEntry *dir_entry);
