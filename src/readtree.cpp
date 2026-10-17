@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "./ytree.hpp"
 
 static void UnReadSubTree(DirEntry *dir_entry);
