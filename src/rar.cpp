@@ -18,46 +18,50 @@ bool ReadTreeFromRAR(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
   );
 }
 
-static int GetStatFromRAR(std::string_view rar_line, std::string& name, struct stat *stat)
+std::optional<archive_meta::NamedEntry> archive_meta::ParseRarListing(
+  std::string_view rar_line
+)
 {
-  int id;
   std::tm tm_struct{};
-
-  InitArchiveStat(stat);
+  NamedEntry entry;
+  entry.meta = RegularFile();
 
   StringTokenizer tok(rar_line);
 
   auto t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* Dateiname */
   /*-----------*/
 
-  name = *t;
+  entry.name = *t;
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* Dateilaenge */
   /*-------------*/
 
-  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0]))) return -1;
-  stat->st_size = AtoLL(*t);
+  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0])))
+  {
+    return std::nullopt;
+  }
+  entry.meta.size = AtoLL(*t);
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* Packed */
   /*--------*/
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* Ratio */
   /*-------*/
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* M-Datum */
   /*---------*/
@@ -73,7 +77,7 @@ static int GetStatFromRAR(std::string_view rar_line, std::string& name, struct s
   }
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* M-time */
   /*--------*/
@@ -87,30 +91,29 @@ static int GetStatFromRAR(std::string_view rar_line, std::string& name, struct s
   tm_struct.tm_sec = 0;
   tm_struct.tm_isdst = -1;
 
-  stat->st_atime = 0;
-  stat->st_ctime = 0;
-  stat->st_mtime = Mktime(&tm_struct);
+  entry.meta.mtime = std::chrono::system_clock::from_time_t(Mktime(&tm_struct));
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
-  /* Attributes */
-  /*------------*/
+  /* Attributes — listing has no Unix mode; use a regular default. */
+  /* Owner/group are not in the listing — leave unset. */
 
-  stat->st_mode = S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+  return entry;
+}
 
-  /* Owner */
-  /*-------*/
+static int GetStatFromRAR(std::string_view rar_line, std::string& name, struct stat *stat)
+{
+  const auto parsed = archive_meta::ParseRarListing(rar_line);
+  if (!parsed)
+  {
+    return -1;
+  }
 
-  id = static_cast<int>(getuid());
-  if (id == -1) id = SvAtoi(*t);
-  stat->st_uid = static_cast<uid_t>(id);
-
-  /* Group */
-  /*-------*/
-
-  id = static_cast<int>(getgid());
-  stat->st_gid = static_cast<gid_t>(id);
+  name = parsed->name;
+  *stat = parsed->meta.ToStat();
+  stat->st_uid = static_cast<uid_t>(getuid());
+  stat->st_gid = static_cast<gid_t>(getgid());
 
   return 0;
 }

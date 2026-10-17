@@ -79,6 +79,7 @@ struct NamedEntry
 {
   std::string name;
   EntryMeta meta;
+  std::string symlink_target;
 };
 
 /** Minimal directory metadata for archive tree nodes. */
@@ -88,9 +89,15 @@ EntryMeta Directory();
 EntryMeta RegularFile();
 
 /**
- * Parse one zipinfo listing line into portable metadata.
- * Unknown atime/ctime/owner are left unset (not faked).
+ * Parse one archive listing line into portable metadata.
+ * Fields the format does not provide are left unset (not faked).
  */
 std::optional<NamedEntry> ParseZipListing(std::string_view zip_line);
+std::optional<NamedEntry> ParseRarListing(std::string_view rar_line);
+std::optional<NamedEntry> ParseTarListing(std::string_view tar_line);
+std::optional<NamedEntry> ParseLhaListing(std::string_view lha_line);
+std::optional<NamedEntry> ParseZooListing(std::string_view zoo_line);
+std::optional<NamedEntry> ParseArcListing(std::string_view arc_line);
+std::optional<NamedEntry> ParseRpmListing(std::string_view rpm_line);
 
 }  // namespace archive_meta

@@ -21,93 +21,98 @@ bool ReadTreeFromLHA(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
   );
 }
 
-static int GetStatFromLHA(std::string_view lha_line, std::string& name, struct stat *stat)
+std::optional<archive_meta::NamedEntry> archive_meta::ParseLhaListing(
+  std::string_view lha_line
+)
 {
   bool dos_mode = false;
-  int id;
   std::tm tm_struct{};
-
-  InitArchiveStat(stat);
+  NamedEntry entry;
+  entry.meta = RegularFile();
 
   StringTokenizer tok(lha_line);
 
   auto t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* Attributes */
   /*------------*/
 
   if (t->size() == 9 && (*t)[0] != '[')
   {
-    stat->st_mode = GetModus(std::string("-") + std::string(*t));
+    entry.meta.SetFromMode(
+      static_cast<std::uint32_t>(GetModus(std::string("-") + std::string(*t)))
+    );
   }
   else if ((*t)[0] == '[')
   {
-    stat->st_mode = GetModus("-rw-r--r--");
+    entry.meta.SetFromMode(
+      static_cast<std::uint32_t>(GetModus("-rw-r--r--"))
+    );
     dos_mode = true;
   }
   else
   {
-    return -1;
+    return std::nullopt;
   }
 
   t = tok.Next(" \t/");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
-  if (dos_mode)
-  {
-    stat->st_uid = getuid();
-    stat->st_gid = getgid();
-  }
-  else
+  if (!dos_mode)
   {
     /* Owner */
     /*-------*/
 
-    id = SvAtoi(*t);
-    stat->st_uid = static_cast<uid_t>(id);
+    entry.meta.uid = static_cast<std::uint32_t>(SvAtoi(*t));
 
     t = tok.Next(" \t");
-    if (!t) return -1;
+    if (!t) return std::nullopt;
 
     /* Group */
     /*-------*/
 
-    id = SvAtoi(*t);
-    stat->st_gid = static_cast<gid_t>(id);
+    entry.meta.gid = static_cast<std::uint32_t>(SvAtoi(*t));
 
     t = tok.Next(" \t");
-    if (!t) return -1;
+    if (!t) return std::nullopt;
   }
+  /* DOS listings have no owner — leave uid/gid unset. */
 
   /* Packed-Size */
   /*-------------*/
 
-  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0]))) return -1;
+  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0])))
+  {
+    return std::nullopt;
+  }
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* Dateilaenge */
   /*-------------*/
 
-  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0]))) return -1;
-  stat->st_size = AtoLL(*t);
+  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0])))
+  {
+    return std::nullopt;
+  }
+  entry.meta.size = AtoLL(*t);
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* Ratio */
   /*-------*/
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* CRC */
   /*-----*/
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   if (lha_line.size() > 61 && lha_line[61] == ':')
   {
@@ -115,7 +120,7 @@ static int GetStatFromLHA(std::string_view lha_line, std::string& name, struct s
     /*-----*/
 
     t = tok.Next(" \t");
-    if (!t) return -1;
+    if (!t) return std::nullopt;
   }
 
   /* M-Datum */
@@ -124,22 +129,22 @@ static int GetStatFromLHA(std::string_view lha_line, std::string& name, struct s
   tm_struct.tm_mon = ArchiveMonthIndex(*t).value_or(0);
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   tm_struct.tm_mday = SvAtoi(*t);
 
   t = tok.Next(" \t:");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   tm_struct.tm_hour = SvAtoi(*t);
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   tm_struct.tm_min = SvAtoi(*t);
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   if (lha_line.size() > 41 && lha_line[41] == '-')
   {
@@ -151,20 +156,39 @@ static int GetStatFromLHA(std::string_view lha_line, std::string& name, struct s
     tm_struct.tm_year = SvAtoi(*t) - 1900;
 
     t = tok.Next(" \t");
-    if (!t) return -1;
+    if (!t) return std::nullopt;
   }
 
   tm_struct.tm_sec = 0;
   tm_struct.tm_isdst = -1;
 
-  stat->st_atime = 0;
-  stat->st_ctime = 0;
-  stat->st_mtime = Mktime(&tm_struct);
+  entry.meta.mtime = std::chrono::system_clock::from_time_t(Mktime(&tm_struct));
 
   /* Dateiname */
   /*-----------*/
 
-  name = *t;
+  entry.name = *t;
+
+  return entry;
+}
+
+static int GetStatFromLHA(std::string_view lha_line, std::string& name, struct stat *stat)
+{
+  const auto parsed = archive_meta::ParseLhaListing(lha_line);
+  if (!parsed)
+  {
+    return -1;
+  }
+
+  name = parsed->name;
+  *stat = parsed->meta.ToStat();
+
+  /* Legacy: DOS LHA listings previously faked process owner. */
+  if (!parsed->meta.uid)
+  {
+    stat->st_uid = static_cast<uid_t>(getuid());
+    stat->st_gid = static_cast<gid_t>(getgid());
+  }
 
   return 0;
 }
