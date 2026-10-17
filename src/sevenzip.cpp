@@ -79,16 +79,19 @@ void ApplyAttributes(std::string_view attributes, EntryMeta& meta)
     return;
   }
 
+  using std::filesystem::perms;
+
   if (is_dir)
   {
     meta.type = std::filesystem::file_type::directory;
-    meta.permissions =
-      S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    meta.permissions = perms::owner_all | perms::group_read | perms::group_exec |
+                       perms::others_read | perms::others_exec;
   }
   else
   {
     meta.type = std::filesystem::file_type::regular;
-    meta.permissions = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    meta.permissions = perms::owner_read | perms::owner_write |
+                       perms::group_read | perms::others_read;
   }
 }
 

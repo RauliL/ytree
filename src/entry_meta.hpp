@@ -9,8 +9,6 @@
 #include <string_view>
 #include <system_error>
 
-#include <sys/stat.h>
-
 /**
  * Portable entry metadata shared by filesystem and archive-backed entries.
  *
@@ -25,8 +23,8 @@ public:
 
   std::filesystem::file_type type = std::filesystem::file_type::unknown;
 
-  /** Permission bits only (e.g. 0644); type lives in `type`. */
-  std::uint32_t permissions = 0;
+  /** Permission bits only; file type lives in `type`. */
+  std::filesystem::perms permissions = std::filesystem::perms::none;
 
   size_type size = 0;
 
@@ -61,7 +59,9 @@ public:
 
   inline bool IsExecutable() const
   {
-    return (permissions & (S_IXUSR | S_IXGRP | S_IXOTH)) != 0;
+    using std::filesystem::perms;
+    return (permissions & (perms::owner_exec | perms::group_exec | perms::others_exec))
+           != perms::none;
   }
 
   /** Apply a POSIX mode including type bits (as from GetModus / st_mode). */
@@ -75,13 +75,15 @@ public:
   std::time_t AtimeAsTimeT() const;
   std::time_t CtimeAsTimeT() const;
 
-  std::uint32_t UidOrZero() const { return uid.value_or(0); }
-  std::uint32_t GidOrZero() const { return gid.value_or(0); }
-  std::uint32_t NlinkOr(std::uint32_t fallback = 1) const
+  inline std::uint32_t UidOrZero() const
   {
-    return nlink.value_or(fallback);
+    return uid.value_or(0);
   }
-  std::uint64_t InodeOrZero() const { return inode.value_or(0); }
+
+  inline std::uint32_t GidOrZero() const
+  {
+    return gid.value_or(0);
+  }
 
   /** Single-character type glyph used in file listings. */
   char TypeSymbol() const;

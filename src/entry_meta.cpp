@@ -3,6 +3,8 @@
 #include <cerrno>
 #include <cstring>
 
+#include <sys/stat.h>
+
 #if defined(S_IFLNK)
 # include <unistd.h>
 #endif
@@ -140,12 +142,15 @@ static inline std::time_t TimeToTimeT(const std::optional<EntryMeta::time_type>&
 void EntryMeta::SetFromMode(std::uint32_t mode)
 {
   type = TypeFromMode(mode);
-  permissions = mode & 07777u;
+  permissions = static_cast<std::filesystem::perms>(
+    mode & static_cast<std::uint32_t>(std::filesystem::perms::mask)
+  );
 }
 
 std::uint32_t EntryMeta::Mode() const
 {
-  return TypeToModeBits(type) | (permissions & 07777u);
+  return TypeToModeBits(type) |
+         static_cast<std::uint32_t>(permissions & std::filesystem::perms::mask);
 }
 
 std::time_t EntryMeta::MtimeAsTimeT() const
@@ -235,10 +240,13 @@ namespace archive_meta
 
 EntryMeta Directory()
 {
+  using std::filesystem::perms;
+
   EntryMeta meta;
 
   meta.type = std::filesystem::file_type::directory;
-  meta.permissions = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+  meta.permissions = perms::owner_all | perms::group_read | perms::group_exec |
+                     perms::others_read | perms::others_exec;
   meta.nlink = 1;
 
   return meta;
@@ -246,10 +254,13 @@ EntryMeta Directory()
 
 EntryMeta RegularFile()
 {
+  using std::filesystem::perms;
+
   EntryMeta meta;
 
   meta.type = std::filesystem::file_type::regular;
-  meta.permissions = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+  meta.permissions = perms::owner_read | perms::owner_write |
+                     perms::group_read | perms::others_read;
   meta.nlink = 1;
 
   return meta;
