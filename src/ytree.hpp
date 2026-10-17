@@ -4,6 +4,7 @@
 #define _FILE_OFFSET_BITS 64
 
 #include "./config.hpp"
+#include "./entry_meta.hpp"
 
 #include <cstdint>
 #include <cstdio>
