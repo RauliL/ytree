@@ -294,11 +294,6 @@ inline constexpr char LOGIN_ESC = '.';
 #define HISTORY_WINDOW_WIDTH   (COLS - 26)
 #define HISTORY_WINDOW_HEIGHT  (LINES - 6)
 
-#define MATCHES_WINDOW_X       1
-#define MATCHES_WINDOW_Y       2
-#define MATCHES_WINDOW_WIDTH   (COLS - 26)
-#define MATCHES_WINDOW_HEIGHT  (LINES - 6)
-
 #define TIME_WINDOW_X        ((COLS > 20) ? (COLS - 20) : 1)
 #define TIME_WINDOW_Y        1
 #define TIME_WINDOW_WIDTH    ((COLS > 15) ? 15 : COLS)
@@ -354,9 +349,6 @@ private:
 
 template<class Fn>
 ScopeGuard(Fn) -> ScopeGuard<Fn>;
-
-#define PRINT(ch) (std::iscntrl(ch) && (((unsigned char)(ch)) < ' ')) ? (ACS_BLOCK) : ((unsigned char)(ch))
-/* #define PRINT(ch) (ch) */
 
 #ifdef COLOR_SUPPORT
 extern void StartColors();
@@ -823,4 +815,14 @@ inline void ClearBottomPromptLines()
   clrtoeol();
   move(LINES - 1, 1);
   clrtoeol();
+}
+
+inline unsigned char MakePrintable(int ch)
+{
+  if (std::iscntrl(ch) && static_cast<unsigned char>(ch) < ' ')
+  {
+    return ACS_BLOCK;
+  }
+
+  return static_cast<unsigned char>(ch);
 }

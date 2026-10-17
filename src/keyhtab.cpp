@@ -7,6 +7,11 @@ static int total_matches  = 0;
 static int cursor_pos     = 0;
 static int disp_begin_pos = 1;
 
+static inline int MatchesWindowHeight()
+{
+  return LINES - 6;
+}
+
 static std::string LongestCommonPrefix(const std::vector<std::string>& matches)
 {
   if (matches.empty())
@@ -197,7 +202,7 @@ int DisplayMatches()
   hilight_no = disp_begin_pos + cursor_pos;
   p_y = -1;
   werase(matches_window);
-  for(i=0; i < MATCHES_WINDOW_HEIGHT; i++)
+  for(i=0; i < MatchesWindowHeight(); i++)
   {
     if (disp_begin_pos + i >= total_matches ) break;
     if (disp_begin_pos + i != hilight_no )
@@ -292,7 +297,7 @@ std::optional<std::string> GetMatches(const std::string& base)
            beep();
          }
          else
-         { if( cursor_pos + 1 < MATCHES_WINDOW_HEIGHT )
+         { if( cursor_pos + 1 < MatchesWindowHeight())
            {
        PrintMtchEntry(disp_begin_pos + cursor_pos,
           cursor_pos, MTCH_COLOR,
@@ -349,29 +354,29 @@ std::optional<std::string> GetMatches(const std::string& base)
          {  beep();  }
          else
          {
-           if( cursor_pos < MATCHES_WINDOW_HEIGHT - 1 )
+           if( cursor_pos < MatchesWindowHeight() - 1 )
            {
        PrintMtchEntry(disp_begin_pos + cursor_pos,
           cursor_pos, MTCH_COLOR,
                             start_x, &hide_left, &hide_right);
-             if( disp_begin_pos + MATCHES_WINDOW_HEIGHT > total_matches  - 1 )
+             if( disp_begin_pos + MatchesWindowHeight() > total_matches  - 1 )
          cursor_pos = total_matches - disp_begin_pos - 1;
        else
-         cursor_pos = MATCHES_WINDOW_HEIGHT - 1;
+         cursor_pos = MatchesWindowHeight() - 1;
        PrintMtchEntry(disp_begin_pos + cursor_pos,
           cursor_pos, HIMTCH_COLOR,
                             start_x, &hide_left, &hide_right);
            }
            else
            {
-       if( disp_begin_pos + cursor_pos + MATCHES_WINDOW_HEIGHT < total_matches )
+       if( disp_begin_pos + cursor_pos + MatchesWindowHeight() < total_matches )
        {
-         disp_begin_pos += MATCHES_WINDOW_HEIGHT;
-         cursor_pos = MATCHES_WINDOW_HEIGHT - 1;
+         disp_begin_pos += MatchesWindowHeight();
+         cursor_pos = MatchesWindowHeight() - 1;
        }
        else
        {
-         disp_begin_pos = total_matches - MATCHES_WINDOW_HEIGHT;
+         disp_begin_pos = total_matches - MatchesWindowHeight();
          if( disp_begin_pos < 1 ) disp_begin_pos = 1;
          cursor_pos = total_matches - disp_begin_pos - 1;
        }
@@ -396,7 +401,7 @@ std::optional<std::string> GetMatches(const std::string& base)
            }
            else
            {
-       if( (disp_begin_pos -= MATCHES_WINDOW_HEIGHT) < 1 )
+       if( (disp_begin_pos -= MatchesWindowHeight()) < 1 )
        {
          disp_begin_pos = 1;
        }
@@ -415,7 +420,7 @@ std::optional<std::string> GetMatches(const std::string& base)
          }
                      break;
       case KEY_END :
-                     disp_begin_pos = std::max(1, total_matches - MATCHES_WINDOW_HEIGHT);
+                     disp_begin_pos = std::max(1, total_matches - MatchesWindowHeight());
          cursor_pos     = total_matches - disp_begin_pos - 1;
                      DisplayMatches();
                      break;

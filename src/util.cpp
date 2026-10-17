@@ -363,7 +363,7 @@ void PrintSpecialString(
         case '9': result = ACS_LARROW;   break;
         case '|': result = ACS_VLINE;    break;
         case '-': result = ACS_HLINE;    break;
-        default:  result = PRINT(c);
+        default:  result = MakePrintable(c);
       }
     } else {
       result = ACS_BLOCK;
@@ -392,7 +392,7 @@ void Print(WINDOW* win, int y, int x, const std::string& str, int color)
 #if defined(COLOR_SUPPORT)
     wattrset(win, COLOR_PAIR(color) | A_BOLD);
 #endif
-    waddch(win, PRINT(c));
+    waddch(win, MakePrintable(c));
 #if defined(COLOR_SUPPORT)
     wattrset(win, 0);
 #endif
@@ -446,7 +446,7 @@ void PrintOptions(WINDOW *win, int y, int x, const std::string& str)
         case '9': ch = ACS_LARROW;   break;
         case '|': ch = ACS_VLINE;    break;
         case '-': ch = ACS_HLINE;    break;
-        default:  ch = PRINT(c);
+        default:  ch = MakePrintable(c);
      }
 
 #ifdef COLOR_SUPPORT
@@ -545,7 +545,7 @@ void PrintMenuOptions(
 #endif
 
       default:
-        sbuf += static_cast<char>(PRINT(c));
+        sbuf += MakePrintable(c);
     }
   }
 

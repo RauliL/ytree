@@ -7,7 +7,7 @@ void MvAddStr(int y, int x, const std::string& str)
 #else
   for (const auto& c : str)
   {
-    mvaddch(y, x++, PRINT(c));
+    mvaddch(y, x++, MakePrintable(c));
   }
 #endif
 }
@@ -19,7 +19,7 @@ void MvWAddStr(WINDOW* win, int y, int x, const std::string& str)
 #else
   for (const auto& c : str)
   {
-    mvwaddch(win, y, x++, PRINT(c));
+    mvwaddch(win, y, x++, MakePrintable(c));
   }
 #endif
 }
@@ -31,7 +31,7 @@ void WAddStr(WINDOW* win, const std::string& str)
 #else
   for (const auto& c : str)
   {
-    waddch(win, PRINT(c));
+    waddch(win, MakePrintable(c));
   }
 #endif
 }
