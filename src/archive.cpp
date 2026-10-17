@@ -60,7 +60,7 @@ static bool InsertArchiveDirEntry(
 
   auto de_ptr = std::make_shared<DirEntry>();
   de_ptr->name = std::move(name);
-  de_ptr->stat_struct = stat;
+  de_ptr->SetStat(stat);
 
 #ifdef DEBUG
   std::fprintf(stderr, "new dir: \"%s\"\n", de_ptr->name.c_str());
@@ -129,7 +129,7 @@ int InsertArchiveFileEntry(
   }
 
   auto fe_ptr = std::make_shared<FileEntry>();
-  fe_ptr->stat_struct = *stat;
+  fe_ptr->SetStat(*stat);
   fe_ptr->name = split.name;
 
   if (S_ISLNK(stat->st_mode))
@@ -265,8 +265,7 @@ bool TryInsertArchiveDirEntry(
 void FinalizeArchiveTree(const std::shared_ptr<DirEntry>& dir_entry)
 {
   statistic.disk_total_directories++;
-  std::memset(&dir_entry->stat_struct, 0, sizeof(struct stat));
-  dir_entry->stat_struct.st_mode = S_IFDIR;
+  dir_entry->SetMeta(archive_meta::Directory());
   MinimizeArchiveTree(dir_entry);
 }
 
@@ -426,7 +425,7 @@ void MinimizeArchiveTree(const std::shared_ptr<DirEntry>& tree)
     {
       fe_ptr->dir_entry = tree;
     }
-    tree->stat_struct = de_ptr->stat_struct;
+    tree->CopyStatFrom(*de_ptr);
     statistic.disk_total_directories--;
     tree->children = std::move(de_ptr->children);
     for (const auto& de1_ptr : tree->children)

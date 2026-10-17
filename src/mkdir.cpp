@@ -77,7 +77,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name)
     statistic.disk_total_directories++;
 
     StatOrAbort(path_str, stat_struct);
-    den_ptr->stat_struct = stat_struct;
+    den_ptr->SetStat(stat_struct);
 
     /* Sortieren durch direktes Einfuegen */
     /*------------------------------------*/

@@ -74,7 +74,7 @@ int SetFileGroup(FileEntry *fe_ptr, ChangeGroupWalkContext *ctx)
     {
       Error("stat() failed");
     } else {
-      fe_ptr->stat_struct = stat_struct;
+      fe_ptr->SetStat(stat_struct);
     }
     result = 0;
   } else {
@@ -125,7 +125,7 @@ static int SetDirGroup(DirEntry *de_ptr, int new_group_id)
     {
       Warning("stat() failed");
     } else {
-      de_ptr->stat_struct = st;
+      de_ptr->SetStat(st);
     }
 
     return 0;

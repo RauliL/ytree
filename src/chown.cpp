@@ -74,7 +74,7 @@ int SetFileOwner(FileEntry* fe_ptr, ChangeOwnerWalkContext* ctx)
     {
       Error("stat() Failed");
     } else {
-      fe_ptr->stat_struct = stat_struct;
+      fe_ptr->SetStat(stat_struct);
     }
     result = 0;
   } else {
@@ -122,7 +122,7 @@ static int SetDirOwner(DirEntry* de_ptr, int new_owner_id)
     {
       Error("stat() failed");
     } else {
-      de_ptr->stat_struct = st;
+      de_ptr->SetStat(st);
     }
 
     return 0;

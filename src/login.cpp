@@ -87,7 +87,7 @@ bool LoginDisk(const std::string& path)
   statistic.file_spec = DEFAULT_FILE_SPEC;
   statistic.tape_name = DEFAULT_TAPEDEV;
   statistic.kind_of_sort = { SortKey::Name, SortOrder::Ascending };
-  statistic.tree->stat_struct = stat_struct;
+  statistic.tree->SetStat(stat_struct);
 
 
   if( !S_ISDIR(stat_struct.st_mode) )

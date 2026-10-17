@@ -374,6 +374,7 @@ struct FileEntry
 {
   std::weak_ptr<DirEntry> dir_entry; /* back-reference to owning directory */
   struct stat stat_struct{};
+  EntryMeta meta{};
   bool tagged = false;
   bool matching = false;
   std::string name;
@@ -381,6 +382,26 @@ struct FileEntry
 
   /* Owning directory, or null if it has expired. */
   std::shared_ptr<DirEntry> Dir() const { return dir_entry.lock(); }
+
+  /** Keep stat_struct and meta in sync from a POSIX stat result. */
+  void SetStat(const struct stat& st)
+  {
+    stat_struct = st;
+    meta = EntryMeta::FromStat(st);
+  }
+
+  /** Keep stat_struct and meta in sync from portable metadata. */
+  void SetMeta(const EntryMeta& m)
+  {
+    meta = m;
+    stat_struct = m.ToStat();
+  }
+
+  void CopyStatFrom(const FileEntry& other)
+  {
+    stat_struct = other.stat_struct;
+    meta = other.meta;
+  }
 
   std::filesystem::path GetPath() const;
 
@@ -413,6 +434,7 @@ struct DirEntry : std::enable_shared_from_this<DirEntry>
   int cursor_pos = 0;
   int start_file = 0;
   struct stat stat_struct{};
+  EntryMeta meta{};
   bool access_denied = false;
   bool global_flag = false;
   bool tagged_flag = false;
@@ -424,6 +446,26 @@ struct DirEntry : std::enable_shared_from_this<DirEntry>
 
   /* Parent directory, or null for the root (or if it has expired). */
   std::shared_ptr<DirEntry> Parent() const { return parent.lock(); }
+
+  /** Keep stat_struct and meta in sync from a POSIX stat result. */
+  void SetStat(const struct stat& st)
+  {
+    stat_struct = st;
+    meta = EntryMeta::FromStat(st);
+  }
+
+  /** Keep stat_struct and meta in sync from portable metadata. */
+  void SetMeta(const EntryMeta& m)
+  {
+    meta = m;
+    stat_struct = m.ToStat();
+  }
+
+  void CopyStatFrom(const DirEntry& other)
+  {
+    stat_struct = other.stat_struct;
+    meta = other.meta;
+  }
 };
 
 struct Statistic

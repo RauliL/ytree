@@ -121,7 +121,7 @@ int MoveFile(
       /*----------------*/
       auto fen_ptr = std::make_shared<FileEntry>();
       fen_ptr->name = to_file;
-      fen_ptr->stat_struct = stat_struct;
+      fen_ptr->SetStat(stat_struct);
       fen_ptr->dir_entry   = dest_dir_entry->weak_from_this();
       fen_ptr->matching    = Match(fen_ptr->name);
       dest_dir_entry->files.insert(dest_dir_entry->files.begin(), fen_ptr);

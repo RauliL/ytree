@@ -35,7 +35,7 @@ int RenameDirectory(DirEntry* de_ptr, const std::string& new_name)
         // back-references, so it can be renamed in place: parent, children,
         // files, statistic.tree and disk_statistic.tree all stay valid.
         de_ptr->name = new_name;
-        de_ptr->stat_struct = stat_struct;
+        de_ptr->SetStat(stat_struct);
 
         result = 0;
       }
@@ -86,7 +86,7 @@ int RenameFile(
 
     // Rename in place; see RenameDirectory().
     fe_ptr->name = new_name;
-    fe_ptr->stat_struct = stat_struct;
+    fe_ptr->SetStat(stat_struct);
 
     result = 0;
 

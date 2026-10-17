@@ -111,7 +111,7 @@ int ReadTree(
       auto den_ptr = std::make_shared<DirEntry>();
       den_ptr->parent = dir_entry;
       den_ptr->name = entry_name;
-      den_ptr->stat_struct = stat_struct;
+      den_ptr->SetStat(stat_struct);
 
       ReadTree(den_ptr, new_path, depth - 1);
 
@@ -125,7 +125,7 @@ int ReadTree(
       /*----------------------------------------*/
 
       fen_ptr->name = entry_name;
-      fen_ptr->stat_struct = stat_struct;
+      fen_ptr->SetStat(stat_struct);
 
       if (S_ISLNK(stat_struct.st_mode))
       {

@@ -152,7 +152,7 @@ int SetFileModus(FileEntry *fe_ptr, ChangeModusWalkContext *ctx)
     {
       Error("stat() failed");
     } else {
-      fe_ptr->stat_struct = stat_struct;
+      fe_ptr->SetStat(stat_struct);
     }
 
     result = 0;
@@ -182,7 +182,7 @@ static int SetDirModus(DirEntry *de_ptr, const ChangeModusWalkContext& ctx)
     {
       Error("stat() Failed");
     } else {
-      de_ptr->stat_struct = st;
+      de_ptr->SetStat(st);
     }
 
     return 0;
