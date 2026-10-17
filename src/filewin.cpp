@@ -2606,9 +2606,11 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 
           if (const auto login_path = GetNewLoginPath(new_login_path))
           {
-            ctx.dir_entry->login_flag = true;
-            LoginDisk(*login_path);
-            ctx.unput_char = LOGIN_ESC;
+            if (LoginDisk(*login_path))
+            {
+              ctx.dir_entry->login_flag = true;
+              ctx.unput_char = LOGIN_ESC;
+            }
           }
           ctx.need_dsp_help = true;
         } else {

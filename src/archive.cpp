@@ -243,7 +243,7 @@ bool TryInsertArchiveDirEntry(
       if (!GetArchiveDirEntry(tree, dir_path, &de_ptr))
       {
         // Evtl. fehlender teil; ==> einfuegen
-        if (InsertArchiveDirEntry(tree, dir_path, meta))
+        if (!InsertArchiveDirEntry(tree, dir_path, meta))
         {
           return false;
         }
