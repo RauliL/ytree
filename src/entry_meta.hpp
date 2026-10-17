@@ -7,6 +7,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <system_error>
 
 #include <sys/stat.h>
 
@@ -14,7 +15,7 @@
  * Portable entry metadata shared by filesystem and archive-backed entries.
  *
  * Optional fields are unset when the source does not provide them (typical for
- * archives). Prefer this over embedding struct stat once call sites migrate.
+ * archives).
  */
 class EntryMeta
 {
@@ -85,14 +86,14 @@ public:
   /** Single-character type glyph used in file listings. */
   char TypeSymbol() const;
 
-  /**
-   * Read metadata from the real filesystem.
-   */
+  /** Read metadata from the real filesystem (POSIX lstat/stat today). */
   static std::optional<EntryMeta> FromFilesystem(const std::filesystem::path& path);
 
-  static EntryMeta FromStat(const struct stat& st);
-
-  struct stat ToStat() const;
+  /** As above, with a detailed error code on failure. */
+  static std::optional<EntryMeta> FromFilesystem(
+    const std::filesystem::path& path,
+    std::error_code& ec
+  );
 };
 
 namespace archive_meta

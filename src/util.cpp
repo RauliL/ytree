@@ -960,13 +960,16 @@ std::filesystem::path GetcwdOrDot()
   return std::filesystem::path(".");
 }
 
-void StatOrAbort(const std::string& path, struct stat& st)
+EntryMeta MetaOrAbort(const std::filesystem::path& path)
 {
-  if (!DoStat(path, st))
+  if (auto meta = EntryMeta::FromFilesystem(path))
   {
-    Error("stat() failed*ABORT");
-    std::exit(EXIT_FAILURE);
+    return *meta;
   }
+
+  Error("stat() failed*ABORT");
+  std::exit(EXIT_FAILURE);
+  return {};
 }
 
 std::optional<std::string> ReadLine(FILE* f)

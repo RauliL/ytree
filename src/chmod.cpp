@@ -133,7 +133,6 @@ bool GetNewFileModus(int y, int x, std::string& modus, const char *term)
 int SetFileModus(FileEntry *fe_ptr, ChangeModusWalkContext *ctx)
 {
   const auto path = fe_ptr->GetPath();
-  struct stat stat_struct;
   int result = -1;
   int new_modus;
 
@@ -148,11 +147,11 @@ int SetFileModus(FileEntry *fe_ptr, ChangeModusWalkContext *ctx)
   {
     /* Erfolgreich modifiziert */
     /*-------------------------*/
-    if (!DoStat(path, stat_struct))
+    if (auto meta = EntryMeta::FromFilesystem(path))
     {
-      Error("stat() failed");
+      fe_ptr->SetMeta(*meta);
     } else {
-      fe_ptr->SetStat(stat_struct);
+      Error("stat() failed");
     }
 
     result = 0;
@@ -174,15 +173,13 @@ static int SetDirModus(DirEntry *de_ptr, const ChangeModusWalkContext& ctx)
 
   if (!chmod(path.c_str(), new_modus))
   {
-    struct stat st;
-
     /* Erfolgreich modifiziert */
     /*-------------------------*/
-    if (!DoStat(path, st))
+    if (auto meta = EntryMeta::FromFilesystem(path))
     {
-      Error("stat() Failed");
+      de_ptr->SetMeta(*meta);
     } else {
-      de_ptr->SetStat(st);
+      Error("stat() Failed");
     }
 
     return 0;

@@ -382,12 +382,6 @@ struct FileEntry
   /* Owning directory, or null if it has expired. */
   std::shared_ptr<DirEntry> Dir() const { return dir_entry.lock(); }
 
-  /** Set metadata from a POSIX stat result (filesystem paths). */
-  void SetStat(const struct stat& st)
-  {
-    meta = EntryMeta::FromStat(st);
-  }
-
   void SetMeta(const EntryMeta& m)
   {
     meta = m;
@@ -440,12 +434,6 @@ struct DirEntry : std::enable_shared_from_this<DirEntry>
 
   /* Parent directory, or null for the root (or if it has expired). */
   std::shared_ptr<DirEntry> Parent() const { return parent.lock(); }
-
-  /** Set metadata from a POSIX stat result (filesystem paths). */
-  void SetStat(const struct stat& st)
-  {
-    meta = EntryMeta::FromStat(st);
-  }
 
   void SetMeta(const EntryMeta& m)
   {
@@ -827,13 +815,7 @@ const char* StrVisualIndex(const char* str, std::size_t index);
 void TruncateVisual(char* str, std::size_t max_len);
 int StrVisualLength(std::string_view str);
 void WAttrAddStr(WINDOW* win, int attr, const std::string& str);
-void StatOrAbort(const std::string& path, struct stat& st);
-bool DoStat(const std::filesystem::path& path, struct stat& st);
-void DoStat(
-  const std::filesystem::path& path,
-  struct stat& st,
-  std::error_code& ec
-);
+EntryMeta MetaOrAbort(const std::filesystem::path& path);
 std::optional<std::filesystem::path> GetXdgCachePath();
 std::optional<std::filesystem::path> GetXdgConfigPath();
 

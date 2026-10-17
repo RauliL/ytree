@@ -58,7 +58,6 @@ std::optional<std::string> GetNewOwner(int st_uid)
 int SetFileOwner(FileEntry* fe_ptr, ChangeOwnerWalkContext* ctx)
 {
   const auto path = fe_ptr->GetPath();
-  struct stat stat_struct;
   int result = -1;
   int new_owner_id;
 
@@ -70,11 +69,11 @@ int SetFileOwner(FileEntry* fe_ptr, ChangeOwnerWalkContext* ctx)
   {
     /* Erfolgreich modifiziert */
     /*-------------------------*/
-    if (!DoStat(path, stat_struct))
+    if (auto meta = EntryMeta::FromFilesystem(path))
     {
-      Error("stat() Failed");
+      fe_ptr->SetMeta(*meta);
     } else {
-      fe_ptr->SetStat(stat_struct);
+      Error("stat() Failed");
     }
     result = 0;
   } else {
@@ -114,15 +113,13 @@ static int SetDirOwner(DirEntry* de_ptr, int new_owner_id)
 
   if (!chown(path.c_str(), new_owner_id, de_ptr->meta.GidOrZero()))
   {
-    struct stat st;
-
     /* Erfolgreich modifiziert */
     /*-------------------------*/
-    if (!DoStat(path, st))
+    if (auto meta = EntryMeta::FromFilesystem(path))
     {
-      Error("stat() failed");
+      de_ptr->SetMeta(*meta);
     } else {
-      de_ptr->SetStat(st);
+      Error("stat() failed");
     }
 
     return 0;

@@ -1,5 +1,6 @@
 #include "./entry_meta.hpp"
 
+#include <cerrno>
 #include <cstring>
 
 #if defined(S_IFLNK)
@@ -36,7 +37,14 @@
 # endif
 #endif
 
-bool DoStat(const std::filesystem::path& path, struct stat& st);
+static bool StatPath(const std::filesystem::path& path, struct stat& st)
+{
+#if defined(S_IFLNK)
+  return !lstat(path.c_str(), &st);
+#else
+  return !stat(path.c_str(), &st);
+#endif
+}
 
 static std::filesystem::file_type TypeFromMode(std::uint32_t mode)
 {
@@ -181,19 +189,7 @@ char EntryMeta::TypeSymbol() const
 }
 
 
-std::optional<EntryMeta> EntryMeta::FromFilesystem(const std::filesystem::path& path)
-{
-  struct stat st{};
-
-  if (!DoStat(path, st))
-  {
-    return std::nullopt;
-  }
-
-  return FromStat(st);
-}
-
-EntryMeta EntryMeta::FromStat(const struct stat& st)
+static EntryMeta FromStat(const struct stat& st)
 {
   EntryMeta meta;
 
@@ -210,22 +206,28 @@ EntryMeta EntryMeta::FromStat(const struct stat& st)
   return meta;
 }
 
-struct stat EntryMeta::ToStat() const
+std::optional<EntryMeta> EntryMeta::FromFilesystem(
+  const std::filesystem::path& path,
+  std::error_code& ec
+)
 {
   struct stat st{};
 
-  std::memset(&st, 0, sizeof(st));
-  st.st_mode = static_cast<mode_t>(Mode());
-  st.st_size = static_cast<off_t>(size);
-  st.st_mtime = TimeToTimeT(mtime);
-  st.st_atime = TimeToTimeT(atime);
-  st.st_ctime = TimeToTimeT(ctime);
-  st.st_uid = static_cast<uid_t>(uid.value_or(0));
-  st.st_gid = static_cast<gid_t>(gid.value_or(0));
-  st.st_ino = static_cast<ino_t>(inode.value_or(0));
-  st.st_nlink = static_cast<nlink_t>(nlink.value_or(1));
+  ec.clear();
 
-  return st;
+  if (!StatPath(path, st))
+  {
+    ec.assign(errno, std::system_category());
+    return std::nullopt;
+  }
+
+  return FromStat(st);
+}
+
+std::optional<EntryMeta> EntryMeta::FromFilesystem(const std::filesystem::path& path)
+{
+  std::error_code ec;
+  return FromFilesystem(path, ec);
 }
 
 namespace archive_meta
