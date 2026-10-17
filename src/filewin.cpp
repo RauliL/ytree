@@ -398,11 +398,6 @@ static bool SortByGroup(const FileEntry* e1, const FileEntry* e2)
   }
 }
 
-void SetKindOfSort(SortKey key, SortOrder order)
-{
-  statistic.kind_of_sort = { key, order };
-}
-
 static void RemoveFileEntry(int entry_no)
 {
   file_entry_list.erase(file_entry_list.begin() + entry_no);
@@ -432,24 +427,35 @@ static void ChangeFileEntry()
   SetFileMode(file_mode); // Recalc.
 }
 
-char GetTypeOfFile(struct stat fst)
+static char GetTypeOfFile(struct stat fst)
 {
-  if ( S_ISLNK(fst.st_mode) )
+  if (S_ISLNK(fst.st_mode))
+  {
     return '@';
-  else if ( S_ISSOCK(fst.st_mode) )
+  }
+  else if (S_ISSOCK(fst.st_mode))
+  {
     return '=';
-  else if ( S_ISCHR(fst.st_mode) )
+  }
+  else if (S_ISCHR(fst.st_mode))
+  {
     return '-';
-  else if ( S_ISBLK(fst.st_mode) )
+  }
+  else if (S_ISBLK(fst.st_mode))
+  {
     return '+';
-  else if ( S_ISFIFO(fst.st_mode) )
+  }
+  else if (S_ISFIFO(fst.st_mode))
+  {
     return '|';
-  else if ( S_ISREG(fst.st_mode) )
+  }
+  else if (S_ISREG(fst.st_mode))
+  {
     return ' ';
-  else
-    return '?';
-}
+  }
 
+  return '?';
+}
 
 static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, int start_x)
 {
@@ -1343,9 +1349,9 @@ struct FileWindowContext
   int dir_window_height = 0;
 };
 
-static FileEntry* FileWindowCurrentEntry(const DirEntry* dir_entry)
+static inline const std::shared_ptr<FileEntry>& FileWindowCurrentEntry(const DirEntry* dir_entry)
 {
-  return file_entry_list[dir_entry->start_file + dir_entry->cursor_pos].get();
+  return file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
 }
 
 static void DisplayFilesAtCursor(DirEntry* dir_entry, int start_x)
@@ -1407,7 +1413,7 @@ static int ReadFileWindowKey(FileWindowContext& ctx)
     return ch;
   }
 
-  ctx.fe_ptr = FileWindowCurrentEntry(ctx.dir_entry);
+  ctx.fe_ptr = FileWindowCurrentEntry(ctx.dir_entry).get();
   if (ctx.dir_entry->global_flag)
   {
     DisplayGlobalFileParameter(ctx.fe_ptr);
@@ -1530,7 +1536,7 @@ static void ResetFileWindowHorizontalScroll(int ch, FileWindowContext& ctx)
   );
 }
 
-static void ApplyFileUserMode(int& ch, FileWindowContext& ctx)
+static void ApplyFileUserMode(int& ch, const FileWindowContext& ctx)
 {
   if (mode == Mode::USER_MODE)
   {

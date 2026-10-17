@@ -39,7 +39,7 @@ void Init(
   ReadHistory(history_file);
 
   SetFileMode(static_cast<ViewMode>(GetIntProfileValue("FILEMODE")));
-  SetKindOfSort(SortKey::Name);
+  statistic.kind_of_sort = { SortKey::Name, SortOrder::Ascending };
   bypass_small_window = GetBooleanProfileValue("NOSMALLWINDOW");
   initial_directory = GetProfileValue("INITIALDIR");
 

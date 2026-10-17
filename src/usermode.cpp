@@ -40,7 +40,7 @@ int DirUserMode(DirEntry *dir_entry, int ch)
   return RunUserMode(ch, GetUserDirAction, GetPath(dir_entry));
 }
 
-int FileUserMode(FileEntry* file_entry, int ch)
+int FileUserMode(const std::shared_ptr<FileEntry>& file_entry, int ch)
 {
   return RunUserMode(ch, GetUserFileAction, file_entry->GetRealPath());
 }
