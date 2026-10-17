@@ -58,7 +58,7 @@ bool ParseModified(std::string_view value, std::tm* tm_struct)
   return true;
 }
 
-void ApplyAttributes(std::string_view attributes, struct stat* st)
+void ApplyAttributes(std::string_view attributes, EntryMeta& meta)
 {
   // Examples: "A -rw-rw-r--", "D", "D_...."
   const bool is_dir =
@@ -69,30 +69,43 @@ void ApplyAttributes(std::string_view attributes, struct stat* st)
   if (unix_mode_pos != std::string_view::npos &&
       attributes.size() - unix_mode_pos >= 10)
   {
-    const auto mode = GetModus(std::string(attributes.substr(unix_mode_pos, 10)));
-
-    st->st_mode = mode;
+    meta.SetFromMode(static_cast<std::uint32_t>(
+      GetModus(std::string(attributes.substr(unix_mode_pos, 10)))
+    ));
     if (is_dir)
     {
-      st->st_mode = (st->st_mode & ~static_cast<mode_t>(S_IFMT)) | S_IFDIR;
+      meta.type = std::filesystem::file_type::directory;
     }
     return;
   }
 
+  using std::filesystem::perms;
+
   if (is_dir)
   {
-    st->st_mode = S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    meta.type = std::filesystem::file_type::directory;
+    meta.permissions = perms::owner_all | perms::group_read | perms::group_exec |
+                       perms::others_read | perms::others_exec;
   }
   else
   {
-    st->st_mode = S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    meta.type = std::filesystem::file_type::regular;
+    meta.permissions = perms::owner_read | perms::owner_write |
+                       perms::group_read | perms::others_read;
   }
+}
+
+EntryMeta ResetEntry()
+{
+  auto meta = archive_meta::RegularFile();
+  /* Owner/group are not in 7z listings — leave unset. */
+  return meta;
 }
 
 bool FlushEntry(
   const std::shared_ptr<DirEntry>& dir_entry,
   std::string& path_name,
-  struct stat& st,
+  EntryMeta& meta,
   bool have_path
 )
 {
@@ -107,20 +120,20 @@ bool FlushEntry(
     return true;
   }
 
-  if (IsArchiveDirectoryEntry(path_name, st))
+  if (IsArchiveDirectoryEntry(path_name, meta))
   {
     if (path_name.back() != std::filesystem::path::preferred_separator)
     {
       path_name.push_back(std::filesystem::path::preferred_separator);
     }
-    if (!TryInsertArchiveDirEntry(dir_entry, path_name.data(), st))
+    if (!TryInsertArchiveDirEntry(dir_entry, path_name.data(), meta))
     {
       FormatMessage("unknown 7z dir*{}", path_name);
 
       return false;
     }
   }
-  else if (InsertArchiveFileEntry(dir_entry, path_name, &st))
+  else if (InsertArchiveFileEntry(dir_entry, path_name, meta))
   {
     FormatMessage("unknown 7z file*{}", path_name);
 
@@ -136,15 +149,11 @@ bool FlushEntry(
 bool ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
 {
   std::string path_name;
-  struct stat st{};
+  EntryMeta meta = ResetEntry();
   bool in_entries = false;
   bool have_path = false;
 
   dir_entry->name.clear();
-  std::memset(&st, 0, sizeof(st));
-  st.st_nlink = 1;
-  st.st_uid = static_cast<uid_t>(getuid());
-  st.st_gid = static_cast<gid_t>(getgid());
 
   while (auto line = ReadLine(f))
   {
@@ -159,31 +168,24 @@ bool ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
 
     if (line->empty())
     {
-      if (!FlushEntry(dir_entry, path_name, st, have_path))
+      if (!FlushEntry(dir_entry, path_name, meta, have_path))
       {
-        return -1;
+        return false;
       }
       have_path = false;
-      std::memset(&st, 0, sizeof(st));
-      st.st_nlink = 1;
-      st.st_uid = static_cast<uid_t>(getuid());
-      st.st_gid = static_cast<gid_t>(getgid());
+      meta = ResetEntry();
       continue;
     }
 
     if (StartsWith(*line, kPathPrefix))
     {
-      if (!FlushEntry(dir_entry, path_name, st, have_path))
+      if (!FlushEntry(dir_entry, path_name, meta, have_path))
       {
-        return -1;
+        return false;
       }
       path_name = std::string(ValueAfter(*line, kPathPrefix));
       have_path = true;
-      std::memset(&st, 0, sizeof(st));
-      st.st_nlink = 1;
-      st.st_uid = static_cast<uid_t>(getuid());
-      st.st_gid = static_cast<gid_t>(getgid());
-      st.st_mode = S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+      meta = ResetEntry();
     }
     else if (StartsWith(*line, kSizePrefix))
     {
@@ -191,7 +193,7 @@ bool ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
 
       if (!value.empty() && std::isdigit(static_cast<unsigned char>(value.front())))
       {
-        st.st_size = AtoLL(value);
+        meta.size = AtoLL(value);
       }
     }
     else if (StartsWith(*line, kModifiedPrefix))
@@ -200,16 +202,16 @@ bool ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
 
       if (ParseModified(ValueAfter(*line, kModifiedPrefix), &tm_struct))
       {
-        st.st_mtime = Mktime(&tm_struct);
+        meta.mtime = std::chrono::system_clock::from_time_t(Mktime(&tm_struct));
       }
     }
     else if (StartsWith(*line, kAttributesPrefix))
     {
-      ApplyAttributes(ValueAfter(*line, kAttributesPrefix), &st);
+      ApplyAttributes(ValueAfter(*line, kAttributesPrefix), meta);
     }
   }
 
-  if (!FlushEntry(dir_entry, path_name, st, have_path))
+  if (!FlushEntry(dir_entry, path_name, meta, have_path))
   {
     return false;
   }

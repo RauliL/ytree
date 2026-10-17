@@ -5,7 +5,7 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
   std::string command_line;
   int result = -1;
 
-  if (file_entry && (file_entry->stat_struct.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
+  if (file_entry && file_entry->meta.IsExecutable())
   {
     command_line = ShellQuote(file_entry->name);
   }

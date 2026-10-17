@@ -142,7 +142,7 @@ static void ReadTaggedList(const DirEntry* dir_entry)
       const auto name_len = static_cast<std::size_t>(StrVisualLength(fe_ptr->name));
 
       file_entry_list.push_back(fe_ptr);
-      if( S_ISLNK(fe_ptr->stat_struct.st_mode) )
+      if( fe_ptr->meta.IsLink() )
       {
         const auto linkname_len = static_cast<std::size_t>(
           StrVisualLength(fe_ptr->symlink_target)
@@ -204,7 +204,7 @@ static void ReadFileList(const DirEntry* dir_entry)
       const auto name_len = static_cast<std::size_t>(StrVisualLength(fe_ptr->name));
 
       file_entry_list.push_back(fe_ptr);
-      if (S_ISLNK(fe_ptr->stat_struct.st_mode))
+      if (fe_ptr->meta.IsLink())
       {
         const auto linkname_len = static_cast<std::size_t>(
           StrVisualLength(fe_ptr->symlink_target)
@@ -301,52 +301,39 @@ static bool SortByExtension(const FileEntry* e1, const FileEntry* e2)
 static bool SortByModTime(const FileEntry* e1, const FileEntry* e2)
 {
   if (order)
-     return (e1->stat_struct.st_mtime - e2->stat_struct.st_mtime) < 0;
+     return (e1->meta.MtimeAsTimeT() - e2->meta.MtimeAsTimeT()) < 0;
   else
-     return -(e1->stat_struct.st_mtime - e2->stat_struct.st_mtime) < 0;
+     return -(e1->meta.MtimeAsTimeT() - e2->meta.MtimeAsTimeT()) < 0;
 }
 
 static bool SortByChgTime(const FileEntry* e1, const FileEntry* e2)
 {
   if (order)
-     return (e1->stat_struct.st_ctime - e2->stat_struct.st_ctime) < 0;
+     return (e1->meta.CtimeAsTimeT() - e2->meta.CtimeAsTimeT()) < 0;
   else
-     return -(e1->stat_struct.st_ctime - e2->stat_struct.st_ctime) < 0;
+     return -(e1->meta.CtimeAsTimeT() - e2->meta.CtimeAsTimeT()) < 0;
 }
 
 static bool SortByAccTime(const FileEntry* e1, const FileEntry* e2)
 {
   if (order)
-     return (e1->stat_struct.st_atime - e2->stat_struct.st_atime) < 0;
+     return (e1->meta.AtimeAsTimeT() - e2->meta.AtimeAsTimeT()) < 0;
   else
-     return -(e1->stat_struct.st_atime - e2->stat_struct.st_atime) < 0;
+     return -(e1->meta.AtimeAsTimeT() - e2->meta.AtimeAsTimeT()) < 0;
 }
 
 static bool SortBySize(const FileEntry* e1, const FileEntry* e2)
 {
   if (order)
-     return (e1->stat_struct.st_size - e2->stat_struct.st_size) < 0;
+     return (e1->meta.size - e2->meta.size) < 0;
   else
-     return -(e1->stat_struct.st_size - e2->stat_struct.st_size) < 0;
+     return -(e1->meta.size - e2->meta.size) < 0;
 }
 
 static bool SortByOwner(const FileEntry* e1, const FileEntry* e2)
 {
-  std::string n1;
-  std::string n2;
-
-  if (const auto o1 = GetPasswdName(e1->stat_struct.st_uid))
-  {
-    n1 = *o1;
-  } else {
-    n1 = std::to_string(e1->stat_struct.st_uid);
-  }
-  if (const auto o2 = GetPasswdName(e2->stat_struct.st_uid))
-  {
-    n2 = *o2;
-  } else {
-    n2 = std::to_string(e2->stat_struct.st_uid);
-  }
+  const auto n1 = FormatMetaOwner(e1->meta);
+  const auto n2 = FormatMetaOwner(e2->meta);
   if (do_case)
   {
     if (order)
@@ -366,21 +353,8 @@ static bool SortByOwner(const FileEntry* e1, const FileEntry* e2)
 
 static bool SortByGroup(const FileEntry* e1, const FileEntry* e2)
 {
-  std::string n1;
-  std::string n2;
-
-  if (const auto g1 = GetGroupName(e1->stat_struct.st_gid))
-  {
-    n1 = *g1;
-  } else {
-    n1 = std::to_string(e1->stat_struct.st_gid);
-  }
-  if (const auto g2 = GetGroupName(e2->stat_struct.st_gid))
-  {
-    n2 = *g2;
-  } else {
-    n2 = std::to_string(e2->stat_struct.st_gid);
-  }
+  const auto n1 = FormatMetaGroup(e1->meta);
+  const auto n2 = FormatMetaGroup(e2->meta);
   if (do_case)
   {
     if (order)
@@ -415,7 +389,7 @@ static void ChangeFileEntry()
     const auto length = static_cast<std::size_t>(StrVisualLength(entry->name));
 
     max_filename_len = std::max(max_filename_len, length);
-    if (S_ISLNK(entry->stat_struct.st_mode))
+    if (entry->meta.IsLink())
     {
       max_linkname_len = std::max(
         max_linkname_len,
@@ -427,35 +401,6 @@ static void ChangeFileEntry()
   SetFileMode(file_mode); // Recalc.
 }
 
-static char GetTypeOfFile(struct stat fst)
-{
-  if (S_ISLNK(fst.st_mode))
-  {
-    return '@';
-  }
-  else if (S_ISSOCK(fst.st_mode))
-  {
-    return '=';
-  }
-  else if (S_ISCHR(fst.st_mode))
-  {
-    return '-';
-  }
-  else if (S_ISBLK(fst.st_mode))
-  {
-    return '+';
-  }
-  else if (S_ISFIFO(fst.st_mode))
-  {
-    return '|';
-  }
-  else if (S_ISREG(fst.st_mode))
-  {
-    return ' ';
-  }
-
-  return '?';
-}
 
 static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, int start_x)
 {
@@ -478,14 +423,14 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
   fe_ptr = file_entry_list[entry_no];
 
-  if (fe_ptr && S_ISLNK(fe_ptr->stat_struct.st_mode))
+  if (fe_ptr && fe_ptr->meta.IsLink())
   {
     sym_link_name = fe_ptr->symlink_target.c_str();
   } else {
     sym_link_name = "";
   }
 
-  type_of_file = fe_ptr ? GetTypeOfFile(fe_ptr->stat_struct) : ' ';
+  type_of_file = fe_ptr ? fe_ptr->meta.TypeSymbol() : ' ';
 
   const auto fitted_name = fe_ptr
     ? FitVisualWidth(fe_ptr->name, max_filename_len, justify == '-')
@@ -496,33 +441,32 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   {
     case ViewMode::MODE_1 : if( fe_ptr )
       {
-        const auto attributes = GetAttributes(fe_ptr->stat_struct.st_mode);
-        const auto modify_time = CTime(fe_ptr->stat_struct.st_mtime);
+        const auto attributes = GetAttributes(fe_ptr->meta.Mode());
+        const auto modify_time = FormatMetaTime(fe_ptr->meta.mtime);
+        const auto nlink = FormatMetaNlink(fe_ptr->meta);
 
-
-
-                    if( S_ISLNK(fe_ptr->stat_struct.st_mode) )
+                    if( fe_ptr->meta.IsLink() )
         {
-          line_buffer = std::format("{}{}{} {:>10} {:3} {:11} {:>12} -> {}",
+          line_buffer = std::format("{}{}{} {:>10} {:>3} {:11} {:>12} -> {}",
               (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
               type_of_file,
               fitted_name,
               attributes,
-              fe_ptr->stat_struct.st_nlink,
-                                      (std::int64_t) fe_ptr->stat_struct.st_size,
+              nlink,
+                                      (std::int64_t) fe_ptr->meta.size,
               modify_time,
               fitted_link
 );
                     }
         else
         {
-          line_buffer = std::format("{}{}{} {:>10} {:3} {:11} {:>12}",
+          line_buffer = std::format("{}{}{} {:>10} {:>3} {:11} {:>12}",
               (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
               type_of_file,
               fitted_name,
               attributes,
-              fe_ptr->stat_struct.st_nlink,
-                                      (std::int64_t) fe_ptr->stat_struct.st_size,
+              nlink,
+                                      (std::int64_t) fe_ptr->meta.size,
               modify_time
 );
                     }
@@ -543,18 +487,17 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     case ViewMode::MODE_2 : if( fe_ptr )
       {
-        const auto owner = GetPasswdName(fe_ptr->stat_struct.st_uid)
-          .value_or(std::to_string(fe_ptr->stat_struct.st_uid));
-        const auto group = GetGroupName(fe_ptr->stat_struct.st_gid)
-          .value_or(std::to_string(fe_ptr->stat_struct.st_gid));
+        const auto owner = FormatMetaOwner(fe_ptr->meta);
+        const auto group = FormatMetaGroup(fe_ptr->meta);
+        const auto inode = FormatMetaInode(fe_ptr->meta);
 
-                    if( S_ISLNK(fe_ptr->stat_struct.st_mode) )
+                    if( fe_ptr->meta.IsLink() )
         {
-                      line_buffer = std::format("{}{}{} {:10} {:<12} {:<12} -> {}",
+                      line_buffer = std::format("{}{}{} {:>10} {:<12} {:<12} -> {}",
               (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
               type_of_file,
               fitted_name,
-              (std::int64_t)fe_ptr->stat_struct.st_ino,
+              inode,
               owner,
               group,
               fitted_link
@@ -562,11 +505,11 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
                     }
         else
         {
-                      line_buffer = std::format("{}{}{} {:10} {:<12} {:<12}",
+                      line_buffer = std::format("{}{}{} {:>10} {:<12} {:<12}",
               (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
               type_of_file,
               fitted_name,
-              (std::int64_t)fe_ptr->stat_struct.st_ino,
+              inode,
               owner,
               group
 );
@@ -608,10 +551,10 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     case ViewMode::MODE_4 : if( fe_ptr )
       {
-        const auto change_time = CTime(fe_ptr->stat_struct.st_ctime);
-        const auto access_time = CTime(fe_ptr->stat_struct.st_atime);
+        const auto change_time = FormatMetaTime(fe_ptr->meta.ctime);
+        const auto access_time = FormatMetaTime(fe_ptr->meta.atime);
 
-                    if( S_ISLNK(fe_ptr->stat_struct.st_mode) )
+                    if( fe_ptr->meta.IsLink() )
         {
                       line_buffer = std::format("{}{}{} Chg: {:>12}  Acc: {:>12} -> {}",
               (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
@@ -1832,9 +1775,9 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           ctx.start_x
 );
                   ctx.de_ptr->tagged_files++;
-            ctx.de_ptr->tagged_bytes += ctx.fe_ptr->stat_struct.st_size;
+            ctx.de_ptr->tagged_bytes += ctx.fe_ptr->meta.size;
                   statistic.disk_tagged_files++;
-            statistic.disk_tagged_bytes += ctx.fe_ptr->stat_struct.st_size;
+            statistic.disk_tagged_bytes += ctx.fe_ptr->meta.size;
       if( ctx.dir_entry->global_flag )
         DisplayDiskTagged();
       else
@@ -1858,9 +1801,9 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 );
 
       ctx.de_ptr->tagged_files--;
-      ctx.de_ptr->tagged_bytes -= ctx.fe_ptr->stat_struct.st_size;
+      ctx.de_ptr->tagged_bytes -= ctx.fe_ptr->meta.size;
       statistic.disk_tagged_files--;
-      statistic.disk_tagged_bytes -= ctx.fe_ptr->stat_struct.st_size;
+      statistic.disk_tagged_bytes -= ctx.fe_ptr->meta.size;
       if( ctx.dir_entry->global_flag )
         DisplayDiskTagged();
       else
@@ -1903,7 +1846,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 
       if( !ctx.fe_ptr->tagged )
       {
-        ctx.file_size = ctx.fe_ptr->stat_struct.st_size;
+        ctx.file_size = ctx.fe_ptr->meta.size;
 
         ctx.fe_ptr->tagged = true;
         ctx.de_ptr->tagged_files++;
@@ -1934,7 +1877,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 
       if( ctx.fe_ptr->tagged )
       {
-        ctx.file_size = ctx.fe_ptr->stat_struct.st_size;
+        ctx.file_size = ctx.fe_ptr->meta.size;
 
         ctx.fe_ptr->tagged = false;
         ctx.de_ptr->tagged_files--;
@@ -1967,7 +1910,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 
       if( !ctx.fe_ptr->tagged )
       {
-        ctx.file_size = ctx.fe_ptr->stat_struct.st_size;
+        ctx.file_size = ctx.fe_ptr->meta.size;
 
         ctx.fe_ptr->tagged = true;
         ctx.de_ptr->tagged_files++;
@@ -1999,7 +1942,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 
       if( ctx.fe_ptr->tagged )
       {
-        ctx.file_size = ctx.fe_ptr->stat_struct.st_size;
+        ctx.file_size = ctx.fe_ptr->meta.size;
 
         ctx.fe_ptr->tagged = false;
         ctx.de_ptr->tagged_files--;

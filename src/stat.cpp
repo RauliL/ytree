@@ -167,7 +167,7 @@ void DisplayGlobalFileParameter(FileEntry *file_entry)
     GLOBAL_COLOR,
     HIGLOBAL_COLOR
   );
-  PrettyPrintNumber(19, COLS - 17, (std::int64_t) file_entry->stat_struct.st_size);
+  PrettyPrintNumber(19, COLS - 17, (std::int64_t) file_entry->meta.size);
   RefreshWindow(stdscr);
 }
 
@@ -184,7 +184,7 @@ void DisplayFileParameter(FileEntry *file_entry)
     MENU_COLOR,
     HIMENUS_COLOR
   );
-  PrettyPrintNumber(19, COLS - 17, (std::int64_t)file_entry->stat_struct.st_size);
+  PrettyPrintNumber(19, COLS - 17, (std::int64_t)file_entry->meta.size);
   RefreshWindow(stdscr);
 }
 

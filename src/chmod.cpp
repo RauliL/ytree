@@ -16,7 +16,7 @@ int ChangeFileModus(FileEntry *fe_ptr)
     return( result );
   }
 
-  auto modus = GetAttributes(fe_ptr->stat_struct.st_mode);
+  auto modus = GetAttributes(fe_ptr->meta.Mode());
 
   if( GetNewFileModus(LINES - 2, 1, modus, "\r\033") )
   {
@@ -46,7 +46,7 @@ int ChangeDirModus(DirEntry *de_ptr)
     return( result );
   }
 
-  auto modus = GetAttributes(de_ptr->stat_struct.st_mode);
+  auto modus = GetAttributes(de_ptr->meta.Mode());
 
   if( GetNewFileModus(LINES - 2, 1, modus, "\r\033") )
   {
@@ -133,26 +133,25 @@ bool GetNewFileModus(int y, int x, std::string& modus, const char *term)
 int SetFileModus(FileEntry *fe_ptr, ChangeModusWalkContext *ctx)
 {
   const auto path = fe_ptr->GetPath();
-  struct stat stat_struct;
   int result = -1;
   int new_modus;
 
   ctx->new_fe_ptr = fe_ptr; // unchanged
 
-  new_modus = GetNewModus(fe_ptr->stat_struct.st_mode, ctx->new_modus);
+  new_modus = GetNewModus(fe_ptr->meta.Mode(), ctx->new_modus);
 
-  new_modus = new_modus | ( fe_ptr->stat_struct.st_mode &
+  new_modus = new_modus | ( fe_ptr->meta.Mode() &
         ~( S_IRWXO | S_IRWXG | S_IRWXU | S_ISGID | S_ISUID ) );
 
   if (!chmod(path.c_str(), new_modus))
   {
     /* Erfolgreich modifiziert */
     /*-------------------------*/
-    if (!DoStat(path, stat_struct))
+    if (auto meta = EntryMeta::FromFilesystem(path))
     {
-      Error("stat() failed");
+      fe_ptr->SetMeta(*meta);
     } else {
-      fe_ptr->stat_struct = stat_struct;
+      Error("stat() failed");
     }
 
     result = 0;
@@ -166,23 +165,21 @@ int SetFileModus(FileEntry *fe_ptr, ChangeModusWalkContext *ctx)
 static int SetDirModus(DirEntry *de_ptr, const ChangeModusWalkContext& ctx)
 {
   const auto path = GetPath(de_ptr);
-  auto new_modus = GetNewModus(de_ptr->stat_struct.st_mode, ctx.new_modus);
+  auto new_modus = GetNewModus(de_ptr->meta.Mode(), ctx.new_modus);
 
-  new_modus = new_modus | (de_ptr->stat_struct.st_mode & ~(
+  new_modus = new_modus | (de_ptr->meta.Mode() & ~(
     S_IRWXO | S_IRWXG | S_IRWXU | S_ISGID | S_ISUID
   ));
 
   if (!chmod(path.c_str(), new_modus))
   {
-    struct stat st;
-
     /* Erfolgreich modifiziert */
     /*-------------------------*/
-    if (!DoStat(path, st))
+    if (auto meta = EntryMeta::FromFilesystem(path))
     {
-      Error("stat() Failed");
+      de_ptr->SetMeta(*meta);
     } else {
-      de_ptr->stat_struct = st;
+      Error("stat() Failed");
     }
 
     return 0;

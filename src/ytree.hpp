@@ -4,6 +4,7 @@
 #define _FILE_OFFSET_BITS 64
 
 #include "./config.hpp"
+#include "./entry_meta.hpp"
 
 #include <cstdint>
 #include <cstdio>
@@ -372,7 +373,7 @@ struct DirEntry;
 struct FileEntry
 {
   std::weak_ptr<DirEntry> dir_entry; /* back-reference to owning directory */
-  struct stat stat_struct{};
+  EntryMeta meta{};
   bool tagged = false;
   bool matching = false;
   std::string name;
@@ -380,6 +381,16 @@ struct FileEntry
 
   /* Owning directory, or null if it has expired. */
   std::shared_ptr<DirEntry> Dir() const { return dir_entry.lock(); }
+
+  void SetMeta(const EntryMeta& m)
+  {
+    meta = m;
+  }
+
+  void CopyMetaFrom(const FileEntry& other)
+  {
+    meta = other.meta;
+  }
 
   std::filesystem::path GetPath() const;
 
@@ -411,7 +422,7 @@ struct DirEntry : std::enable_shared_from_this<DirEntry>
   unsigned int tagged_files = 0;
   int cursor_pos = 0;
   int start_file = 0;
-  struct stat stat_struct{};
+  EntryMeta meta{};
   bool access_denied = false;
   bool global_flag = false;
   bool tagged_flag = false;
@@ -423,6 +434,16 @@ struct DirEntry : std::enable_shared_from_this<DirEntry>
 
   /* Parent directory, or null for the root (or if it has expired). */
   std::shared_ptr<DirEntry> Parent() const { return parent.lock(); }
+
+  void SetMeta(const EntryMeta& m)
+  {
+    meta = m;
+  }
+
+  void CopyMetaFrom(const DirEntry& other)
+  {
+    meta = other.meta;
+  }
 };
 
 struct Statistic
@@ -604,6 +625,14 @@ extern int  RenameDirectory(DirEntry *de_ptr, const std::string& new_name);
 extern int  RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_fe_ptr);
 std::optional<std::string> GetRenameParameter(const std::string* old_name);
 std::string CTime(std::time_t f_time);
+
+/** Display helpers: unset optional EntryMeta fields render as "-". */
+std::string FormatMetaTime(const std::optional<EntryMeta::time_type>& tp);
+std::string FormatMetaOwner(const EntryMeta& meta);
+std::string FormatMetaGroup(const EntryMeta& meta);
+std::string FormatMetaInode(const EntryMeta& meta);
+std::string FormatMetaNlink(const EntryMeta& meta);
+
 bool LoginDisk(const std::string& path);
 std::optional<std::string> GetNewLoginPath(const std::string& initial);
 void PrintSpecialString(WINDOW* win, int y, int x, const std::string& str, int color);
@@ -631,41 +660,35 @@ extern std::time_t Mktime(std::tm *tm);
 bool TryInsertArchiveDirEntry(
   const std::shared_ptr<DirEntry>& tree,
   const char* dir,
-  struct stat& stat
+  const EntryMeta& meta
 );
 int InsertArchiveFileEntry(
   const std::shared_ptr<DirEntry>& tree,
   const std::string& path,
-  struct stat *stat,
+  const EntryMeta& meta,
   std::string symlink_target = {}
 );
 void MinimizeArchiveTree(const std::shared_ptr<DirEntry>& tree);
 void FinalizeArchiveTree(const std::shared_ptr<DirEntry>& dir_entry);
 
 using ArchiveLineFilter = bool (*)(std::string_view line);
-using ArchiveStatParser = int (*)(std::string_view line, std::string& name, struct stat* st);
-using ArchiveStatParserWithLink = int (*)(
-  std::string_view line,
-  std::string& name,
-  std::string& symlink_target,
-  struct stat* st
-);
+using ArchiveMetaParser = std::optional<archive_meta::NamedEntry> (*)(std::string_view line);
 
 bool ReadArchiveListingFilesOnly(
   const std::shared_ptr<DirEntry>& dir_entry,
   FILE* f,
   ArchiveLineFilter is_entry,
-  ArchiveStatParser parse,
+  ArchiveMetaParser parse,
   std::string_view unknown_tag
 );
 bool ReadArchiveListingWithDirs(
   const std::shared_ptr<DirEntry>& dir_entry,
   FILE* f,
-  ArchiveStatParserWithLink parse,
+  ArchiveMetaParser parse,
   std::string_view unknown_tag
 );
 
-bool IsArchiveDirectoryEntry(const std::string& path, const struct stat& st);
+bool IsArchiveDirectoryEntry(const std::string& path, const EntryMeta& meta);
 
 inline constexpr std::string_view kArchiveMonthNames[12] = {
   "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
@@ -682,12 +705,6 @@ inline std::optional<int> ArchiveMonthIndex(std::string_view name)
     }
   }
   return std::nullopt;
-}
-
-inline void InitArchiveStat(struct stat* st)
-{
-  std::memset(st, 0, sizeof(*st));
-  st->st_nlink = 1;
 }
 extern void HitReturnToContinue();
 std::string BuildFilename(
@@ -806,13 +823,7 @@ const char* StrVisualIndex(const char* str, std::size_t index);
 void TruncateVisual(char* str, std::size_t max_len);
 int StrVisualLength(std::string_view str);
 void WAttrAddStr(WINDOW* win, int attr, const std::string& str);
-void StatOrAbort(const std::string& path, struct stat& st);
-bool DoStat(const std::filesystem::path& path, struct stat& st);
-void DoStat(
-  const std::filesystem::path& path,
-  struct stat& st,
-  std::error_code& ec
-);
+EntryMeta MetaOrAbort(const std::filesystem::path& path);
 std::optional<std::filesystem::path> GetXdgCachePath();
 std::optional<std::filesystem::path> GetXdgConfigPath();
 

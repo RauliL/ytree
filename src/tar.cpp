@@ -1,46 +1,40 @@
 #include "./ytree.hpp"
 
-static int GetStatFromTAR(
-  std::string_view tar_line,
-  std::string& name,
-  std::string& symlink_target,
-  struct stat *stat
-);
-
 /**
  * Dateibaum aus TAR-Listing lesen.
  */
 bool ReadTreeFromTAR(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
 {
-  return ReadArchiveListingWithDirs(dir_entry, f, GetStatFromTAR, "tarinfo");
+  return ReadArchiveListingWithDirs(
+    dir_entry,
+    f,
+    archive_meta::ParseTarListing,
+    "tarinfo"
+  );
 }
 
-static int GetStatFromTAR(
-  std::string_view tar_line,
-  std::string& name,
-  std::string& symlink_target,
-  struct stat *stat
+std::optional<archive_meta::NamedEntry> archive_meta::ParseTarListing(
+  std::string_view tar_line
 )
 {
   int id;
   std::tm tm_struct{};
-
-  InitArchiveStat(stat);
-  symlink_target.clear();
+  NamedEntry entry;
 
   StringTokenizer tok(tar_line);
 
   auto t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* Attribute */
   /*-----------*/
 
-  if (t->size() != 10) return -1;
-  stat->st_mode = GetModus(std::string(*t));
+  if (t->size() != 10) return std::nullopt;
+  entry.meta.SetFromMode(static_cast<std::uint32_t>(GetModus(std::string(*t))));
+  entry.meta.nlink = 1;
 
   t = tok.Next(" \t/");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* Owner */
   /*-------*/
@@ -52,10 +46,10 @@ static int GetStatFromTAR(
   {
     id = SvAtoi(*t);
   }
-  stat->st_uid = static_cast<uid_t>(id);
+  entry.meta.uid = static_cast<std::uint32_t>(id);
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* Group */
   /*-------*/
@@ -67,19 +61,22 @@ static int GetStatFromTAR(
   {
     id = SvAtoi(*t);
   }
-  stat->st_gid = static_cast<gid_t>(id);
+  entry.meta.gid = static_cast<std::uint32_t>(id);
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* Dateilaenge */
   /*-------------*/
 
-  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0]))) return -1;
-  stat->st_size = AtoLL(*t);
+  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0])))
+  {
+    return std::nullopt;
+  }
+  entry.meta.size = AtoLL(*t);
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* M-Datum */
   /*---------*/
@@ -89,68 +86,66 @@ static int GetStatFromTAR(
     tm_struct.tm_mon = *month;
 
     t = tok.Next(" \t");
-    if (!t) return -1;
+    if (!t) return std::nullopt;
     tm_struct.tm_mday = SvAtoi(*t);
 
     t = tok.Next(" \t:");
-    if (!t) return -1;
+    if (!t) return std::nullopt;
     tm_struct.tm_hour = SvAtoi(*t);
 
     t = tok.Next(" \t");
-    if (!t) return -1;
+    if (!t) return std::nullopt;
     tm_struct.tm_min = SvAtoi(*t);
 
     t = tok.Next(" \t");
-    if (!t) return -1;
+    if (!t) return std::nullopt;
     tm_struct.tm_year = SvAtoi(*t) - 1900;
 
     t = tok.Next(" \t");
-    if (!t) return -1;
+    if (!t) return std::nullopt;
   }
   else
   {
     /* YYYY-MM-DD form */
-    if (t->size() < 10) return -1;
+    if (t->size() < 10) return std::nullopt;
 
     tm_struct.tm_year = SvAtoi(t->substr(0, 4)) - 1900;
     tm_struct.tm_mon = SvAtoi(t->substr(5, 2)) - 1;
     tm_struct.tm_mday = SvAtoi(t->substr(8, 2));
 
     t = tok.Next(" \t:");
-    if (!t) return -1;
+    if (!t) return std::nullopt;
     tm_struct.tm_hour = SvAtoi(*t);
 
     t = tok.Next(" \t");
-    if (!t) return -1;
+    if (!t) return std::nullopt;
     tm_struct.tm_min = SvAtoi(*t);
 
     t = tok.Next(" \t");
-    if (!t) return -1;
+    if (!t) return std::nullopt;
   }
 
   tm_struct.tm_sec = 0;
   tm_struct.tm_isdst = -1;
 
-  stat->st_atime = 0;
-  stat->st_ctime = 0;
-  stat->st_mtime = Mktime(&tm_struct);
+  entry.meta.mtime = std::chrono::system_clock::from_time_t(Mktime(&tm_struct));
 
   /* Dateiname */
   /*-----------*/
 
-  name = *t;
+  entry.name = *t;
 
-  if (S_ISLNK(stat->st_mode))
+  if (entry.meta.IsLink())
   {
     /* Symbolischer Link */
     /*-------------------*/
 
     t = tok.Next(" \t");
-    if (!t) return -1;  /* "->" */
+    if (!t) return std::nullopt;  /* "->" */
     t = tok.Next(" \t");
-    if (!t) return -1;
-    symlink_target = *t;
+    if (!t) return std::nullopt;
+    entry.symlink_target = *t;
   }
 
-  return 0;
+  return entry;
 }

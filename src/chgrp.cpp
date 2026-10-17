@@ -17,7 +17,7 @@ int ChangeFileGroup(FileEntry *fe_ptr)
     return( result );
   }
 
-  if (const auto group = GetNewGroup(fe_ptr->stat_struct.st_gid))
+  if (const auto group = GetNewGroup(fe_ptr->meta.GidOrZero()))
   {
     if (const auto group_id_ptr = GetGroupId(*group))
     {
@@ -55,7 +55,6 @@ std::optional<std::string> GetNewGroup(int st_gid)
 int SetFileGroup(FileEntry *fe_ptr, ChangeGroupWalkContext *ctx)
 {
   const auto path = fe_ptr->GetPath();
-  struct stat stat_struct;
   int  result;
   int  new_group_id;
 
@@ -65,16 +64,16 @@ int SetFileGroup(FileEntry *fe_ptr, ChangeGroupWalkContext *ctx)
 
   new_group_id = ctx->new_group_id;
 
-  if (!chown(path.c_str(), fe_ptr->stat_struct.st_uid, new_group_id))
+  if (!chown(path.c_str(), fe_ptr->meta.UidOrZero(), new_group_id))
   {
     /* Erfolgreich modifiziert */
     /*-------------------------*/
 
-    if (!DoStat(path, stat_struct))
+    if (auto meta = EntryMeta::FromFilesystem(path))
     {
-      Error("stat() failed");
+      fe_ptr->SetMeta(*meta);
     } else {
-      fe_ptr->stat_struct = stat_struct;
+      Error("stat() failed");
     }
     result = 0;
   } else {
@@ -99,7 +98,7 @@ int ChangeDirGroup(DirEntry *de_ptr)
     return( result );
   }
 
-  if (const auto group = GetNewGroup(de_ptr->stat_struct.st_gid))
+  if (const auto group = GetNewGroup(de_ptr->meta.GidOrZero()))
   {
     if (const auto group_id_ptr = GetGroupId(*group))
     {
@@ -115,17 +114,15 @@ static int SetDirGroup(DirEntry *de_ptr, int new_group_id)
 {
   const auto path = GetPath(de_ptr);
 
-  if (!chown(path.c_str(), de_ptr->stat_struct.st_uid, new_group_id))
+  if (!chown(path.c_str(), de_ptr->meta.UidOrZero(), new_group_id))
   {
-    struct stat st;
-
     /* Erfolgreich modifiziert */
     /*-------------------------*/
-    if (!DoStat(path, st))
+    if (auto meta = EntryMeta::FromFilesystem(path))
     {
-      Warning("stat() failed");
+      de_ptr->SetMeta(*meta);
     } else {
-      de_ptr->stat_struct = st;
+      Warning("stat() failed");
     }
 
     return 0;

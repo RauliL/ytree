@@ -14,7 +14,6 @@ int RenameDirectory(DirEntry* de_ptr, const std::string& new_name)
   const auto from_path = GetPath(de_ptr);
   const std::filesystem::path from_fs_path(from_path);
   std::string to_path;
-  struct stat stat_struct;
   int result = -1;
 
   if (!from_fs_path.has_filename() ||
@@ -29,13 +28,11 @@ int RenameDirectory(DirEntry* de_ptr, const std::string& new_name)
     {
       if (RenameDirEntry(to_path, from_path))
       {
-        StatOrAbort(to_path, stat_struct);
-
         // The entry is owned by shared_ptr and only holds weak
         // back-references, so it can be renamed in place: parent, children,
         // files, statistic.tree and disk_statistic.tree all stay valid.
         de_ptr->name = new_name;
-        de_ptr->stat_struct = stat_struct;
+        de_ptr->SetMeta(MetaOrAbort(to_path));
 
         result = 0;
       }
@@ -64,7 +61,6 @@ int RenameFile(
   const auto from_path = fe_ptr->GetPath();
   const auto to_path =
     (std::filesystem::path(GetPath(de_ptr.get())) / new_name).string();
-  struct stat stat_struct;
   int result = -1;
 
   *new_fe_ptr = fe_ptr;
@@ -82,11 +78,9 @@ int RenameFile(
 
   if (RenameFileEntry(to_path, from_path))
   {
-    StatOrAbort(to_path, stat_struct);
-
     // Rename in place; see RenameDirectory().
     fe_ptr->name = new_name;
-    fe_ptr->stat_struct = stat_struct;
+    fe_ptr->SetMeta(MetaOrAbort(to_path));
 
     result = 0;
 

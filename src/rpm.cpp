@@ -1,80 +1,81 @@
 #include "./ytree.hpp"
 
-static int GetStatFromRPM(
-  std::string_view rpm_line,
-  std::string& name,
-  std::string& symlink_target,
-  struct stat *stat
-);
-
 /**
  * Dateibaum aus RPM-Listing lesen.
  */
 bool ReadTreeFromRPM(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
 {
-  return ReadArchiveListingWithDirs(dir_entry, f, GetStatFromRPM, "rpminfo");
+  return ReadArchiveListingWithDirs(
+    dir_entry,
+    f,
+    archive_meta::ParseRpmListing,
+    "rpminfo"
+  );
 }
 
-static int GetStatFromRPM(
-  std::string_view rpm_line,
-  std::string& name,
-  std::string& symlink_target,
-  struct stat *stat
+std::optional<archive_meta::NamedEntry> archive_meta::ParseRpmListing(
+  std::string_view rpm_line
 )
 {
   int id;
-
-  InitArchiveStat(stat);
-  symlink_target.clear();
+  NamedEntry entry;
+  entry.meta.nlink = 1;
 
   StringTokenizer tok(rpm_line);
 
   auto t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* Dateiname */
   /*-----------*/
 
-  name = *t;
+  entry.name = *t;
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* Dateilaenge */
   /*-------------*/
 
-  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0]))) return -1;
-  stat->st_size = AtoLL(*t);
+  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0])))
+  {
+    return std::nullopt;
+  }
+  entry.meta.size = AtoLL(*t);
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* M-Datum */
   /*---------*/
 
-  stat->st_atime = 0;
-  stat->st_ctime = 0;
-  stat->st_mtime = SvAtoi(*t);
+  {
+    const auto mtime = static_cast<std::time_t>(SvAtoi(*t));
+    if (mtime != 0)
+    {
+      entry.meta.mtime = std::chrono::system_clock::from_time_t(mtime);
+    }
+  }
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* M5 */
   if (t->size() > 20)
   {
     t = tok.Next(" \t/");
-    if (!t) return -1;
+    if (!t) return std::nullopt;
   }
 
   /* Attribute */
   /*-----------*/
 
-  stat->st_mode = static_cast<mode_t>(
+  entry.meta.SetFromMode(static_cast<std::uint32_t>(
     std::strtoul(std::string(*t).c_str(), nullptr, 8)
-  );
+  ));
 
   t = tok.Next(" \t/");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* Owner */
   /*-------*/
@@ -86,10 +87,10 @@ static int GetStatFromRPM(
   {
     id = SvAtoi(*t);
   }
-  stat->st_uid = static_cast<uid_t>(id);
+  entry.meta.uid = static_cast<std::uint32_t>(id);
 
   t = tok.Next(" \t");
-  if (!t) return -1;
+  if (!t) return std::nullopt;
 
   /* Group */
   /*-------*/
@@ -101,15 +102,15 @@ static int GetStatFromRPM(
   {
     id = SvAtoi(*t);
   }
-  stat->st_gid = static_cast<gid_t>(id);
+  entry.meta.gid = static_cast<std::uint32_t>(id);
 
-  if (S_ISLNK(stat->st_mode))
+  if (entry.meta.IsLink())
   {
     /* Symbolischer Link */
     /*-------------------*/
 
-    symlink_target = "symlink";
+    entry.symlink_target = "symlink";
   }
 
-  return 0;
+  return entry;
 }

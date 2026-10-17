@@ -20,7 +20,7 @@ std::filesystem::path FileEntry::GetRealPath() const
     return GetPath();
   }
 
-  if (S_ISLNK(stat_struct.st_mode))
+  if (meta.IsLink())
   {
     if (IsAbsolute(symlink_target))
     {
@@ -31,37 +31,6 @@ std::filesystem::path FileEntry::GetRealPath() const
   }
 
   return ::GetPath(Dir().get()) / name;
-}
-
-bool DoStat(const std::filesystem::path& path, struct stat& st)
-{
-#if defined(S_IFLNK)
-  return !lstat(path.c_str(), &st);
-#else
-  return !stat(path.c_str(), &st);
-#endif
-}
-
-void DoStat(
-  const std::filesystem::path& path,
-  struct stat& st,
-  std::error_code& ec
-)
-{
-  bool result;
-
-  ec.clear();
-
-#if defined(S_IFLNK)
-  result = !lstat(path.c_str(), &st);
-#else
-  result = !stat(path.c_str(), &st);
-#endif
-
-  if (!result)
-  {
-    ec.assign(errno, std::system_category());
-  }
 }
 
 std::optional<std::filesystem::path> GetXdgConfigPath()

@@ -27,7 +27,6 @@ static const std::unordered_map<Mode, read_tree_callback> read_tree_mapping({
 
 bool LoginDisk(const std::string& path)
 {
-  struct stat stat_struct;
   std::string command_line;
   std::optional<CompressMethod> file_method;
   int    pid;
@@ -68,8 +67,8 @@ bool LoginDisk(const std::string& path)
   }
 
   std::error_code ec;
-  DoStat(path, stat_struct, ec);
-  if (ec)
+  auto root_meta = EntryMeta::FromFilesystem(path, ec);
+  if (!root_meta)
   {
     // Stat failed.
     FormatMessage("Can't access*\"{}\"*{}", path, ec.message());
@@ -87,10 +86,10 @@ bool LoginDisk(const std::string& path)
   statistic.file_spec = DEFAULT_FILE_SPEC;
   statistic.tape_name = DEFAULT_TAPEDEV;
   statistic.kind_of_sort = { SortKey::Name, SortOrder::Ascending };
-  statistic.tree->stat_struct = stat_struct;
+  statistic.tree->SetMeta(*root_meta);
 
 
-  if( !S_ISDIR(stat_struct.st_mode) )
+  if( !root_meta->IsDir() )
   {
     /* No Directory ==> TAR_FILE/RPM/ZOO/ZIP/LHA/ARC_FILE */
     /*----------------------------------------------------*/

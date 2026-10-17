@@ -36,7 +36,6 @@ std::optional<std::string> MakeDirectory(DirEntry *father_dir_entry)
 
 int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name)
 {
-  struct stat stat_struct;
   int result = -1;
 
   if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
@@ -76,8 +75,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name)
 
     statistic.disk_total_directories++;
 
-    StatOrAbort(path_str, stat_struct);
-    den_ptr->stat_struct = stat_struct;
+    den_ptr->SetMeta(MetaOrAbort(path_str));
 
     /* Sortieren durch direktes Einfuegen */
     /*------------------------------------*/

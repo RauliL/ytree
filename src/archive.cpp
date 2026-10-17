@@ -11,7 +11,7 @@ static bool GetArchiveDirEntry(
 static bool InsertArchiveDirEntry(
   const std::shared_ptr<DirEntry>& tree,
   const std::string& path,
-  const struct stat& stat
+  const EntryMeta& meta
 )
 {
   DirEntry* df_ptr;
@@ -60,7 +60,7 @@ static bool InsertArchiveDirEntry(
 
   auto de_ptr = std::make_shared<DirEntry>();
   de_ptr->name = std::move(name);
-  de_ptr->stat_struct = stat;
+  de_ptr->SetMeta(meta);
 
 #ifdef DEBUG
   std::fprintf(stderr, "new dir: \"%s\"\n", de_ptr->name.c_str());
@@ -92,12 +92,11 @@ static bool InsertArchiveDirEntry(
 int InsertArchiveFileEntry(
   const std::shared_ptr<DirEntry>& tree,
   const std::string& path,
-  struct stat *stat,
+  const EntryMeta& meta,
   std::string symlink_target
 )
 {
   DirEntry *de_ptr;
-  struct stat stat_struct;
 
   if (KeyPressed())
   {
@@ -113,10 +112,7 @@ int InsertArchiveFileEntry(
                  path.c_str());
 #endif
 
-    std::memset(&stat_struct, 0, sizeof(struct stat));
-    stat_struct.st_mode = S_IFDIR;
-
-    if (!TryInsertArchiveDirEntry(tree, split.dir.c_str(), stat_struct))
+    if (!TryInsertArchiveDirEntry(tree, split.dir.c_str(), archive_meta::Directory()))
     {
       Error("Inserting directory failed");
       return -1;
@@ -129,19 +125,19 @@ int InsertArchiveFileEntry(
   }
 
   auto fe_ptr = std::make_shared<FileEntry>();
-  fe_ptr->stat_struct = *stat;
+  fe_ptr->SetMeta(meta);
   fe_ptr->name = split.name;
 
-  if (S_ISLNK(stat->st_mode))
+  if (meta.IsLink())
   {
     fe_ptr->symlink_target = std::move(symlink_target);
   }
 
   fe_ptr->dir_entry = de_ptr->weak_from_this();
   de_ptr->total_files++;
-  de_ptr->total_bytes += stat->st_size;
+  de_ptr->total_bytes += meta.size;
   statistic.disk_total_files++;
-  statistic.disk_total_bytes += stat->st_size;
+  statistic.disk_total_bytes += meta.size;
 
   // Einklinken
 
@@ -226,7 +222,7 @@ static bool GetArchiveDirEntry(
 bool TryInsertArchiveDirEntry(
   const std::shared_ptr<DirEntry>& tree,
   const char* dir,
-  struct stat& stat
+  const EntryMeta& meta
 )
 {
   DirEntry *de_ptr;
@@ -247,7 +243,7 @@ bool TryInsertArchiveDirEntry(
       if (!GetArchiveDirEntry(tree, dir_path, &de_ptr))
       {
         // Evtl. fehlender teil; ==> einfuegen
-        if (InsertArchiveDirEntry(tree, dir_path, stat))
+        if (InsertArchiveDirEntry(tree, dir_path, meta))
         {
           return false;
         }
@@ -265,14 +261,13 @@ bool TryInsertArchiveDirEntry(
 void FinalizeArchiveTree(const std::shared_ptr<DirEntry>& dir_entry)
 {
   statistic.disk_total_directories++;
-  std::memset(&dir_entry->stat_struct, 0, sizeof(struct stat));
-  dir_entry->stat_struct.st_mode = S_IFDIR;
+  dir_entry->SetMeta(archive_meta::Directory());
   MinimizeArchiveTree(dir_entry);
 }
 
-bool IsArchiveDirectoryEntry(const std::string& path, const struct stat& st)
+bool IsArchiveDirectoryEntry(const std::string& path, const EntryMeta& meta)
 {
-  return S_ISDIR(st.st_mode) ||
+  return meta.IsDir() ||
          path == "." ||
          (!path.empty() &&
           path.back() == std::filesystem::path::preferred_separator);
@@ -282,7 +277,7 @@ bool ReadArchiveListingFilesOnly(
   const std::shared_ptr<DirEntry>& dir_entry,
   FILE* f,
   ArchiveLineFilter is_entry,
-  ArchiveStatParser parse,
+  ArchiveMetaParser parse,
   std::string_view unknown_tag
 )
 {
@@ -295,17 +290,21 @@ bool ReadArchiveListingFilesOnly(
       continue;
     }
 
-    struct stat st;
-    std::string path_name;
+    const auto parsed = parse(*line);
 
-    if (parse(*line, path_name, &st))
+    if (!parsed)
     {
       FormatMessage("unknown {}*{}", unknown_tag, *line);
     } else {
 #ifdef DEBUG
-      std::fprintf(stderr, "FILE: \"%s\"\n", path_name.c_str());
+      std::fprintf(stderr, "FILE: \"%s\"\n", parsed->name.c_str());
 #endif
-      InsertArchiveFileEntry(dir_entry, path_name, &st);
+      InsertArchiveFileEntry(
+        dir_entry,
+        parsed->name,
+        parsed->meta,
+        parsed->symlink_target
+      );
     }
   }
 
@@ -317,7 +316,7 @@ bool ReadArchiveListingFilesOnly(
 bool ReadArchiveListingWithDirs(
   const std::shared_ptr<DirEntry>& dir_entry,
   FILE* f,
-  ArchiveStatParserWithLink parse,
+  ArchiveMetaParser parse,
   std::string_view unknown_tag
 )
 {
@@ -325,30 +324,33 @@ bool ReadArchiveListingWithDirs(
 
   while (auto line = ReadLine(f))
   {
-    struct stat st;
-    std::string path_name;
-    std::string symlink_target;
+    auto parsed = parse(*line);
 
-    if (parse(*line, path_name, symlink_target, &st))
+    if (!parsed)
     {
       FormatMessage("unknown {}*{}", unknown_tag, *line);
     }
-    else if (IsArchiveDirectoryEntry(path_name, st))
+    else if (IsArchiveDirectoryEntry(parsed->name, parsed->meta))
     {
 #ifdef DEBUG
-      std::fprintf(stderr, "DIR: %s\n", path_name.c_str());
+      std::fprintf(stderr, "DIR: %s\n", parsed->name.c_str());
 #endif
-      if (path_name != "./")
+      if (parsed->name != "./")
       {
-        TryInsertArchiveDirEntry(dir_entry, path_name.c_str(), st);
+        TryInsertArchiveDirEntry(dir_entry, parsed->name.c_str(), parsed->meta);
         DisplayDiskStatistic();
         doupdate();
       }
     } else {
 #ifdef DEBUG
-      std::fprintf(stderr, "FILE: \"%s\"\n", path_name.c_str());
+      std::fprintf(stderr, "FILE: \"%s\"\n", parsed->name.c_str());
 #endif
-      InsertArchiveFileEntry(dir_entry, path_name, &st, std::move(symlink_target));
+      InsertArchiveFileEntry(
+        dir_entry,
+        parsed->name,
+        parsed->meta,
+        std::move(parsed->symlink_target)
+      );
     }
   }
 
@@ -426,7 +428,7 @@ void MinimizeArchiveTree(const std::shared_ptr<DirEntry>& tree)
     {
       fe_ptr->dir_entry = tree;
     }
-    tree->stat_struct = de_ptr->stat_struct;
+    tree->CopyMetaFrom(*de_ptr);
     statistic.disk_total_directories--;
     tree->children = std::move(de_ptr->children);
     for (const auto& de1_ptr : tree->children)

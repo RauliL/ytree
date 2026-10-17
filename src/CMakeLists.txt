@@ -100,6 +100,7 @@ add_executable(
   dirwin.cpp
   disp.cpp
   edit.cpp
+  entry_meta.cpp
   error.cpp
   execute.cpp
   filespec.cpp

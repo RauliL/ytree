@@ -13,7 +13,6 @@ int ReadTree(
   int depth
 )
 {
-  struct stat   stat_struct;
   int   file_count;
   std::vector<std::shared_ptr<DirEntry>> new_children;
   std::vector<std::shared_ptr<FileEntry>> new_files;
@@ -37,8 +36,10 @@ int ReadTree(
   dir_entry->big_window     = false;
   dir_entry->not_scanned    = false;
 
-  if( S_ISBLK(dir_entry->stat_struct.st_mode) )
-    return( 0 ); /* Block-Device */
+  if (dir_entry->meta.IsBlock())
+  {
+    return 0; // Block device
+  }
 
   if (depth < 0)
   {
@@ -94,8 +95,8 @@ int ReadTree(
     new_path = it->path();
 
     std::error_code ec;
-    DoStat(new_path, stat_struct, ec);
-    if (ec)
+    auto entry_meta = EntryMeta::FromFilesystem(new_path, ec);
+    if (!entry_meta)
     {
       if (ec.value() != EACCES)
       {
@@ -104,14 +105,14 @@ int ReadTree(
       continue;
     }
 
-    if (S_ISDIR(stat_struct.st_mode))
+    if (entry_meta->IsDir())
     {
       /* Directory-Entry */
       /*-----------------*/
       auto den_ptr = std::make_shared<DirEntry>();
       den_ptr->parent = dir_entry;
       den_ptr->name = entry_name;
-      den_ptr->stat_struct = stat_struct;
+      den_ptr->SetMeta(*entry_meta);
 
       ReadTree(den_ptr, new_path, depth - 1);
 
@@ -125,9 +126,9 @@ int ReadTree(
       /*----------------------------------------*/
 
       fen_ptr->name = entry_name;
-      fen_ptr->stat_struct = stat_struct;
+      fen_ptr->SetMeta(*entry_meta);
 
-      if (S_ISLNK(stat_struct.st_mode))
+      if (entry_meta->IsLink())
       {
         char link_path[PATH_LENGTH + 1];
         const auto n = readlink(new_path.c_str(), link_path, sizeof(link_path));
@@ -145,9 +146,9 @@ int ReadTree(
       fen_ptr->dir_entry = dir_entry;
       new_files.push_back(fen_ptr);
       dir_entry->total_files++;
-      dir_entry->total_bytes += stat_struct.st_size;
+      dir_entry->total_bytes += entry_meta->size;
       statistic.disk_total_files++;
-      statistic.disk_total_bytes += stat_struct.st_size;
+      statistic.disk_total_bytes += entry_meta->size;
     }
   }
 

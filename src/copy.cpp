@@ -19,7 +19,6 @@ int CopyFile(
   std::filesystem::path to_fs_path;
   std::string to_path;
   FileEntry   *dest_file_entry;
-  struct stat stat_struct;
   int         term;
   int         result;
   int       refresh_dirwindow = false;
@@ -172,16 +171,16 @@ int CopyFile(
     /* File wurde kopiert */
     /*--------------------*/
 
-    if( chmod(to_path.c_str(), fe_ptr->stat_struct.st_mode) == -1 )
+    if( chmod(to_path.c_str(), fe_ptr->meta.Mode()) == -1 )
     {
-      FormatWarning("Can't chmod file*\"{}\"*to mode {}*IGNORED", to_path.c_str(), GetAttributes(fe_ptr->stat_struct.st_mode));
+      FormatWarning("Can't chmod file*\"{}\"*to mode {}*IGNORED", to_path.c_str(), GetAttributes(fe_ptr->meta.Mode()));
     }
 
     if( dest_dir_entry )
     {
-      StatOrAbort(to_path, stat_struct);
+      const auto meta = MetaOrAbort(to_path);
 
-      file_size = stat_struct.st_size;
+      file_size = meta.size;
 
       dest_dir_entry->total_bytes += file_size;
       dest_dir_entry->total_files++;
@@ -196,7 +195,7 @@ int CopyFile(
       /*----------------*/
       auto fen_ptr = std::make_shared<FileEntry>();
       fen_ptr->name = to_file;
-      fen_ptr->stat_struct = stat_struct;
+      fen_ptr->SetMeta(meta);
       fen_ptr->dir_entry   = dest_dir_entry->weak_from_this();
       fen_ptr->matching    = Match(fen_ptr->name);
       dest_dir_entry->files.insert(dest_dir_entry->files.begin(), fen_ptr);

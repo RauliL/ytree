@@ -8,7 +8,7 @@ int DeleteFile(FileEntry* fe_ptr)
   int result = -1;
   std::error_code ec;
 
-  if (!S_ISLNK(fe_ptr->stat_struct.st_mode))
+  if (!fe_ptr->meta.IsLink())
   {
     if (!IsWriteable(filepath))
     {
@@ -23,7 +23,7 @@ int DeleteFile(FileEntry* fe_ptr)
       term = InputChoise(
         std::format(
           "overriding mode {:04o} for \"{}\" (Y/N) ? ",
-          fe_ptr->stat_struct.st_mode & 0777,
+          fe_ptr->meta.Mode() & 0777,
           fe_ptr->name
         ),
         "YN\033"
@@ -73,7 +73,7 @@ int RemoveFile(FileEntry *fe_ptr)
     return -1;
   }
 
-  file_size = fe_ptr->stat_struct.st_size;
+  file_size = fe_ptr->meta.size;
 
   de_ptr->total_bytes -= file_size;
   de_ptr->total_files--;
