@@ -107,23 +107,23 @@ bool FlushEntry(
     return true;
   }
 
-  if (S_ISDIR(st.st_mode) ||
-      (!path_name.empty() &&
-       path_name.back() == std::filesystem::path::preferred_separator))
+  if (IsArchiveDirectoryEntry(path_name, st))
   {
     if (path_name.back() != std::filesystem::path::preferred_separator)
     {
       path_name.push_back(std::filesystem::path::preferred_separator);
     }
-    if (TryInsertArchiveDirEntry(dir_entry, path_name.data(), &st))
+    if (!TryInsertArchiveDirEntry(dir_entry, path_name.data(), st))
     {
       FormatMessage("unknown 7z dir*{}", path_name);
+
       return false;
     }
   }
   else if (InsertArchiveFileEntry(dir_entry, path_name, &st))
   {
     FormatMessage("unknown 7z file*{}", path_name);
+
     return false;
   }
 
@@ -133,13 +133,12 @@ bool FlushEntry(
 
 } // namespace
 
-int ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
+bool ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
 {
   std::string path_name;
   struct stat st{};
   bool in_entries = false;
   bool have_path = false;
-  bool dir_flag = false;
 
   dir_entry->name.clear();
   std::memset(&st, 0, sizeof(st));
@@ -189,6 +188,7 @@ int ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
     else if (StartsWith(*line, kSizePrefix))
     {
       const auto value = ValueAfter(*line, kSizePrefix);
+
       if (!value.empty() && std::isdigit(static_cast<unsigned char>(value.front())))
       {
         st.st_size = AtoLL(value);
@@ -211,15 +211,9 @@ int ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
 
   if (!FlushEntry(dir_entry, path_name, st, have_path))
   {
-    return -1;
+    return false;
   }
 
-  if (!dir_flag)
-  {
-    statistic.disk_total_directories++;
-    std::memset(&dir_entry->stat_struct, 0, sizeof(struct stat));
-    dir_entry->stat_struct.st_mode = S_IFDIR;
-  }
-
-  return MinimizeArchiveTree(dir_entry);
+  FinalizeArchiveTree(dir_entry);
+  return true;
 }

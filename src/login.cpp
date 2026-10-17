@@ -1,4 +1,29 @@
+#include <functional>
+
 #include "./ytree.hpp"
+
+using read_tree_callback = std::function<
+  bool(const std::shared_ptr<DirEntry>&, FILE*)
+>;
+
+bool ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>&, FILE*);
+bool ReadTreeFromARC(const std::shared_ptr<DirEntry>&, FILE*);
+bool ReadTreeFromLHA(const std::shared_ptr<DirEntry>&, FILE*);
+bool ReadTreeFromRAR(const std::shared_ptr<DirEntry>&, FILE*);
+bool ReadTreeFromRPM(const std::shared_ptr<DirEntry>&, FILE*);
+bool ReadTreeFromTAR(const std::shared_ptr<DirEntry>&, FILE*);
+bool ReadTreeFromZIP(const std::shared_ptr<DirEntry>&, FILE*);
+bool ReadTreeFromZOO(const std::shared_ptr<DirEntry>&, FILE*);
+
+static const std::unordered_map<Mode, read_tree_callback> read_tree_mapping({
+  { Mode::ARC_FILE_MODE, ReadTreeFromARC },
+  { Mode::LHA_FILE_MODE, ReadTreeFromLHA },
+  { Mode::RAR_FILE_MODE, ReadTreeFromRAR },
+  { Mode::RPM_FILE_MODE, ReadTreeFromRPM },
+  { Mode::SEVENZIP_FILE_MODE, ReadTreeFrom7ZIP },
+  { Mode::ZIP_FILE_MODE, ReadTreeFromZIP },
+  { Mode::ZOO_FILE_MODE, ReadTreeFromZOO },
+});
 
 bool LoginDisk(const std::string& path)
 {
@@ -464,15 +489,11 @@ bool LoginDisk(const std::string& path)
     }
     else if( pid == 0 )
     {
-      /* Sohn */
-      /*------*/
+      // Sohn.
 
       close(p[0]);
       close(1);
-      if (dup(p[1]) == -1)
-      {
-  /* fprintf(stderr, "dup failed\n" ); */
-      }
+      dup(p[1]);
       close(p[1]);
 
       if (result == 0 && SilentSystemCall(command_line))
@@ -481,11 +502,9 @@ bool LoginDisk(const std::string& path)
         // std::fprintf(stderr, "system(%s)*failed\n", command_line);
       }
       std::exit(result);
-    }
-    else
-    {
-      /* Vater */
-      /*-------*/
+    } else {
+      // Vater.
+      read_tree_callback callback = ReadTreeFromTAR;
 
       close(p[1]);
       status = 0;
@@ -497,88 +516,23 @@ bool LoginDisk(const std::string& path)
         return false;
       }
 
-      if( mode == Mode::ZOO_FILE_MODE )
+      if (
+        const auto it = read_tree_mapping.find(mode);
+        it != std::end(read_tree_mapping)
+      )
       {
-  if( ReadTreeFromZOO(statistic.tree, f) )
-        {
-    Error("ReadTreeFromZOO() failed");
-          std::fclose(f);
-    wait(&status);
-          return false;
-  }
+        callback = it->second;
       }
-      else if( mode == Mode::RPM_FILE_MODE )
+      if (!callback(statistic.tree, f))
       {
-  if( ReadTreeFromRPM(statistic.tree, f) )
-        {
-    Error("ReadTreeFromRPM() failed");
-          std::fclose(f);
-    wait(&status);
-          return false;
-  }
-      }
-      else if( mode == Mode::LHA_FILE_MODE )
-      {
-  if( ReadTreeFromLHA(statistic.tree, f) )
-        {
-    Error("ReadTreeFromLHA() failed");
-          std::fclose(f);
-    wait(&status);
-          return false;
-  }
-      }
-      else if( mode == Mode::ZIP_FILE_MODE )
-      {
-  if( ReadTreeFromZIP(statistic.tree, f) )
-        {
-    Error("ReadTreeFromZIP() failed");
-          std::fclose(f);
-    wait(&status);
-          return false;
-  }
-      }
-      else if( mode == Mode::ARC_FILE_MODE )
-      {
-  if( ReadTreeFromARC(statistic.tree, f) )
-        {
-    Error("ReadTreeFromARC() failed");
-          std::fclose(f);
-    wait(&status);
-          return false;
-  }
-      }
-      else if( mode == Mode::RAR_FILE_MODE )
-      {
-  if( ReadTreeFromRAR(statistic.tree, f) )
-        {
-    Error("ReadTreeFromRAR() failed");
-          std::fclose(f);
-    wait(&status);
-          return false;
-  }
-      }
-      else if (mode == Mode::SEVENZIP_FILE_MODE)
-      {
-        if (ReadTreeFrom7ZIP(statistic.tree, f))
-        {
-          Error("ReadTreeFrom7ZIP() failed");
-          std::fclose(f);
-          wait(&status);
-          return false;
-        }
-      }
-      else
-      {
-        if( ReadTreeFromTAR(statistic.tree, f) )
-        {
-          Error("ReadTreeFromTAR() failed");
-          std::fclose(f);
-    wait(&status);
-          return false;
-        }
+        Error("Reading tree from archive failed");
+        std::fclose(f);
+        wait(&status);
+
+        return false;
       }
       wait(&status);
-      if(status)
+      if (status)
       {
         FormatMessage("ReadTarFile() failed*can't execute*{}", command_line);
       }

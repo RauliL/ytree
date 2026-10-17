@@ -7,74 +7,13 @@ static int GetStatFromRPM(
   struct stat *stat
 );
 
-/* Dateibaum aus RPM-Listing lesen */
-/*---------------------------------*/
-int ReadTreeFromRPM(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
+/**
+ * Dateibaum aus RPM-Listing lesen.
+ */
+bool ReadTreeFromRPM(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
 {
-  struct stat st;
-  bool dir_flag = false;
-
-  dir_entry->name.clear();
-
-  while (auto line = ReadLine(f))
-  {
-    std::string path_name;
-    std::string symlink_target;
-
-    if (GetStatFromRPM(*line, path_name, symlink_target, &st))
-    {
-      FormatMessage("unknown rpminfo*{}", *line);
-    }
-    else
-    {
-      if (
-        (!path_name.empty() &&
-         path_name.back() == std::filesystem::path::preferred_separator) ||
-        path_name == "." ||
-        S_ISDIR(st.st_mode)
-      )
-      {
-        /* Directory */
-        /*-----------*/
-
-#ifdef DEBUG
-        std::fprintf(stderr, "DIR: %s\n", path_name.c_str());
-#endif
-
-        if (path_name != "./")
-        {
-          /* "./" wird ignoriert */
-          /*---------------------*/
-
-          TryInsertArchiveDirEntry(dir_entry, path_name.c_str(), &st);
-          DisplayDiskStatistic();
-          doupdate();
-        }
-      }
-      else
-      {
-        /* File */
-        /*------*/
-
-#ifdef DEBUG
-        std::fprintf(stderr, "FILE: \"%s\"\n", path_name.c_str());
-#endif
-        InsertArchiveFileEntry(dir_entry, path_name, &st, std::move(symlink_target));
-      }
-    }
-  }
-
-  if (dir_flag == false)
-  {
-    statistic.disk_total_directories++;
-    std::memset(&dir_entry->stat_struct, 0, sizeof(struct stat));
-    dir_entry->stat_struct.st_mode = S_IFDIR;
-  }
-  return MinimizeArchiveTree(dir_entry);
+  return ReadArchiveListingWithDirs(dir_entry, f, GetStatFromRPM, "rpminfo");
 }
-
-
-
 
 static int GetStatFromRPM(
   std::string_view rpm_line,
@@ -85,8 +24,7 @@ static int GetStatFromRPM(
 {
   int id;
 
-  std::memset(stat, 0, sizeof(struct stat));
-  stat->st_nlink = 1;
+  InitArchiveStat(stat);
   symlink_target.clear();
 
   StringTokenizer tok(rpm_line);

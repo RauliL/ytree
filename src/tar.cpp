@@ -7,74 +7,13 @@ static int GetStatFromTAR(
   struct stat *stat
 );
 
-/* Dateibaum aus TAR-Listing lesen */
-/*---------------------------------*/
-int ReadTreeFromTAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
+/**
+ * Dateibaum aus TAR-Listing lesen.
+ */
+bool ReadTreeFromTAR(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
 {
-  struct stat st;
-  bool dir_flag = false;
-
-  dir_entry->name.clear();
-
-  while (auto line = ReadLine(f))
-  {
-    std::string path_name;
-    std::string symlink_target;
-
-    if (GetStatFromTAR(*line, path_name, symlink_target, &st))
-    {
-      FormatMessage("unknown tarinfo*{}", *line);
-    }
-    else
-    {
-      if (
-        (!path_name.empty() &&
-         path_name.back() == std::filesystem::path::preferred_separator) ||
-        path_name == "." ||
-        line->starts_with('d')
-      )
-      {
-        /* Directory */
-        /*-----------*/
-
-#ifdef DEBUG
-        std::fprintf(stderr, "DIR: %s\n", path_name.c_str());
-#endif
-
-        if (path_name != "./")
-        {
-          /* "./" wird ignoriert */
-          /*---------------------*/
-
-          TryInsertArchiveDirEntry(dir_entry, path_name.c_str(), &st);
-          DisplayDiskStatistic();
-          doupdate();
-        }
-      }
-      else
-      {
-        /* File */
-        /*------*/
-
-#ifdef DEBUG
-        std::fprintf(stderr, "FILE: \"%s\"\n", path_name.c_str());
-#endif
-        InsertArchiveFileEntry(dir_entry, path_name, &st, std::move(symlink_target));
-      }
-    }
-  }
-
-  if (dir_flag == false)
-  {
-    statistic.disk_total_directories++;
-    std::memset(&dir_entry->stat_struct, 0, sizeof(struct stat));
-    dir_entry->stat_struct.st_mode = S_IFDIR;
-  }
-  return MinimizeArchiveTree(dir_entry);
+  return ReadArchiveListingWithDirs(dir_entry, f, GetStatFromTAR, "tarinfo");
 }
-
-
-
 
 static int GetStatFromTAR(
   std::string_view tar_line,
@@ -83,15 +22,10 @@ static int GetStatFromTAR(
   struct stat *stat
 )
 {
-  int i, id;
+  int id;
   std::tm tm_struct{};
-  static constexpr std::string_view month[] = {
-    "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  };
 
-  std::memset(stat, 0, sizeof(struct stat));
-  stat->st_nlink = 1;
+  InitArchiveStat(stat);
   symlink_target.clear();
 
   StringTokenizer tok(tar_line);
@@ -150,11 +84,30 @@ static int GetStatFromTAR(
   /* M-Datum */
   /*---------*/
 
-  for (i = 0; i < 12; i++)
+  if (const auto month = ArchiveMonthIndex(*t))
   {
-    if (*t == month[i]) break;
+    tm_struct.tm_mon = *month;
+
+    t = tok.Next(" \t");
+    if (!t) return -1;
+    tm_struct.tm_mday = SvAtoi(*t);
+
+    t = tok.Next(" \t:");
+    if (!t) return -1;
+    tm_struct.tm_hour = SvAtoi(*t);
+
+    t = tok.Next(" \t");
+    if (!t) return -1;
+    tm_struct.tm_min = SvAtoi(*t);
+
+    t = tok.Next(" \t");
+    if (!t) return -1;
+    tm_struct.tm_year = SvAtoi(*t) - 1900;
+
+    t = tok.Next(" \t");
+    if (!t) return -1;
   }
-  if (i >= 12)
+  else
   {
     /* YYYY-MM-DD form */
     if (t->size() < 10) return -1;
@@ -173,31 +126,7 @@ static int GetStatFromTAR(
 
     t = tok.Next(" \t");
     if (!t) return -1;
-    goto XDATE;
   }
-
-  tm_struct.tm_mon = i;
-
-  t = tok.Next(" \t");
-  if (!t) return -1;
-  tm_struct.tm_mday = SvAtoi(*t);
-
-  t = tok.Next(" \t:");
-  if (!t) return -1;
-  tm_struct.tm_hour = SvAtoi(*t);
-
-  t = tok.Next(" \t");
-  if (!t) return -1;
-  tm_struct.tm_min = SvAtoi(*t);
-
-  t = tok.Next(" \t");
-  if (!t) return -1;
-  tm_struct.tm_year = SvAtoi(*t) - 1900;
-
-  t = tok.Next(" \t");
-  if (!t) return -1;
-
-XDATE:
 
   tm_struct.tm_sec = 0;
   tm_struct.tm_isdst = -1;

@@ -2,66 +2,29 @@
 
 static int GetStatFromZIP(std::string_view zip_line, std::string& name, struct stat *stat);
 
-/* Dateibaum aus ZIP-Listing lesen */
-/*---------------------------------*/
-int ReadTreeFromZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
+/**
+ * Dateibaum aus ZIP-Listing lesen.
+ */
+bool ReadTreeFromZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
 {
-  struct stat st;
-  bool dir_flag = false;
-
-  dir_entry->name.clear();
-
-  while (auto line = ReadLine(f))
-  {
-    if (line->size() > 58 &&
-        ((*line)[56] == ':' ||
-         ((*line)[57] != 'd' && (*line)[58] == ':')))
-    {
-      /* gueltiger Eintrag */
-      /*-------------------*/
-
-      std::string path_name;
-
-      if (GetStatFromZIP(*line, path_name, &st))
-      {
-        FormatMessage("unknown zipinfo*{}", *line);
-      }
-      else
-      {
-        /* File */
-        /*------*/
-
-#ifdef DEBUG
-        std::fprintf(stderr, "FILE: \"%s\"\n", path_name.c_str());
-#endif
-        InsertArchiveFileEntry(dir_entry, path_name, &st);
-      }
-    }
-  }
-
-  if (dir_flag == false)
-  {
-    statistic.disk_total_directories++;
-    std::memset(&dir_entry->stat_struct, 0, sizeof(struct stat));
-    dir_entry->stat_struct.st_mode = S_IFDIR;
-  }
-  return MinimizeArchiveTree(dir_entry);
+  return ReadArchiveListingFilesOnly(
+    dir_entry,
+    f,
+    [](std::string_view line) {
+      return line.size() > 58 &&
+             (line[56] == ':' || (line[57] != 'd' && line[58] == ':'));
+    },
+    GetStatFromZIP,
+    "zipinfo"
+  );
 }
-
-
-
 
 static int GetStatFromZIP(std::string_view zip_line, std::string& name, struct stat *stat)
 {
-  int i, id;
+  int id;
   std::tm tm_struct{};
-  static constexpr std::string_view month[] = {
-    "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  };
 
-  std::memset(stat, 0, sizeof(struct stat));
-  stat->st_nlink = 1;
+  InitArchiveStat(stat);
 
   StringTokenizer tok(zip_line);
 
@@ -133,13 +96,7 @@ static int GetStatFromZIP(std::string_view zip_line, std::string& name, struct s
   t = tok.Next(" \t-");
   if (!t) return -1;
 
-  for (i = 0; i < 12; i++)
-  {
-    if (*t == month[i]) break;
-  }
-  if (i >= 12) i = 0;
-
-  tm_struct.tm_mon = i;
+  tm_struct.tm_mon = ArchiveMonthIndex(*t).value_or(0);
 
   t = tok.Next(" \t");
   if (!t) return -1;

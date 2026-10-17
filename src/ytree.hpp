@@ -490,14 +490,6 @@ extern void DisplayGlobalFileParameter(FileEntry *file_entry);
 void RefreshWindow(WINDOW* win);
 int ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path, int depth);
 extern void UnReadTree(DirEntry *dir_entry);
-extern int  ReadTreeFromTAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
-extern int  ReadTreeFromRPM(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
-extern int  ReadTreeFromZOO(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
-extern int  ReadTreeFromZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
-extern int  ReadTreeFromLHA(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
-extern int  ReadTreeFromARC(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
-extern int  ReadTreeFromRAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f);
-int ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f);
 bool GetDiskParameter(
   const std::string& path,
   std::string* volume_name,
@@ -636,14 +628,67 @@ std::string MakeExtractCommandLine(
 );
 std::optional<std::string> MakeDirectory(DirEntry *father_dir_entry);
 extern std::time_t Mktime(std::tm *tm);
-extern int TryInsertArchiveDirEntry(const std::shared_ptr<DirEntry>& tree, const char *dir, struct stat *stat);
+bool TryInsertArchiveDirEntry(
+  const std::shared_ptr<DirEntry>& tree,
+  const char* dir,
+  struct stat& stat
+);
 int InsertArchiveFileEntry(
   const std::shared_ptr<DirEntry>& tree,
   const std::string& path,
   struct stat *stat,
   std::string symlink_target = {}
 );
-extern int MinimizeArchiveTree(const std::shared_ptr<DirEntry>& tree);
+void MinimizeArchiveTree(const std::shared_ptr<DirEntry>& tree);
+void FinalizeArchiveTree(const std::shared_ptr<DirEntry>& dir_entry);
+
+using ArchiveLineFilter = bool (*)(std::string_view line);
+using ArchiveStatParser = int (*)(std::string_view line, std::string& name, struct stat* st);
+using ArchiveStatParserWithLink = int (*)(
+  std::string_view line,
+  std::string& name,
+  std::string& symlink_target,
+  struct stat* st
+);
+
+bool ReadArchiveListingFilesOnly(
+  const std::shared_ptr<DirEntry>& dir_entry,
+  FILE* f,
+  ArchiveLineFilter is_entry,
+  ArchiveStatParser parse,
+  std::string_view unknown_tag
+);
+bool ReadArchiveListingWithDirs(
+  const std::shared_ptr<DirEntry>& dir_entry,
+  FILE* f,
+  ArchiveStatParserWithLink parse,
+  std::string_view unknown_tag
+);
+
+bool IsArchiveDirectoryEntry(const std::string& path, const struct stat& st);
+
+inline constexpr std::string_view kArchiveMonthNames[12] = {
+  "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+};
+
+inline std::optional<int> ArchiveMonthIndex(std::string_view name)
+{
+  for (int i = 0; i < 12; ++i)
+  {
+    if (name == kArchiveMonthNames[i])
+    {
+      return i;
+    }
+  }
+  return std::nullopt;
+}
+
+inline void InitArchiveStat(struct stat* st)
+{
+  std::memset(st, 0, sizeof(*st));
+  st->st_nlink = 1;
+}
 extern void HitReturnToContinue();
 std::string BuildFilename(
   const std::string& in_filename,

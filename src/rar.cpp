@@ -2,61 +2,28 @@
 
 static int GetStatFromRAR(std::string_view rar_line, std::string& name, struct stat *stat);
 
-/* Dateibaum aus RAR-Listing lesen */
-/*---------------------------------*/
-
-int ReadTreeFromRAR(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
+/**
+ * Dateibaum aus RAR-Listing lesen.
+ */
+bool ReadTreeFromRAR(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
 {
-  struct stat st;
-  bool dir_flag = false;
-
-  dir_entry->name.clear();
-
-  while (auto line = ReadLine(f))
-  {
-    if (line->size() > 48 && (*line)[48] == ':')
-    {
-      /* gueltiger Eintrag */
-      /*-------------------*/
-
-      std::string path_name;
-
-      if (GetStatFromRAR(*line, path_name, &st))
-      {
-        FormatMessage("unknown rarinfo*{}", *line);
-      }
-      else
-      {
-        /* File */
-        /*------*/
-
-#ifdef DEBUG
-        std::fprintf(stderr, "FILE: \"%s\"\n", path_name.c_str());
-#endif
-        InsertArchiveFileEntry(dir_entry, path_name, &st);
-      }
-    }
-  }
-
-  if (dir_flag == false)
-  {
-    statistic.disk_total_directories++;
-    std::memset(&dir_entry->stat_struct, 0, sizeof(struct stat));
-    dir_entry->stat_struct.st_mode = S_IFDIR;
-  }
-  return MinimizeArchiveTree(dir_entry);
+  return ReadArchiveListingFilesOnly(
+    dir_entry,
+    f,
+    [](std::string_view line) {
+      return line.size() > 48 && line[48] == ':';
+    },
+    GetStatFromRAR,
+    "rarinfo"
+  );
 }
-
-
-
 
 static int GetStatFromRAR(std::string_view rar_line, std::string& name, struct stat *stat)
 {
   int id;
   std::tm tm_struct{};
 
-  std::memset(stat, 0, sizeof(struct stat));
-  stat->st_nlink = 1;
+  InitArchiveStat(stat);
 
   StringTokenizer tok(rar_line);
 

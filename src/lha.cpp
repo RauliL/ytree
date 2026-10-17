@@ -2,68 +2,32 @@
 
 static int GetStatFromLHA(std::string_view lha_line, std::string& name, struct stat *stat);
 
-/* Dateibaum aus LHA-Listing lesen */
-/*---------------------------------*/
-
-int ReadTreeFromLHA(const std::shared_ptr<DirEntry>& dir_entry, FILE *f)
+/**
+ * Dateibaum aus LHA-Listing lesen.
+ */
+bool ReadTreeFromLHA(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
 {
-  struct stat st;
-  bool dir_flag = false;
-
-  dir_entry->name.clear();
-
-  while (auto line = ReadLine(f))
-  {
-    if (((line->size() > 55 && (*line)[55] == ':') ||
-         (line->size() > 61 && (*line)[61] == ':')) &&
-        (*line)[34] != '*' && !std::string_view(*line).substr(1).starts_with("Total"))
-    {
-      /* gueltiger Eintrag */
-      /*-------------------*/
-
-      std::string path_name;
-
-      if (GetStatFromLHA(*line, path_name, &st))
-      {
-        FormatMessage("unknown lhainfo*{}", *line);
-      }
-      else
-      {
-        /* File */
-        /*------*/
-
-#ifdef DEBUG
-        std::fprintf(stderr, "FILE: \"%s\"\n", path_name.c_str());
-#endif
-        InsertArchiveFileEntry(dir_entry, path_name, &st);
-      }
-    }
-  }
-
-  if (dir_flag == false)
-  {
-    statistic.disk_total_directories++;
-    std::memset(&dir_entry->stat_struct, 0, sizeof(struct stat));
-    dir_entry->stat_struct.st_mode = S_IFDIR;
-  }
-  return MinimizeArchiveTree(dir_entry);
+  return ReadArchiveListingFilesOnly(
+    dir_entry,
+    f,
+    [](std::string_view line) {
+      return ((line.size() > 55 && line[55] == ':') ||
+              (line.size() > 61 && line[61] == ':')) &&
+             line[34] != '*' &&
+             !line.substr(1).starts_with("Total");
+    },
+    GetStatFromLHA,
+    "lhainfo"
+  );
 }
-
-
-
 
 static int GetStatFromLHA(std::string_view lha_line, std::string& name, struct stat *stat)
 {
   bool dos_mode = false;
-  int i, id;
+  int id;
   std::tm tm_struct{};
-  static constexpr std::string_view month[] = {
-    "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  };
 
-  std::memset(stat, 0, sizeof(struct stat));
-  stat->st_nlink = 1;
+  InitArchiveStat(stat);
 
   StringTokenizer tok(lha_line);
 
@@ -157,13 +121,7 @@ static int GetStatFromLHA(std::string_view lha_line, std::string& name, struct s
   /* M-Datum */
   /*---------*/
 
-  for (i = 0; i < 12; i++)
-  {
-    if (*t == month[i]) break;
-  }
-  if (i >= 12) i = 0;
-
-  tm_struct.tm_mon = i;
+  tm_struct.tm_mon = ArchiveMonthIndex(*t).value_or(0);
 
   t = tok.Next(" \t");
   if (!t) return -1;
