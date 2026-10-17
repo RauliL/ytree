@@ -332,21 +332,8 @@ static bool SortBySize(const FileEntry* e1, const FileEntry* e2)
 
 static bool SortByOwner(const FileEntry* e1, const FileEntry* e2)
 {
-  std::string n1;
-  std::string n2;
-
-  if (const auto o1 = GetPasswdName(e1->meta.UidOrZero()))
-  {
-    n1 = *o1;
-  } else {
-    n1 = std::to_string(e1->meta.UidOrZero());
-  }
-  if (const auto o2 = GetPasswdName(e2->meta.UidOrZero()))
-  {
-    n2 = *o2;
-  } else {
-    n2 = std::to_string(e2->meta.UidOrZero());
-  }
+  const auto n1 = FormatMetaOwner(e1->meta);
+  const auto n2 = FormatMetaOwner(e2->meta);
   if (do_case)
   {
     if (order)
@@ -366,21 +353,8 @@ static bool SortByOwner(const FileEntry* e1, const FileEntry* e2)
 
 static bool SortByGroup(const FileEntry* e1, const FileEntry* e2)
 {
-  std::string n1;
-  std::string n2;
-
-  if (const auto g1 = GetGroupName(e1->meta.GidOrZero()))
-  {
-    n1 = *g1;
-  } else {
-    n1 = std::to_string(e1->meta.GidOrZero());
-  }
-  if (const auto g2 = GetGroupName(e2->meta.GidOrZero()))
-  {
-    n2 = *g2;
-  } else {
-    n2 = std::to_string(e2->meta.GidOrZero());
-  }
+  const auto n1 = FormatMetaGroup(e1->meta);
+  const auto n2 = FormatMetaGroup(e2->meta);
   if (do_case)
   {
     if (order)
@@ -468,18 +442,17 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
     case ViewMode::MODE_1 : if( fe_ptr )
       {
         const auto attributes = GetAttributes(fe_ptr->meta.Mode());
-        const auto modify_time = CTime(fe_ptr->meta.MtimeAsTimeT());
-
-
+        const auto modify_time = FormatMetaTime(fe_ptr->meta.mtime);
+        const auto nlink = FormatMetaNlink(fe_ptr->meta);
 
                     if( fe_ptr->meta.IsLink() )
         {
-          line_buffer = std::format("{}{}{} {:>10} {:3} {:11} {:>12} -> {}",
+          line_buffer = std::format("{}{}{} {:>10} {:>3} {:11} {:>12} -> {}",
               (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
               type_of_file,
               fitted_name,
               attributes,
-              fe_ptr->meta.NlinkOr(),
+              nlink,
                                       (std::int64_t) fe_ptr->meta.size,
               modify_time,
               fitted_link
@@ -487,12 +460,12 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
                     }
         else
         {
-          line_buffer = std::format("{}{}{} {:>10} {:3} {:11} {:>12}",
+          line_buffer = std::format("{}{}{} {:>10} {:>3} {:11} {:>12}",
               (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
               type_of_file,
               fitted_name,
               attributes,
-              fe_ptr->meta.NlinkOr(),
+              nlink,
                                       (std::int64_t) fe_ptr->meta.size,
               modify_time
 );
@@ -514,18 +487,17 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     case ViewMode::MODE_2 : if( fe_ptr )
       {
-        const auto owner = GetPasswdName(fe_ptr->meta.UidOrZero())
-          .value_or(std::to_string(fe_ptr->meta.UidOrZero()));
-        const auto group = GetGroupName(fe_ptr->meta.GidOrZero())
-          .value_or(std::to_string(fe_ptr->meta.GidOrZero()));
+        const auto owner = FormatMetaOwner(fe_ptr->meta);
+        const auto group = FormatMetaGroup(fe_ptr->meta);
+        const auto inode = FormatMetaInode(fe_ptr->meta);
 
                     if( fe_ptr->meta.IsLink() )
         {
-                      line_buffer = std::format("{}{}{} {:10} {:<12} {:<12} -> {}",
+                      line_buffer = std::format("{}{}{} {:>10} {:<12} {:<12} -> {}",
               (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
               type_of_file,
               fitted_name,
-              (std::int64_t)fe_ptr->meta.InodeOrZero(),
+              inode,
               owner,
               group,
               fitted_link
@@ -533,11 +505,11 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
                     }
         else
         {
-                      line_buffer = std::format("{}{}{} {:10} {:<12} {:<12}",
+                      line_buffer = std::format("{}{}{} {:>10} {:<12} {:<12}",
               (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
               type_of_file,
               fitted_name,
-              (std::int64_t)fe_ptr->meta.InodeOrZero(),
+              inode,
               owner,
               group
 );
@@ -579,8 +551,8 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
 
     case ViewMode::MODE_4 : if( fe_ptr )
       {
-        const auto change_time = CTime(fe_ptr->meta.CtimeAsTimeT());
-        const auto access_time = CTime(fe_ptr->meta.AtimeAsTimeT());
+        const auto change_time = FormatMetaTime(fe_ptr->meta.ctime);
+        const auto access_time = FormatMetaTime(fe_ptr->meta.atime);
 
                     if( fe_ptr->meta.IsLink() )
         {

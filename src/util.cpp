@@ -296,6 +296,56 @@ std::string GetAttributes(unsigned short modus)
   return buffer;
 }
 
+namespace
+{
+constexpr std::string_view kMissingMeta = "-";
+}  // namespace
+
+std::string FormatMetaTime(const std::optional<EntryMeta::time_type>& tp)
+{
+  if (!tp)
+  {
+    return std::string(kMissingMeta);
+  }
+  return CTime(std::chrono::system_clock::to_time_t(*tp));
+}
+
+std::string FormatMetaOwner(const EntryMeta& meta)
+{
+  if (!meta.uid)
+  {
+    return std::string(kMissingMeta);
+  }
+  return GetPasswdName(*meta.uid).value_or(std::to_string(*meta.uid));
+}
+
+std::string FormatMetaGroup(const EntryMeta& meta)
+{
+  if (!meta.gid)
+  {
+    return std::string(kMissingMeta);
+  }
+  return GetGroupName(*meta.gid).value_or(std::to_string(*meta.gid));
+}
+
+std::string FormatMetaInode(const EntryMeta& meta)
+{
+  if (!meta.inode)
+  {
+    return std::string(kMissingMeta);
+  }
+  return std::to_string(*meta.inode);
+}
+
+std::string FormatMetaNlink(const EntryMeta& meta)
+{
+  if (!meta.nlink)
+  {
+    return std::string(kMissingMeta);
+  }
+  return std::to_string(*meta.nlink);
+}
+
 std::string CTime(std::time_t f_time)
 {
 #if defined(YTREE_HAS_STD_CHRONO_TZ)
@@ -810,14 +860,12 @@ std::string BuildUserFileEntry(
   const char tag = fe_ptr->tagged ? TAGGED_SYMBOL : ' ';
   const auto attributes = GetAttributes(fe_ptr->meta.Mode());
 
-  const auto modify_time = CTime(fe_ptr->meta.MtimeAsTimeT());
-  const auto change_time = CTime(fe_ptr->meta.CtimeAsTimeT());
-  const auto access_time = CTime(fe_ptr->meta.AtimeAsTimeT());
+  const auto modify_time = FormatMetaTime(fe_ptr->meta.mtime);
+  const auto change_time = FormatMetaTime(fe_ptr->meta.ctime);
+  const auto access_time = FormatMetaTime(fe_ptr->meta.atime);
 
-  const auto owner = GetPasswdName(fe_ptr->meta.UidOrZero())
-    .value_or(std::to_string(fe_ptr->meta.UidOrZero()));
-  const auto group = GetPasswdName(fe_ptr->meta.GidOrZero())
-    .value_or(std::to_string(fe_ptr->meta.GidOrZero()));
+  const auto owner = FormatMetaOwner(fe_ptr->meta);
+  const auto group = FormatMetaGroup(fe_ptr->meta);
 
   const auto fitted_name = FitVisualWidth(fe_ptr->name, max_filename_len, true);
   const auto fitted_link = FitVisualWidth(sym_link_name, max_linkname_len, true);
@@ -847,13 +895,13 @@ std::string BuildUserFileEntry(
     if(append_and_skip(TAGSYMBOL_VIEWNAME, std::string(1, tag))
         || append_and_skip(FILENAME_VIEWNAME, std::format("{}", fitted_name))
         || append_and_skip(ATTRIBUTE_VIEWNAME, std::format("{:>10}", attributes))
-        || append_and_skip(LINKCOUNT_VIEWNAME, std::format("{:3}", (int)fe_ptr->meta.NlinkOr()))
+        || append_and_skip(LINKCOUNT_VIEWNAME, std::format("{:>3}", FormatMetaNlink(fe_ptr->meta)))
         || append_and_skip(FILESIZE_VIEWNAME, std::format("{:7}", (std::int64_t) fe_ptr->meta.size))
         || append_and_skip(MODTIME_VIEWNAME, std::format("{:>12}", modify_time))
         || append_and_skip(SYMLINK_VIEWNAME, std::format("{}", fitted_link))
         || append_and_skip(UID_VIEWNAME, std::format("{:<8}", owner))
         || append_and_skip(GID_VIEWNAME, std::format("{:<8}", group))
-        || append_and_skip(INODE_VIEWNAME, std::format("{:7}", (std::int64_t)fe_ptr->meta.InodeOrZero()))
+        || append_and_skip(INODE_VIEWNAME, std::format("{:>7}", FormatMetaInode(fe_ptr->meta)))
         || append_and_skip(ACCTIME_VIEWNAME, std::format("{:>12}", access_time))
         || append_and_skip(CHGTIME_VIEWNAME, std::format("{:>12}", change_time))) {
     } else {

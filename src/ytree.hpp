@@ -625,6 +625,14 @@ extern int  RenameDirectory(DirEntry *de_ptr, const std::string& new_name);
 extern int  RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_fe_ptr);
 std::optional<std::string> GetRenameParameter(const std::string* old_name);
 std::string CTime(std::time_t f_time);
+
+/** Display helpers: unset optional EntryMeta fields render as "-". */
+std::string FormatMetaTime(const std::optional<EntryMeta::time_type>& tp);
+std::string FormatMetaOwner(const EntryMeta& meta);
+std::string FormatMetaGroup(const EntryMeta& meta);
+std::string FormatMetaInode(const EntryMeta& meta);
+std::string FormatMetaNlink(const EntryMeta& meta);
+
 bool LoginDisk(const std::string& path);
 std::optional<std::string> GetNewLoginPath(const std::string& initial);
 void PrintSpecialString(WINDOW* win, int y, int x, const std::string& str, int color);

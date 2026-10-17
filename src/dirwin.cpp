@@ -126,11 +126,11 @@ static void PrintDirEntry(WINDOW *win,
     case ViewMode::MODE_1:
       {
         const auto attributes = GetAttributes(de_ptr->meta.Mode());
-        const auto modify_time = CTime(de_ptr->meta.MtimeAsTimeT());
+        const auto modify_time = FormatMetaTime(de_ptr->meta.mtime);
         line_buffer = std::format(
-          "{:>10} {:3} {:8} {:>12}",
+          "{:>10} {:>3} {:8} {:>12}",
           attributes,
-          de_ptr->meta.NlinkOr(),
+          FormatMetaNlink(de_ptr->meta),
           static_cast<std::int64_t>(de_ptr->meta.size),
           modify_time
 );
@@ -139,15 +139,11 @@ static void PrintDirEntry(WINDOW *win,
 
     case ViewMode::MODE_2 :
                  {
-                   const auto owner = GetPasswdName(de_ptr->meta.UidOrZero())
-                     .value_or(std::to_string(de_ptr->meta.UidOrZero()));
-                   const auto group = GetGroupName(de_ptr->meta.GidOrZero())
-                     .value_or(std::to_string(de_ptr->meta.GidOrZero()));
                    line_buffer = std::format(
-                     "{:12}  {:<12} {:<12}",
-                     de_ptr->meta.InodeOrZero(),
-                     owner,
-                     group
+                     "{:>12}  {:<12} {:<12}",
+                     FormatMetaInode(de_ptr->meta),
+                     FormatMetaOwner(de_ptr->meta),
+                     FormatMetaGroup(de_ptr->meta)
 );
                  }
                  break;
@@ -157,8 +153,8 @@ static void PrintDirEntry(WINDOW *win,
     case ViewMode::MODE_4 :
                  line_buffer = std::format(
                    "Chg.: {:>12}  Acc.: {:>12}",
-                   CTime(de_ptr->meta.CtimeAsTimeT()),
-                   CTime(de_ptr->meta.AtimeAsTimeT())
+                   FormatMetaTime(de_ptr->meta.ctime),
+                   FormatMetaTime(de_ptr->meta.atime)
 );
                  break;
   }
