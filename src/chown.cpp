@@ -17,7 +17,7 @@ int ChangeFileOwner(FileEntry *fe_ptr)
     return( result );
   }
 
-  if (const auto owner = GetNewOwner(fe_ptr->stat_struct.st_uid))
+  if (const auto owner = GetNewOwner(fe_ptr->meta.UidOrZero()))
   {
     if (const auto owner_id_ptr = GetPasswdUid(*owner))
     {
@@ -66,7 +66,7 @@ int SetFileOwner(FileEntry* fe_ptr, ChangeOwnerWalkContext* ctx)
 
   new_owner_id = ctx->new_owner_id;
 
-  if (!chown(path.c_str(), new_owner_id, fe_ptr->stat_struct.st_gid))
+  if (!chown(path.c_str(), new_owner_id, fe_ptr->meta.GidOrZero()))
   {
     /* Erfolgreich modifiziert */
     /*-------------------------*/
@@ -96,7 +96,7 @@ int ChangeDirOwner(DirEntry *de_ptr)
     return( result );
   }
 
-  if (const auto owner = GetNewOwner(de_ptr->stat_struct.st_uid))
+  if (const auto owner = GetNewOwner(de_ptr->meta.UidOrZero()))
   {
     if (const auto owner_id_ptr = GetPasswdUid(*owner))
     {
@@ -112,7 +112,7 @@ static int SetDirOwner(DirEntry* de_ptr, int new_owner_id)
 {
   const auto path = GetPath(de_ptr);
 
-  if (!chown(path.c_str(), new_owner_id, de_ptr->stat_struct.st_gid))
+  if (!chown(path.c_str(), new_owner_id, de_ptr->meta.GidOrZero()))
   {
     struct stat st;
 

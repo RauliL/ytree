@@ -172,9 +172,9 @@ int CopyFile(
     /* File wurde kopiert */
     /*--------------------*/
 
-    if( chmod(to_path.c_str(), fe_ptr->stat_struct.st_mode) == -1 )
+    if( chmod(to_path.c_str(), fe_ptr->meta.Mode()) == -1 )
     {
-      FormatWarning("Can't chmod file*\"{}\"*to mode {}*IGNORED", to_path.c_str(), GetAttributes(fe_ptr->stat_struct.st_mode));
+      FormatWarning("Can't chmod file*\"{}\"*to mode {}*IGNORED", to_path.c_str(), GetAttributes(fe_ptr->meta.Mode()));
     }
 
     if( dest_dir_entry )

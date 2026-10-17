@@ -36,14 +36,7 @@
 # endif
 #endif
 
-static bool StatPath(const std::filesystem::path& path, struct stat& st)
-{
-#if defined(S_IFLNK)
-  return !lstat(path.c_str(), &st);
-#else
-  return !stat(path.c_str(), &st);
-#endif
-}
+bool DoStat(const std::filesystem::path& path, struct stat& st);
 
 static std::filesystem::file_type TypeFromMode(std::uint32_t mode)
 {
@@ -121,7 +114,7 @@ static std::uint32_t TypeToModeBits(std::filesystem::file_type type)
   return 0;
 }
 
-static std::optional<EntryMeta::TimePoint> TimeFromTimeT(std::time_t t)
+static std::optional<EntryMeta::time_type> TimeFromTimeT(std::time_t t)
 {
   if (t == 0)
   {
@@ -131,7 +124,7 @@ static std::optional<EntryMeta::TimePoint> TimeFromTimeT(std::time_t t)
   return std::chrono::system_clock::from_time_t(t);
 }
 
-static inline std::time_t TimeToTimeT(const std::optional<EntryMeta::TimePoint>& tp)
+static inline std::time_t TimeToTimeT(const std::optional<EntryMeta::time_type>& tp)
 {
   return tp ? std::chrono::system_clock::to_time_t(*tp) : 0;
 }
@@ -147,12 +140,52 @@ std::uint32_t EntryMeta::Mode() const
   return TypeToModeBits(type) | (permissions & 07777u);
 }
 
+std::time_t EntryMeta::MtimeAsTimeT() const
+{
+  return TimeToTimeT(mtime);
+}
+
+std::time_t EntryMeta::AtimeAsTimeT() const
+{
+  return TimeToTimeT(atime);
+}
+
+std::time_t EntryMeta::CtimeAsTimeT() const
+{
+  return TimeToTimeT(ctime);
+}
+
+char EntryMeta::TypeSymbol() const
+{
+  switch (type)
+  {
+    case std::filesystem::file_type::symlink:
+      return '@';
+    case std::filesystem::file_type::socket:
+      return '=';
+    case std::filesystem::file_type::character:
+      return '-';
+    case std::filesystem::file_type::block:
+      return '+';
+    case std::filesystem::file_type::fifo:
+      return '|';
+    case std::filesystem::file_type::regular:
+      return ' ';
+    case std::filesystem::file_type::directory:
+    case std::filesystem::file_type::unknown:
+    case std::filesystem::file_type::none:
+    case std::filesystem::file_type::not_found:
+      break;
+  }
+  return '?';
+}
+
 
 std::optional<EntryMeta> EntryMeta::FromFilesystem(const std::filesystem::path& path)
 {
   struct stat st{};
 
-  if (!StatPath(path, st))
+  if (!DoStat(path, st))
   {
     return std::nullopt;
   }

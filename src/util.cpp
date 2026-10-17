@@ -802,22 +802,22 @@ std::string BuildUserFileEntry(
 
   result.reserve(tmpl.size() + 256);
 
-  if (fe_ptr && S_ISLNK(fe_ptr->stat_struct.st_mode))
+  if (fe_ptr && fe_ptr->meta.IsLink())
   {
     sym_link_name = fe_ptr->symlink_target.c_str();
   }
 
   const char tag = fe_ptr->tagged ? TAGGED_SYMBOL : ' ';
-  const auto attributes = GetAttributes(fe_ptr->stat_struct.st_mode);
+  const auto attributes = GetAttributes(fe_ptr->meta.Mode());
 
-  const auto modify_time = CTime(fe_ptr->stat_struct.st_mtime);
-  const auto change_time = CTime(fe_ptr->stat_struct.st_ctime);
-  const auto access_time = CTime(fe_ptr->stat_struct.st_atime);
+  const auto modify_time = CTime(fe_ptr->meta.MtimeAsTimeT());
+  const auto change_time = CTime(fe_ptr->meta.CtimeAsTimeT());
+  const auto access_time = CTime(fe_ptr->meta.AtimeAsTimeT());
 
-  const auto owner = GetPasswdName(fe_ptr->stat_struct.st_uid)
-    .value_or(std::to_string(fe_ptr->stat_struct.st_uid));
-  const auto group = GetPasswdName(fe_ptr->stat_struct.st_gid)
-    .value_or(std::to_string(fe_ptr->stat_struct.st_gid));
+  const auto owner = GetPasswdName(fe_ptr->meta.UidOrZero())
+    .value_or(std::to_string(fe_ptr->meta.UidOrZero()));
+  const auto group = GetPasswdName(fe_ptr->meta.GidOrZero())
+    .value_or(std::to_string(fe_ptr->meta.GidOrZero()));
 
   const auto fitted_name = FitVisualWidth(fe_ptr->name, max_filename_len, true);
   const auto fitted_link = FitVisualWidth(sym_link_name, max_linkname_len, true);
@@ -847,13 +847,13 @@ std::string BuildUserFileEntry(
     if(append_and_skip(TAGSYMBOL_VIEWNAME, std::string(1, tag))
         || append_and_skip(FILENAME_VIEWNAME, std::format("{}", fitted_name))
         || append_and_skip(ATTRIBUTE_VIEWNAME, std::format("{:>10}", attributes))
-        || append_and_skip(LINKCOUNT_VIEWNAME, std::format("{:3}", (int)fe_ptr->stat_struct.st_nlink))
-        || append_and_skip(FILESIZE_VIEWNAME, std::format("{:7}", (std::int64_t) fe_ptr->stat_struct.st_size))
+        || append_and_skip(LINKCOUNT_VIEWNAME, std::format("{:3}", (int)fe_ptr->meta.NlinkOr()))
+        || append_and_skip(FILESIZE_VIEWNAME, std::format("{:7}", (std::int64_t) fe_ptr->meta.size))
         || append_and_skip(MODTIME_VIEWNAME, std::format("{:>12}", modify_time))
         || append_and_skip(SYMLINK_VIEWNAME, std::format("{}", fitted_link))
         || append_and_skip(UID_VIEWNAME, std::format("{:<8}", owner))
         || append_and_skip(GID_VIEWNAME, std::format("{:<8}", group))
-        || append_and_skip(INODE_VIEWNAME, std::format("{:7}", (std::int64_t)fe_ptr->stat_struct.st_ino))
+        || append_and_skip(INODE_VIEWNAME, std::format("{:7}", (std::int64_t)fe_ptr->meta.InodeOrZero()))
         || append_and_skip(ACCTIME_VIEWNAME, std::format("{:>12}", access_time))
         || append_and_skip(CHGTIME_VIEWNAME, std::format("{:>12}", change_time))) {
     } else {

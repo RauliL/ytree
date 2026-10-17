@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <ctime>
 #include <filesystem>
 #include <optional>
 #include <string>
@@ -18,23 +19,29 @@
 class EntryMeta
 {
 public:
-  using TimePoint = std::chrono::system_clock::time_point;
+  using size_type = std::int64_t;
+  using time_type = std::chrono::system_clock::time_point;
 
   std::filesystem::file_type type = std::filesystem::file_type::unknown;
 
   /** Permission bits only (e.g. 0644); type lives in `type`. */
   std::uint32_t permissions = 0;
 
-  std::int64_t size = 0;
+  size_type size = 0;
 
-  std::optional<TimePoint> mtime;
-  std::optional<TimePoint> atime;
-  std::optional<TimePoint> ctime;
+  std::optional<time_type> mtime;
+  std::optional<time_type> atime;
+  std::optional<time_type> ctime;
 
   std::optional<std::uint32_t> uid;
   std::optional<std::uint32_t> gid;
   std::optional<std::uint64_t> inode;
   std::optional<std::uint32_t> nlink;
+
+  inline bool IsBlock() const
+  {
+    return type == std::filesystem::file_type::block;
+  }
 
   inline bool IsDir() const
   {
@@ -61,6 +68,22 @@ public:
 
   /** POSIX mode with type bits reconstructed from `type` and `permissions`. */
   std::uint32_t Mode() const;
+
+  /** time_t for display/sort; missing optional times map to 0 (epoch). */
+  std::time_t MtimeAsTimeT() const;
+  std::time_t AtimeAsTimeT() const;
+  std::time_t CtimeAsTimeT() const;
+
+  std::uint32_t UidOrZero() const { return uid.value_or(0); }
+  std::uint32_t GidOrZero() const { return gid.value_or(0); }
+  std::uint32_t NlinkOr(std::uint32_t fallback = 1) const
+  {
+    return nlink.value_or(fallback);
+  }
+  std::uint64_t InodeOrZero() const { return inode.value_or(0); }
+
+  /** Single-character type glyph used in file listings. */
+  char TypeSymbol() const;
 
   /**
    * Read metadata from the real filesystem.

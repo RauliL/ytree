@@ -16,7 +16,7 @@ int ChangeFileModus(FileEntry *fe_ptr)
     return( result );
   }
 
-  auto modus = GetAttributes(fe_ptr->stat_struct.st_mode);
+  auto modus = GetAttributes(fe_ptr->meta.Mode());
 
   if( GetNewFileModus(LINES - 2, 1, modus, "\r\033") )
   {
@@ -46,7 +46,7 @@ int ChangeDirModus(DirEntry *de_ptr)
     return( result );
   }
 
-  auto modus = GetAttributes(de_ptr->stat_struct.st_mode);
+  auto modus = GetAttributes(de_ptr->meta.Mode());
 
   if( GetNewFileModus(LINES - 2, 1, modus, "\r\033") )
   {
@@ -139,9 +139,9 @@ int SetFileModus(FileEntry *fe_ptr, ChangeModusWalkContext *ctx)
 
   ctx->new_fe_ptr = fe_ptr; // unchanged
 
-  new_modus = GetNewModus(fe_ptr->stat_struct.st_mode, ctx->new_modus);
+  new_modus = GetNewModus(fe_ptr->meta.Mode(), ctx->new_modus);
 
-  new_modus = new_modus | ( fe_ptr->stat_struct.st_mode &
+  new_modus = new_modus | ( fe_ptr->meta.Mode() &
         ~( S_IRWXO | S_IRWXG | S_IRWXU | S_ISGID | S_ISUID ) );
 
   if (!chmod(path.c_str(), new_modus))
@@ -166,9 +166,9 @@ int SetFileModus(FileEntry *fe_ptr, ChangeModusWalkContext *ctx)
 static int SetDirModus(DirEntry *de_ptr, const ChangeModusWalkContext& ctx)
 {
   const auto path = GetPath(de_ptr);
-  auto new_modus = GetNewModus(de_ptr->stat_struct.st_mode, ctx.new_modus);
+  auto new_modus = GetNewModus(de_ptr->meta.Mode(), ctx.new_modus);
 
-  new_modus = new_modus | (de_ptr->stat_struct.st_mode & ~(
+  new_modus = new_modus | (de_ptr->meta.Mode() & ~(
     S_IRWXO | S_IRWXG | S_IRWXU | S_ISGID | S_ISUID
   ));
 

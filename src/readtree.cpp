@@ -37,8 +37,10 @@ int ReadTree(
   dir_entry->big_window     = false;
   dir_entry->not_scanned    = false;
 
-  if( S_ISBLK(dir_entry->stat_struct.st_mode) )
-    return( 0 ); /* Block-Device */
+  if (dir_entry->meta.IsBlock())
+  {
+    return 0; // Block device
+  }
 
   if (depth < 0)
   {

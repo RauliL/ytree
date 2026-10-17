@@ -20,7 +20,7 @@ std::filesystem::path FileEntry::GetRealPath() const
     return GetPath();
   }
 
-  if (S_ISLNK(stat_struct.st_mode))
+  if (meta.IsLink())
   {
     if (IsAbsolute(symlink_target))
     {

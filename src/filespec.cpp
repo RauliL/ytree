@@ -25,7 +25,7 @@ void SetMatchingParam(DirEntry *dir_entry)
     if( Match(fe_ptr->name) )
     {
       matching_files++;
-      matching_bytes += fe_ptr->stat_struct.st_size;
+      matching_bytes += fe_ptr->meta.size;
       fe_ptr->matching = true;
     }
     else
