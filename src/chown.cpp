@@ -2,36 +2,33 @@
 
 static constexpr std::size_t OWNER_NAME_MAX = 64;
 
-static int SetDirOwner(DirEntry *de_ptr, int new_owner_id);
+static bool SetDirOwner(DirEntry *de_ptr, int new_owner_id);
 
-int ChangeFileOwner(FileEntry *fe_ptr)
+bool FileEntry::ChangeOwner()
 {
   ChangeOwnerWalkContext ctx;
-  int  result;
+  bool result = false;
 
-  result = -1;
-
-  if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
+  if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
     beep();
-    return( result );
+
+    return false;
   }
 
-  if (const auto owner = GetNewOwner(fe_ptr->meta.UidOrZero()))
+  if (const auto owner = GetNewOwner(meta.UidOrZero()))
   {
     if (const auto owner_id_ptr = GetPasswdUid(*owner))
     {
       ctx.new_owner_id = *owner_id_ptr;
-      result = SetFileOwner(fe_ptr, &ctx) ? 0 : -1;
+      result = SetFileOwner(this, &ctx);
     } else {
       FormatMessage("Can't read Owner-ID:*{}", *owner);
     }
   }
-  return( result );
+
+  return result;
 }
-
-
-
 
 std::optional<std::string> GetNewOwner(int st_uid)
 {
@@ -81,31 +78,31 @@ bool SetFileOwner(FileEntry* fe_ptr, ChangeOwnerWalkContext* ctx)
   return false;
 }
 
-int ChangeDirOwner(DirEntry *de_ptr)
+bool DirEntry::ChangeOwner()
 {
-  int  result;
+  bool result = false;
 
-  result = -1;
-
-  if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
+  if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
     beep();
-    return( result );
+
+    return false;
   }
 
-  if (const auto owner = GetNewOwner(de_ptr->meta.UidOrZero()))
+  if (const auto owner = GetNewOwner(meta.UidOrZero()))
   {
     if (const auto owner_id_ptr = GetPasswdUid(*owner))
     {
-      result = SetDirOwner(de_ptr, *owner_id_ptr);
+      result = SetDirOwner(this, *owner_id_ptr);
     } else {
       FormatMessage("Can't read Owner-ID:*{}", *owner);
     }
   }
-  return( result );
+
+  return result;
 }
 
-static int SetDirOwner(DirEntry* de_ptr, int new_owner_id)
+static bool SetDirOwner(DirEntry* de_ptr, int new_owner_id)
 {
   const auto path = GetPath(de_ptr);
 
@@ -120,9 +117,9 @@ static int SetDirOwner(DirEntry* de_ptr, int new_owner_id)
       Error("stat() failed");
     }
 
-    return 0;
+    return true;
   }
   FormatMessage("Can't change Owner:*{}", std::strerror(errno));
 
-  return -1;
+  return false;
 }

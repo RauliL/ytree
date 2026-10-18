@@ -1,3 +1,4 @@
+#include <functional>
 #include <limits>
 
 #include <peelo/xdg.hpp>
@@ -1061,13 +1062,13 @@ static void HandleDirKeyRename(DirWindowContext& ctx)
   ctx.need_dsp_help = true;
 }
 
-static void HandleDirKeyAttributeChange(
+static inline void HandleDirKeyAttributeChange(
   DirEntry* dir_entry,
   bool& need_dsp_help,
-  int (*change)(DirEntry*)
+  const std::function<bool(DirEntry&)> callback
 )
 {
-  change(dir_entry);
+  callback(*dir_entry);
   DisplayDirTreeAtCursor();
   need_dsp_help = true;
 }
@@ -1269,17 +1270,29 @@ static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
 
     case 'G':
     case 'g':
-      HandleDirKeyAttributeChange(ctx.dir_entry, ctx.need_dsp_help, ChangeDirGroup);
+      HandleDirKeyAttributeChange(
+        ctx.dir_entry,
+        ctx.need_dsp_help,
+        &DirEntry::ChangeGroup
+      );
       break;
 
     case 'O':
     case 'o':
-      HandleDirKeyAttributeChange(ctx.dir_entry, ctx.need_dsp_help, ChangeDirOwner);
+      HandleDirKeyAttributeChange(
+        ctx.dir_entry,
+        ctx.need_dsp_help,
+        &DirEntry::ChangeOwner
+      );
       break;
 
     case 'A':
     case 'a':
-      HandleDirKeyAttributeChange(ctx.dir_entry, ctx.need_dsp_help, ChangeDirModus);
+      HandleDirKeyAttributeChange(
+        ctx.dir_entry,
+        ctx.need_dsp_help,
+        &DirEntry::ChangeModus
+      );
       break;
 
     case 'Q' & 0x1f:

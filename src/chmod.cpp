@@ -1,52 +1,83 @@
+#include <functional>
+
 #include "./walker.hpp"
 
-static int SetDirModus(DirEntry *de_ptr, const ChangeModusWalkContext& ctx);
+using ChangeModusCallback = std::function<bool(ChangeModusWalkContext&)>;
+
 static int GetNewModus(int old_modus, const std::string& new_modus);
 
-template<typename Apply>
-static int ChangeModus(int old_mode, Apply apply)
+static bool ChangeModus(int old_mode, const ChangeModusCallback& callback)
 {
-  if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
+  if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
   {
-    beep();
+    ChangeModusWalkContext ctx;
+    auto modus = GetAttributes(old_mode);
+    bool result = false;
 
-    return -1;
+    if (GetNewFileModus(LINES - 2, 1, modus, "\r\033"))
+    {
+      ctx.new_modus = modus;
+      result = callback(ctx);
+    }
+
+    move(LINES - 2, 1);
+    clrtoeol();
+
+    return result;
   }
+  beep();
 
-  ChangeModusWalkContext ctx;
-  auto modus = GetAttributes(old_mode);
-  int result = -1;
-
-  if (GetNewFileModus(LINES - 2, 1, modus, "\r\033"))
-  {
-    ctx.new_modus = modus;
-    result = apply(ctx);
-  }
-
-  move(LINES - 2, 1);
-  clrtoeol();
-
-  return result;
+  return false;
 }
 
-int ChangeFileModus(FileEntry *fe_ptr)
+bool FileEntry::ChangeModus()
 {
-  return ChangeModus(
-    fe_ptr->meta.Mode(),
+  return ::ChangeModus(
+    meta.Mode(),
     [&](ChangeModusWalkContext& ctx)
     {
-      return SetFileModus(fe_ptr, &ctx) ? 0 : -1;
+      return SetFileModus(this, &ctx);
     }
   );
 }
 
-int ChangeDirModus(DirEntry *de_ptr)
+bool DirEntry::ChangeModus()
 {
-  return ChangeModus(
-    de_ptr->meta.Mode(),
+  return ::ChangeModus(
+    meta.Mode(),
     [&](ChangeModusWalkContext& ctx)
     {
-      return SetDirModus(de_ptr, ctx);
+      const auto path = GetPath(this);
+      auto new_modus = GetNewModus(meta.Mode(), ctx.new_modus);
+      std::error_code ec;
+      std::filesystem::perms perms;
+
+      new_modus = new_modus | (meta.Mode() & ~(
+        S_IRWXO |
+        S_IRWXG |
+        S_IRWXU |
+        S_ISGID |
+        S_ISUID
+      ));
+      perms = static_cast<std::filesystem::perms>(new_modus);
+      std::filesystem::permissions(path, perms, ec);
+
+      if (ec)
+      {
+        FormatMessage("Cant't change modus:*{}", ec.message());
+
+        return false;
+      }
+
+      // Erfolgreich modifiziert
+      if (const auto meta = EntryMeta::FromFilesystem(path))
+      {
+        SetMeta(*meta);
+      } else {
+        Error("stat() Failed");
+      }
+
+      return true;
     }
   );
 }
@@ -150,36 +181,6 @@ bool SetFileModus(FileEntry *fe_ptr, ChangeModusWalkContext *ctx)
 
   FormatMessage("Cant't change modus:*{}", ec.message().c_str());
   return false;
-}
-
-static int SetDirModus(DirEntry *de_ptr, const ChangeModusWalkContext& ctx)
-{
-  const auto path = GetPath(de_ptr);
-  auto new_modus = GetNewModus(de_ptr->meta.Mode(), ctx.new_modus);
-
-  new_modus = new_modus | (de_ptr->meta.Mode() & ~(
-    S_IRWXO | S_IRWXG | S_IRWXU | S_ISGID | S_ISUID
-  ));
-
-  std::error_code ec;
-  const auto perms = static_cast<std::filesystem::perms>(new_modus);
-  std::filesystem::permissions(path, perms, ec);
-  if (!ec)
-  {
-    /* Erfolgreich modifiziert */
-    /*-------------------------*/
-    if (auto meta = EntryMeta::FromFilesystem(path))
-    {
-      de_ptr->SetMeta(*meta);
-    } else {
-      Error("stat() Failed");
-    }
-
-    return 0;
-  }
-  FormatMessage("Cant't change modus:*{}", ec.message().c_str());
-
-  return -1;
 }
 
 static int GetNewModus(int old_modus, const std::string& modus_str)

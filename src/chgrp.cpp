@@ -2,32 +2,32 @@
 
 static constexpr std::size_t GROUP_NAME_MAX = 64;
 
-static int SetDirGroup(DirEntry *de_ptr, int new_group_id);
+static bool SetDirGroup(DirEntry* de_ptr, int new_group_id);
 
-int ChangeFileGroup(FileEntry *fe_ptr)
+bool FileEntry::ChangeGroup()
 {
   ChangeGroupWalkContext ctx;
-  int  result;
+  bool result = false;
 
-  result = -1;
-
-  if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
+  if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
     beep();
-    return( result );
+
+    return false;
   }
 
-  if (const auto group = GetNewGroup(fe_ptr->meta.GidOrZero()))
+  if (const auto group = GetNewGroup(meta.GidOrZero()))
   {
     if (const auto group_id_ptr = GetGroupId(*group))
     {
       ctx.new_group_id = *group_id_ptr;
-      result = SetFileGroup(fe_ptr, &ctx) ? 0 : -1;
+      result = SetFileGroup(this, &ctx);
     } else {
       FormatMessage("Can't read Group-ID:*\"{}\"", *group);
     }
   }
-  return( result );
+
+  return result;
 }
 
 std::optional<std::string> GetNewGroup(int st_gid)
@@ -79,34 +79,31 @@ bool SetFileGroup(FileEntry *fe_ptr, ChangeGroupWalkContext *ctx)
   return false;
 }
 
-
-
-
-int ChangeDirGroup(DirEntry *de_ptr)
+bool DirEntry::ChangeGroup()
 {
-  int  result;
+  bool result = false;
 
-  result = -1;
-
-  if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
+  if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
     beep();
-    return( result );
+
+    return false;
   }
 
-  if (const auto group = GetNewGroup(de_ptr->meta.GidOrZero()))
+  if (const auto group = GetNewGroup(meta.GidOrZero()))
   {
     if (const auto group_id_ptr = GetGroupId(*group))
     {
-      result = SetDirGroup(de_ptr, *group_id_ptr);
+      result = SetDirGroup(this, *group_id_ptr);
     } else {
       FormatMessage("Can't read Group-ID:*\"{}\"", *group);
     }
   }
-  return( result );
+
+  return result;
 }
 
-static int SetDirGroup(DirEntry *de_ptr, int new_group_id)
+static bool SetDirGroup(DirEntry* de_ptr, int new_group_id)
 {
   const auto path = GetPath(de_ptr);
 
@@ -121,9 +118,9 @@ static int SetDirGroup(DirEntry *de_ptr, int new_group_id)
       Warning("stat() failed");
     }
 
-    return 0;
+    return true;
   }
   FormatMessage("Can't change owner:*{}", std::strerror(errno));
 
-  return -1;
+  return false;
 }

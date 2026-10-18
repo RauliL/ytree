@@ -407,6 +407,12 @@ struct FileEntry
 
     return extension.string();
   }
+
+  bool ChangeModus();
+
+  bool ChangeOwner();
+
+  bool ChangeGroup();
 };
 
 struct DirEntry : std::enable_shared_from_this<DirEntry>
@@ -444,6 +450,12 @@ struct DirEntry : std::enable_shared_from_this<DirEntry>
   {
     meta = other.meta;
   }
+
+  bool ChangeModus();
+
+  bool ChangeOwner();
+
+  bool ChangeGroup();
 };
 
 struct Statistic
@@ -564,8 +576,6 @@ int Execute(const DirEntry* dir_entry, const FileEntry* file_entry);
 extern int  Pipe(DirEntry *dir_entry, FileEntry *file_entry);
 std::optional<std::string> GetPipeCommand(const std::string& initial = {});
 std::optional<SortSpec> GetKindOfSort();
-extern int  ChangeFileModus(FileEntry *fe_ptr);
-extern int  ChangeDirModus(DirEntry *de_ptr);
 bool GetNewFileModus(int y, int x, std::string& modus, const char *term);
 int GetModus(const std::string& modus);
 int CopyFile(
@@ -606,12 +616,8 @@ std::optional<AsToParameter> GetCopyParameter(
 std::optional<AsToParameter> GetMoveParameter(
   std::optional<std::string_view> from_file
 );
-extern int  ChangeFileOwner(FileEntry *fe_ptr);
 std::optional<std::string> GetNewOwner(int st_uid);
-extern int  ChangeDirOwner(DirEntry *de_ptr);
-extern int  ChangeFileGroup(FileEntry *fe_ptr);
 std::optional<std::string> GetNewGroup(int st_gid);
-extern int  ChangeDirGroup(DirEntry *de_ptr);
 extern void DisplayDirHelp();
 extern void DisplayFileHelp();
 extern void ClearHelp();

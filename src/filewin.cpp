@@ -1605,21 +1605,21 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           }
           break;
 
-      case 'A' :
-      case 'a' :      ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
-
-                ctx.need_dsp_help = true;
-
-          if( !ChangeFileModus(ctx.fe_ptr) )
-          {
-      PrintFileEntry(ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-                ctx.dir_entry->cursor_pos % window_height,
-                ctx.dir_entry->cursor_pos / window_height,
-                true,
-          ctx.start_x
-);
-          }
-          break;
+      case 'A':
+      case 'a':
+        ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
+        ctx.need_dsp_help = true;
+        if (!ctx.fe_ptr->ChangeModus())
+        {
+          PrintFileEntry(
+            ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
+            ctx.dir_entry->cursor_pos % window_height,
+            ctx.dir_entry->cursor_pos / window_height,
+            true,
+            ctx.start_x
+          );
+        }
+        break;
 
       case 'A' & 0x1F :
           if( (mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
@@ -1657,21 +1657,21 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           }
           break;
 
-      case 'O' :
-      case 'o' :      ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
-
-          ctx.need_dsp_help = true;
-
-          if( !ChangeFileOwner(ctx.fe_ptr) )
-          {
-      PrintFileEntry(ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-                ctx.dir_entry->cursor_pos % window_height,
-                ctx.dir_entry->cursor_pos / window_height,
-                true ,
-          ctx.start_x
-);
-          }
-          break;
+      case 'O':
+      case 'o':
+        ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
+        ctx.need_dsp_help = true;
+        if (ctx.fe_ptr->ChangeOwner())
+        {
+          PrintFileEntry(
+            ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
+            ctx.dir_entry->cursor_pos % window_height,
+            ctx.dir_entry->cursor_pos / window_height,
+            true,
+            ctx.start_x
+          );
+        }
+        break;
 
       case 'O' & 0x1F :
           if(( mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
@@ -1707,21 +1707,21 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           }
           break;
 
-      case 'G' :
-      case 'g' :      ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
-
-          ctx.need_dsp_help = true;
-
-          if( !ChangeFileGroup(ctx.fe_ptr) )
-          {
-      PrintFileEntry(ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-                ctx.dir_entry->cursor_pos % window_height,
-                ctx.dir_entry->cursor_pos / window_height,
-                true,
-          ctx.start_x
-);
-          }
-          break;
+      case 'G':
+      case 'g':
+        ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
+        ctx.need_dsp_help = true;
+        if (ctx.fe_ptr->ChangeGroup())
+        {
+          PrintFileEntry(
+            ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
+            ctx.dir_entry->cursor_pos % window_height,
+            ctx.dir_entry->cursor_pos / window_height,
+            true,
+            ctx.start_x
+          );
+        }
+        break;
 
       case 'G' & 0x1F :
           if(( mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
