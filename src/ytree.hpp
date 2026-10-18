@@ -363,6 +363,8 @@ struct Entry
 {
   EntryMeta meta{};
 
+  virtual ~Entry() = default;
+
   virtual std::filesystem::path GetPath() const = 0;
 
   bool ChangeModus();
