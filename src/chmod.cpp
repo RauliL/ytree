@@ -2,20 +2,18 @@
 
 #include "./ytree.hpp"
 
-using ChangeModusCallback = std::function<bool(const std::string&)>;
-
 static int GetNewModus(int old_modus, const std::string& new_modus);
 
-static bool ChangeModus(int old_mode, const ChangeModusCallback& callback)
+bool Entry::ChangeModus()
 {
   if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
   {
-    auto modus = GetAttributes(old_mode);
+    auto modus = GetAttributes(meta.Mode());
     bool result = false;
 
     if (GetNewFileModus(LINES - 2, 1, modus, "\r\033"))
     {
-      result = callback(modus);
+      result = SetModus(modus);
     }
 
     move(LINES - 2, 1);
@@ -26,58 +24,6 @@ static bool ChangeModus(int old_mode, const ChangeModusCallback& callback)
   beep();
 
   return false;
-}
-
-bool FileEntry::ChangeModus()
-{
-  return ::ChangeModus(
-    meta.Mode(),
-    [&](const std::string& new_modus)
-    {
-      return this->SetModus(new_modus);
-    }
-  );
-}
-
-bool DirEntry::ChangeModus()
-{
-  return ::ChangeModus(
-    meta.Mode(),
-    [&](const std::string& new_modus_str)
-    {
-      const auto path = GetPath(this);
-      auto new_modus = GetNewModus(meta.Mode(), new_modus_str);
-      std::error_code ec;
-      std::filesystem::perms perms;
-
-      new_modus = new_modus | (meta.Mode() & ~(
-        S_IRWXO |
-        S_IRWXG |
-        S_IRWXU |
-        S_ISGID |
-        S_ISUID
-      ));
-      perms = static_cast<std::filesystem::perms>(new_modus);
-      std::filesystem::permissions(path, perms, ec);
-
-      if (ec)
-      {
-        FormatMessage("Cant't change modus:*{}", ec.message());
-
-        return false;
-      }
-
-      // Erfolgreich modifiziert
-      if (const auto meta = EntryMeta::FromFilesystem(path))
-      {
-        SetMeta(*meta);
-      } else {
-        Error("stat() Failed");
-      }
-
-      return true;
-    }
-  );
 }
 
 bool GetNewFileModus(int y, int x, std::string& modus, const char *term)
@@ -148,7 +94,7 @@ bool GetNewFileModus(int y, int x, std::string& modus, const char *term)
   return c == CR;
 }
 
-bool FileEntry::SetModus(const std::string& new_modus_str)
+bool Entry::SetModus(const std::string& new_modus_str)
 {
   const auto path = GetPath();
   int new_modus = GetNewModus(meta.Mode(), new_modus_str);
@@ -166,11 +112,10 @@ bool FileEntry::SetModus(const std::string& new_modus_str)
   std::filesystem::permissions(path, perms, ec);
   if (!ec)
   {
-    /* Erfolgreich modifiziert */
-    /*-------------------------*/
-    if (auto meta = EntryMeta::FromFilesystem(path))
+    // Erfolgreich modifiziert
+    if (const auto new_meta = EntryMeta::FromFilesystem(path))
     {
-      SetMeta(*meta);
+      meta = *new_meta;
     } else {
       Error("stat() failed");
     }

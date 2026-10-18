@@ -32,7 +32,7 @@ int RenameDirectory(DirEntry* de_ptr, const std::string& new_name)
         // back-references, so it can be renamed in place: parent, children,
         // files, statistic.tree and disk_statistic.tree all stay valid.
         de_ptr->name = new_name;
-        de_ptr->SetMeta(MetaOrAbort(to_path));
+        de_ptr->meta = MetaOrAbort(to_path);
 
         result = 0;
       }
@@ -80,7 +80,7 @@ int RenameFile(
   {
     // Rename in place; see RenameDirectory().
     fe_ptr->name = new_name;
-    fe_ptr->SetMeta(MetaOrAbort(to_path));
+    fe_ptr->meta = MetaOrAbort(to_path);
 
     result = 0;
 

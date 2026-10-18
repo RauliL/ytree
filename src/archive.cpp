@@ -60,7 +60,7 @@ static bool InsertArchiveDirEntry(
 
   auto de_ptr = std::make_shared<DirEntry>();
   de_ptr->name = std::move(name);
-  de_ptr->SetMeta(meta);
+  de_ptr->meta = meta;
 
 #ifdef DEBUG
   std::fprintf(stderr, "new dir: \"%s\"\n", de_ptr->name.c_str());
@@ -125,7 +125,7 @@ int InsertArchiveFileEntry(
   }
 
   auto fe_ptr = std::make_shared<FileEntry>();
-  fe_ptr->SetMeta(meta);
+  fe_ptr->meta = meta;
   fe_ptr->name = split.name;
 
   if (meta.IsLink())
@@ -261,7 +261,7 @@ bool TryInsertArchiveDirEntry(
 void FinalizeArchiveTree(const std::shared_ptr<DirEntry>& dir_entry)
 {
   statistic.disk_total_directories++;
-  dir_entry->SetMeta(archive_meta::Directory());
+  dir_entry->meta = archive_meta::Directory();
   MinimizeArchiveTree(dir_entry);
 }
 
@@ -430,7 +430,7 @@ void MinimizeArchiveTree(const std::shared_ptr<DirEntry>& tree)
     {
       fe_ptr->dir_entry = tree;
     }
-    tree->CopyMetaFrom(*de_ptr);
+    tree->meta = de_ptr->meta;
     statistic.disk_total_directories--;
     tree->children = std::move(de_ptr->children);
     for (const auto& de1_ptr : tree->children)

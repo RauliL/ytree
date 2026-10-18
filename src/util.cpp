@@ -71,36 +71,6 @@ static const std::unordered_map<std::string, CompressMethod> file_extensions =
   { ".SPM", CompressMethod::RPM_COMPRESS }
 };
 
-std::filesystem::path GetPath(const DirEntry* dir_entry)
-{
-  std::string result;
-
-  /* Parents are owned by the tree, so the raw cursor stays valid while the
-   * temporary shared_ptr returned by Parent() goes away. */
-  for (const DirEntry* de_ptr = dir_entry; de_ptr; )
-  {
-    const auto parent = de_ptr->Parent();
-
-    const auto is_root =
-      de_ptr->name.size() == 1 &&
-      de_ptr->name[0] == std::filesystem::path::preferred_separator;
-
-    if (!is_root)
-    {
-      result.insert(0, de_ptr->name);
-    }
-    /* A nameless root (archive placeholder) doesn't contribute a separator */
-    if (parent && !parent->name.empty())
-    {
-      result.insert(result.begin(), std::filesystem::path::preferred_separator);
-    }
-
-    de_ptr = parent.get();
-  }
-
-  return result;
-}
-
 std::shared_ptr<DirEntry> SharedDirEntry(DirEntry* dir_entry)
 {
   if (!dir_entry)

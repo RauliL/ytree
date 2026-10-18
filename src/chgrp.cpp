@@ -2,12 +2,8 @@
 
 static constexpr std::size_t GROUP_NAME_MAX = 64;
 
-static bool SetDirGroup(DirEntry* de_ptr, int new_group_id);
-
-bool FileEntry::ChangeGroup()
+bool Entry::ChangeGroup()
 {
-  bool result = false;
-
   if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
     beep();
@@ -19,13 +15,12 @@ bool FileEntry::ChangeGroup()
   {
     if (const auto group_id_ptr = GetGroupId(*group))
     {
-      result = SetFileGroup(this, *group_id_ptr);
-    } else {
-      FormatMessage("Can't read Group-ID:*\"{}\"", *group);
+      return SetGroup(*group_id_ptr);
     }
+    FormatMessage("Can't read Group-ID:*\"{}\"", *group);
   }
 
-  return result;
+  return false;
 }
 
 std::optional<std::string> GetNewGroup(int st_gid)
@@ -50,22 +45,16 @@ std::optional<std::string> GetNewGroup(int st_gid)
   return new_group;
 }
 
-bool SetFileGroup(FileEntry *fe_ptr, unsigned new_group_id)
+bool Entry::SetGroup(int new_group_id)
 {
-  const auto path = fe_ptr->GetPath();
+  const auto path = GetPath();
 
-  if (!chown(
-    path.c_str(),
-    fe_ptr->meta.UidOrZero(),
-    static_cast<int>(new_group_id)
-  ))
+  if (!chown(path.c_str(), meta.UidOrZero(), new_group_id))
   {
-    /* Erfolgreich modifiziert */
-    /*-------------------------*/
-
-    if (auto meta = EntryMeta::FromFilesystem(path))
+    // Erfolgreich modifiziert
+    if (const auto new_meta = EntryMeta::FromFilesystem(path))
     {
-      fe_ptr->SetMeta(*meta);
+      meta = *new_meta;
     } else {
       Error("stat() failed");
     }
@@ -73,51 +62,6 @@ bool SetFileGroup(FileEntry *fe_ptr, unsigned new_group_id)
     return true;
   }
 
-  FormatMessage("Can't change owner:*{}", std::strerror(errno));
-
-  return false;
-}
-
-bool DirEntry::ChangeGroup()
-{
-  bool result = false;
-
-  if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
-  {
-    beep();
-
-    return false;
-  }
-
-  if (const auto group = GetNewGroup(meta.GidOrZero()))
-  {
-    if (const auto group_id_ptr = GetGroupId(*group))
-    {
-      result = SetDirGroup(this, *group_id_ptr);
-    } else {
-      FormatMessage("Can't read Group-ID:*\"{}\"", *group);
-    }
-  }
-
-  return result;
-}
-
-static bool SetDirGroup(DirEntry* de_ptr, int new_group_id)
-{
-  const auto path = GetPath(de_ptr);
-
-  if (!chown(path.c_str(), de_ptr->meta.UidOrZero(), new_group_id))
-  {
-    // Erfolgreich modifiziert
-    if (auto meta = EntryMeta::FromFilesystem(path))
-    {
-      de_ptr->SetMeta(*meta);
-    } else {
-      Warning("stat() failed");
-    }
-
-    return true;
-  }
   FormatMessage("Can't change owner:*{}", std::strerror(errno));
 
   return false;

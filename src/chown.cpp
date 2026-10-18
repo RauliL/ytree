@@ -2,12 +2,8 @@
 
 static constexpr std::size_t OWNER_NAME_MAX = 64;
 
-static bool SetDirOwner(DirEntry *de_ptr, int new_owner_id);
-
-bool FileEntry::ChangeOwner()
+bool Entry::ChangeOwner()
 {
-  bool result = false;
-
   if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
     beep();
@@ -19,13 +15,12 @@ bool FileEntry::ChangeOwner()
   {
     if (const auto owner_id_ptr = GetPasswdUid(*owner))
     {
-      result = SetFileOwner(this, *owner_id_ptr);
-    } else {
-      FormatMessage("Can't read Owner-ID:*{}", *owner);
+      return SetOwner(*owner_id_ptr);
     }
+    FormatMessage("Can't read Owner-ID:*{}", *owner);
   }
 
-  return result;
+  return false;
 }
 
 std::optional<std::string> GetNewOwner(int st_uid)
@@ -50,65 +45,16 @@ std::optional<std::string> GetNewOwner(int st_uid)
   return new_owner;
 }
 
-bool SetFileOwner(FileEntry* fe_ptr, unsigned new_owner_id)
+bool Entry::SetOwner(int new_owner_id)
 {
-  const auto path = fe_ptr->GetPath();
+  const auto path = GetPath();
 
-  if (!chown(
-    path.c_str(),
-    static_cast<int>(new_owner_id),
-    fe_ptr->meta.GidOrZero()
-  ))
+  if (!chown(path.c_str(), new_owner_id, meta.GidOrZero()))
   {
     // Erfolgreich modifiziert
-    if (auto meta = EntryMeta::FromFilesystem(path))
+    if (const auto new_meta = EntryMeta::FromFilesystem(path))
     {
-      fe_ptr->SetMeta(*meta);
-    } else {
-      Error("stat() Failed");
-    }
-    return true;
-  }
-
-  FormatMessage("Can't change Owner:*{}", std::strerror(errno));
-  return false;
-}
-
-bool DirEntry::ChangeOwner()
-{
-  bool result = false;
-
-  if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
-  {
-    beep();
-
-    return false;
-  }
-
-  if (const auto owner = GetNewOwner(meta.UidOrZero()))
-  {
-    if (const auto owner_id_ptr = GetPasswdUid(*owner))
-    {
-      result = SetDirOwner(this, *owner_id_ptr);
-    } else {
-      FormatMessage("Can't read Owner-ID:*{}", *owner);
-    }
-  }
-
-  return result;
-}
-
-static bool SetDirOwner(DirEntry* de_ptr, int new_owner_id)
-{
-  const auto path = GetPath(de_ptr);
-
-  if (!chown(path.c_str(), new_owner_id, de_ptr->meta.GidOrZero()))
-  {
-    /* Erfolgreich modifiziert */
-    /*-------------------------*/
-    if (auto meta = EntryMeta::FromFilesystem(path))
-    {
-      de_ptr->SetMeta(*meta);
+      meta = *new_meta;
     } else {
       Error("stat() failed");
     }

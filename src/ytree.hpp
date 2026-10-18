@@ -359,6 +359,25 @@ extern void WbkgdSet(WINDOW *w, chtype c);
 #define WbkgdSet(a, b)  ;
 #endif /* COLOR_SUPPORT */
 
+struct Entry
+{
+  EntryMeta meta{};
+
+  virtual std::filesystem::path GetPath() const = 0;
+
+  bool ChangeModus();
+
+  bool SetModus(const std::string& new_modus_str);
+
+  bool ChangeOwner();
+
+  bool SetOwner(int new_user_id);
+
+  bool ChangeGroup();
+
+  bool SetGroup(int new_group_id);
+};
+
 struct DirEntry;
 
 /*
@@ -372,29 +391,24 @@ struct DirEntry;
  *  - SharedDirEntry() recovers the owning shared_ptr from a raw DirEntry*
  *    (via parent->children, or Statistic::tree / disk_statistic.tree).
  */
-struct FileEntry
+struct FileEntry : Entry
 {
-  std::weak_ptr<DirEntry> dir_entry; /* back-reference to owning directory */
-  EntryMeta meta{};
+  /** Back reference to owning directory. */
+  std::weak_ptr<DirEntry> dir_entry;
   bool tagged = false;
   bool matching = false;
   std::string name;
   std::string symlink_target;
 
-  /* Owning directory, or null if it has expired. */
-  std::shared_ptr<DirEntry> Dir() const { return dir_entry.lock(); }
-
-  void SetMeta(const EntryMeta& m)
+  /**
+   * Owning directory, or null if it has expired.
+   */
+  inline std::shared_ptr<DirEntry> Dir() const
   {
-    meta = m;
+    return dir_entry.lock();
   }
 
-  void CopyMetaFrom(const FileEntry& other)
-  {
-    meta = other.meta;
-  }
-
-  std::filesystem::path GetPath() const;
+  std::filesystem::path GetPath() const override;
 
   std::filesystem::path GetRealPath() const;
 
@@ -409,17 +423,9 @@ struct FileEntry
 
     return extension.string();
   }
-
-  bool ChangeModus();
-
-  bool SetModus(const std::string& new_modus_str);
-
-  bool ChangeOwner();
-
-  bool ChangeGroup();
 };
 
-struct DirEntry
+struct DirEntry : Entry
 {
   std::vector<std::shared_ptr<FileEntry>> files;
   std::vector<std::shared_ptr<DirEntry>> children;
@@ -432,7 +438,6 @@ struct DirEntry
   unsigned int tagged_files = 0;
   int cursor_pos = 0;
   int start_file = 0;
-  EntryMeta meta{};
   bool access_denied = false;
   bool global_flag = false;
   bool tagged_flag = false;
@@ -442,24 +447,15 @@ struct DirEntry
   bool login_flag = false;
   std::string name;
 
-  /* Parent directory, or null for the root (or if it has expired). */
-  std::shared_ptr<DirEntry> Parent() const { return parent.lock(); }
-
-  void SetMeta(const EntryMeta& m)
+  /**
+   * Parent directory, or null for the root (or if it has expired).
+   */
+  inline std::shared_ptr<DirEntry> Parent() const
   {
-    meta = m;
+    return parent.lock();
   }
 
-  void CopyMetaFrom(const DirEntry& other)
-  {
-    meta = other.meta;
-  }
-
-  bool ChangeModus();
-
-  bool ChangeOwner();
-
-  bool ChangeGroup();
+  std::filesystem::path GetPath() const override;
 };
 
 struct Statistic
@@ -587,8 +583,6 @@ std::optional<std::string> GetPipeCommand(const std::string& initial = {});
 std::optional<SortSpec> GetKindOfSort();
 bool GetNewFileModus(int y, int x, std::string& modus, const char *term);
 int GetModus(const std::string& modus);
-bool SetFileOwner(FileEntry* fe_ptr, unsigned new_owner_id);
-bool SetFileGroup(FileEntry* fe_ptr, unsigned new_group_id);
 bool ExecuteCommand(FileEntry* fe_ptr, const std::string& command);
 bool PipeFileTo(FileEntry* fe_ptr, FILE* pipe_file);
 int CopyFile(

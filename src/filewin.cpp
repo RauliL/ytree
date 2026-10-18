@@ -1728,7 +1728,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
             ctx.dir_entry->cursor_pos,
             [&](FileEntry& fe)
             {
-              return SetFileOwner(&fe, new_owner_id);
+              return fe.SetOwner(new_owner_id);
             }
           );
 
@@ -1781,7 +1781,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
             ctx.dir_entry->cursor_pos,
             [&](FileEntry& fe)
             {
-              return SetFileGroup(&fe, new_group_id);
+              return fe.SetGroup(new_group_id);
             }
           );
 

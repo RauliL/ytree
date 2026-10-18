@@ -75,7 +75,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name)
 
     statistic.disk_total_directories++;
 
-    den_ptr->SetMeta(MetaOrAbort(path_str));
+    den_ptr->meta = MetaOrAbort(path_str);
 
     /* Sortieren durch direktes Einfuegen */
     /*------------------------------------*/

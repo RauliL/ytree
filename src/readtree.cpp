@@ -112,7 +112,7 @@ int ReadTree(
       auto den_ptr = std::make_shared<DirEntry>();
       den_ptr->parent = dir_entry;
       den_ptr->name = entry_name;
-      den_ptr->SetMeta(*entry_meta);
+      den_ptr->meta = *entry_meta;
 
       ReadTree(den_ptr, new_path, depth - 1);
 
@@ -126,7 +126,7 @@ int ReadTree(
       /*----------------------------------------*/
 
       fen_ptr->name = entry_name;
-      fen_ptr->SetMeta(*entry_meta);
+      fen_ptr->meta = *entry_meta;
 
       if (entry_meta->IsLink())
       {
