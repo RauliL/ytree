@@ -1,4 +1,4 @@
-#include "./walker.hpp"
+#include "./ytree.hpp"
 
 static bool Move(const std::string&, const std::string&);
 
@@ -163,23 +163,4 @@ static bool Move(const std::string& to_path, const std::string& from_path)
   }
 
   return true;
-}
-
-bool MoveTaggedFiles(FileEntry *fe_ptr, MoveWalkContext *ctx)
-{
-  const auto new_name = BuildFilename(fe_ptr->name, ctx->to_file);
-  if (new_name.empty())
-  {
-    Message("Can't move file to*empty name");
-    return false;
-  }
-
-  return MoveFile(
-    fe_ptr,
-    ctx->confirm,
-    new_name,
-    ctx->dest_dir_entry,
-    ctx->to_path,
-    &ctx->new_fe_ptr
-  ) == 0;
 }

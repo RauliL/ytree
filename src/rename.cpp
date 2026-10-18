@@ -1,4 +1,4 @@
-#include "./walker.hpp"
+#include "./ytree.hpp"
 
 static bool RenameDirEntry(
   const std::filesystem::path&,
@@ -211,18 +211,4 @@ static bool RenameFileEntry(
   }
 
   return true;
-}
-
-bool RenameTaggedFiles(FileEntry* fe_ptr, RenameWalkContext* ctx)
-{
-  const auto new_name = BuildFilename(fe_ptr->name, ctx->new_name);
-
-  if (new_name.empty())
-  {
-    Message("Can't rename file to*empty name");
-
-    return false;
-  }
-
-  return RenameFile(fe_ptr, new_name, &ctx->new_fe_ptr) == 0;
 }

@@ -1,4 +1,4 @@
-#include "./walker.hpp"
+#include "./ytree.hpp"
 
 static int Copy(const std::string& to_path, const std::string& from_path);
 static int CopyArchiveFile(const std::string& to_path, const std::string& from_path);
@@ -304,27 +304,6 @@ static int Copy(const std::string& to_path, const std::string& from_path)
   }
 
   return 0;
-}
-
-bool CopyTaggedFiles(FileEntry *fe_ptr, CopyWalkContext *ctx)
-{
-  ctx->new_fe_ptr = fe_ptr;  /* unchanged */
-
-  const auto new_name = BuildFilename(fe_ptr->name, ctx->to_file);
-  if (new_name.empty())
-  {
-    Message("Can't copy file to*empty name");
-  }
-
-  return CopyFile(
-    ctx->statistic_ptr,
-    fe_ptr,
-    ctx->confirm,
-    new_name,
-    ctx->dest_dir_entry,
-    ctx->to_path,
-    ctx->path_copy
-  ) == 0;
 }
 
 static int CopyArchiveFile(

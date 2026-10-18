@@ -1,4 +1,4 @@
-#include "./walker.hpp"
+#include "./ytree.hpp"
 
 static constexpr std::size_t OWNER_NAME_MAX = 64;
 
@@ -6,7 +6,6 @@ static bool SetDirOwner(DirEntry *de_ptr, int new_owner_id);
 
 bool FileEntry::ChangeOwner()
 {
-  ChangeOwnerWalkContext ctx;
   bool result = false;
 
   if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
@@ -20,8 +19,7 @@ bool FileEntry::ChangeOwner()
   {
     if (const auto owner_id_ptr = GetPasswdUid(*owner))
     {
-      ctx.new_owner_id = *owner_id_ptr;
-      result = SetFileOwner(this, &ctx);
+      result = SetFileOwner(this, *owner_id_ptr);
     } else {
       FormatMessage("Can't read Owner-ID:*{}", *owner);
     }
@@ -34,6 +32,7 @@ std::optional<std::string> GetNewOwner(int st_uid)
 {
   std::string owner;
   const int id = (st_uid == -1) ? static_cast<int>(getuid()) : st_uid;
+  std::optional<std::string> new_owner;
 
   if (const auto owner_name_ptr = GetPasswdName(id))
   {
@@ -43,28 +42,25 @@ std::optional<std::string> GetNewOwner(int st_uid)
   }
 
   ClearHelp();
-
   MvAddStr(LINES - 2, 1, "New Owner:");
-
-  const auto new_owner = InputString(owner, LINES - 2, 12, 0, OWNER_NAME_MAX);
+  new_owner = InputString(owner, LINES - 2, 12, 0, OWNER_NAME_MAX);
   move(LINES - 2, 1);
   clrtoeol();
+
   return new_owner;
 }
 
-bool SetFileOwner(FileEntry* fe_ptr, ChangeOwnerWalkContext* ctx)
+bool SetFileOwner(FileEntry* fe_ptr, unsigned new_owner_id)
 {
   const auto path = fe_ptr->GetPath();
-  int new_owner_id;
 
-  ctx->new_fe_ptr = fe_ptr; // unchanged
-
-  new_owner_id = ctx->new_owner_id;
-
-  if (!chown(path.c_str(), new_owner_id, fe_ptr->meta.GidOrZero()))
+  if (!chown(
+    path.c_str(),
+    static_cast<int>(new_owner_id),
+    fe_ptr->meta.GidOrZero()
+  ))
   {
-    /* Erfolgreich modifiziert */
-    /*-------------------------*/
+    // Erfolgreich modifiziert
     if (auto meta = EntryMeta::FromFilesystem(path))
     {
       fe_ptr->SetMeta(*meta);

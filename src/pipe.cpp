@@ -1,4 +1,4 @@
-#include "./walker.hpp"
+#include "./ytree.hpp"
 
 int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
 {
@@ -56,14 +56,12 @@ std::optional<std::string> GetPipeCommand(const std::string& initial)
   return command;
 }
 
-bool PipeTaggedFiles(FileEntry* fe_ptr, PipeWalkContext* ctx)
+bool PipeFileTo(FileEntry* fe_ptr, FILE* pipe_file)
 {
   const auto from_path = fe_ptr->GetRealPath();
   int i;
   int n;
   char buffer[2048];
-
-  ctx->new_fe_ptr = fe_ptr; // Unchanged.
 
   if ((i = open(from_path.c_str(), O_RDONLY)) == -1)
   {
@@ -74,7 +72,7 @@ bool PipeTaggedFiles(FileEntry* fe_ptr, PipeWalkContext* ctx)
 
   while ((n = read(i, buffer, sizeof(buffer))) > 0)
   {
-    if (std::fwrite(buffer, n, 1, ctx->pipe_file) != 1)
+    if (std::fwrite(buffer, n, 1, pipe_file) != 1)
     {
       FormatMessage("Write-Error!*{}", std::strerror(errno));
       close(i);

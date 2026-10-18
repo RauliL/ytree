@@ -1,8 +1,10 @@
 #include <algorithm>
+#include <concepts>
 #include <functional>
+#include <type_traits>
 
 #include "./mouse.hpp"
-#include "./walker.hpp"
+#include "./ytree.hpp"
 
 static bool reverse_sort;
 static bool order;
@@ -1145,124 +1147,157 @@ static int HandleFileMouse(int *start_file, int *cursor_pos, int *start_x, DirEn
   }
 }
 
-template<typename Context>
-  requires std::is_base_of_v<WalkContextBase, Context>
-static void WalkTaggedFiles(
-  int start_file,
-  int cursor_pos,
-  bool (*fkt)(FileEntry*, Context*),
-  Context* ctx
-)
+/* Result of one interactive tagged-file action.
+ * replacement non-null means the list slot should track a different entry
+ * (e.g. after a move into another directory). */
+struct TaggedFileWalkResult
 {
-  FileEntry *fe_ptr;
-  int       i;
-  int       start_x = 0;
-  bool      continue_walk = true;
-  bool      maybe_change_x = false;
+  bool continue_walk = true;
+  FileEntry* replacement = nullptr;
+};
 
-  if( baudrate() >= QUICK_BAUD_RATE ) typeahead(0);
+template<typename F>
+static TaggedFileWalkResult InvokeTaggedFileAction(F&& action, FileEntry& fe)
+{
+  using R = std::decay_t<std::invoke_result_t<F&, FileEntry&>>;
+
+  if constexpr (std::is_same_v<R, TaggedFileWalkResult>)
+  {
+    return action(fe);
+  }
+  else if constexpr (std::is_same_v<R, bool>)
+  {
+    return TaggedFileWalkResult{action(fe), nullptr};
+  }
+  else
+  {
+    static_assert(
+      std::is_void_v<R>,
+      "tagged-file walk callback must return void, bool, or TaggedFileWalkResult"
+    );
+    action(fe);
+    return {};
+  }
+}
+
+template<typename F>
+  requires std::invocable<F&, FileEntry&>
+static void WalkTaggedFiles(int start_file, int cursor_pos, F&& action)
+{
+  int start_x = 0;
+  bool continue_walk = true;
+  bool maybe_change_x = false;
+
+  if (baudrate() >= QUICK_BAUD_RATE)
+  {
+    typeahead(0);
+  }
 
   max_disp_files = window_height * max_column;
 
-  for( i=0; i < (int)file_entry_list.size() && continue_walk; i++ )
+  for (
+    int i = 0;
+    i < static_cast<int>(file_entry_list.size()) && continue_walk;
+    ++i
+  )
   {
-    const auto fe_sp = file_entry_list[i];
+    auto fe_ptr = file_entry_list[i].get();
 
-    fe_ptr = fe_sp.get();
-
-    if( fe_ptr->tagged && fe_ptr->matching )
+    if (!fe_ptr->tagged || !fe_ptr->matching)
     {
-      if( maybe_change_x == false &&
-    i >= start_file && i < start_file + max_disp_files )
-      {
-    PrintFileEntry(start_file + cursor_pos,
-      cursor_pos % window_height,
-      cursor_pos / window_height,
-      false,
-            start_x
-);
+      continue;
+    }
 
-        cursor_pos = i - start_file;
+    if (
+      !maybe_change_x &&
+      i >= start_file &&
+      i < start_file + max_disp_files
+    )
+    {
+      PrintFileEntry(
+        start_file + cursor_pos,
+        cursor_pos % window_height,
+        cursor_pos / window_height,
+        false,
+        start_x
+      );
 
-  PrintFileEntry(start_file + cursor_pos,
-      cursor_pos % window_height,
-      cursor_pos / window_height,
-      true,
-            start_x
-);
-      }
-      else
-      {
-  start_file = std::max(0, i - max_disp_files + 1);
-  cursor_pos = i - start_file;
+      cursor_pos = static_cast<int>(i) - start_file;
 
-        DisplayFiles(fe_ptr->Dir().get(),
-          start_file,
-          start_file + cursor_pos,
-          start_x
-);
-  maybe_change_x = false;
-      }
+      PrintFileEntry(
+        start_file + cursor_pos,
+        cursor_pos % window_height,
+        cursor_pos / window_height,
+        true,
+        start_x
+      );
+    } else {
+      start_file = std::max(0, i - max_disp_files + 1);
+      cursor_pos = i - start_file;
 
-      if( fe_ptr->Dir()->global_flag )
-        DisplayGlobalFileParameter(fe_ptr);
-      else
-        DisplayFileParameter(fe_ptr);
+      DisplayFiles(
+        fe_ptr->Dir().get(),
+        start_file,
+        start_file + cursor_pos,
+        start_x
+      );
+      maybe_change_x = false;
+    }
 
-      RefreshWindow(file_window);
-      doupdate();
-      continue_walk = fkt(fe_ptr, ctx);
-      if( ctx->new_fe_ptr != fe_ptr )
-      {
-        file_entry_list[i] = FindSharedFileEntry(ctx->new_fe_ptr);
-  ChangeFileEntry();
-        max_disp_files = window_height * max_column;
-  maybe_change_x = true;
-      }
+    if (fe_ptr->Dir()->global_flag)
+    {
+      DisplayGlobalFileParameter(fe_ptr);
+    } else {
+      DisplayFileParameter(fe_ptr);
+    }
+
+    RefreshWindow(file_window);
+    doupdate();
+
+    const auto step = InvokeTaggedFileAction(action, *fe_ptr);
+    continue_walk = step.continue_walk;
+
+    if (step.replacement != nullptr && step.replacement != fe_ptr)
+    {
+      file_entry_list[i] = FindSharedFileEntry(step.replacement);
+      ChangeFileEntry();
+      max_disp_files = window_height * max_column;
+      maybe_change_x = true;
     }
   }
 
-  if( baudrate() >= QUICK_BAUD_RATE ) typeahead(-1);
+  if (baudrate() >= QUICK_BAUD_RATE) typeahead(-1);
 }
 
-template<typename Context>
-  requires std::is_base_of_v<WalkContextBase, Context>
-static void SilentWalkTaggedFiles(
-  bool (*fkt)(FileEntry*, Context*),
-  Context* ctx
-)
+template<typename F>
+  requires std::invocable<F&, FileEntry&>
+static void SilentWalkTaggedFiles(F&& action)
 {
-  for( int i = 0; i < (int)file_entry_list.size(); i++ )
+  for (const auto& fe_sp : file_entry_list)
   {
-    FileEntry *fe_ptr = file_entry_list[i].get();
+    auto fe_ptr = fe_sp.get();
 
-    if( fe_ptr->tagged && fe_ptr->matching )
+    if (fe_ptr->tagged && fe_ptr->matching)
     {
-      fkt(fe_ptr, ctx);
+      action(*fe_ptr);
     }
   }
 }
 
-template<typename Context>
-  requires std::is_base_of_v<WalkContextBase, Context>
-static void SilentTagWalkTaggedFiles(
-  bool (*fkt)(FileEntry*, Context*),
-  Context* ctx
-)
+template<typename F>
+  requires std::invocable<F&, FileEntry&>
+static void SilentTagWalkTaggedFiles(F&& action)
 {
-  for( int i = 0; i < (int)file_entry_list.size(); i++ )
+  for (const auto& fe_sp : file_entry_list)
   {
-    FileEntry *fe_ptr = file_entry_list[i].get();
+    auto fe_ptr = fe_sp.get();
 
-    if( fe_ptr->tagged && fe_ptr->matching )
+    if (fe_ptr->tagged && fe_ptr->matching && action(*fe_ptr))
     {
-      if( fkt(fe_ptr, ctx) ) {
-        fe_ptr->tagged = false;
-      }
+      fe_ptr->tagged = false;
     }
   }
 }
-
 
 struct FileWindowContext
 {
@@ -1636,19 +1671,20 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 
             if( GetNewFileModus(LINES - 2, 1, ctx.modus, "\r\033") )
       {
-        ChangeModusWalkContext modus_ctx;
-        modus_ctx.new_modus = ctx.modus;
-                          WalkTaggedFiles(ctx.dir_entry->start_file,
-             ctx.dir_entry->cursor_pos,
-             SetFileModus,
-             &modus_ctx
-);
+        WalkTaggedFiles(
+          ctx.dir_entry->start_file,
+          ctx.dir_entry->cursor_pos,
+          [&](FileEntry& fe)
+          {
+            return fe.SetModus(ctx.modus);
+          }
+        );
 
         DisplayFiles(ctx.dir_entry,
           ctx.dir_entry->start_file,
           ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
           ctx.start_x
-);
+        );
       }
       else
       {
@@ -1685,13 +1721,15 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
       {
         if (const auto owner_id_ptr = GetPasswdUid(*owner))
         {
-          ChangeOwnerWalkContext owner_ctx;
-          owner_ctx.new_owner_id = *owner_id_ptr;
+          const auto new_owner_id = *owner_id_ptr;
+
           WalkTaggedFiles(
             ctx.dir_entry->start_file,
             ctx.dir_entry->cursor_pos,
-            SetFileOwner,
-            &owner_ctx
+            [&](FileEntry& fe)
+            {
+              return SetFileOwner(&fe, new_owner_id);
+            }
           );
 
           DisplayFiles(
@@ -1736,13 +1774,15 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
       {
         if (const auto group_id_ptr = GetGroupId(*group))
         {
-          ChangeGroupWalkContext group_ctx;
-          group_ctx.new_group_id = *group_id_ptr;
+          const auto new_group_id = *group_id_ptr;
+
           WalkTaggedFiles(
             ctx.dir_entry->start_file,
             ctx.dir_entry->cursor_pos,
-            SetFileGroup,
-            &group_ctx
+            [&](FileEntry& fe)
+            {
+              return SetFileGroup(&fe, new_group_id);
+            }
           );
 
           DisplayFiles(
@@ -2162,19 +2202,32 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           break;
         }
 
-        CopyWalkContext copy_ctx;
-        copy_ctx.statistic_ptr = &statistic;
-        copy_ctx.dest_dir_entry = ctx.dest_dir_entry;
-        copy_ctx.to_file = ctx.to_file;
-        copy_ctx.to_path = ctx.to_path;
-        copy_ctx.path_copy = ctx.path_copy;
-        copy_ctx.confirm = (ctx.term == 'Y');
+        const bool confirm = (ctx.term == 'Y');
+        WalkTaggedFiles(
+          ctx.dir_entry->start_file,
+          ctx.dir_entry->cursor_pos,
+          [&](FileEntry& fe)
+          {
+            const auto new_name = BuildFilename(fe.name, ctx.to_file);
 
-        WalkTaggedFiles(ctx.dir_entry->start_file,
-             ctx.dir_entry->cursor_pos,
-             CopyTaggedFiles,
-             &copy_ctx
-);
+            if (new_name.empty())
+            {
+              Message("Can't copy file to*empty name");
+
+              return false;
+            }
+
+            return CopyFile(
+              &statistic,
+              &fe,
+              confirm,
+              new_name,
+              ctx.dest_dir_entry,
+              ctx.to_path,
+              ctx.path_copy
+            ) == 0;
+          }
+        );
 
                           DisplayAvailBytes();
 
@@ -2217,19 +2270,32 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           break;
         }
 
-        CopyWalkContext copy_ctx;
-        copy_ctx.statistic_ptr = &disk_statistic;
-        copy_ctx.dest_dir_entry = ctx.dest_dir_entry;
-        copy_ctx.to_file = ctx.to_file;
-        copy_ctx.to_path = ctx.to_path;
-        copy_ctx.path_copy = ctx.path_copy;
-        copy_ctx.confirm = (ctx.term == 'Y');
+        const bool confirm = (ctx.term == 'Y');
+        WalkTaggedFiles(
+          ctx.dir_entry->start_file,
+          ctx.dir_entry->cursor_pos,
+          [&](FileEntry& fe)
+          {
+            const auto new_name = BuildFilename(fe.name, ctx.to_file);
 
-        WalkTaggedFiles(ctx.dir_entry->start_file,
-             ctx.dir_entry->cursor_pos,
-             CopyTaggedFiles,
-             &copy_ctx
-);
+            if (new_name.empty())
+            {
+              Message("Can't copy file to*empty name");
+
+              return false;
+            }
+
+            return CopyFile(
+              &disk_statistic,
+              &fe,
+              confirm,
+              new_name,
+              ctx.dest_dir_entry,
+              ctx.to_path,
+              ctx.path_copy
+            ) == 0;
+          }
+        );
 
                           DisplayAvailBytes();
 
@@ -2368,17 +2434,37 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
         break;
       }
 
-      MoveWalkContext move_ctx;
-      move_ctx.dest_dir_entry = ctx.dest_dir_entry;
-      move_ctx.to_file = ctx.to_file;
-      move_ctx.to_path = ctx.to_path;
-      move_ctx.confirm = (ctx.term == 'Y');
+      const bool confirm = (ctx.term == 'Y');
+      WalkTaggedFiles(
+        ctx.dir_entry->start_file,
+        ctx.dir_entry->cursor_pos,
+        [&](FileEntry& fe) -> TaggedFileWalkResult
+        {
+          const auto new_name = BuildFilename(fe.name, ctx.to_file);
 
-      WalkTaggedFiles(ctx.dir_entry->start_file,
-           ctx.dir_entry->cursor_pos,
-           MoveTaggedFiles,
-           &move_ctx
-);
+          if (new_name.empty())
+          {
+            Message("Can't move file to*empty name");
+
+            return {false, nullptr};
+          }
+
+          FileEntry* replacement = nullptr;
+          const bool ok = MoveFile(
+            &fe,
+            confirm,
+            new_name,
+            ctx.dest_dir_entry,
+            ctx.to_path,
+            &replacement
+          ) == 0;
+
+          return {
+            ok,
+            (replacement != nullptr && replacement != &fe) ? replacement : nullptr
+          };
+        }
+      );
 
       BuildFileEntryList(ctx.dir_entry);
 
@@ -2522,15 +2608,25 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
         break;
       }
 
-      RenameWalkContext rename_ctx;
-      rename_ctx.new_name = *tagged_rename;
-      rename_ctx.confirm = false;
+      const auto new_name_pattern = *tagged_rename;
+      WalkTaggedFiles(
+        ctx.dir_entry->start_file,
+        ctx.dir_entry->cursor_pos,
+        [&](FileEntry& fe)
+        {
+          const auto new_name = BuildFilename(fe.name, new_name_pattern);
 
-      WalkTaggedFiles(ctx.dir_entry->start_file,
-           ctx.dir_entry->cursor_pos,
-           RenameTaggedFiles,
-           &rename_ctx
-);
+          if (new_name.empty())
+          {
+            Message("Can't rename file to*empty name");
+
+            return false;
+          }
+
+          FileEntry* unchanged = &fe;
+          return RenameFile(&fe, new_name, &unchanged) == 0;
+        }
+      );
 
       BuildFileEntryList(ctx.dir_entry);
 
@@ -2663,24 +2759,22 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
               break;
             }
 
-            PipeWalkContext pipe_ctx;
-            if (!(pipe_ctx.pipe_file = popen(filepath.c_str(), "w")))
+            FILE* pipe_file = popen(filepath.c_str(), "w");
+            if (!pipe_file)
             {
               FormatMessage("execution of command*{}*failed", filepath);
               break;
             }
 
-
             WalkTaggedFiles(
               ctx.dir_entry->start_file,
               ctx.dir_entry->cursor_pos,
-              PipeTaggedFiles,
-              &pipe_ctx
+              [&](FileEntry& fe) { return PipeFileTo(&fe, pipe_file); }
             );
 
             clearok(stdscr, true);
 
-            if (pclose(pipe_ctx.pipe_file) )
+            if (pclose(pipe_file))
             {
               Warning("pclose() failed");
             }
@@ -2723,9 +2817,9 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
               endwin();
               SuspendClock();
 
-              ExecuteWalkContext execute_ctx;
-              execute_ctx.command = command_line;
-              SilentTagWalkTaggedFiles(ExecuteCommand, &execute_ctx);
+              SilentTagWalkTaggedFiles(
+                [&](FileEntry& fe) { return ExecuteCommand(&fe, command_line); }
+              );
 
               HitReturnToContinue();
               refresh();
@@ -2759,9 +2853,9 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
               command_line = *tagged_command;
               refresh();
               endwin();
-              ExecuteWalkContext execute_ctx;
-              execute_ctx.command = command_line;
-              SilentWalkTaggedFiles(ExecuteCommand, &execute_ctx);
+              SilentWalkTaggedFiles(
+                [&](FileEntry& fe) { ExecuteCommand(&fe, command_line); }
+              );
               HitReturnToContinue();
               refresh();
               InitClock();

@@ -410,6 +410,8 @@ struct FileEntry
 
   bool ChangeModus();
 
+  bool SetModus(const std::string& new_modus_str);
+
   bool ChangeOwner();
 
   bool ChangeGroup();
@@ -578,6 +580,10 @@ std::optional<std::string> GetPipeCommand(const std::string& initial = {});
 std::optional<SortSpec> GetKindOfSort();
 bool GetNewFileModus(int y, int x, std::string& modus, const char *term);
 int GetModus(const std::string& modus);
+bool SetFileOwner(FileEntry* fe_ptr, unsigned new_owner_id);
+bool SetFileGroup(FileEntry* fe_ptr, unsigned new_group_id);
+bool ExecuteCommand(FileEntry* fe_ptr, const std::string& command);
+bool PipeFileTo(FileEntry* fe_ptr, FILE* pipe_file);
 int CopyFile(
   Statistic* statistic_ptr,
   FileEntry* fe_ptr,

@@ -1,4 +1,4 @@
-#include "./walker.hpp"
+#include "./ytree.hpp"
 
 int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
 {
@@ -79,17 +79,15 @@ std::optional<std::string> GetSearchCommandLine()
   return edited;
 }
 
-bool ExecuteCommand(FileEntry* fe_ptr, ExecuteWalkContext* ctx)
+bool ExecuteCommand(FileEntry* fe_ptr, const std::string& command)
 {
   std::string command_line;
 
-  ctx->new_fe_ptr = fe_ptr;
-
-  for (std::size_t i = 0; i < ctx->command.length(); ++i)
+  for (std::size_t i = 0; i < command.length(); ++i)
   {
-    const auto c = ctx->command[i];
+    const auto c = command[i];
 
-    if (c == '{' && i + 1 < ctx->command.length() && ctx->command[i + 1] == '}')
+    if (c == '{' && i + 1 < command.length() && command[i + 1] == '}')
     {
       command_line += fe_ptr->GetPath();
       ++i;

@@ -1,4 +1,4 @@
-#include "./walker.hpp"
+#include "./ytree.hpp"
 
 static constexpr std::size_t GROUP_NAME_MAX = 64;
 
@@ -6,7 +6,6 @@ static bool SetDirGroup(DirEntry* de_ptr, int new_group_id);
 
 bool FileEntry::ChangeGroup()
 {
-  ChangeGroupWalkContext ctx;
   bool result = false;
 
   if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
@@ -20,8 +19,7 @@ bool FileEntry::ChangeGroup()
   {
     if (const auto group_id_ptr = GetGroupId(*group))
     {
-      ctx.new_group_id = *group_id_ptr;
-      result = SetFileGroup(this, &ctx);
+      result = SetFileGroup(this, *group_id_ptr);
     } else {
       FormatMessage("Can't read Group-ID:*\"{}\"", *group);
     }
@@ -34,6 +32,7 @@ std::optional<std::string> GetNewGroup(int st_gid)
 {
   std::string group;
   const int id = st_gid == -1 ? static_cast<int>(getgid()) : st_gid;
+  std::optional<std::string> new_group;
 
   if (const auto group_name_ptr = GetGroupName(id))
   {
@@ -43,25 +42,23 @@ std::optional<std::string> GetNewGroup(int st_gid)
   }
 
   ClearHelp();
-
   MvAddStr(LINES - 2, 1, "New Group:");
-
-  const auto new_group = InputString(group, LINES - 2, 12, 0, GROUP_NAME_MAX);
+  new_group = InputString(group, LINES - 2, 12, 0, GROUP_NAME_MAX);
   move(LINES - 2, 1);
   clrtoeol();
+
   return new_group;
 }
 
-bool SetFileGroup(FileEntry *fe_ptr, ChangeGroupWalkContext *ctx)
+bool SetFileGroup(FileEntry *fe_ptr, unsigned new_group_id)
 {
   const auto path = fe_ptr->GetPath();
-  int  new_group_id;
 
-  ctx->new_fe_ptr = fe_ptr; /* unchanged */
-
-  new_group_id = ctx->new_group_id;
-
-  if (!chown(path.c_str(), fe_ptr->meta.UidOrZero(), new_group_id))
+  if (!chown(
+    path.c_str(),
+    fe_ptr->meta.UidOrZero(),
+    static_cast<int>(new_group_id)
+  ))
   {
     /* Erfolgreich modifiziert */
     /*-------------------------*/
@@ -72,10 +69,12 @@ bool SetFileGroup(FileEntry *fe_ptr, ChangeGroupWalkContext *ctx)
     } else {
       Error("stat() failed");
     }
+
     return true;
   }
 
   FormatMessage("Can't change owner:*{}", std::strerror(errno));
+
   return false;
 }
 
@@ -109,8 +108,7 @@ static bool SetDirGroup(DirEntry* de_ptr, int new_group_id)
 
   if (!chown(path.c_str(), de_ptr->meta.UidOrZero(), new_group_id))
   {
-    /* Erfolgreich modifiziert */
-    /*-------------------------*/
+    // Erfolgreich modifiziert
     if (auto meta = EntryMeta::FromFilesystem(path))
     {
       de_ptr->SetMeta(*meta);
