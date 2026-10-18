@@ -22,7 +22,7 @@ int ChangeFileOwner(FileEntry *fe_ptr)
     if (const auto owner_id_ptr = GetPasswdUid(*owner))
     {
       ctx.new_owner_id = *owner_id_ptr;
-      result = SetFileOwner(fe_ptr, &ctx);
+      result = SetFileOwner(fe_ptr, &ctx) ? 0 : -1;
     } else {
       FormatMessage("Can't read Owner-ID:*{}", *owner);
     }
@@ -55,10 +55,9 @@ std::optional<std::string> GetNewOwner(int st_uid)
   return new_owner;
 }
 
-int SetFileOwner(FileEntry* fe_ptr, ChangeOwnerWalkContext* ctx)
+bool SetFileOwner(FileEntry* fe_ptr, ChangeOwnerWalkContext* ctx)
 {
   const auto path = fe_ptr->GetPath();
-  int result = -1;
   int new_owner_id;
 
   ctx->new_fe_ptr = fe_ptr; // unchanged
@@ -75,12 +74,11 @@ int SetFileOwner(FileEntry* fe_ptr, ChangeOwnerWalkContext* ctx)
     } else {
       Error("stat() Failed");
     }
-    result = 0;
-  } else {
-    FormatMessage("Can't change Owner:*{}", std::strerror(errno));
+    return true;
   }
 
-  return result;
+  FormatMessage("Can't change Owner:*{}", std::strerror(errno));
+  return false;
 }
 
 int ChangeDirOwner(DirEntry *de_ptr)

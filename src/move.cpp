@@ -165,26 +165,21 @@ static bool Move(const std::string& to_path, const std::string& from_path)
   return true;
 }
 
-int MoveTaggedFiles(FileEntry *fe_ptr, MoveWalkContext *ctx)
+bool MoveTaggedFiles(FileEntry *fe_ptr, MoveWalkContext *ctx)
 {
-  int  result = -1;
-
   const auto new_name = BuildFilename(fe_ptr->name, ctx->to_file);
   if (new_name.empty())
   {
     Message("Can't move file to*empty name");
-  }
-  else
-  {
-    result = MoveFile(
-      fe_ptr,
-      ctx->confirm,
-      new_name,
-      ctx->dest_dir_entry,
-      ctx->to_path,
-      &ctx->new_fe_ptr
-    );
+    return false;
   }
 
-  return( result );
+  return MoveFile(
+    fe_ptr,
+    ctx->confirm,
+    new_name,
+    ctx->dest_dir_entry,
+    ctx->to_path,
+    &ctx->new_fe_ptr
+  ) == 0;
 }

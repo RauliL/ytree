@@ -79,7 +79,7 @@ std::optional<std::string> GetSearchCommandLine()
   return edited;
 }
 
-int ExecuteCommand(FileEntry* fe_ptr, ExecuteWalkContext* ctx)
+bool ExecuteCommand(FileEntry* fe_ptr, ExecuteWalkContext* ctx)
 {
   std::string command_line;
 
@@ -98,5 +98,5 @@ int ExecuteCommand(FileEntry* fe_ptr, ExecuteWalkContext* ctx)
     }
   }
 
-  return SilentSystemCall(command_line);
+  return SilentSystemCall(command_line) == 0;
 }

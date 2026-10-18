@@ -1150,21 +1150,21 @@ template<typename Context>
 static void WalkTaggedFiles(
   int start_file,
   int cursor_pos,
-  int (*fkt)(FileEntry*, Context*),
+  bool (*fkt)(FileEntry*, Context*),
   Context* ctx
 )
 {
   FileEntry *fe_ptr;
   int       i;
   int       start_x = 0;
-  int       result = 0;
+  bool      continue_walk = true;
   bool      maybe_change_x = false;
 
   if( baudrate() >= QUICK_BAUD_RATE ) typeahead(0);
 
   max_disp_files = window_height * max_column;
 
-  for( i=0; i < (int)file_entry_list.size() && result == 0; i++ )
+  for( i=0; i < (int)file_entry_list.size() && continue_walk; i++ )
   {
     const auto fe_sp = file_entry_list[i];
 
@@ -1211,7 +1211,7 @@ static void WalkTaggedFiles(
 
       RefreshWindow(file_window);
       doupdate();
-      result = fkt(fe_ptr, ctx);
+      continue_walk = fkt(fe_ptr, ctx);
       if( ctx->new_fe_ptr != fe_ptr )
       {
         file_entry_list[i] = FindSharedFileEntry(ctx->new_fe_ptr);
@@ -1228,7 +1228,7 @@ static void WalkTaggedFiles(
 template<typename Context>
   requires std::is_base_of_v<WalkContextBase, Context>
 static void SilentWalkTaggedFiles(
-  int (*fkt)(FileEntry*, Context*),
+  bool (*fkt)(FileEntry*, Context*),
   Context* ctx
 )
 {
@@ -1246,7 +1246,7 @@ static void SilentWalkTaggedFiles(
 template<typename Context>
   requires std::is_base_of_v<WalkContextBase, Context>
 static void SilentTagWalkTaggedFiles(
-  int (*fkt)(FileEntry*, Context*),
+  bool (*fkt)(FileEntry*, Context*),
   Context* ctx
 )
 {
@@ -1256,9 +1256,7 @@ static void SilentTagWalkTaggedFiles(
 
     if( fe_ptr->tagged && fe_ptr->matching )
     {
-      const int result = fkt(fe_ptr, ctx);
-
-      if( result == 0 ) {
+      if( fkt(fe_ptr, ctx) ) {
         fe_ptr->tagged = false;
       }
     }

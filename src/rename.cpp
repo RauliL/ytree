@@ -213,7 +213,7 @@ static bool RenameFileEntry(
   return true;
 }
 
-int RenameTaggedFiles(FileEntry* fe_ptr, RenameWalkContext* ctx)
+bool RenameTaggedFiles(FileEntry* fe_ptr, RenameWalkContext* ctx)
 {
   const auto new_name = BuildFilename(fe_ptr->name, ctx->new_name);
 
@@ -221,8 +221,8 @@ int RenameTaggedFiles(FileEntry* fe_ptr, RenameWalkContext* ctx)
   {
     Message("Can't rename file to*empty name");
 
-    return -1;
+    return false;
   }
 
-  return RenameFile(fe_ptr, new_name, &ctx->new_fe_ptr);
+  return RenameFile(fe_ptr, new_name, &ctx->new_fe_ptr) == 0;
 }

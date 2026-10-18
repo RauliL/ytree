@@ -35,7 +35,7 @@ int ChangeFileModus(FileEntry *fe_ptr)
     fe_ptr->meta.Mode(),
     [&](ChangeModusWalkContext& ctx)
     {
-      return SetFileModus(fe_ptr, &ctx);
+      return SetFileModus(fe_ptr, &ctx) ? 0 : -1;
     }
   );
 }
@@ -119,10 +119,9 @@ bool GetNewFileModus(int y, int x, std::string& modus, const char *term)
   return c == CR;
 }
 
-int SetFileModus(FileEntry *fe_ptr, ChangeModusWalkContext *ctx)
+bool SetFileModus(FileEntry *fe_ptr, ChangeModusWalkContext *ctx)
 {
   const auto path = fe_ptr->GetPath();
-  int result = -1;
   int new_modus;
 
   ctx->new_fe_ptr = fe_ptr; // unchanged
@@ -146,12 +145,11 @@ int SetFileModus(FileEntry *fe_ptr, ChangeModusWalkContext *ctx)
       Error("stat() failed");
     }
 
-    result = 0;
-  } else {
-    FormatMessage("Cant't change modus:*{}", ec.message().c_str());
+    return true;
   }
 
-  return result;
+  FormatMessage("Cant't change modus:*{}", ec.message().c_str());
+  return false;
 }
 
 static int SetDirModus(DirEntry *de_ptr, const ChangeModusWalkContext& ctx)

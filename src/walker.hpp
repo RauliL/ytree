@@ -56,11 +56,11 @@ struct PipeWalkContext : WalkContextBase
   FILE* pipe_file = nullptr;
 };
 
-int PipeTaggedFiles(FileEntry* fe_ptr, PipeWalkContext* ctx);
-int SetFileModus(FileEntry* fe_ptr, ChangeModusWalkContext* ctx);
-int CopyTaggedFiles(FileEntry* fe_ptr, CopyWalkContext* ctx);
-int MoveTaggedFiles(FileEntry* fe_ptr, MoveWalkContext* ctx);
-int SetFileOwner(FileEntry* fe_ptr, ChangeOwnerWalkContext* ctx);
-int SetFileGroup(FileEntry* fe_ptr, ChangeGroupWalkContext* ctx);
-int ExecuteCommand(FileEntry* fe_ptr, ExecuteWalkContext* ctx);
-int RenameTaggedFiles(FileEntry* fe_ptr, RenameWalkContext* ctx);
+bool PipeTaggedFiles(FileEntry* fe_ptr, PipeWalkContext* ctx);
+bool SetFileModus(FileEntry* fe_ptr, ChangeModusWalkContext* ctx);
+bool CopyTaggedFiles(FileEntry* fe_ptr, CopyWalkContext* ctx);
+bool MoveTaggedFiles(FileEntry* fe_ptr, MoveWalkContext* ctx);
+bool SetFileOwner(FileEntry* fe_ptr, ChangeOwnerWalkContext* ctx);
+bool SetFileGroup(FileEntry* fe_ptr, ChangeGroupWalkContext* ctx);
+bool ExecuteCommand(FileEntry* fe_ptr, ExecuteWalkContext* ctx);
+bool RenameTaggedFiles(FileEntry* fe_ptr, RenameWalkContext* ctx);

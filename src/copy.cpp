@@ -306,10 +306,8 @@ static int Copy(const std::string& to_path, const std::string& from_path)
   return 0;
 }
 
-int CopyTaggedFiles(FileEntry *fe_ptr, CopyWalkContext *ctx)
+bool CopyTaggedFiles(FileEntry *fe_ptr, CopyWalkContext *ctx)
 {
-  int  result = -1;
-
   ctx->new_fe_ptr = fe_ptr;  /* unchanged */
 
   const auto new_name = BuildFilename(fe_ptr->name, ctx->to_file);
@@ -318,7 +316,7 @@ int CopyTaggedFiles(FileEntry *fe_ptr, CopyWalkContext *ctx)
     Message("Can't copy file to*empty name");
   }
 
-  result = CopyFile(
+  return CopyFile(
     ctx->statistic_ptr,
     fe_ptr,
     ctx->confirm,
@@ -326,9 +324,7 @@ int CopyTaggedFiles(FileEntry *fe_ptr, CopyWalkContext *ctx)
     ctx->dest_dir_entry,
     ctx->to_path,
     ctx->path_copy
-  );
-
-  return( result );
+  ) == 0;
 }
 
 static int CopyArchiveFile(

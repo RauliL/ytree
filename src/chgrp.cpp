@@ -22,7 +22,7 @@ int ChangeFileGroup(FileEntry *fe_ptr)
     if (const auto group_id_ptr = GetGroupId(*group))
     {
       ctx.new_group_id = *group_id_ptr;
-      result = SetFileGroup(fe_ptr, &ctx);
+      result = SetFileGroup(fe_ptr, &ctx) ? 0 : -1;
     } else {
       FormatMessage("Can't read Group-ID:*\"{}\"", *group);
     }
@@ -52,13 +52,10 @@ std::optional<std::string> GetNewGroup(int st_gid)
   return new_group;
 }
 
-int SetFileGroup(FileEntry *fe_ptr, ChangeGroupWalkContext *ctx)
+bool SetFileGroup(FileEntry *fe_ptr, ChangeGroupWalkContext *ctx)
 {
   const auto path = fe_ptr->GetPath();
-  int  result;
   int  new_group_id;
-
-  result = -1;
 
   ctx->new_fe_ptr = fe_ptr; /* unchanged */
 
@@ -75,12 +72,11 @@ int SetFileGroup(FileEntry *fe_ptr, ChangeGroupWalkContext *ctx)
     } else {
       Error("stat() failed");
     }
-    result = 0;
-  } else {
-    FormatMessage("Can't change owner:*{}", std::strerror(errno));
+    return true;
   }
 
-  return( result );
+  FormatMessage("Can't change owner:*{}", std::strerror(errno));
+  return false;
 }
 
 

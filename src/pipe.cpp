@@ -56,7 +56,7 @@ std::optional<std::string> GetPipeCommand(const std::string& initial)
   return command;
 }
 
-int PipeTaggedFiles(FileEntry* fe_ptr, PipeWalkContext* ctx)
+bool PipeTaggedFiles(FileEntry* fe_ptr, PipeWalkContext* ctx)
 {
   const auto from_path = fe_ptr->GetRealPath();
   int i;
@@ -69,7 +69,7 @@ int PipeTaggedFiles(FileEntry* fe_ptr, PipeWalkContext* ctx)
   {
     FormatMessage("Can't open file*\"{}\"*{}", from_path.c_str(), std::strerror(errno));
 
-    return -1;
+    return false;
   }
 
   while ((n = read(i, buffer, sizeof(buffer))) > 0)
@@ -79,11 +79,11 @@ int PipeTaggedFiles(FileEntry* fe_ptr, PipeWalkContext* ctx)
       FormatMessage("Write-Error!*{}", std::strerror(errno));
       close(i);
 
-      return -1;
+      return false;
     }
   }
 
   close(i);
 
-  return 0;
+  return true;
 }
