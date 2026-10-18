@@ -71,7 +71,7 @@ static bool InsertArchiveDirEntry(
   /* Entweder direkt in tree (= df_ptr) oder in dessen Unterverzeichnis
    * (= df_ptr); die Unterverzeichnisse bleiben dabei nach Namen sortiert.
    */
-  de_ptr->parent = df_ptr->weak_from_this();
+  de_ptr->parent = WeakDirEntry(df_ptr);
 
   df_ptr->children.insert(
     std::find_if(
@@ -133,7 +133,7 @@ int InsertArchiveFileEntry(
     fe_ptr->symlink_target = std::move(symlink_target);
   }
 
-  fe_ptr->dir_entry = de_ptr->weak_from_this();
+  fe_ptr->dir_entry = WeakDirEntry(de_ptr);
   de_ptr->total_files++;
   de_ptr->total_bytes += meta.size;
   statistic.disk_total_files++;

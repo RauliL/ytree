@@ -369,6 +369,8 @@ struct DirEntry;
  *    (no ownership, no reference cycles).
  *  - Raw DirEntry* / FileEntry* in function signatures are short-lived,
  *    non-owning observers obtained from a shared_ptr.
+ *  - SharedDirEntry() recovers the owning shared_ptr from a raw DirEntry*
+ *    (via parent->children, or Statistic::tree / disk_statistic.tree).
  */
 struct FileEntry
 {
@@ -417,7 +419,7 @@ struct FileEntry
   bool ChangeGroup();
 };
 
-struct DirEntry : std::enable_shared_from_this<DirEntry>
+struct DirEntry
 {
   std::vector<std::shared_ptr<FileEntry>> files;
   std::vector<std::shared_ptr<DirEntry>> children;
@@ -538,6 +540,11 @@ void Init(
   const std::optional<std::filesystem::path>& history_file
 );
 std::filesystem::path GetPath(const DirEntry* dir_entry);
+std::shared_ptr<DirEntry> SharedDirEntry(DirEntry* dir_entry);
+inline std::weak_ptr<DirEntry> WeakDirEntry(DirEntry* dir_entry)
+{
+  return SharedDirEntry(dir_entry);
+}
 bool Match(const std::string& file_name);
 int SetMatchSpec(const std::string& new_spec);
 bool SetFileSpec(const std::string& file_spec);

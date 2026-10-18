@@ -70,7 +70,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name)
      * ==> einklinken im Baum
      */
     auto den_ptr = std::make_shared<DirEntry>();
-    den_ptr->parent = father_dir_entry->weak_from_this();
+    den_ptr->parent = WeakDirEntry(father_dir_entry);
     den_ptr->name = dir_name;
 
     statistic.disk_total_directories++;

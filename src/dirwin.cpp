@@ -39,7 +39,7 @@ static void BuildDirEntryList(DirEntry* dir_entry)
   }
   current_dir_entry = 0;
 
-  ReadDirList({ dir_entry->shared_from_this() });
+  ReadDirList({ SharedDirEntry(dir_entry) });
 }
 
 static void RotateDirMode()

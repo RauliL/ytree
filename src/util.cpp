@@ -101,6 +101,37 @@ std::filesystem::path GetPath(const DirEntry* dir_entry)
   return result;
 }
 
+std::shared_ptr<DirEntry> SharedDirEntry(DirEntry* dir_entry)
+{
+  if (!dir_entry)
+  {
+    return nullptr;
+  }
+
+  if (const auto parent = dir_entry->Parent())
+  {
+    for (const auto& child : parent->children)
+    {
+      if (child.get() == dir_entry)
+      {
+        return child;
+      }
+    }
+  }
+
+  if (statistic.tree.get() == dir_entry)
+  {
+    return statistic.tree;
+  }
+
+  if (disk_statistic.tree.get() == dir_entry)
+  {
+    return disk_statistic.tree;
+  }
+
+  return nullptr;
+}
+
 int GetDirEntry(
   const std::shared_ptr<DirEntry>& tree,
   DirEntry* current_dir_entry,
