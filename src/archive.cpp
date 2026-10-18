@@ -295,7 +295,9 @@ bool ReadArchiveListingFilesOnly(
     if (!parsed)
     {
       FormatMessage("unknown {}*{}", unknown_tag, *line);
-    } else {
+    }
+    else if (!parsed->name.empty())
+    {
 #ifdef DEBUG
       std::fprintf(stderr, "FILE: \"%s\"\n", parsed->name.c_str());
 #endif

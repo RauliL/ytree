@@ -1121,7 +1121,7 @@ static int HandleDirKeyLogParent(DirWindowContext& ctx, int ch)
   return ch;
 }
 
-static std::optional<int> ProcessDirWindowKey(int ch, DirWindowContext& ctx)
+static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
 {
   switch (ch)
   {
