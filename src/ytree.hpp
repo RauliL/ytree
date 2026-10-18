@@ -361,6 +361,7 @@ extern void WbkgdSet(WINDOW *w, chtype c);
 
 struct Entry
 {
+  std::string name;
   EntryMeta meta{};
 
   virtual ~Entry() = default;
@@ -399,7 +400,6 @@ struct FileEntry : Entry
   std::weak_ptr<DirEntry> dir_entry;
   bool tagged = false;
   bool matching = false;
-  std::string name;
   std::string symlink_target;
 
   /**
@@ -447,7 +447,6 @@ struct DirEntry : Entry
   bool not_scanned = false;
   bool big_window = false;
   bool login_flag = false;
-  std::string name;
 
   /**
    * Parent directory, or null for the root (or if it has expired).
@@ -704,23 +703,6 @@ bool ReadArchiveListingWithDirs(
 );
 
 bool IsArchiveDirectoryEntry(const std::string& path, const EntryMeta& meta);
-
-inline constexpr std::string_view kArchiveMonthNames[12] = {
-  "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-};
-
-inline std::optional<int> ArchiveMonthIndex(std::string_view name)
-{
-  for (int i = 0; i < 12; ++i)
-  {
-    if (name == kArchiveMonthNames[i])
-    {
-      return i;
-    }
-  }
-  return std::nullopt;
-}
 extern void HitReturnToContinue();
 std::string BuildFilename(
   const std::string& in_filename,

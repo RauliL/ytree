@@ -2,6 +2,12 @@
 
 #include "./ytree.hpp"
 
+inline constexpr std::string_view ARCHIVE_MONTH_NAMES[12] =
+{
+  "Jan", "Feb", "Mar", "Apr", "Mai", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+};
+
 static bool GetArchiveDirEntry(
   const std::shared_ptr<DirEntry>& tree,
   const char* path,
@@ -685,4 +691,17 @@ std::string MakeExtractCommandLine(
     path,
     cmd
   );
+}
+
+std::optional<int> ArchiveMonthIndex(std::string_view name)
+{
+  for (int i = 0; i < 12; ++i)
+  {
+    if (name == ARCHIVE_MONTH_NAMES[i])
+    {
+      return i;
+    }
+  }
+
+  return std::nullopt;
 }
