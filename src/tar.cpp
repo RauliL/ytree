@@ -100,9 +100,6 @@ std::optional<archive_meta::NamedEntry> archive_meta::ParseTarListing(
     t = tok.Next(" \t");
     if (!t) return std::nullopt;
     tm_struct.tm_year = SvAtoi(*t) - 1900;
-
-    t = tok.Next(" \t");
-    if (!t) return std::nullopt;
   }
   else
   {
@@ -120,9 +117,6 @@ std::optional<archive_meta::NamedEntry> archive_meta::ParseTarListing(
     t = tok.Next(" \t");
     if (!t) return std::nullopt;
     tm_struct.tm_min = SvAtoi(*t);
-
-    t = tok.Next(" \t");
-    if (!t) return std::nullopt;
   }
 
   tm_struct.tm_sec = 0;
@@ -130,21 +124,40 @@ std::optional<archive_meta::NamedEntry> archive_meta::ParseTarListing(
 
   entry.meta.mtime = std::chrono::system_clock::from_time_t(Mktime(&tm_struct));
 
-  /* Dateiname */
-  /*-----------*/
+  /* Dateiname (may contain spaces; take rest of line) */
+  /*---------------------------------------------------*/
 
-  entry.name = *t;
+  t = tok.Next("");
+  if (!t) return std::nullopt;
 
   if (entry.meta.IsLink())
   {
-    /* Symbolischer Link */
-    /*-------------------*/
+    /* Symbolischer Link: "name -> target" or "name symbolic link to target" */
+    /*---------------------------------------------------------------------*/
 
-    t = tok.Next(" \t");
-    if (!t) return std::nullopt;  /* "->" */
-    t = tok.Next(" \t");
-    if (!t) return std::nullopt;
-    entry.symlink_target = *t;
+    const auto full = *t;
+    constexpr std::string_view gnu_arrow = " -> ";
+    constexpr std::string_view non_gnu_arrow = " symbolic link to ";
+
+    if (const auto pos = full.find(gnu_arrow); pos != std::string_view::npos)
+    {
+      entry.name = full.substr(0, pos);
+      entry.symlink_target = full.substr(pos + gnu_arrow.size());
+    }
+    else if (const auto pos = full.find(non_gnu_arrow);
+             pos != std::string_view::npos)
+    {
+      entry.name = full.substr(0, pos);
+      entry.symlink_target = full.substr(pos + non_gnu_arrow.size());
+    }
+    else
+    {
+      entry.name = full;
+    }
+  }
+  else
+  {
+    entry.name = *t;
   }
 
   return entry;

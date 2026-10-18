@@ -1,3 +1,5 @@
+#include <limits>
+
 #include <peelo/xdg.hpp>
 
 #include "./mouse.hpp"
@@ -29,7 +31,11 @@ static void BuildDirEntryList(DirEntry* dir_entry)
   /* fuer !ANSI-Systeme.. */
   /*----------------------*/
 
-  dir_entry_list.reserve(statistic.disk_total_directories);
+  /* Skip reserve if the counter has underflowed (unsigned wrap to a huge value). */
+  if (statistic.disk_total_directories <= std::numeric_limits<unsigned int>::max() / 2)
+  {
+    dir_entry_list.reserve(statistic.disk_total_directories);
+  }
   current_dir_entry = 0;
 
   ReadDirList({ dir_entry->shared_from_this() });
@@ -1115,7 +1121,7 @@ static int HandleDirKeyLogParent(DirWindowContext& ctx, int ch)
   return ch;
 }
 
-static std::optional<int> ProcessDirWindowKey(int ch, DirWindowContext& ctx)
+static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
 {
   switch (ch)
   {

@@ -243,7 +243,7 @@ bool TryInsertArchiveDirEntry(
       if (!GetArchiveDirEntry(tree, dir_path, &de_ptr))
       {
         // Evtl. fehlender teil; ==> einfuegen
-        if (InsertArchiveDirEntry(tree, dir_path, meta))
+        if (!InsertArchiveDirEntry(tree, dir_path, meta))
         {
           return false;
         }
@@ -295,7 +295,9 @@ bool ReadArchiveListingFilesOnly(
     if (!parsed)
     {
       FormatMessage("unknown {}*{}", unknown_tag, *line);
-    } else {
+    }
+    else if (!parsed->name.empty())
+    {
 #ifdef DEBUG
       std::fprintf(stderr, "FILE: \"%s\"\n", parsed->name.c_str());
 #endif

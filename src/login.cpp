@@ -528,6 +528,13 @@ bool LoginDisk(const std::string& path)
         std::fclose(f);
         wait(&status);
 
+        /* Restore the previous disk tree if we still have one. */
+        if (!disk_statistic.login_path.empty())
+        {
+          statistic = disk_statistic;
+          mode = IsUserActionDefined() ? Mode::USER_MODE : Mode::DISK_MODE;
+        }
+
         return false;
       }
       wait(&status);
