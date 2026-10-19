@@ -1,3 +1,4 @@
+#include "core/ui.hpp"
 #include "ytree.hpp"
 
 static bool ViewHexFile(const std::filesystem::path& file_path);
@@ -24,7 +25,7 @@ bool ViewHex(const std::filesystem::path& file_path)
       return ViewHexArchiveFile(file_path);
 
     default:
-      beep();
+      ui::Beep();
   }
 
   return false;

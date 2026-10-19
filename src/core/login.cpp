@@ -1,5 +1,6 @@
 #include <functional>
 
+#include "core/ui.hpp"
 #include "ytree.hpp"
 
 using read_tree_callback = std::function<
@@ -581,10 +582,6 @@ std::optional<std::string> GetNewLoginPath(const std::string& initial)
 {
   std::string aux = initial;
 
-  ClearHelp();
-
-  MvAddStr(LINES - 2, 1, "NEW LOGIN-PATH:");
-
   if (mode == Mode::LL_FILE_MODE && !initial.empty() && initial.front() == '<')
   {
     if (!aux.empty())
@@ -597,7 +594,7 @@ std::optional<std::string> GetNewLoginPath(const std::string& initial)
     }
   }
 
-  if (const auto entered = InputString(aux, LINES - 2, 17, 0, COLS - 24))
+  if (const auto entered = ui::Prompt("NEW LOGIN-PATH:", aux))
   {
     return NormPath(*entered);
   }

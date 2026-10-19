@@ -1,22 +1,17 @@
 #include <algorithm>
 
+#include "core/ui.hpp"
 #include "ytree.hpp"
 
 std::optional<std::string> MakeDirectory(DirEntry *father_dir_entry)
 {
   if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
   {
-    beep();
+    ui::Beep();
     return std::nullopt;
   }
 
-  ClearHelp();
-
-  MvAddStr(LINES - 2, 1, "Make Subdirectory: ");
-
-  const auto name = InputString({}, LINES - 2, 20, 0, COLS - 20 - 1);
-  move(LINES - 2, 1);
-  clrtoeol();
+  const auto name = ui::Prompt("Make Subdirectory:");
 
   if (!name)
   {
@@ -40,7 +35,7 @@ bool MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name)
 
   if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
   {
-    beep();
+    ui::Beep();
     return( result );
   }
 

@@ -142,6 +142,7 @@ add_executable(
   ui/keyhtab.cpp
   ui/main.cpp
   ui/mouse.cpp
+  ui/ncurses_backend.cpp
   ui/print.cpp
   ui/sort.cpp
   ui/stat.cpp

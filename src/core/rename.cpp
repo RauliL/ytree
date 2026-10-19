@@ -1,3 +1,4 @@
+#include "core/ui.hpp"
 #include "ytree.hpp"
 
 static bool RenameDirEntry(
@@ -45,9 +46,6 @@ bool RenameDirectory(DirEntry* de_ptr, const std::string& new_name)
     }
   }
 
-  move(LINES - 2, 1);
-  clrtoeol();
-
   return result;
 }
 
@@ -86,39 +84,20 @@ bool RenameFile(
 
   }
 
-  move(LINES - 2, 1);
-  clrtoeol();
-
   return result;
 }
 
 std::optional<std::string> GetRenameParameter(const std::string* old_name)
 {
-  int l;
-
   if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
   {
-    beep();
+    ui::Beep();
     return std::nullopt;
   }
 
-  ClearHelp();
-
-  if (!old_name)
-  {
-    MvAddStr(LINES - 2, 1, "RENAME TAGGED FILES TO:");
-    l = 25;
-  } else {
-    MvAddStr(LINES - 2, 1, "RENAME TO:");
-    l = 13;
-  }
-
-  const auto edited_name = InputString(
-    old_name ? *old_name : "*",
-    LINES - 2,
-    l,
-    0,
-    COLS - l - 1
+  const auto edited_name = ui::Prompt(
+    old_name ? "RENAME TO:" : "RENAME TAGGED FILES TO:",
+    old_name ? *old_name : "*"
   );
   if (!edited_name)
   {

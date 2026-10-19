@@ -1,39 +1,13 @@
+#include "core/ui.hpp"
 #include "ytree.hpp"
-
-static void PrepareTerminalForShell()
-{
-  if (!isendwin())
-  {
-    endwin();
-  }
-  reset_shell_mode();
-  std::fflush(stdout);
-  std::fflush(stderr);
-  std::fputc('\n', stdout);
-  std::fflush(stdout);
-}
-
-static void RestoreScreenAfterShell(const bool restart_clock)
-{
-  if (isendwin())
-  {
-    refresh();
-  }
-  leaveok(stdscr, true);
-  curs_set(0);
-  if (restart_clock)
-  {
-    InitClock();
-  }
-}
 
 bool SystemCall(const std::string& command_line)
 {
   bool result;
 
-  PrepareTerminalForShell();
+  ui::session().suspend();
   result = SilentSystemCall(command_line);
-  RestoreScreenAfterShell(true);
+  ui::session().resume(true);
   GetAvailBytes(statistic.disk_space);
 
   return result;
@@ -43,10 +17,10 @@ bool QuerySystemCall(const std::string& command_line)
 {
   bool result;
 
-  PrepareTerminalForShell();
+  ui::session().suspend();
   result = SilentSystemCall(command_line);
-  HitReturnToContinue();
-  RestoreScreenAfterShell(true);
+  ui::HitReturnToContinue();
+  ui::session().resume(true);
   GetAvailBytes(statistic.disk_space);
 
   return result;
@@ -59,7 +33,7 @@ bool SilentSystemCall(const std::string& command_line)
   int status;
 
   SuspendClock();
-  PrepareTerminalForShell();
+  ui::session().suspend();
   status = std::system(command_line.c_str());
   GetAvailBytes(statistic.disk_space);
 

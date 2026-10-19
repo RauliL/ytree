@@ -1,3 +1,4 @@
+#include "core/ui.hpp"
 #include "ytree.hpp"
 
 /*
@@ -134,7 +135,7 @@ void Quit()
   if (term == 'Y' || term == 'Q' || term == 'q')
   {
     SaveHistory();
-    endwin();
+    ui::session().shutdown();
     std::exit(EXIT_SUCCESS);
   }
 }

@@ -1,5 +1,6 @@
-#include "ui/mouse.hpp"
 #include "core/tilde.hpp"
+#include "core/ui.hpp"
+#include "ui/mouse.hpp"
 #include "ytree.hpp"
 
 /***************************************************************************
@@ -704,101 +705,32 @@ std::optional<std::string> InputString(
 
 int InputChoise(const std::string& msg, const char *term)
 {
-  int  c;
-
-  ClearHelp();
-
-  curs_set(1);
-  leaveok(stdscr, false);
-  mvprintw(LINES - 2, 1, "%s", msg.c_str());
-  RefreshWindow(stdscr);
-  doupdate();
-  do
-  {
-    c = Getch();
-#ifdef KEY_MOUSE
-    if (c == KEY_MOUSE)
-    {
-      DecodeMouse(MouseFocus::Overlay);
-      continue;
-    }
-#endif
-    if(c >= 0)
-      if( std::islower(c) ) c = std::toupper(c);
-  } while( c != -1 && !std::strchr(term, c) );
-
-  if(c >= 0)
-    echochar(c);
-
-  move(LINES - 2, 1); clrtoeol();
-  leaveok(stdscr, true);
-  curs_set(0);
-
-  return( c );
+  return ui::dialogs().choice(msg, term);
 }
 
 bool Confirm(const std::string& message)
 {
-  return InputChoise(message + " (Y/N)", "YN\033") == 'Y';
+  return ui::dialogs().confirm(message);
 }
 
 std::optional<std::string> GetTapeDeviceName()
 {
-  ClearHelp();
-
-  MvAddStr(LINES - 2, 1, "Tape-Device:");
-  const auto tape = InputString(statistic.tape_name, LINES - 2, 14, 0, COLS - 15);
-  move(LINES - 2, 1);
-  clrtoeol();
-  return tape;
+  return ui::Prompt("Tape-Device:", statistic.tape_name);
 }
-
 
 void HitReturnToContinue()
 {
-  std::FILE* tty = std::fopen("/dev/tty", "r+");
-  if (tty != nullptr)
-  {
-    std::fputs("\n[Hit return to continue]", tty);
-    std::fflush(tty);
-    std::fgetc(tty);
-    std::fclose(tty);
-    return;
-  }
-
-  std::fputs("\n[Hit return to continue]", stdout);
-  std::fflush(stdout);
-  std::fgetc(stdin);
+  ui::dialogs().hitReturnToContinue();
 }
-
-
 
 bool KeyPressed()
 {
-  bool pressed = false;
-
-#if !defined( __linux__ )
-  nodelay(stdscr, true);
-  if( wgetch(stdscr) != ERR ) pressed = true;
-  nodelay(stdscr, false);
-#endif /* __linux__ */
-
-  return( pressed );
+  return ui::dialogs().keyPressed();
 }
-
 
 bool EscapeKeyPressed()
 {
-  bool pressed = false;
-  int  c = 0;
-
-#if !defined( __linux__ )
-  nodelay(stdscr, true);
-  if( ( c = wgetch(stdscr) ) != ERR ) pressed = true;
-  nodelay(stdscr, false);
-#endif /* __linux__ */
-
-  return( ( pressed && c == ESC ) ? true : false );
+  return ui::dialogs().escapePressed();
 }
 
 

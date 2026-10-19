@@ -1,11 +1,10 @@
+#include "core/ui.hpp"
 #include "ytree.hpp"
 
 bool FileEntry::Pipe() const
 {
   std::string input_buffer;
 
-  ClearHelp();
-  MvAddStr(LINES - 2, 1, "Pipe-Command:");
   if (const auto command = GetPipeCommand(input_buffer))
   {
     const auto file_name_path = GetRealPath();
@@ -13,8 +12,6 @@ bool FileEntry::Pipe() const
 
     input_buffer = *command;
     input_buffer.insert(0, "| ");
-    move(LINES - 2, 1);
-    clrtoeol();
 
     if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
     {
@@ -32,28 +29,16 @@ bool FileEntry::Pipe() const
         input_buffer
       );
     }
-    refresh();
 
     return QuerySystemCall(command_line);
   }
-
-  move(LINES - 2, 1);
-  clrtoeol();
 
   return false;
 }
 
 std::optional<std::string> GetPipeCommand(const std::string& initial)
 {
-  std::optional<std::string> command;
-
-  ClearHelp();
-  MvAddStr(LINES - 2, 1, "Pipe-Command: ");
-  command = InputString(initial, LINES - 2, 15, 0, COLS - 16);
-  move(LINES - 2, 1);
-  clrtoeol();
-
-  return command;
+  return ui::Prompt("Pipe-Command:", initial);
 }
 
 bool FileEntry::PipeTo(FILE* pipe_file) const

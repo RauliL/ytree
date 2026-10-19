@@ -1,3 +1,4 @@
+#include "core/ui.hpp"
 #include "ytree.hpp"
 
 bool Edit(const DirEntry* dir_entry, const std::string& file_path)
@@ -7,7 +8,7 @@ bool Edit(const DirEntry* dir_entry, const std::string& file_path)
 
   if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
-    beep();
+    ui::Beep();
 
     return false;
   }

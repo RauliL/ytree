@@ -1,3 +1,4 @@
+#include "core/ui.hpp"
 #include "ytree.hpp"
 
 static bool Copy(const std::string& to_path, const std::string& from_path);
@@ -220,29 +221,16 @@ static std::optional<AsToParameter> GetAsToParameter(
   std::optional<std::string_view> from_file
 )
 {
-  std::string to_file_input = from_file ? std::string(*from_file) : "*";
-
-  ClearHelp();
-
-  MvAddStr(LINES - 3, 1, header);
-  MvAddStr(LINES - 2, 1, "AS   ");
-
-  const auto to_file_value = InputString(to_file_input, LINES - 2, 6, 0, COLS - 6);
-  if (!to_file_value)
+  const auto prompted = ui::PromptAsTo(
+    header,
+    from_file ? std::string(*from_file) : "*"
+  );
+  if (!prompted)
   {
-    ClearHelp();
     return std::nullopt;
   }
 
-  MvAddStr(LINES - 1, 1, "TO   ");
-  const auto to_dir_value = InputString({}, LINES - 1, 6, 0, COLS - 6);
-  if (!to_dir_value)
-  {
-    ClearHelp();
-    return std::nullopt;
-  }
-
-  return AsToParameter{ *to_file_value, *to_dir_value };
+  return AsToParameter{prompted->as_value, prompted->to_value};
 }
 
 std::optional<AsToParameter> GetCopyParameter(

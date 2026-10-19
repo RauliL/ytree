@@ -1,5 +1,6 @@
 #include <algorithm>
 
+#include "core/ui.hpp"
 #include "ytree.hpp"
 
 static bool DeleteSubTree(DirEntry* dir_entry);
@@ -10,7 +11,7 @@ bool DirEntry::Delete()
 {
   if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
-    beep();
+    ui::Beep();
 
     return false;
   }
