@@ -9,12 +9,12 @@ static bool RenameFileEntry(
   const std::filesystem::path&
 );
 
-int RenameDirectory(DirEntry* de_ptr, const std::string& new_name)
+bool RenameDirectory(DirEntry* de_ptr, const std::string& new_name)
 {
   const auto from_path = GetPath(de_ptr);
   const std::filesystem::path from_fs_path(from_path);
   std::string to_path;
-  int result = -1;
+  bool result = false;
 
   if (!from_fs_path.has_filename() ||
       from_fs_path == std::filesystem::path(
@@ -34,7 +34,7 @@ int RenameDirectory(DirEntry* de_ptr, const std::string& new_name)
         de_ptr->name = new_name;
         de_ptr->meta = MetaOrAbort(to_path);
 
-        result = 0;
+        result = true;
       }
     } else {
       FormatMessage(
@@ -51,7 +51,7 @@ int RenameDirectory(DirEntry* de_ptr, const std::string& new_name)
   return result;
 }
 
-int RenameFile(
+bool RenameFile(
   FileEntry* fe_ptr,
   const std::string& new_name,
   FileEntry** new_fe_ptr
@@ -61,7 +61,7 @@ int RenameFile(
   const auto from_path = fe_ptr->GetPath();
   const auto to_path =
     (std::filesystem::path(GetPath(de_ptr.get())) / new_name).string();
-  int result = -1;
+  bool result = false;
 
   *new_fe_ptr = fe_ptr;
 
@@ -73,7 +73,7 @@ int RenameFile(
       std::strerror(errno)
     );
 
-    return -1;
+    return false;
   }
 
   if (RenameFileEntry(to_path, from_path))
@@ -82,7 +82,7 @@ int RenameFile(
     fe_ptr->name = new_name;
     fe_ptr->meta = MetaOrAbort(to_path);
 
-    result = 0;
+    result = true;
 
   }
 

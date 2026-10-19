@@ -649,7 +649,7 @@ std::optional<std::string> InputString(
       {
         char path[PATH_LENGTH + 1];
 
-        if (KeyF2Get(statistic.tree.get(), statistic.disp_begin_pos, statistic.cursor_pos, path))
+        if (!KeyF2Get(statistic.tree.get(), statistic.disp_begin_pos, statistic.cursor_pos, path))
         {
           break;
         }
@@ -737,9 +737,10 @@ int InputChoise(const std::string& msg, const char *term)
   return( c );
 }
 
-
-
-
+bool Confirm(const std::string& message)
+{
+  return InputChoise(message + " (Y/N)", "YN\033") == 'Y';
+}
 
 std::optional<std::string> GetTapeDeviceName()
 {

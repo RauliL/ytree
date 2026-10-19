@@ -2,162 +2,181 @@
 
 #include "./ytree.hpp"
 
-static int DeleteSubTree(DirEntry *dir_entry);
-static int DeleteSingleDirectory(DirEntry *dir_entry);
-static void UnlinkDirEntry(DirEntry *dir_entry);
+static bool DeleteSubTree(DirEntry* dir_entry);
+static bool DeleteSingleDirectory(DirEntry* dir_entry);
+static void UnlinkDirEntry(DirEntry* dir_entry);
 
-int DeleteDirectory(DirEntry *dir_entry)
+bool DirEntry::Delete()
 {
-  int result = -1;
-
-  if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
+  if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
     beep();
-    return( result );
+
+    return false;
   }
 
   ClearHelp();
 
-  if (dir_entry == statistic.tree.get())
+  if (this == statistic.tree.get())
   {
     Message("Can't delete ROOT");
   }
-  else if( !dir_entry->files.empty() || !dir_entry->children.empty() )
+  else if (!files.empty() || !children.empty())
   {
-    if( InputChoise("Directory not empty, PRUNE ? (Y/N) ? ", "YN\033") == 'Y' ) {
-      if( !dir_entry->children.empty() ) {
-        ScanSubTree(dir_entry);
-        if( DeleteSubTree(dir_entry) ) {
-          return result;
+    if (Confirm("Directory not empty, PRUNE?"))
+    {
+      if (!children.empty())
+      {
+        ScanSubTree(this);
+        if (!DeleteSubTree(this))
+        {
+          return false;
         }
       }
-      if( DeleteSingleDirectory(dir_entry) ) {
-        return result;
+      if (!DeleteSingleDirectory(this))
+      {
+        return false;
       }
-      result = 0;
-      return result;
+
+      return true;
     }
   }
-  else if( InputChoise("Delete this directory (Y/N) ? ", "YN\033") == 'Y' )
+  else if (Confirm("Delete this directory?"))
   {
-    const auto path = GetPath(dir_entry);
+    const auto path = GetPath();
+    std::error_code ec;
 
     if (!IsWriteable(path))
     {
-      FormatMessage("Can't delete directory*\"{}\"*{}", path.c_str(), std::strerror(errno));
+      FormatMessage(
+        "Can't delete directory*\"{}\"*{}",
+        path.string(),
+        std::strerror(errno)
+      );
     }
-    else if (rmdir(path.c_str()))
+    else if (!std::filesystem::remove(path, ec))
     {
-      FormatMessage("Can't delete directory*\"{}\"*{}", path.c_str(), std::strerror(errno));
+      FormatMessage(
+        "Can't delete directory*\"{}\"*{}",
+        path.string(),
+        ec.message()
+      );
     } else {
-      /* Directory geloescht
-       * ==> aus Baum loeschen
-       */
+      // Directory geloescht => aus Baum loeschen
+      --statistic.disk_total_directories;
+      UnlinkDirEntry(this);
+      GetAvailBytes(statistic.disk_space);
 
-      statistic.disk_total_directories--;
-
-      UnlinkDirEntry(dir_entry);
-
-      GetAvailBytes(&statistic.disk_space);
-
-      result = 0;
+      return true;
     }
   }
 
-  return result;
+  return false;
 }
 
-
-
-
-
-/* Loescht alle Unterverzeichnisse von dir_entry */
-/*-----------------------------------------------*/
-
-static int DeleteSubTree(DirEntry *dir_entry)
+/**
+ * Loescht alle Unterverzeichnisse von dir_entry.
+ */
+static bool DeleteSubTree(DirEntry* dir_entry)
 {
-  int result = -1;
-
-  /* Kopie, da DeleteSingleDirectory() die Eintraege austraegt */
+  // Kopie, da DeleteSingleDirectory() die Eintraege austraegt
   const auto children = dir_entry->children;
 
-  for( const auto& de_sp : children ) {
-    DirEntry *de_ptr = de_sp.get();
-    if( !de_ptr->children.empty() ) {
-      if( DeleteSubTree(de_ptr) ) {
-        return result;
+  for (const auto& de_sp : children)
+  {
+    const auto de_ptr = de_sp.get();
+
+    if (!de_ptr->children.empty())
+    {
+      if (!DeleteSubTree(de_ptr))
+      {
+        return false;
       }
     }
-    if( DeleteSingleDirectory(de_ptr) ) {
-      return result;
+    if (!DeleteSingleDirectory(de_ptr))
+    {
+      return false;
     }
   }
 
-  return 0;
+  return true;
 }
 
-
-
-static int DeleteSingleDirectory(DirEntry *dir_entry)
+static bool DeleteSingleDirectory(DirEntry* dir_entry)
 {
   const auto path = GetPath(dir_entry);
+  std::error_code ec;
 
   if (!IsWriteable(path))
   {
-    FormatMessage("Can't delete directory*\"{}\"*{}", path.c_str(), std::strerror(errno));
+    FormatMessage(
+      "Can't delete directory*\"{}\"*{}",
+      path.c_str(),
+      std::strerror(errno)
+    );
 
-    return -1;
+    return false;
   }
 
-  /* Kopie, da DeleteFile() die Eintraege austraegt */
+  // Kopie, da DeleteFile() die Eintraege austraegt
   const auto files = dir_entry->files;
 
   for (const auto& fe_ptr : files)
   {
-    if (DeleteFile(fe_ptr.get()))
+    if (!fe_ptr->Delete())
     {
-      return -1;
+      return false;
     }
   }
 
-  if (rmdir(path.c_str()))
+  if (!std::filesystem::remove(path, ec))
   {
-    FormatMessage("Can't delete directory*\"{}\"*{}", path.c_str(), std::strerror(errno));
+    FormatMessage(
+      "Can't delete directory*\"{}\"*{}",
+      path.string(),
+      ec.message()
+    );
 
-    return -1;
+    return false;
   }
 
   const auto parent = dir_entry->Parent();
 
-  if( parent && !parent->not_scanned )
-    statistic.disk_total_directories--;
+  if (parent && !parent->not_scanned)
+  {
+    --statistic.disk_total_directories;
+  }
 
   UnlinkDirEntry(dir_entry);
 
-  return 0;
+  return true;
 }
 
-
-/* Traegt dir_entry aus der Liste der Unterverzeichnisse seines Vaters aus */
-/*-------------------------------------------------------------------------*/
-
-static void UnlinkDirEntry(DirEntry *dir_entry)
+/**
+ * Traegt dir_entry aus der Liste der Unterverzeichnisse seines Vaters aus.
+ */
+static void UnlinkDirEntry(DirEntry* dir_entry)
 {
   const auto parent = dir_entry->Parent();
 
-  if( !parent )
+  if (!parent)
+  {
     return;
+  }
 
-  /* The parent no longer owns the entry afterwards; it is destroyed here
-   * unless something else (e.g. the dir window list) still shares it. */
+  // The parent no longer owns the entry afterwards; it is destroyed here
+  // unless something else (e.g. the dir window list) still shares it.
   auto& siblings = parent->children;
 
   siblings.erase(
     std::remove_if(
-      siblings.begin(),
-      siblings.end(),
-      [dir_entry]( const std::shared_ptr<DirEntry>& d ) { return d.get() == dir_entry; }
-),
-    siblings.end()
-);
+      std::begin(siblings),
+      std::end(siblings),
+      [dir_entry](const std::shared_ptr<DirEntry>& d)
+      {
+        return d.get() == dir_entry;
+      }
+    ),
+    std::end(siblings)
+  );
 }

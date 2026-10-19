@@ -1,9 +1,9 @@
 #include "./ytree.hpp"
 
-static int ViewHexFile(const std::filesystem::path& file_path);
-static int ViewHexArchiveFile(const std::filesystem::path& file_path);
+static bool ViewHexFile(const std::filesystem::path& file_path);
+static bool ViewHexArchiveFile(const std::filesystem::path& file_path);
 
-int ViewHex(const std::filesystem::path& file_path)
+bool ViewHex(const std::filesystem::path& file_path)
 {
   switch (mode)
   {
@@ -27,10 +27,10 @@ int ViewHex(const std::filesystem::path& file_path)
       beep();
   }
 
-  return -1;
+  return false;
 }
 
-static int ViewHexFile(const std::filesystem::path& file_path)
+static bool ViewHexFile(const std::filesystem::path& file_path)
 {
   if (!IsReadable(file_path))
   {
@@ -40,13 +40,13 @@ static int ViewHexFile(const std::filesystem::path& file_path)
       std::strerror(errno)
     );
 
-    return -1;
+    return false;
   }
 
   return InternalView(file_path);
 }
 
-static int ViewHexArchiveFile(const std::filesystem::path& file_path)
+static bool ViewHexArchiveFile(const std::filesystem::path& file_path)
 {
   const auto command_line = MakeExtractCommandLine(
     mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
@@ -60,7 +60,7 @@ static int ViewHexArchiveFile(const std::filesystem::path& file_path)
   );
   const auto result = SilentSystemCall(command_line);
 
-  if (result)
+  if (!result)
   {
     FormatMessage("can't execute*{}", command_line.c_str());
   }

@@ -133,7 +133,7 @@ bool FlushEntry(
       return false;
     }
   }
-  else if (InsertArchiveFileEntry(dir_entry, path_name, meta))
+  else if (!InsertArchiveFileEntry(dir_entry, path_name, meta))
   {
     FormatMessage("unknown 7z file*{}", path_name);
 

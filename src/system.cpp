@@ -27,41 +27,41 @@ static void RestoreScreenAfterShell(const bool restart_clock)
   }
 }
 
-int SystemCall(const std::string& command_line)
+bool SystemCall(const std::string& command_line)
 {
-  int result;
+  bool result;
 
   PrepareTerminalForShell();
   result = SilentSystemCall(command_line);
   RestoreScreenAfterShell(true);
-  GetAvailBytes(&statistic.disk_space);
+  GetAvailBytes(statistic.disk_space);
 
   return result;
 }
 
-int QuerySystemCall(const std::string& command_line)
+bool QuerySystemCall(const std::string& command_line)
 {
-  int result;
+  bool result;
 
   PrepareTerminalForShell();
   result = SilentSystemCall(command_line);
   HitReturnToContinue();
   RestoreScreenAfterShell(true);
-  GetAvailBytes(&statistic.disk_space);
+  GetAvailBytes(statistic.disk_space);
 
   return result;
 }
 
 extern struct itimerval value, ovalue;
 
-int SilentSystemCall(const std::string& command_line)
+bool SilentSystemCall(const std::string& command_line)
 {
-  int result;
+  int status;
 
   SuspendClock();
   PrepareTerminalForShell();
-  result = std::system(command_line.c_str());
-  GetAvailBytes(&statistic.disk_space);
+  status = std::system(command_line.c_str());
+  GetAvailBytes(statistic.disk_space);
 
-  return result;
+  return status == EXIT_SUCCESS;
 }

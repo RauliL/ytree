@@ -158,7 +158,7 @@ bool LoginDisk(const std::string& path)
   GetDiskParameter(
     path,
     &statistic.disk_name,
-    &statistic.disk_space,
+    statistic.disk_space,
     &statistic.disk_capacity
   );
 
@@ -495,7 +495,7 @@ bool LoginDisk(const std::string& path)
       dup(p[1]);
       close(p[1]);
 
-      if (result == 0 && SilentSystemCall(command_line))
+      if (result == 0 && !SilentSystemCall(command_line))
       {
         result = 1;
         // std::fprintf(stderr, "system(%s)*failed\n", command_line);
@@ -558,7 +558,7 @@ bool LoginDisk(const std::string& path)
     statistic.tree->name = path;
 
     depth = GetDoubleProfileValue("TREEDEPTH");
-    if (ReadTree(statistic.tree, path, depth))
+    if (!ReadTree(statistic.tree, path, depth))
     {
       Error("ReadTree() failed");
 

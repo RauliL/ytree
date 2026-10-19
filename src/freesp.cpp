@@ -20,12 +20,12 @@ using FsStat = struct statvfs;
 using FsStat = struct statfs;
 #endif
 
-static int QueryFs(const char* path, FsStat* buf)
+static bool QueryFs(const char* path, FsStat* buf)
 {
 #if defined(__NetBSD__)
-  return ::statvfs(path, buf);
+  return ::statvfs(path, buf) == 0;
 #else
-  return ::statfs(path, buf);
+  return ::statfs(path, buf) == 0;
 #endif
 }
 
@@ -94,15 +94,13 @@ static const char* FilesystemTypeName(const FsStat& fs)
 #endif
 }
 
-
-
-/* Volume-Name und freien Plattenplatz ermitteln */
-/*-----------------------------------------------*/
-
+/**
+ * Volume-Name und freien Plattenplatz ermitteln.
+ */
 bool GetDiskParameter(
   const std::string& path,
   std::string* volume_name,
-  std::int64_t* avail_bytes,
+  std::int64_t& avail_bytes,
   std::int64_t* total_disk_space
 )
 {
@@ -110,15 +108,14 @@ bool GetDiskParameter(
   std::int64_t bfree;
   std::int64_t this_disk_space;
 
-  if (QueryFs(path.c_str(), &fs) != 0)
+  if (!QueryFs(path.c_str(), &fs))
   {
     return false;
   }
 
   if (volume_name)
   {
-    /* Name ermitteln */
-    /*----------------*/
+    // Name ermitteln
 
     if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
     {
@@ -127,16 +124,13 @@ bool GetDiskParameter(
       {
         volume_name->resize(DISK_NAME_LENGTH);
       }
-    }
-    else
-    {
-      /* TAR/ZOO/ZIP-FILE_MODE */
-      /*-----------------------*/
-
+    } else {
+      // TAR/ZOO/ZIP-FILE_MODE
       const auto pos = statistic.login_path.rfind(
         std::filesystem::path::preferred_separator
       );
-      *volume_name = (pos == std::string::npos)
+
+      *volume_name = pos == std::string::npos
         ? statistic.login_path
         : statistic.login_path.substr(pos + 1);
       if (volume_name->size() > DISK_NAME_LENGTH)
@@ -144,7 +138,7 @@ bool GetDiskParameter(
         volume_name->resize(DISK_NAME_LENGTH);
       }
     }
-  } /* volume_name */
+  }
 
   const auto bsize = FsBlockSize(fs);
   bfree = getuid() ? fs.f_bavail : fs.f_bfree;
@@ -152,7 +146,7 @@ bool GetDiskParameter(
   {
     bfree = 0L;
   }
-  *avail_bytes = bfree * bsize;
+  avail_bytes = bfree * bsize;
   this_disk_space = static_cast<std::int64_t>(fs.f_blocks) * bsize;
 
   if (total_disk_space)
@@ -163,12 +157,9 @@ bool GetDiskParameter(
   return true;
 }
 
-
-
-
-bool GetAvailBytes(std::int64_t* avail_bytes)
+void GetAvailBytes(std::int64_t& avail_bytes)
 {
-  return GetDiskParameter(
+  GetDiskParameter(
     statistic.tree->name,
     nullptr,
     avail_bytes,

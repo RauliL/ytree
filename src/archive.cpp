@@ -95,7 +95,7 @@ static bool InsertArchiveDirEntry(
   return true;
 }
 
-int InsertArchiveFileEntry(
+bool InsertArchiveFileEntry(
   const std::shared_ptr<DirEntry>& tree,
   const std::string& path,
   const EntryMeta& meta,
@@ -121,12 +121,12 @@ int InsertArchiveFileEntry(
     if (!TryInsertArchiveDirEntry(tree, split.dir.c_str(), archive_meta::Directory()))
     {
       Error("Inserting directory failed");
-      return -1;
+      return false;
     }
     if (!GetArchiveDirEntry(tree, split.dir.c_str(), &de_ptr))
     {
       FormatError("again: can't get directory for file*{}*giving up", path);
-      return -1;
+      return false;
     }
   }
 
@@ -149,7 +149,7 @@ int InsertArchiveFileEntry(
 
   de_ptr->files.push_back(fe_ptr);
 
-  return 0;
+  return true;
 }
 
 static bool GetArchiveDirEntry(

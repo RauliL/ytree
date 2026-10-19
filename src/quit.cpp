@@ -66,7 +66,7 @@ function yt
 
 */
 
-static int QuitFileCheck(const std::string& fname);
+static bool QuitFileCheck(const std::string& fname);
 
 void QuitTo(DirEntry* dir_entry)
 {
@@ -80,7 +80,7 @@ void QuitTo(DirEntry* dir_entry)
     static_cast<int>(parpid)
   );
 
-  if (!QuitFileCheck(qfilename))
+  if (QuitFileCheck(qfilename))
   {
     if (auto qfile = std::fopen(qfilename.c_str(), "w"))
     {
@@ -92,7 +92,7 @@ void QuitTo(DirEntry* dir_entry)
   // Never come back from a successful quit.
   Quit();
 
-  if (!QuitFileCheck(qfilename))
+  if (QuitFileCheck(qfilename))
   {
     if (auto qfile = std::fopen(qfilename.c_str(), "w"))
     {
@@ -112,19 +112,19 @@ void QuitTo(DirEntry* dir_entry)
  * security breach.
  */
 
-static int QuitFileCheck(const std::string& fname)
+static bool QuitFileCheck(const std::string& fname)
 {
   struct stat fstat;
 
   if(stat(fname.c_str(),&fstat))
-    return(1);
+    return false;
   if(!S_ISREG(fstat.st_mode))
-    return(1);
+    return false;
   if(!fstat.st_size)
-    return(2);
+    return false;
   if(fstat.st_uid != getuid())
-    return(3);
-  return(0);
+    return false;
+  return true;
 }
 
 void Quit()

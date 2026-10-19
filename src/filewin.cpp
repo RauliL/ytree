@@ -66,7 +66,7 @@ static void ReadGlobalFileList(const DirEntry* dir_entry);
 static bool IsMatchingTaggedFiles();
 static void RemoveFileEntry(int entry_no);
 static void ChangeFileEntry();
-static int  DeleteTaggedFiles(int max_dispfiles);
+static bool DeleteTaggedFiles(int max_dispfiles);
 static void RereadWindowSize(DirEntry *dir_entry);
 static void ListJump(DirEntry * dir_entry, const char *str);
 
@@ -2068,7 +2068,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
         break;
             }
 
-            if( !CopyFile(&statistic,
+            if( CopyFile(&statistic,
                ctx.fe_ptr,
                true,
                ctx.to_file,
@@ -2132,7 +2132,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
       {
         ctx.to_path = ctx.to_dir;
       }
-            if( !CopyFile(&disk_statistic,
+            if( CopyFile(&disk_statistic,
                ctx.fe_ptr,
                true,
                ctx.to_file,
@@ -2225,7 +2225,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
               ctx.dest_dir_entry,
               ctx.to_path,
               ctx.path_copy
-            ) == 0;
+            );
           }
         );
 
@@ -2293,7 +2293,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
               ctx.dest_dir_entry,
               ctx.to_path,
               ctx.path_copy
-            ) == 0;
+            );
           }
         );
 
@@ -2347,7 +2347,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
       break;
           }
 
-          if( !MoveFile(ctx.fe_ptr,
+          if( MoveFile(ctx.fe_ptr,
              true,
              ctx.to_file,
              ctx.dest_dir_entry,
@@ -2457,7 +2457,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
             ctx.dest_dir_entry,
             ctx.to_path,
             &replacement
-          ) == 0;
+          );
 
           return {
             ok,
@@ -2500,7 +2500,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
           ctx.de_ptr = ctx.fe_ptr->Dir().get();
 
-          if( !DeleteFile(ctx.fe_ptr) )
+          if (ctx.fe_ptr->Delete())
           {
             /* File wurde geloescht */
       /*----------------------*/
@@ -2571,7 +2571,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 
           if (const auto renamed = GetRenameParameter(&ctx.fe_ptr->name))
           {
-      if( !RenameFile(ctx.fe_ptr, *renamed, &ctx.new_fe_ptr) )
+      if( RenameFile(ctx.fe_ptr, *renamed, &ctx.new_fe_ptr) )
             {
         /* Rename OK */
         /*-----------*/
@@ -2624,7 +2624,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           }
 
           FileEntry* unchanged = &fe;
-          return RenameFile(&fe, new_name, &unchanged) == 0;
+          return RenameFile(&fe, new_name, &unchanged);
         }
       );
 
@@ -2729,10 +2729,11 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 );
           break;
 
-      case 'P' :
-      case 'p' :      ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
+      case 'P':
+      case 'p':
+          ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
           ctx.de_ptr = ctx.fe_ptr->Dir().get();
-          Pipe(ctx.de_ptr, ctx.fe_ptr);
+          ctx.fe_ptr->Pipe();
           ctx.need_dsp_help = true;
           break;
 
@@ -2748,6 +2749,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
             Message("ctx.i am sorry*^P not supported in Archive-mode");
           } else {
             std::string filepath;
+            FILE* pipe_file;
 
             ctx.need_dsp_help = true;
 
@@ -2759,8 +2761,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
               break;
             }
 
-            FILE* pipe_file = popen(filepath.c_str(), "w");
-            if (!pipe_file)
+            if (!(pipe_file = popen(filepath.c_str(), "w")))
             {
               FormatMessage("execution of command*{}*failed", filepath);
               break;
@@ -2769,7 +2770,10 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
             WalkTaggedFiles(
               ctx.dir_entry->start_file,
               ctx.dir_entry->cursor_pos,
-              [&](FileEntry& fe) { return PipeFileTo(&fe, pipe_file); }
+              [&](FileEntry& fe)
+              {
+                return fe.PipeTo(pipe_file);
+              }
             );
 
             clearok(stdscr, true);
@@ -2779,7 +2783,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
               Warning("pclose() failed");
             }
 
-            GetAvailBytes(&statistic.disk_space);
+            GetAvailBytes(statistic.disk_space);
             DisplayAvailBytes();
 
             DisplayFiles(
@@ -2976,7 +2980,7 @@ static bool IsMatchingTaggedFiles()
 
 
 
-static int DeleteTaggedFiles(int max_disp_files)
+static bool DeleteTaggedFiles(int max_disp_files)
 {
   FileEntry *fe_ptr;
   DirEntry  *de_ptr;
@@ -2987,18 +2991,18 @@ static int DeleteTaggedFiles(int max_disp_files)
   bool      confirm;
   int       term;
   int       start_x = 0;
-  int       result = 0;
+  bool      result = true;
 
   term = InputChoise("Confirm delete each file (Y/N) ? ", "YN\033");
 
-  if( term == ESC ) return( -1 );
+  if( term == ESC ) return false;
 
   if( term == 'Y' ) confirm = true;
   else confirm = false;
 
   if( baudrate() >= QUICK_BAUD_RATE ) typeahead(0);
 
-  for( i=0; i < (int)file_entry_list.size() && result == 0; )
+  for( i=0; i < (int)file_entry_list.size() && result; )
   {
     deleted = false;
 
@@ -3030,35 +3034,45 @@ static int DeleteTaggedFiles(int max_disp_files)
       if( term == ESC )
       {
         if( baudrate() >= QUICK_BAUD_RATE ) typeahead(-1);
-  result = -1;
+  result = false;
   break;
       }
 
-      if( term == 'Y' )
+      if (term == 'Y')
       {
-        if( ( result = DeleteFile(fe_ptr) ) == 0 )
+        if (fe_ptr->Delete())
         {
-    /* File wurde geloescht */
-    /*----------------------*/
+          // File wurde geloescht
 
-    deleted = true;
+          deleted = true;
+          result = true;
 
-      if( de_ptr->global_flag )
-      DisplayDiskStatistic();
-    else
-      DisplayDirStatistic(de_ptr);
+          if (de_ptr->global_flag)
+          {
+            DisplayDiskStatistic();
+          } else {
+            DisplayDirStatistic(de_ptr);
+          }
 
-    DisplayAvailBytes();
+          DisplayAvailBytes();
 
           RemoveFileEntry(start_file + cursor_pos);
+        } else {
+          result = false;
         }
       }
     }
-    if( !deleted ) i++;
+    if (!deleted)
+    {
+      i++;
+    }
   }
-  if( baudrate() >= QUICK_BAUD_RATE ) typeahead(-1);
+  if (baudrate() >= QUICK_BAUD_RATE)
+  {
+    typeahead(-1);
+  }
 
-  return( result );
+  return result;
 }
 
 
