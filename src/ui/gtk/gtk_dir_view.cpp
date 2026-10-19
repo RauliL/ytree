@@ -114,7 +114,10 @@ public:
     {
       return;
     }
-    showTree(statistic.disp_begin_pos, entry_no);
+    if (auto* win = GtkMainWindow())
+    {
+      win->selectDirRow(entry_no);
+    }
   }
 
   void forceFullRedraw() override

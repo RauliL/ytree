@@ -38,11 +38,13 @@ public:
   void setCurrentFile(const std::string& name, std::int64_t size);
 
   void setDirRows(const std::vector<Glib::ustring>& rows, int hilight);
+  void selectDirRow(int hilight);
   void setFileTable(
     ViewMode mode,
     const std::vector<FileTableRow>& rows,
     int hilight
   );
+  void selectFileRow(int hilight);
   void setFileTableMessage(const Glib::ustring& message);
 
   Gtk::ListView& dirList() { return dir_list_; }

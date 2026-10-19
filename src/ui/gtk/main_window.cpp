@@ -174,13 +174,15 @@ void YTreeMainWindow::applyRows(
 {
   model = Gtk::StringList::create(rows);
   auto selection = Gtk::SingleSelection::create(model);
+  view.set_model(selection);
   if (!rows.empty())
   {
-    selection->set_selected(static_cast<guint>(
+    const guint idx = static_cast<guint>(
       std::clamp(hilight, 0, static_cast<int>(rows.size()) - 1)
-    ));
+    );
+    selection->set_selected(idx);
+    view.scroll_to(idx, Gtk::ListScrollFlags::SELECT | Gtk::ListScrollFlags::FOCUS);
   }
-  view.set_model(selection);
 }
 
 void YTreeMainWindow::clearFileColumns()
@@ -532,6 +534,24 @@ void YTreeMainWindow::setDirRows(const std::vector<Glib::ustring>& rows, int hil
   applyRows(dir_list_, dir_model_, rows, hilight);
 }
 
+void YTreeMainWindow::selectDirRow(int hilight)
+{
+  auto selection = std::dynamic_pointer_cast<Gtk::SingleSelection>(
+    dir_list_.get_model()
+  );
+  if (!selection || selection->get_n_items() == 0)
+  {
+    return;
+  }
+  const guint idx = static_cast<guint>(std::clamp(
+    hilight,
+    0,
+    static_cast<int>(selection->get_n_items()) - 1
+  ));
+  selection->set_selected(idx);
+  dir_list_.scroll_to(idx, Gtk::ListScrollFlags::SELECT | Gtk::ListScrollFlags::FOCUS);
+}
+
 void YTreeMainWindow::setFileTable(
   ViewMode mode,
   const std::vector<FileTableRow>& rows,
@@ -569,13 +589,33 @@ void YTreeMainWindow::setFileTable(
   file_model_ = store;
 
   auto selection = Gtk::SingleSelection::create(store);
+  file_table_.set_model(selection);
   if (!rows.empty())
   {
-    selection->set_selected(static_cast<guint>(
-      std::clamp(hilight, 0, static_cast<int>(rows.size()) - 1)
-    ));
+    selectFileRow(hilight);
   }
-  file_table_.set_model(selection);
+}
+
+void YTreeMainWindow::selectFileRow(int hilight)
+{
+  auto selection = std::dynamic_pointer_cast<Gtk::SingleSelection>(
+    file_table_.get_model()
+  );
+  if (!selection || selection->get_n_items() == 0)
+  {
+    return;
+  }
+  const guint idx = static_cast<guint>(std::clamp(
+    hilight,
+    0,
+    static_cast<int>(selection->get_n_items()) - 1
+  ));
+  selection->set_selected(idx);
+  file_table_.scroll_to(
+    idx,
+    {},
+    Gtk::ListScrollFlags::SELECT | Gtk::ListScrollFlags::FOCUS
+  );
 }
 
 void YTreeMainWindow::setFileTableMessage(const Glib::ustring& message)

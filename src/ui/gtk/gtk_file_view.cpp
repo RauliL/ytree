@@ -155,9 +155,13 @@ public:
     int /*start_x*/
   ) override
   {
-    if (hilight)
+    if (!hilight)
     {
-      PopulateFileModel(entry_no);
+      return;
+    }
+    if (auto* win = GtkMainWindow())
+    {
+      win->selectFileRow(entry_no);
     }
   }
 
