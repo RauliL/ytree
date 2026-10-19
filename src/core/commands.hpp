@@ -360,7 +360,17 @@ inline FileCommand MapFileCommand(const ui::InputEvent& ev)
   }
 }
 
-/** Legacy int form for user-mode remapping and continue checks. */
+/** True when Y/y (or tagged Ctrl-Y) should copy with path. */
+inline bool IsPathCopyKey(const ui::InputEvent& ev)
+{
+  if (ev.key != ui::Key::Char)
+  {
+    return false;
+  }
+  return ev.code == 'Y' || ev.code == 'y' || ev.code == ('Y' & 0x1f);
+}
+
+/** Legacy int form for profile/user-mode tables that still key on raw codes. */
 inline int LegacyCode(const ui::InputEvent& ev)
 {
   if (ev.raw != 0 || ev.key == ui::Key::Char || ev.key == ui::Key::Function)
@@ -385,6 +395,15 @@ inline int LegacyCode(const ui::InputEvent& ev)
     default:
       return ev.code;
   }
+}
+
+/**
+ * Exit code for HandleDirWindow / HandleFileWindow callers.
+ * Keeps the legacy int ABI ('q', LOGIN_ESC, …) at the boundary only.
+ */
+inline int WindowExitCode(const ui::InputEvent& ev)
+{
+  return LegacyCode(ev);
 }
 
 inline ui::InputEvent EventFromLegacyChar(int ch)

@@ -536,32 +536,36 @@ static void MoveToRow(int row, int *disp_begin_pos, int *cursor_pos, DirEntry **
   ui::dir_view().showFileSide();
 }
 
-static int HandleDirMouse(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
+static std::optional<ui::InputEvent> HandleDirMouse(
+  int *disp_begin_pos,
+  int *cursor_pos,
+  DirEntry **dir_entry
+)
 {
   const MouseEvent event = DecodeMouse(MouseFocus::Dir);
 
   switch (event.action)
   {
     case MouseAction::ScrollUp:
-      return KEY_UP;
+      return ui::InputEvent::Special(ui::Key::Up);
     case MouseAction::ScrollDown:
-      return KEY_DOWN;
+      return ui::InputEvent::Special(ui::Key::Down);
     case MouseAction::SwitchToFile:
-      return CR;
+      return ui::InputEvent::Special(ui::Key::Enter);
     case MouseAction::Select:
       MoveToRow(event.row, disp_begin_pos, cursor_pos, dir_entry);
-      return -1;
+      return std::nullopt;
     case MouseAction::Activate:
       MoveToRow(event.row, disp_begin_pos, cursor_pos, dir_entry);
-      return CR;
+      return ui::InputEvent::Special(ui::Key::Enter);
     case MouseAction::Tag:
       MoveToRow(event.row, disp_begin_pos, cursor_pos, dir_entry);
-      return 't';
+      return ui::InputEvent::CharKey('t');
     case MouseAction::Ignore:
     case MouseAction::None:
     case MouseAction::SwitchToDir:
     default:
-      return -1;
+      return std::nullopt;
   }
 }
 
@@ -702,13 +706,13 @@ static void HandleTagAllDirs(DirEntry* dir_entry, bool value)
   ui::dir_view().showDiskStatistic();
 }
 
-static int HandleShowAllTagged(
+static bool HandleShowAllTagged(
   DirEntry* dir_entry,
   DirEntry* start_dir_entry,
-  bool& need_dsp_help,
-  int ch
+  bool& need_dsp_help
 )
 {
+  bool request_change_login = false;
   if (statistic.disk_tagged_files)
   {
     if (dir_entry->login_flag)
@@ -736,23 +740,23 @@ static int HandleShowAllTagged(
       BuildDirEntryList(statistic.tree.get());
       ui::dir_view().showTree(statistic.disp_begin_pos,
       statistic.disp_begin_pos + statistic.cursor_pos);
-      ch = 'L';
+      request_change_login = true;
     }
   } else {
     dir_entry->login_flag = false;
     beep();
   }
   need_dsp_help = true;
-  return ch;
+  return request_change_login;
 }
 
-static int HandleShowAll(
+static bool HandleShowAll(
   DirEntry* dir_entry,
   DirEntry* start_dir_entry,
-  bool& need_dsp_help,
-  int ch
+  bool& need_dsp_help
 )
 {
+  bool request_change_login = false;
   if (statistic.disk_matching_files)
   {
     if (dir_entry->login_flag)
@@ -781,23 +785,23 @@ static int HandleShowAll(
       ui::dir_view().showTree(statistic.disp_begin_pos,
         statistic.disp_begin_pos + statistic.cursor_pos
       );
-      ch = 'L';
+      request_change_login = true;
     }
   } else {
     dir_entry->login_flag = false;
     beep();
   }
   need_dsp_help = true;
-  return ch;
+  return request_change_login;
 }
 
-static int HandleSwitchWindow(
+static bool HandleSwitchWindow(
   DirEntry* dir_entry,
   DirEntry* start_dir_entry,
-  bool& need_dsp_help,
-  int ch
+  bool& need_dsp_help
 )
 {
+  bool request_change_login = false;
   if (dir_entry->matching_files)
   {
     if (dir_entry->login_flag)
@@ -825,7 +829,7 @@ static int HandleSwitchWindow(
       BuildDirEntryList(statistic.tree.get());
       ui::dir_view().showTree(statistic.disp_begin_pos,
       statistic.disp_begin_pos + statistic.cursor_pos);
-      ch = 'L';
+      request_change_login = true;
     }
     ui::DisplayAvailBytes();
     need_dsp_help = true;
@@ -833,7 +837,7 @@ static int HandleSwitchWindow(
     dir_entry->login_flag = false;
     beep();
   }
-  return ch;
+  return request_change_login;
 }
 
 struct DirWindowContext
@@ -1088,7 +1092,7 @@ static void HandleDirKeyChangeLogin(DirEntry* dir_entry, bool& need_dsp_help)
   need_dsp_help = true;
 }
 
-static int HandleDirKeyLogParent(DirWindowContext& ctx, int ch)
+static std::optional<int> HandleDirKeyLogParent(DirWindowContext& ctx)
 {
   MoveHome(&ctx.dir_entry);
 
@@ -1101,7 +1105,7 @@ static int HandleDirKeyLogParent(DirWindowContext& ctx, int ch)
   );
   if (separator == nullptr)
   {
-    return ch;
+    return std::nullopt;
   }
 
   *separator = '\0';
@@ -1115,13 +1119,12 @@ static int HandleDirKeyLogParent(DirWindowContext& ctx, int ch)
   disk_statistic.login_path.clear();
   LoginDisk(ctx.new_login_path);
   ctx.need_dsp_help = true;
-  return ch;
+  return WindowExitCode(ui::InputEvent::CharKey('p'));
 }
 
 static std::optional<int> ProcessDirWindowKey(ui::InputEvent& ev, DirWindowContext& ctx)
 {
   const auto cmd = MapDirCommand(ev);
-  int legacy = LegacyCode(ev);
 
   switch (cmd)
   {
@@ -1131,14 +1134,13 @@ static std::optional<int> ProcessDirWindowKey(ui::InputEvent& ev, DirWindowConte
 
     case DirCommand::Mouse:
     {
-      const int ch = HandleDirMouse(
-        &statistic.disp_begin_pos,
-        &statistic.cursor_pos,
-        &ctx.dir_entry
-      );
-      if (ch != -1)
+      if (const auto injected = HandleDirMouse(
+            &statistic.disp_begin_pos,
+            &statistic.cursor_pos,
+            &ctx.dir_entry
+          ))
       {
-        ctx.unput = EventFromLegacyChar(ch);
+        ctx.unput = *injected;
       }
       break;
     }
@@ -1225,41 +1227,35 @@ static std::optional<int> ProcessDirWindowKey(ui::InputEvent& ev, DirWindowConte
       break;
 
     case DirCommand::ShowTagged:
-      legacy = HandleShowAllTagged(
-        ctx.dir_entry,
-        ctx.start_dir_entry,
-        ctx.need_dsp_help,
-        legacy
-      );
-      if (legacy == 'L')
+      if (HandleShowAllTagged(
+            ctx.dir_entry,
+            ctx.start_dir_entry,
+            ctx.need_dsp_help
+          ))
       {
-        ev = EventFromLegacyChar('L');
+        ev = ui::InputEvent::CharKey('L');
       }
       break;
 
     case DirCommand::ShowAll:
-      legacy = HandleShowAll(
-        ctx.dir_entry,
-        ctx.start_dir_entry,
-        ctx.need_dsp_help,
-        legacy
-      );
-      if (legacy == 'L')
+      if (HandleShowAll(
+            ctx.dir_entry,
+            ctx.start_dir_entry,
+            ctx.need_dsp_help
+          ))
       {
-        ev = EventFromLegacyChar('L');
+        ev = ui::InputEvent::CharKey('L');
       }
       break;
 
     case DirCommand::EnterFiles:
-      legacy = HandleSwitchWindow(
-        ctx.dir_entry,
-        ctx.start_dir_entry,
-        ctx.need_dsp_help,
-        legacy
-      );
-      if (legacy == 'L')
+      if (HandleSwitchWindow(
+            ctx.dir_entry,
+            ctx.start_dir_entry,
+            ctx.need_dsp_help
+          ))
       {
-        ev = EventFromLegacyChar('L');
+        ev = ui::InputEvent::CharKey('L');
       }
       break;
 
@@ -1323,7 +1319,7 @@ static std::optional<int> ProcessDirWindowKey(ui::InputEvent& ev, DirWindowConte
       break;
 
     case DirCommand::LogParent:
-      return HandleDirKeyLogParent(ctx, legacy);
+      return HandleDirKeyLogParent(ctx);
 
     case DirCommand::Unknown:
     default:
@@ -1369,8 +1365,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
 
     if (mode == Mode::USER_MODE)
     {
-      const int remapped = DirUserMode(ctx.dir_entry, LegacyCode(ev));
-      ev = EventFromLegacyChar(remapped);
+      ev = DirUserMode(ctx.dir_entry, ev);
     }
 
     if (const auto exit_key = ProcessDirWindowKey(ev, ctx))
@@ -1379,7 +1374,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
     }
   } while (ShouldContinueDirWindow(ev));
 
-  return LegacyCode(ev);
+  return WindowExitCode(ev);
 }
 
 

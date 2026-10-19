@@ -1098,18 +1098,23 @@ static int FileIndexFromMouse(int row, int col)
   return column * window_height + row;
 }
 
-static int HandleFileMouse(int *start_file, int *cursor_pos, int *start_x, DirEntry *dir_entry)
+static std::optional<ui::InputEvent> HandleFileMouse(
+  int *start_file,
+  int *cursor_pos,
+  int *start_x,
+  DirEntry *dir_entry
+)
 {
   const MouseEvent event = DecodeMouse(MouseFocus::File);
 
   switch (event.action)
   {
     case MouseAction::ScrollUp:
-      return KEY_UP;
+      return ui::InputEvent::Special(ui::Key::Up);
     case MouseAction::ScrollDown:
-      return KEY_DOWN;
+      return ui::InputEvent::Special(ui::Key::Down);
     case MouseAction::SwitchToDir:
-      return ESC;
+      return ui::InputEvent::Special(ui::Key::Escape);
     case MouseAction::Select:
     case MouseAction::Activate:
     case MouseAction::Tag:
@@ -1117,24 +1122,24 @@ static int HandleFileMouse(int *start_file, int *cursor_pos, int *start_x, DirEn
       const int relative = FileIndexFromMouse(event.row, event.col);
       if (relative < 0)
       {
-        return -1;
+        return std::nullopt;
       }
       fmoveto(*start_file + relative, start_file, cursor_pos, start_x, dir_entry);
       if (event.action == MouseAction::Activate)
       {
-        return 'v';
+        return ui::InputEvent::CharKey('v');
       }
       if (event.action == MouseAction::Tag)
       {
-        return 't';
+        return ui::InputEvent::CharKey('t');
       }
-      return -1;
+      return std::nullopt;
     }
     case MouseAction::Ignore:
     case MouseAction::None:
     case MouseAction::SwitchToFile:
     default:
-      return -1;
+      return std::nullopt;
   }
 }
 
@@ -1486,18 +1491,13 @@ static void ApplyFileUserMode(ui::InputEvent& ev, const FileWindowContext& ctx)
 {
   if (mode == Mode::USER_MODE)
   {
-    const int remapped = FileUserMode(
-      FileWindowCurrentEntry(ctx.dir_entry),
-      LegacyCode(ev)
-    );
-    ev = EventFromLegacyChar(remapped);
+    ev = FileUserMode(FileWindowCurrentEntry(ctx.dir_entry), ev);
   }
 }
 
 static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
 {
   const FileCommand cmd = MapFileCommand(ev);
-  const int ch = LegacyCode(ev);
 
   switch (cmd)
   {
@@ -1507,15 +1507,14 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
 
       case FileCommand::Mouse:
       {
-        const int mouse_ch = HandleFileMouse(
-          &ctx.dir_entry->start_file,
-          &ctx.dir_entry->cursor_pos,
-          &ctx.start_x,
-          ctx.dir_entry
-        );
-        if (mouse_ch != -1)
+        if (const auto injected = HandleFileMouse(
+              &ctx.dir_entry->start_file,
+              &ctx.dir_entry->cursor_pos,
+              &ctx.start_x,
+              ctx.dir_entry
+            ))
         {
-          ctx.unput = EventFromLegacyChar(mouse_ch);
+          ctx.unput = *injected;
         }
         break;
       }
@@ -1971,7 +1970,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
           ctx.de_ptr = ctx.fe_ptr->Dir().get();
 
           ctx.path_copy = false;
-          if( ch == 'y' || ch == 'Y' ) ctx.path_copy = true;
+          if (IsPathCopyKey(ev)) ctx.path_copy = true;
 
           ctx.need_dsp_help = true;
 
@@ -2088,7 +2087,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
           ctx.de_ptr = ctx.dir_entry;
 
                       ctx.path_copy = false;
-                      if( ch == ('Y' & 0x1F) ) ctx.path_copy = true;
+                      if (IsPathCopyKey(ev)) ctx.path_copy = true;
 
           if( !IsMatchingTaggedFiles() )
           {
@@ -2795,7 +2794,7 @@ int HandleFileWindow(DirEntry* dir_entry)
   } while (ShouldContinueFileWindow(ev));
 
   FinalizeFileWindow(ctx, ev);
-  return LegacyCode(ev);
+  return WindowExitCode(ev);
 }
 
 

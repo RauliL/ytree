@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/domain.hpp"
+#include "core/ui.hpp"
 
 bool ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path, int depth);
 bool GetDiskParameter(
@@ -169,6 +170,11 @@ std::int64_t AtoLL(std::string_view s);
 std::optional<std::string> ReadLine(FILE* f);
 extern int  DirUserMode(DirEntry *dir_entry, int ch);
 int FileUserMode(const std::shared_ptr<FileEntry>& file_entry, int ch);
+ui::InputEvent DirUserMode(DirEntry* dir_entry, const ui::InputEvent& ev);
+ui::InputEvent FileUserMode(
+  const std::shared_ptr<FileEntry>& file_entry,
+  const ui::InputEvent& ev
+);
 std::optional<std::string> GetUserFileAction(int chkey, int* pchremap);
 std::optional<std::string> GetUserDirAction(int chkey, int* pchremap);
 bool IsUserActionDefined();
