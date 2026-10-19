@@ -30,10 +30,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#ifndef S_IFLNK
-#define readlink(a, b, c)  (-1)
-#endif /* S_IFLNK */
-
 #ifndef S_ISREG
 #define S_ISREG(mode)   (((mode) & S_IFMT) == S_IFREG)
 #endif /* S_ISREG */

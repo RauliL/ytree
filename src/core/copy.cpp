@@ -168,9 +168,15 @@ bool CopyFile(
     /* File wurde kopiert */
     /*--------------------*/
 
-    if( chmod(to_path.c_str(), fe_ptr->meta.Mode()) == -1 )
+    std::error_code chmod_ec;
+    std::filesystem::permissions(to_path, fe_ptr->meta.permissions, chmod_ec);
+    if (chmod_ec)
     {
-      FormatWarning("Can't chmod file*\"{}\"*to mode {}*IGNORED", to_path.c_str(), GetAttributes(fe_ptr->meta.Mode()));
+      FormatWarning(
+        "Can't chmod file*\"{}\"*to mode {}*IGNORED",
+        to_path.c_str(),
+        GetAttributes(fe_ptr->meta.Mode())
+      );
     }
 
     if( dest_dir_entry )

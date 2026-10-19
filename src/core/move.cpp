@@ -82,9 +82,11 @@ bool MoveFile(
       }
     }
 
-    if (unlink(to_path.c_str()))
+    std::error_code ec;
+    std::filesystem::remove(to_path, ec);
+    if (ec)
     {
-      FormatMessage("Can't unlink*\"{}\"*{}", to_path.c_str(), std::strerror(errno));
+      FormatMessage("Can't unlink*\"{}\"*{}", to_path.c_str(), ec.message());
       return result;
     }
   }
@@ -148,16 +150,24 @@ static bool Move(const std::string& to_path, const std::string& from_path)
     return false;
   }
 
-  if (link(from_path.c_str(), to_path.c_str()))
+  std::error_code ec;
+  std::filesystem::create_hard_link(from_path, to_path, ec);
+  if (ec)
   {
-    FormatMessage("Can't link \"{}\"*to \"{}\"*{}", from_path.c_str(), to_path.c_str(), std::strerror(errno));
+    FormatMessage(
+      "Can't link \"{}\"*to \"{}\"*{}",
+      from_path.c_str(),
+      to_path.c_str(),
+      ec.message()
+    );
 
     return false;
   }
 
-  if (unlink(from_path.c_str()))
+  std::filesystem::remove(from_path, ec);
+  if (ec)
   {
-    FormatMessage("Can't unlink*\"{}\"*{}", from_path.c_str(), std::strerror(errno));
+    FormatMessage("Can't unlink*\"{}\"*{}", from_path.c_str(), ec.message());
 
     return false;
   }

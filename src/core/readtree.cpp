@@ -107,9 +107,9 @@ bool ReadTree(
 
     if (entry_meta->IsDir())
     {
-      /* Directory-Entry */
-      /*-----------------*/
+      // Directory-Entry
       auto den_ptr = std::make_shared<DirEntry>();
+
       den_ptr->parent = dir_entry;
       den_ptr->name = entry_name;
       den_ptr->meta = *entry_meta;
@@ -118,28 +118,25 @@ bool ReadTree(
 
       new_children.push_back(den_ptr);
     } else {
-      /* File-Entry */
-      /*------------*/
+      // File-Entry
       auto fen_ptr = std::make_shared<FileEntry>();
 
-      /* Test, ob Eintrag Symbolischer Link ist */
-      /*----------------------------------------*/
+      // Test, ob Eintrag Symbolischer Link ist
 
       fen_ptr->name = entry_name;
       fen_ptr->meta = *entry_meta;
 
       if (entry_meta->IsLink())
       {
-        char link_path[PATH_LENGTH + 1];
-        const auto n = readlink(new_path.c_str(), link_path, sizeof(link_path));
+        std::error_code link_ec;
+        const auto target = std::filesystem::read_symlink(new_path, link_ec);
 
-        /* Ja, symbolischer Name wird an "echten" Namen angehaengt */
-        /*---------------------------------------------------------*/
-        if (n == -1)
+        // Ja, symbolischer Name wird an "echten" Namen angehaengt
+        if (link_ec)
         {
           fen_ptr->symlink_target = "unknown";
         } else {
-          fen_ptr->symlink_target.assign(link_path, static_cast<std::size_t>(n));
+          fen_ptr->symlink_target = target.string();
         }
       }
 
@@ -152,8 +149,7 @@ bool ReadTree(
     }
   }
 
-  /* Sortieren der Unterverzeichnisse (stabil, nach Namen) */
-  /*-------------------------------------------------------*/
+  // Sortieren der Unterverzeichnisse (stabil, nach Namen)
 
   std::stable_sort(
     new_children.begin(),
