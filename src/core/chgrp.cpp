@@ -1,4 +1,5 @@
-#include "ytree.hpp"
+#include "core/ui.hpp"
+#include "core/api.hpp"
 
 static constexpr std::size_t GROUP_NAME_MAX = 64;
 
@@ -6,7 +7,7 @@ bool Entry::ChangeGroup()
 {
   if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
-    beep();
+    ui::Beep();
 
     return false;
   }
@@ -27,7 +28,6 @@ std::optional<std::string> GetNewGroup(int st_gid)
 {
   std::string group;
   const int id = st_gid == -1 ? static_cast<int>(getgid()) : st_gid;
-  std::optional<std::string> new_group;
 
   if (const auto group_name_ptr = GetGroupName(id))
   {
@@ -36,13 +36,7 @@ std::optional<std::string> GetNewGroup(int st_gid)
     group = std::to_string(id);
   }
 
-  ClearHelp();
-  MvAddStr(LINES - 2, 1, "New Group:");
-  new_group = InputString(group, LINES - 2, 12, 0, GROUP_NAME_MAX);
-  move(LINES - 2, 1);
-  clrtoeol();
-
-  return new_group;
+  return ui::Prompt("New Group:", group, GROUP_NAME_MAX);
 }
 
 bool Entry::SetGroup(int new_group_id)

@@ -1,6 +1,7 @@
 #include <algorithm>
 
-#include "ytree.hpp"
+#include "core/api.hpp"
+#include "core/ui.hpp"
 
 static void UnReadSubTree(DirEntry *dir_entry);
 
@@ -88,8 +89,7 @@ bool ReadTree(
 
     if ((file_count++ % 100) == 0)
     {
-      DisplayDiskStatistic();
-      doupdate();
+      ui::RefreshDiskStats();
     }
 
     new_path = it->path();
@@ -167,8 +167,7 @@ bool ReadTree(
   dir_entry->files = std::move(new_files);
   dir_entry->children = std::move(new_children);
 
-  DisplayDiskStatistic();
-  doupdate();
+  ui::RefreshDiskStats();
 
   return true;
 }
@@ -194,8 +193,7 @@ void DirEntry::UnReadTree()
   UnReadSubTree(this);
   --statistic.disk_total_directories;
   GetAvailBytes(statistic.disk_space);
-  DisplayDiskStatistic();
-  doupdate();
+  ui::RefreshDiskStats();
 }
 
 /**

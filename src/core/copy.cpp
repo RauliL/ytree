@@ -1,4 +1,6 @@
-#include "ytree.hpp"
+#include "core/ui.hpp"
+#include "core/api.hpp"
+#include "util/scope-guard.hpp"
 
 static bool Copy(const std::string& to_path, const std::string& from_path);
 static bool CopyArchiveFile(const std::string& to_path, const std::string& from_path);
@@ -23,11 +25,9 @@ bool CopyFile(
   bool        result = false;
   int       refresh_dirwindow = false;
 
-  const ScopeGuard clear_prompt_lines([] { ClearBottomPromptLines(); });
+  const ScopeGuard clear_prompt_lines(ui::ClearPromptLines);
 
-  const auto is_root =
-    to_dir_path.size() == 1 &&
-    to_dir_path.front() == std::filesystem::path::preferred_separator;
+  const auto is_root = IsRoot(to_dir_path);
 
   if (!is_root)
   {
@@ -205,7 +205,7 @@ bool CopyFile(
 
   if( refresh_dirwindow)
   {
-    RefreshDirWindow();
+    ui::RefreshDirWindow();
   }
 
   return result;
@@ -220,29 +220,16 @@ static std::optional<AsToParameter> GetAsToParameter(
   std::optional<std::string_view> from_file
 )
 {
-  std::string to_file_input = from_file ? std::string(*from_file) : "*";
-
-  ClearHelp();
-
-  MvAddStr(LINES - 3, 1, header);
-  MvAddStr(LINES - 2, 1, "AS   ");
-
-  const auto to_file_value = InputString(to_file_input, LINES - 2, 6, 0, COLS - 6);
-  if (!to_file_value)
+  const auto prompted = ui::PromptAsTo(
+    header,
+    from_file ? std::string(*from_file) : "*"
+  );
+  if (!prompted)
   {
-    ClearHelp();
     return std::nullopt;
   }
 
-  MvAddStr(LINES - 1, 1, "TO   ");
-  const auto to_dir_value = InputString({}, LINES - 1, 6, 0, COLS - 6);
-  if (!to_dir_value)
-  {
-    ClearHelp();
-    return std::nullopt;
-  }
-
-  return AsToParameter{ *to_file_value, *to_dir_value };
+  return AsToParameter{prompted->as_value, prompted->to_value};
 }
 
 std::optional<AsToParameter> GetCopyParameter(

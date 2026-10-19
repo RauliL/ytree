@@ -1,6 +1,7 @@
 #include <functional>
 
-#include "ytree.hpp"
+#include "core/api.hpp"
+#include "core/ui.hpp"
 
 using read_tree_callback = std::function<
   bool(const std::shared_ptr<DirEntry>&, FILE*)
@@ -162,10 +163,7 @@ bool LoginDisk(const std::string& path)
     &statistic.disk_capacity
   );
 
-  RefreshWindow(stdscr);
-  RefreshWindow(dir_window);
-  DisplayMenu();
-  doupdate();
+  ui::RefreshChrome();
 
 
   if( mode == Mode::TAPE_MODE )
@@ -173,7 +171,7 @@ bool LoginDisk(const std::string& path)
     /* zugehoeriges tape-device ermitteln */
     /*------------------------------------*/
 
-    if (const auto tape = GetTapeDeviceName())
+    if (const auto tape = ui::Prompt("Tape-Device:", statistic.tape_name))
     {
       statistic.tape_name = *tape;
     } else {
@@ -581,10 +579,6 @@ std::optional<std::string> GetNewLoginPath(const std::string& initial)
 {
   std::string aux = initial;
 
-  ClearHelp();
-
-  MvAddStr(LINES - 2, 1, "NEW LOGIN-PATH:");
-
   if (mode == Mode::LL_FILE_MODE && !initial.empty() && initial.front() == '<')
   {
     if (!aux.empty())
@@ -597,7 +591,7 @@ std::optional<std::string> GetNewLoginPath(const std::string& initial)
     }
   }
 
-  if (const auto entered = InputString(aux, LINES - 2, 17, 0, COLS - 24))
+  if (const auto entered = ui::Prompt("NEW LOGIN-PATH:", aux))
   {
     return NormPath(*entered);
   }

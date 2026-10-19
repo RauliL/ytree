@@ -1,4 +1,5 @@
-#include "ytree.hpp"
+#include "core/ui.hpp"
+#include "core/api.hpp"
 
 bool SetFileSpec(const std::string& file_spec)
 {
@@ -54,14 +55,7 @@ Returns the new filespec on success, or nullopt on cancel/invalid input.
 
 std::optional<std::string> ReadFileSpec()
 {
-  std::string buffer = "*";
-
-  ClearHelp();
-
-  MvAddStr(LINES - 2, 1, "New filespec:");
-  const auto filespec = InputString(buffer, LINES - 2, 15, 0, FILE_SPEC_LENGTH);
-  move(LINES - 2, 1);
-  clrtoeol();
+  const auto filespec = ui::Prompt("New filespec:", "*", FILE_SPEC_LENGTH);
 
   if (!filespec)
   {

@@ -1,3 +1,4 @@
+#include "core/ui.hpp"
 #include "ui/mouse.hpp"
 #include "ytree.hpp"
 
@@ -11,6 +12,15 @@ void Init(
   const std::optional<std::filesystem::path>& history_file
 )
 {
+  ui::set_backend(
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    &NcursesDirViewInstance(),
+    &NcursesFileViewInstance(),
+    &NcursesViewerSurfaceInstance()
+  );
 
   user_umask = umask(0);
   initscr();

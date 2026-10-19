@@ -1,4 +1,4 @@
-#include "ytree.hpp"
+#include "core/api.hpp"
 
 #include <unordered_map>
 
@@ -192,18 +192,8 @@ static void ApplyMenuValue(const std::string& name, std::string value)
     return;
   }
 
-  std::size_t visible = 0;
-  for (const auto ch : value)
-  {
-    if (ch != '(' && ch != ')')
-    {
-      ++visible;
-    }
-  }
-  if (visible < static_cast<std::size_t>(COLS - 1))
-  {
-    value.append(static_cast<std::size_t>(COLS - 1) - visible, ' ');
-  }
+  // Store the menu template as-is; the UI pads/clears to screen width
+  // when rendering (see DisplayHelp / clrtoeol).
   entry->second.value = std::move(value);
 }
 

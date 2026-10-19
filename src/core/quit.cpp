@@ -1,4 +1,5 @@
-#include "ytree.hpp"
+#include "core/ui.hpp"
+#include "core/api.hpp"
 
 /*
 quit-to-directory (xtree: alt-Q)(ytree: shift-Q, ^Q)
@@ -133,8 +134,8 @@ void Quit()
 
   if (term == 'Y' || term == 'Q' || term == 'q')
   {
-    SaveHistory();
-    endwin();
+    ui::SaveHistory();
+    ui::session().shutdown();
     std::exit(EXIT_SUCCESS);
   }
 }

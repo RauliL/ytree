@@ -1,22 +1,17 @@
 #include <algorithm>
 
-#include "ytree.hpp"
+#include "core/ui.hpp"
+#include "core/api.hpp"
 
 std::optional<std::string> MakeDirectory(DirEntry *father_dir_entry)
 {
   if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
   {
-    beep();
+    ui::Beep();
     return std::nullopt;
   }
 
-  ClearHelp();
-
-  MvAddStr(LINES - 2, 1, "Make Subdirectory: ");
-
-  const auto name = InputString({}, LINES - 2, 20, 0, COLS - 20 - 1);
-  move(LINES - 2, 1);
-  clrtoeol();
+  const auto name = ui::Prompt("Make Subdirectory:");
 
   if (!name)
   {
@@ -40,7 +35,7 @@ bool MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name)
 
   if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
   {
-    beep();
+    ui::Beep();
     return( result );
   }
 
@@ -113,9 +108,7 @@ bool MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path
   n = tree->name.size();
   const char preferred_separator_str[]{
     std::filesystem::path::preferred_separator, '\0'};
-  const auto tree_is_root =
-    tree->name.size() == 1 &&
-    tree->name[0] == std::filesystem::path::preferred_separator;
+  const auto tree_is_root = IsRoot(tree->name);
 
   if (tree_is_root ||
       (tree->name.compare(0, n, path, 0, n) == 0 &&

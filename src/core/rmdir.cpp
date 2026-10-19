@@ -1,6 +1,7 @@
 #include <algorithm>
 
-#include "ytree.hpp"
+#include "core/ui.hpp"
+#include "core/api.hpp"
 
 static bool DeleteSubTree(DirEntry* dir_entry);
 static bool DeleteSingleDirectory(DirEntry* dir_entry);
@@ -10,12 +11,12 @@ bool DirEntry::Delete()
 {
   if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
-    beep();
+    ui::Beep();
 
     return false;
   }
 
-  ClearHelp();
+  ui::ClearHelp();
 
   if (this == statistic.tree.get())
   {

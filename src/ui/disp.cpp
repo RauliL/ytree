@@ -1,3 +1,4 @@
+#include "core/ui.hpp"
 #include "core/version.hpp"
 #include "ytree.hpp"
 
@@ -247,11 +248,7 @@ void DisplayFileHelp()
 
 void ClearHelp()
 {
-  for (int i = 0; i < 3; ++i)
-  {
-    wmove(stdscr, LINES - 3 + i, 0);
-    clrtoeol();
-  }
+  ui::dialogs().clearHelp();
 }
 
 

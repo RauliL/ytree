@@ -1,6 +1,5 @@
-#include <functional>
-
-#include "ytree.hpp"
+#include "core/ui.hpp"
+#include "core/api.hpp"
 
 static int GetNewModus(int old_modus, const std::string& new_modus);
 
@@ -11,87 +10,21 @@ bool Entry::ChangeModus()
     auto modus = GetAttributes(meta.Mode());
     bool result = false;
 
-    if (GetNewFileModus(LINES - 2, 1, modus, "\r\033"))
+    if (ui::EditFileMode(modus, "\r\033"))
     {
       result = SetModus(modus);
     }
 
-    move(LINES - 2, 1);
-    clrtoeol();
-
     return result;
   }
-  beep();
+  ui::Beep();
 
   return false;
 }
 
-bool GetNewFileModus(int y, int x, std::string& modus, const char *term)
+bool GetNewFileModus(int /*y*/, int /*x*/, std::string& modus, const char *term)
 {
-  int c, p;
-  static char rwx[] = "rwx";
-
-  ClearHelp();
-  curs_set(1);
-  MvAddStr(y, x, "New Filemodus:");
-
-  x += 16;
-
-  p = 0;
-  MvAddStr(y, x, modus);
-  leaveok(stdscr, false);
-  do
-  {
-    move(y, x + p);
-    RefreshWindow(stdscr);
-    doupdate();
-
-    c = Getch();
-
-#ifdef VI_KEYS
-    c = ViKey(c);
-#endif /* VI_KEYS */
-
-    if( c == LF ) c = CR;
-
-    if( p > 0 && ( c == '?' || c == '-' || c == rwx[(p-1) % 3] ) )
-    {
-      /* gueltige Eingabe */
-      /*------------------*/
-
-      modus[p] = (char) c;
-      addch(c);
-      if( p < 9 ) p++;
-    }
-    else if( c == 's' && ( p == 3 || p == 6 ) )
-    {
-      /* Set-ID */
-      /*--------*/
-
-      if( modus[p] != 'x' && modus[p] != 's' )
-      {
-  Message("Execute-Permission required*for set-ID");
-      }
-      else
-      {
-        modus[p] = (char) c;
-        addch(c);
-        if( p < 9 ) p++;
-      }
-    }
-    else
-    {
-      if( c == ' ' && p < 9 ) p++;
-      else if( c == KEY_LEFT && p > 0 ) p--;
-      else if( c == KEY_RIGHT && p < 9 ) p++;
-      else if( std::strrchr(term, c) == nullptr ) beep();
-    }
-  } while( c != -1 && std::strrchr(term, c) == nullptr );
-  leaveok(stdscr, true);
-  move(y, x); clrtoeol();
-  curs_set(0);
-
-  return c == CR;
+  return ui::EditFileMode(modus, term);
 }
 
 bool Entry::SetModus(const std::string& new_modus_str)

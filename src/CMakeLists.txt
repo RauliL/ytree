@@ -142,10 +142,12 @@ add_executable(
   ui/keyhtab.cpp
   ui/main.cpp
   ui/mouse.cpp
+  ui/ncurses_backend.cpp
   ui/print.cpp
   ui/sort.cpp
   ui/stat.cpp
   ui/view.cpp
+  ui/view_info.cpp
 )
 
 target_compile_features(

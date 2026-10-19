@@ -3,7 +3,10 @@
 
 #include <peelo/xdg.hpp>
 
+#include "core/commands.hpp"
+#include "core/ui.hpp"
 #include "ui/mouse.hpp"
+#include "ui/view_info.hpp"
 #include "ytree.hpp"
 
 struct DirEntryList
@@ -285,14 +288,12 @@ static void Movedown(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
       {
           /* Element ist ohne scrollen erreichbar */
           /*--------------------------------------*/
-          PrintDirEntry(dir_window,
-                         *disp_begin_pos + *cursor_pos,
+          ui::dir_view().printEntry(*disp_begin_pos + *cursor_pos,
                          *cursor_pos,
                          false
 );
           (*cursor_pos)++;
-          PrintDirEntry(dir_window,
-                         *disp_begin_pos + *cursor_pos,
+          ui::dir_view().printEntry(*disp_begin_pos + *cursor_pos,
                          *cursor_pos,
                          true
 );
@@ -301,15 +302,13 @@ static void Movedown(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
       {
           /* Es muss gescrollt werden */
           /*--------------------------*/
-          PrintDirEntry(dir_window,
-                         *disp_begin_pos + *cursor_pos,
+          ui::dir_view().printEntry(*disp_begin_pos + *cursor_pos,
                          *cursor_pos,
                          false
 );
           scroll(dir_window);
           (*disp_begin_pos)++;
-          PrintDirEntry(dir_window,
-                         *disp_begin_pos + *cursor_pos,
+          ui::dir_view().printEntry(*disp_begin_pos + *cursor_pos,
                          *cursor_pos,
                          true
 );
@@ -317,8 +316,7 @@ static void Movedown(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
       *dir_entry = dir_entry_list[*disp_begin_pos + *cursor_pos].dir_entry.get();
       (*dir_entry)->start_file = 0;
       (*dir_entry)->cursor_pos = -1;
-      DisplayFileWindow(*dir_entry);
-      RefreshWindow(file_window);
+      ui::dir_view().showFileSide();
    }
    return;
 }
@@ -340,14 +338,12 @@ static void Moveup(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
       {
          /* Element ist ohne scrollen erreichbar */
          /*--------------------------------------*/
-         PrintDirEntry(dir_window,
-                        *disp_begin_pos + *cursor_pos,
+         ui::dir_view().printEntry(*disp_begin_pos + *cursor_pos,
                         *cursor_pos,
                         false
 );
          (*cursor_pos)--;
-         PrintDirEntry(dir_window,
-                        *disp_begin_pos + *cursor_pos,
+         ui::dir_view().printEntry(*disp_begin_pos + *cursor_pos,
                         *cursor_pos,
                         true
 );
@@ -356,16 +352,14 @@ static void Moveup(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
       {
           /* Es muss gescrollt werden */
           /*--------------------------*/
-          PrintDirEntry(dir_window,
-                         *disp_begin_pos + *cursor_pos,
+          ui::dir_view().printEntry(*disp_begin_pos + *cursor_pos,
                          *cursor_pos,
                          false
 );
           wmove(dir_window, 0, 0);
           winsertln(dir_window);
           (*disp_begin_pos)--;
-          PrintDirEntry(dir_window,
-                         *disp_begin_pos + *cursor_pos,
+          ui::dir_view().printEntry(*disp_begin_pos + *cursor_pos,
                          *cursor_pos,
                          true
 );
@@ -373,8 +367,7 @@ static void Moveup(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
       *dir_entry = dir_entry_list[*disp_begin_pos + *cursor_pos].dir_entry.get();
       (*dir_entry)->start_file = 0;
       (*dir_entry)->cursor_pos = -1;
-      DisplayFileWindow(*dir_entry);
-      RefreshWindow(file_window);
+      ui::dir_view().showFileSide();
    }
    return;
 }
@@ -395,8 +388,7 @@ static void Movenpage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
           /* Cursor steht nicht auf letztem Eintrag
            * der Seite
            */
-           PrintDirEntry(dir_window,
-                          *disp_begin_pos + *cursor_pos,
+           ui::dir_view().printEntry(*disp_begin_pos + *cursor_pos,
                           *cursor_pos,
                           false
 );
@@ -407,10 +399,8 @@ static void Movenpage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
            *dir_entry = dir_entry_list[*disp_begin_pos + *cursor_pos].dir_entry.get();
            (*dir_entry)->start_file = 0;
            (*dir_entry)->cursor_pos = -1;
-           DisplayFileWindow(*dir_entry);
-           RefreshWindow(file_window);
-           PrintDirEntry(dir_window,
-                          *disp_begin_pos + *cursor_pos,
+           ui::dir_view().showFileSide();
+           ui::dir_view().printEntry(*disp_begin_pos + *cursor_pos,
                           *cursor_pos,
                           true
 );
@@ -433,9 +423,8 @@ static void Movenpage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
           *dir_entry = dir_entry_list[*disp_begin_pos + *cursor_pos].dir_entry.get();
           (*dir_entry)->start_file = 0;
           (*dir_entry)->cursor_pos = -1;
-          DisplayFileWindow(*dir_entry);
-          RefreshWindow(file_window);
-          DisplayTree(dir_window,*disp_begin_pos,*disp_begin_pos+*cursor_pos);
+          ui::dir_view().showFileSide();
+          ui::dir_view().showTree(*disp_begin_pos,*disp_begin_pos+*cursor_pos);
       }
    }
    return;
@@ -456,8 +445,7 @@ static void Moveppage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
           /* Cursor steht nicht auf erstem Eintrag
            * der Seite
            */
-           PrintDirEntry(dir_window,
-                          *disp_begin_pos + *cursor_pos,
+           ui::dir_view().printEntry(*disp_begin_pos + *cursor_pos,
                           *cursor_pos,
                           false
 );
@@ -465,10 +453,8 @@ static void Moveppage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
            *dir_entry = dir_entry_list[*disp_begin_pos + *cursor_pos].dir_entry.get();
            (*dir_entry)->start_file = 0;
            (*dir_entry)->cursor_pos = -1;
-           DisplayFileWindow(*dir_entry);
-           RefreshWindow(file_window);
-           PrintDirEntry(dir_window,
-                          *disp_begin_pos + *cursor_pos,
+           ui::dir_view().showFileSide();
+           ui::dir_view().printEntry(*disp_begin_pos + *cursor_pos,
                           *cursor_pos,
                           true
 );
@@ -485,9 +471,8 @@ static void Moveppage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
          *dir_entry = dir_entry_list[*disp_begin_pos + *cursor_pos].dir_entry.get();
          (*dir_entry)->start_file = 0;
          (*dir_entry)->cursor_pos = -1;
-         DisplayFileWindow(*dir_entry);
-         RefreshWindow(file_window);
-         DisplayTree(dir_window,*disp_begin_pos,*disp_begin_pos+*cursor_pos);
+         ui::dir_view().showFileSide();
+         ui::dir_view().showTree(*disp_begin_pos,*disp_begin_pos+*cursor_pos);
       }
    }
    return;
@@ -500,9 +485,8 @@ void MoveEnd(DirEntry **dir_entry)
     *dir_entry = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry.get();
     (*dir_entry)->start_file = 0;
     (*dir_entry)->cursor_pos = -1;
-    DisplayFileWindow(*dir_entry);
-    RefreshWindow(file_window);
-    DisplayTree(dir_window, statistic.disp_begin_pos,
+    ui::dir_view().showFileSide();
+    ui::dir_view().showTree(statistic.disp_begin_pos,
     statistic.disp_begin_pos + statistic.cursor_pos);
     return;
 }
@@ -521,9 +505,8 @@ void MoveHome(DirEntry **dir_entry)
        *dir_entry = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry.get();
        (*dir_entry)->start_file = 0;
        (*dir_entry)->cursor_pos = -1;
-       DisplayFileWindow(*dir_entry);
-       RefreshWindow(file_window);
-       DisplayTree(dir_window, statistic.disp_begin_pos,
+       ui::dir_view().showFileSide();
+       ui::dir_view().showTree(statistic.disp_begin_pos,
     statistic.disp_begin_pos + statistic.cursor_pos);
     }
     return;
@@ -544,42 +527,45 @@ static void MoveToRow(int row, int *disp_begin_pos, int *cursor_pos, DirEntry **
     return;
   }
 
-  PrintDirEntry(dir_window, *disp_begin_pos + *cursor_pos, *cursor_pos, false);
+  ui::dir_view().printEntry(*disp_begin_pos + *cursor_pos, *cursor_pos, false);
   *cursor_pos = row;
-  PrintDirEntry(dir_window, *disp_begin_pos + *cursor_pos, *cursor_pos, true);
+  ui::dir_view().printEntry(*disp_begin_pos + *cursor_pos, *cursor_pos, true);
   *dir_entry = dir_entry_list[*disp_begin_pos + *cursor_pos].dir_entry.get();
   (*dir_entry)->start_file = 0;
   (*dir_entry)->cursor_pos = -1;
-  DisplayFileWindow(*dir_entry);
-  RefreshWindow(file_window);
+  ui::dir_view().showFileSide();
 }
 
-static int HandleDirMouse(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
+static std::optional<ui::InputEvent> HandleDirMouse(
+  int *disp_begin_pos,
+  int *cursor_pos,
+  DirEntry **dir_entry
+)
 {
   const MouseEvent event = DecodeMouse(MouseFocus::Dir);
 
   switch (event.action)
   {
     case MouseAction::ScrollUp:
-      return KEY_UP;
+      return ui::InputEvent::Special(ui::Key::Up);
     case MouseAction::ScrollDown:
-      return KEY_DOWN;
+      return ui::InputEvent::Special(ui::Key::Down);
     case MouseAction::SwitchToFile:
-      return CR;
+      return ui::InputEvent::Special(ui::Key::Enter);
     case MouseAction::Select:
       MoveToRow(event.row, disp_begin_pos, cursor_pos, dir_entry);
-      return -1;
+      return std::nullopt;
     case MouseAction::Activate:
       MoveToRow(event.row, disp_begin_pos, cursor_pos, dir_entry);
-      return CR;
+      return ui::InputEvent::Special(ui::Key::Enter);
     case MouseAction::Tag:
       MoveToRow(event.row, disp_begin_pos, cursor_pos, dir_entry);
-      return 't';
+      return ui::InputEvent::CharKey('t');
     case MouseAction::Ignore:
     case MouseAction::None:
     case MouseAction::SwitchToDir:
     default:
-      return -1;
+      return std::nullopt;
   }
 }
 
@@ -606,13 +592,11 @@ static void HandlePlus(
   }
   dir_entry->not_scanned = false;
   BuildDirEntryList(start_dir_entry);
-  DisplayTree(
-    dir_window,
-    statistic.disp_begin_pos,
+  ui::dir_view().showTree(statistic.disp_begin_pos,
     statistic.disp_begin_pos + statistic.cursor_pos
 );
-  DisplayDiskStatistic();
-  DisplayAvailBytes();
+  ui::dir_view().showDiskStatistic();
+  ui::DisplayAvailBytes();
   *need_dsp_help = true;
 }
 
@@ -624,13 +608,11 @@ static void HandleReadSubTree(
 {
   ScanSubTree(dir_entry);
   BuildDirEntryList(start_dir_entry);
-  DisplayTree(
-    dir_window,
-    statistic.disp_begin_pos,
+  ui::dir_view().showTree(statistic.disp_begin_pos,
     statistic.disp_begin_pos + statistic.cursor_pos
   );
-  DisplayDiskStatistic();
-  DisplayAvailBytes();
+  ui::dir_view().showDiskStatistic();
+  ui::DisplayAvailBytes();
   need_dsp_help = true;
 }
 
@@ -653,12 +635,10 @@ static void HandleUnreadSubTree(
   }
   dir_entry->not_scanned = true;
   BuildDirEntryList(start_dir_entry);
-  DisplayTree(
-    dir_window,
-    statistic.disp_begin_pos,
+  ui::dir_view().showTree(statistic.disp_begin_pos,
     statistic.disp_begin_pos + statistic.cursor_pos
   );
-  DisplayAvailBytes();
+  ui::DisplayAvailBytes();
   need_dsp_help = true;
 }
 
@@ -688,9 +668,8 @@ static void HandleTagDir(DirEntry* dir_entry, bool value)
 
   dir_entry->start_file = 0;
   dir_entry->cursor_pos = -1;
-  DisplayFileWindow(dir_entry);
-  RefreshWindow(file_window);
-  DisplayDiskStatistic();
+  ui::dir_view().showFileSide();
+  ui::dir_view().showDiskStatistic();
 }
 
 static void HandleTagAllDirs(DirEntry* dir_entry, bool value)
@@ -723,18 +702,17 @@ static void HandleTagAllDirs(DirEntry* dir_entry, bool value)
 
   dir_entry->start_file = 0;
   dir_entry->cursor_pos = -1;
-  DisplayFileWindow(dir_entry);
-  RefreshWindow(file_window);
-  DisplayDiskStatistic();
+  ui::dir_view().showFileSide();
+  ui::dir_view().showDiskStatistic();
 }
 
-static void HandleShowAllTagged(
+static bool HandleShowAllTagged(
   DirEntry* dir_entry,
   DirEntry* start_dir_entry,
-  bool& need_dsp_help,
-  int& ch
+  bool& need_dsp_help
 )
 {
+  bool request_change_login = false;
   if (statistic.disk_tagged_files)
   {
     if (dir_entry->login_flag)
@@ -749,38 +727,36 @@ static void HandleShowAllTagged(
     }
     if (HandleFileWindow(dir_entry) != LOGIN_ESC)
     {
-      DisplayDiskStatistic();
+      ui::dir_view().showDiskStatistic();
       dir_entry->start_file = 0;
       dir_entry->cursor_pos = -1;
-      DisplayFileWindow(dir_entry);
-      RefreshWindow(small_file_window);
-      RefreshWindow(big_file_window);
+      ui::dir_view().showFileSide();
+      ui::dir_view().refreshBothFileWindows();
       BuildDirEntryList(start_dir_entry);
-      DisplayTree(
-        dir_window,
-        statistic.disp_begin_pos,
+      ui::dir_view().showTree(statistic.disp_begin_pos,
         statistic.disp_begin_pos + statistic.cursor_pos
       );
     } else {
       BuildDirEntryList(statistic.tree.get());
-      DisplayTree(dir_window, statistic.disp_begin_pos,
+      ui::dir_view().showTree(statistic.disp_begin_pos,
       statistic.disp_begin_pos + statistic.cursor_pos);
-      ch = 'L';
+      request_change_login = true;
     }
   } else {
     dir_entry->login_flag = false;
     beep();
   }
   need_dsp_help = true;
+  return request_change_login;
 }
 
-static void HandleShowAll(
+static bool HandleShowAll(
   DirEntry* dir_entry,
   DirEntry* start_dir_entry,
-  bool& need_dsp_help,
-  int& ch
+  bool& need_dsp_help
 )
 {
+  bool request_change_login = false;
   if (statistic.disk_matching_files)
   {
     if (dir_entry->login_flag)
@@ -795,41 +771,37 @@ static void HandleShowAll(
     }
     if (HandleFileWindow(dir_entry) != LOGIN_ESC)
     {
-      DisplayDiskStatistic();
+      ui::dir_view().showDiskStatistic();
       dir_entry->start_file = 0;
       dir_entry->cursor_pos = -1;
-      DisplayFileWindow(dir_entry);
-      RefreshWindow(small_file_window);
-      RefreshWindow(big_file_window);
+      ui::dir_view().showFileSide();
+      ui::dir_view().refreshBothFileWindows();
       BuildDirEntryList(start_dir_entry);
-      DisplayTree(
-        dir_window,
-        statistic.disp_begin_pos,
+      ui::dir_view().showTree(statistic.disp_begin_pos,
         statistic.disp_begin_pos + statistic.cursor_pos
       );
     } else {
       BuildDirEntryList(statistic.tree.get());
-      DisplayTree(
-        dir_window,
-        statistic.disp_begin_pos,
+      ui::dir_view().showTree(statistic.disp_begin_pos,
         statistic.disp_begin_pos + statistic.cursor_pos
       );
-      ch = 'L';
+      request_change_login = true;
     }
   } else {
     dir_entry->login_flag = false;
     beep();
   }
   need_dsp_help = true;
+  return request_change_login;
 }
 
-static void HandleSwitchWindow(
+static bool HandleSwitchWindow(
   DirEntry* dir_entry,
   DirEntry* start_dir_entry,
-  bool& need_dsp_help,
-  int& ch
+  bool& need_dsp_help
 )
 {
+  bool request_change_login = false;
   if (dir_entry->matching_files)
   {
     if (dir_entry->login_flag)
@@ -846,28 +818,26 @@ static void HandleSwitchWindow(
     {
       dir_entry->start_file = 0;
       dir_entry->cursor_pos = -1;
-      DisplayFileWindow(dir_entry);
-      RefreshWindow(small_file_window);
-      RefreshWindow(big_file_window);
+      ui::dir_view().showFileSide();
+      ui::dir_view().refreshBothFileWindows();
       BuildDirEntryList(start_dir_entry);
-      DisplayTree(
-        dir_window,
-        statistic.disp_begin_pos,
+      ui::dir_view().showTree(statistic.disp_begin_pos,
         statistic.disp_begin_pos + statistic.cursor_pos
       );
-      DisplayDiskStatistic();
+      ui::dir_view().showDiskStatistic();
     } else {
       BuildDirEntryList(statistic.tree.get());
-      DisplayTree(dir_window, statistic.disp_begin_pos,
+      ui::dir_view().showTree(statistic.disp_begin_pos,
       statistic.disp_begin_pos + statistic.cursor_pos);
-      ch = 'L';
+      request_change_login = true;
     }
-    DisplayAvailBytes();
+    ui::DisplayAvailBytes();
     need_dsp_help = true;
   } else {
     dir_entry->login_flag = false;
     beep();
   }
+  return request_change_login;
 }
 
 struct DirWindowContext
@@ -875,7 +845,7 @@ struct DirWindowContext
   DirEntry* start_dir_entry = nullptr;
   DirEntry* dir_entry = nullptr;
   DirEntry* de_ptr = nullptr;
-  int unput_char = 0;
+  std::optional<ui::InputEvent> unput;
   bool need_dsp_help = true;
   char new_login_path[PATH_LENGTH + 1]{};
 };
@@ -893,8 +863,7 @@ static void RefreshDirEntryFilePane(DirEntry* dir_entry)
 {
   dir_entry->start_file = 0;
   dir_entry->cursor_pos = -1;
-  DisplayFileWindow(dir_entry);
-  RefreshWindow(file_window);
+  ui::dir_view().showFileSide();
 }
 
 static void SyncDirEntryFromList(DirEntry*& dir_entry)
@@ -915,7 +884,7 @@ static void ApplyStartupDirectorySelection(DirWindowContext& ctx)
   {
     statistic.disp_begin_pos = 0;
     statistic.cursor_pos = 0;
-    ctx.unput_char = CR;
+    ctx.unput = ui::InputEvent::Special(ui::Key::Enter);
   } else {
     if (!initial_directory->empty() && initial_directory->at(1) == '.')
     {
@@ -956,7 +925,7 @@ static void ApplyStartupDirectorySelection(DirWindowContext& ctx)
       {
         statistic.disp_begin_pos = i;
         statistic.cursor_pos = 0;
-        ctx.unput_char = CR;
+        ctx.unput = ui::InputEvent::Special(ui::Key::Enter);
         break;
       }
     }
@@ -969,7 +938,7 @@ static void InitializeDirWindowDisplay(DirWindowContext& ctx)
 {
   ctx.dir_entry = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry.get();
 
-  DisplayDiskStatistic();
+  ui::dir_view().showDiskStatistic();
 
   if (!ctx.dir_entry->login_flag)
   {
@@ -977,45 +946,34 @@ static void InitializeDirWindowDisplay(DirWindowContext& ctx)
     ctx.dir_entry->cursor_pos = -1;
   }
 
-  DisplayFileWindow(ctx.dir_entry);
-  RefreshWindow(file_window);
-  DisplayDirTreeAtCursor();
+  ui::dir_view().showFileSide();
+  ui::dir_view().showTreeAtCursor();
   touchwin(dir_window);
 
   if (ctx.dir_entry->login_flag)
   {
     if (ctx.dir_entry->global_flag || ctx.dir_entry->tagged_flag)
     {
-      ctx.unput_char = 'S';
+      ctx.unput = ui::InputEvent::CharKey('S');
     }
     else
     {
-      ctx.unput_char = CR;
+      ctx.unput = ui::InputEvent::Special(ui::Key::Enter);
     }
   }
 }
 
-static int ReadDirWindowKey(int& unput_char)
+static ui::InputEvent ReadDirWindowKey(DirWindowContext& ctx)
 {
-  if (unput_char)
+  if (ctx.unput)
   {
-    const int ch = unput_char;
-    unput_char = '\0';
-    return ch;
+    const auto ev = *ctx.unput;
+    ctx.unput.reset();
+    return ev;
   }
 
   doupdate();
-  int ch = resize_request ? -1 : Getch();
-  if (ch == LF)
-  {
-    ch = CR;
-  }
-
-#ifdef VI_KEYS
-  ch = ViKey(ch);
-#endif
-
-  return ch;
+  return ui::ReadEvent();
 }
 
 static void HandleDirWindowResize(DirEntry* dir_entry, bool& need_dsp_help)
@@ -1026,22 +984,22 @@ static void HandleDirWindowResize(DirEntry* dir_entry, bool& need_dsp_help)
   }
 
   ReCreateWindows();
-  DisplayMenu();
-  GetMaxYX(dir_window, &window_height, &window_width);
+  ui::DisplayMenu();
+  ui::dir_view().getSize(window_height, window_width);
   while (statistic.cursor_pos >= window_height)
   {
     statistic.cursor_pos--;
     statistic.disp_begin_pos++;
   }
 
-  DisplayDirTreeAtCursor();
-  DisplayFileWindow(dir_entry);
-  DisplayDiskStatistic();
-  DisplayDirParameter(dir_entry);
+  ui::dir_view().showTreeAtCursor();
+  ui::dir_view().showFileSide();
+  ui::dir_view().showDiskStatistic();
+  ui::dir_view().showParameter(MakeDirPanelInfo(*dir_entry));
   need_dsp_help = true;
-  DisplayAvailBytes();
-  DisplayFileSpec();
-  DisplayDiskName();
+  ui::DisplayAvailBytes();
+  ui::DisplayFileSpec();
+  ui::DisplayDiskName();
   resize_request = false;
 }
 
@@ -1050,7 +1008,7 @@ static void HandleDirKeyFileSpec(DirEntry* dir_entry, bool& need_dsp_help)
   if (ReadFileSpec())
   {
     RefreshDirEntryFilePane(dir_entry);
-    DisplayDiskStatistic();
+    ui::dir_view().showDiskStatistic();
   }
   need_dsp_help = true;
 }
@@ -1060,8 +1018,8 @@ static void HandleDirKeyMakeDirectory(DirWindowContext& ctx)
   if (MakeDirectory(ctx.dir_entry))
   {
     BuildDirEntryList(ctx.start_dir_entry);
-    DisplayDirTreeAtCursor();
-    DisplayAvailBytes();
+    ui::dir_view().showTreeAtCursor();
+    ui::DisplayAvailBytes();
   }
   ctx.need_dsp_help = true;
 }
@@ -1084,8 +1042,8 @@ static void HandleDirKeyDeleteDirectory(DirWindowContext& ctx)
   BuildDirEntryList(ctx.start_dir_entry);
   SyncDirEntryFromList(ctx.dir_entry);
   RefreshDirEntryFilePane(ctx.dir_entry);
-  DisplayDirTreeAtCursor();
-  DisplayAvailBytes();
+  ui::dir_view().showTreeAtCursor();
+  ui::DisplayAvailBytes();
   ctx.need_dsp_help = true;
 }
 
@@ -1096,8 +1054,8 @@ static void HandleDirKeyRename(DirWindowContext& ctx)
     if (RenameDirectory(ctx.dir_entry, *renamed))
     {
       BuildDirEntryList(ctx.start_dir_entry);
-      DisplayDirTreeAtCursor();
-      DisplayAvailBytes();
+      ui::dir_view().showTreeAtCursor();
+      ui::DisplayAvailBytes();
       SyncDirEntryFromList(ctx.dir_entry);
     }
   }
@@ -1111,7 +1069,7 @@ static inline void HandleDirKeyAttributeChange(
 )
 {
   callback(*dir_entry);
-  DisplayDirTreeAtCursor();
+  ui::dir_view().showTreeAtCursor();
   need_dsp_help = true;
 }
 
@@ -1127,14 +1085,14 @@ static void HandleDirKeyChangeLogin(DirEntry* dir_entry, bool& need_dsp_help)
 
   if (const auto new_path = GetNewLoginPath(login_path))
   {
-    DisplayMenu();
+    ui::DisplayMenu();
     doupdate();
     LoginDisk(*new_path);
   }
   need_dsp_help = true;
 }
 
-static int HandleDirKeyLogParent(DirWindowContext& ctx, int ch)
+static std::optional<int> HandleDirKeyLogParent(DirWindowContext& ctx)
 {
   MoveHome(&ctx.dir_entry);
 
@@ -1147,7 +1105,7 @@ static int HandleDirKeyLogParent(DirWindowContext& ctx, int ch)
   );
   if (separator == nullptr)
   {
-    return ch;
+    return std::nullopt;
   }
 
   *separator = '\0';
@@ -1161,64 +1119,60 @@ static int HandleDirKeyLogParent(DirWindowContext& ctx, int ch)
   disk_statistic.login_path.clear();
   LoginDisk(ctx.new_login_path);
   ctx.need_dsp_help = true;
-  return ch;
+  return WindowExitCode(ui::InputEvent::CharKey('p'));
 }
 
-static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
+static std::optional<int> ProcessDirWindowKey(ui::InputEvent& ev, DirWindowContext& ctx)
 {
-  switch (ch)
+  const auto cmd = MapDirCommand(ev);
+
+  switch (cmd)
   {
-#ifdef KEY_RESIZE
-    case KEY_RESIZE:
+    case DirCommand::Resize:
       resize_request = true;
       break;
-#endif
 
-#ifdef KEY_MOUSE
-    case KEY_MOUSE:
-      ch = HandleDirMouse(
-        &statistic.disp_begin_pos,
-        &statistic.cursor_pos,
-        &ctx.dir_entry
-      );
-      if (ch == -1)
+    case DirCommand::Mouse:
+    {
+      if (const auto injected = HandleDirMouse(
+            &statistic.disp_begin_pos,
+            &statistic.cursor_pos,
+            &ctx.dir_entry
+          ))
       {
-        break;
+        ctx.unput = *injected;
       }
-      ctx.unput_char = ch;
       break;
-#endif
+    }
 
-    case -1:
+    case DirCommand::None:
       break;
 
-    case ' ':
-    case KEY_DOWN:
+    case DirCommand::MoveDown:
       Movedown(&statistic.disp_begin_pos, &statistic.cursor_pos, &ctx.dir_entry);
       break;
 
-    case KEY_UP:
+    case DirCommand::MoveUp:
       Moveup(&statistic.disp_begin_pos, &statistic.cursor_pos, &ctx.dir_entry);
       break;
 
-    case KEY_NPAGE:
+    case DirCommand::PageDown:
       Movenpage(&statistic.disp_begin_pos, &statistic.cursor_pos, &ctx.dir_entry);
       break;
 
-    case KEY_PPAGE:
+    case DirCommand::PageUp:
       Moveppage(&statistic.disp_begin_pos, &statistic.cursor_pos, &ctx.dir_entry);
       break;
 
-    case KEY_HOME:
+    case DirCommand::Home:
       MoveHome(&ctx.dir_entry);
       break;
 
-    case KEY_END:
+    case DirCommand::End:
       MoveEnd(&ctx.dir_entry);
       break;
 
-    case KEY_RIGHT:
-    case '+':
+    case DirCommand::Expand:
       HandlePlus(
         ctx.dir_entry,
         ctx.de_ptr,
@@ -1228,8 +1182,7 @@ static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
       );
       break;
 
-    case '\t':
-    case '*':
+    case DirCommand::ReadSubtree:
       HandleReadSubTree(
         ctx.dir_entry,
         ctx.start_dir_entry,
@@ -1237,9 +1190,7 @@ static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
       );
       break;
 
-    case KEY_LEFT:
-    case '-':
-    case KEY_BTAB:
+    case DirCommand::Collapse:
       HandleUnreadSubTree(
         ctx.dir_entry,
         ctx.de_ptr,
@@ -1248,89 +1199,85 @@ static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
       );
       break;
 
-    case 'F':
-    case 'f':
+    case DirCommand::FileSpec:
       HandleDirKeyFileSpec(ctx.dir_entry, ctx.need_dsp_help);
       break;
 
-    case 'T':
-    case 't':
+    case DirCommand::Tag:
       HandleTagDir(ctx.dir_entry, true);
       break;
 
-    case 'U':
-    case 'u':
+    case DirCommand::Untag:
       HandleTagDir(ctx.dir_entry, false);
       break;
 
-    case 'T' & 0x1f:
+    case DirCommand::TagAll:
       HandleTagAllDirs(ctx.dir_entry, true);
       break;
 
-    case 'U' & 0x1f:
+    case DirCommand::UntagAll:
       HandleTagAllDirs(ctx.dir_entry, false);
       break;
 
-    case 'F' & 0x1f:
+    case DirCommand::RotateMode:
       RotateDirMode();
-      DisplayDirTreeAtCursor();
-      DisplayDiskStatistic();
+      ui::dir_view().showTreeAtCursor();
+      ui::dir_view().showDiskStatistic();
       ctx.need_dsp_help = true;
       break;
 
-    case 'S' & 0x1f:
-      HandleShowAllTagged(
-        ctx.dir_entry,
-        ctx.start_dir_entry,
-        ctx.need_dsp_help,
-        ch
-      );
+    case DirCommand::ShowTagged:
+      if (HandleShowAllTagged(
+            ctx.dir_entry,
+            ctx.start_dir_entry,
+            ctx.need_dsp_help
+          ))
+      {
+        ev = ui::InputEvent::CharKey('L');
+      }
       break;
 
-    case 'S':
-    case 's':
-      HandleShowAll(
-        ctx.dir_entry,
-        ctx.start_dir_entry,
-        ctx.need_dsp_help,
-        ch
-      );
+    case DirCommand::ShowAll:
+      if (HandleShowAll(
+            ctx.dir_entry,
+            ctx.start_dir_entry,
+            ctx.need_dsp_help
+          ))
+      {
+        ev = ui::InputEvent::CharKey('L');
+      }
       break;
 
-    case LF:
-    case CR:
-      HandleSwitchWindow(
-        ctx.dir_entry,
-        ctx.start_dir_entry,
-        ctx.need_dsp_help,
-        ch
-      );
+    case DirCommand::EnterFiles:
+      if (HandleSwitchWindow(
+            ctx.dir_entry,
+            ctx.start_dir_entry,
+            ctx.need_dsp_help
+          ))
+      {
+        ev = ui::InputEvent::CharKey('L');
+      }
       break;
 
-    case 'X':
-    case 'x':
+    case DirCommand::Execute:
       Execute(ctx.dir_entry, nullptr);
       ctx.need_dsp_help = true;
-      DisplayAvailBytes();
+      ui::DisplayAvailBytes();
       break;
 
-    case 'M':
-    case 'm':
+    case DirCommand::MakeDirectory:
       HandleDirKeyMakeDirectory(ctx);
       break;
 
-    case 'D':
-    case 'd':
+    case DirCommand::Delete:
       HandleDirKeyDeleteDirectory(ctx);
       break;
 
-    case 'r':
-    case 'R':
+    case DirCommand::Rename:
       HandleDirKeyRename(ctx);
       break;
 
-    case 'G':
-    case 'g':
+    case DirCommand::ChangeGroup:
       HandleDirKeyAttributeChange(
         ctx.dir_entry,
         ctx.need_dsp_help,
@@ -1338,8 +1285,7 @@ static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
       );
       break;
 
-    case 'O':
-    case 'o':
+    case DirCommand::ChangeOwner:
       HandleDirKeyAttributeChange(
         ctx.dir_entry,
         ctx.need_dsp_help,
@@ -1347,8 +1293,7 @@ static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
       );
       break;
 
-    case 'A':
-    case 'a':
+    case DirCommand::ChangeMode:
       HandleDirKeyAttributeChange(
         ctx.dir_entry,
         ctx.need_dsp_help,
@@ -1356,42 +1301,39 @@ static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
       );
       break;
 
-    case 'Q' & 0x1f:
+    case DirCommand::QuitTo:
       ctx.need_dsp_help = true;
       QuitTo(ctx.dir_entry);
       break;
 
-    case 'Q':
-    case 'q':
+    case DirCommand::Quit:
       ctx.need_dsp_help = true;
       break;
 
-#if !defined(VI_KEYS)
-    case 'l':
-#endif
-    case 'L':
+    case DirCommand::ChangeLogin:
       HandleDirKeyChangeLogin(ctx.dir_entry, ctx.need_dsp_help);
       break;
 
-    case 'L' & 0x1f:
-      clearok(stdscr, true);
+    case DirCommand::Redraw:
+      ui::dir_view().forceFullRedraw();
       break;
 
-    case 'P':
-    case 'p':
-      return HandleDirKeyLogParent(ctx, ch);
+    case DirCommand::LogParent:
+      return HandleDirKeyLogParent(ctx);
 
+    case DirCommand::Unknown:
     default:
-      beep();
+      ui::Beep();
       break;
   }
 
   return std::nullopt;
 }
 
-static bool ShouldContinueDirWindow(int ch)
+static bool ShouldContinueDirWindow(const ui::InputEvent& ev)
 {
-  return ch != 'q' && ch != 'Q' && ch != 'l' && ch != 'L';
+  const auto cmd = MapDirCommand(ev);
+  return cmd != DirCommand::Quit && cmd != DirCommand::ChangeLogin;
 }
 
 int HandleDirWindow(DirEntry *start_dir_entry)
@@ -1399,40 +1341,40 @@ int HandleDirWindow(DirEntry *start_dir_entry)
   DirWindowContext ctx;
   ctx.start_dir_entry = start_dir_entry;
 
-  GetMaxYX(dir_window, &window_height, &window_width);
+  ui::dir_view().getSize(window_height, window_width);
   dir_mode = ViewMode::MODE_3;
 
   BuildDirEntryList(start_dir_entry);
   ApplyStartupDirectorySelection(ctx);
   InitializeDirWindowDisplay(ctx);
 
-  int ch = 0;
+  ui::InputEvent ev{};
   do
   {
     if (ctx.need_dsp_help)
     {
       ctx.need_dsp_help = false;
-      DisplayDirHelp();
+      ui::DisplayDirHelp();
     }
 
-    DisplayDirParameter(ctx.dir_entry);
-    RefreshWindow(dir_window);
+    ui::dir_view().showParameter(MakeDirPanelInfo(*ctx.dir_entry));
+    ui::dir_view().refresh();
 
-    ch = ReadDirWindowKey(ctx.unput_char);
+    ev = ReadDirWindowKey(ctx);
     HandleDirWindowResize(ctx.dir_entry, ctx.need_dsp_help);
 
     if (mode == Mode::USER_MODE)
     {
-      ch = DirUserMode(ctx.dir_entry, ch);
+      ev = DirUserMode(ctx.dir_entry, ev);
     }
 
-    if (const auto exit_key = ProcessDirWindowKey(ch, ctx))
+    if (const auto exit_key = ProcessDirWindowKey(ev, ctx))
     {
       return *exit_key;
     }
-  } while (ShouldContinueDirWindow(ch));
+  } while (ShouldContinueDirWindow(ev));
 
-  return ch;
+  return WindowExitCode(ev);
 }
 
 
@@ -1686,18 +1628,93 @@ bool RefreshDirWindow()
       }
     }
 
-          GetMaxYX(dir_window, &window_height, &window_width);
+          ui::dir_view().getSize(window_height, window_width);
           while(statistic.cursor_pos >= window_height) {
       statistic.cursor_pos--;
       statistic.disp_begin_pos++;
           }
-    DisplayTree(dir_window, statistic.disp_begin_pos,
+    ui::dir_view().showTree(statistic.disp_begin_pos,
           statistic.disp_begin_pos + statistic.cursor_pos
 );
 
-    DisplayAvailBytes();
+    ui::DisplayAvailBytes();
     result = true;
   }
 
   return(result);
+}
+
+namespace {
+
+class NcursesDirView final : public ui::IDirView
+{
+public:
+  void getSize(int& height, int& width) override
+  {
+    GetMaxYX(dir_window, &height, &width);
+  }
+
+  void showTree(int start_entry_no, int hilight_no) override
+  {
+    DisplayTree(dir_window, start_entry_no, hilight_no);
+  }
+
+  void showTreeAtCursor() override
+  {
+    DisplayDirTreeAtCursor();
+  }
+
+  void showParameter(const ui::DirPanelInfo& info) override
+  {
+    PaintDirParameter(info);
+  }
+
+  void showDiskStatistic() override
+  {
+    DisplayDiskStatistic();
+  }
+
+  void showFileSide() override
+  {
+    DirEntry* dir =
+      dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos]
+        .dir_entry.get();
+    DisplayFileWindow(dir);
+    RefreshWindow(file_window);
+  }
+
+  void refresh() override
+  {
+    RefreshWindow(dir_window);
+  }
+
+  void refreshFileSide() override
+  {
+    RefreshWindow(file_window);
+  }
+
+  void refreshBothFileWindows() override
+  {
+    RefreshWindow(small_file_window);
+    RefreshWindow(big_file_window);
+  }
+
+  void printEntry(int entry_no, int y, bool hilight) override
+  {
+    PrintDirEntry(dir_window, entry_no, y, hilight);
+  }
+
+  void forceFullRedraw() override
+  {
+    clearok(stdscr, true);
+  }
+};
+
+NcursesDirView g_ncurses_dir_view;
+
+} // namespace
+
+ui::IDirView& NcursesDirViewInstance()
+{
+  return g_ncurses_dir_view;
 }

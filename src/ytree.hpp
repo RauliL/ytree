@@ -1,532 +1,12 @@
 #pragma once
 
-#define _LARGEFILE64_SOURCE 1
-#define _FILE_OFFSET_BITS 64
+#include "core/api.hpp"
+#include "core/ui.hpp"
+#include "ui/curses.hpp"
 
-#include "config.hpp"
-#include "core/entry_meta.hpp"
-
-#include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <ctime>
 #if defined(WITH_UTF8)
 # include <cwchar>
 #endif
-#include <filesystem>
-#include <format>
-#include <memory>
-#include <optional>
-#include <string>
-#include <string_view>
-#include <utility>
-#include <vector>
-
-#include <dirent.h>
-#include <fcntl.h>
-#include <grp.h>
-#include <pwd.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
-
-#if defined(WITH_UTF8) && __has_include(<ncursesw/ncurses.h>)
-# include <ncursesw/ncurses.h>
-#elif defined(WITH_UTF8) && __has_include(<ncursesw/curses.h>)
-# include <ncursesw/curses.h>
-#elif defined(CURSES_HAVE_NCURSES_NCURSES_H)
-# include <ncurses/ncurses.h>
-#elif defined(CURSES_HAVE_NCURSES_H)
-# include <ncurses.h>
-#elif defined(CURSES_HAVE_NCURSES_CURSES_H)
-# include <ncurses/curses.h>
-#else
-# include <curses.h>
-#endif
-
-#ifndef KEY_BTAB
-#define KEY_BTAB  0x1d
-#endif
-
-#ifndef KEY_END
-#define KEY_END   KEY_EOL
-#endif
-
-#ifndef S_IFLNK
-#define readlink(a, b, c)  (-1)
-#endif /* S_IFLNK */
-
-#ifndef S_ISREG
-#define S_ISREG(mode)   (((mode) & S_IFMT) == S_IFREG)
-#endif /* S_ISREG */
-
-#ifndef S_ISDIR
-#define S_ISDIR(mode)   (((mode) & S_IFMT) == S_IFDIR)
-#endif /* S_ISDIR */
-
-#ifndef S_ISCHR
-#define S_ISCHR(mode)   (((mode) & S_IFMT) == S_IFCHR)
-#endif /* S_ISCHR */
-
-#ifndef S_ISBLK
-#define S_ISBLK(mode)   (((mode) & S_IFMT) == S_IFBLK)
-#endif /* S_ISBLK */
-
-#ifndef S_ISFIFO
-#define S_ISFIFO(mode)   (((mode) & S_IFMT) == S_IFIFO)
-#endif /* S_ISFIFO */
-
-#ifndef S_ISLNK
-#ifdef  S_IFLNK
-#define S_ISLNK(mode)   (((mode) & S_IFMT) == S_IFLNK)
-#else
-#define S_ISLNK(mode)   FALSE
-#endif /* S_IFLNK */
-#endif /* S_ISLNK */
-
-#ifndef S_ISSOCK
-#ifdef  S_IFSOCK
-#define S_ISSOCK(mode)   (((mode) & S_IFMT) == S_IFSOCK)
-#else
-#define S_ISSOCK(mode)   FALSE
-#endif /* S_IFSOCK */
-#endif /* S_ISSOCK */
-
-/* Sonderzeichen fuer Liniengrafik */
-/*---------------------------------*/
-
-#ifndef ACS_ULCORNER
-#define ACS_ULCORNER '+'
-#endif
-#ifndef ACS_URCORNER
-#define ACS_URCORNER '+'
-#endif
-#ifndef ACS_LLCORNER
-#define ACS_LLCORNER '+'
-#endif
-#ifndef ACS_LRCORNER
-#define ACS_LRCORNER '+'
-#endif
-#ifndef ACS_VLINE
-#define ACS_VLINE    '|'
-#endif
-#ifndef ACS_HLINE
-#define ACS_HLINE    '-'
-#endif
-#ifndef ACS_RTEE
-#define ACS_RTEE    '+'
-#endif
-#ifndef ACS_LTEE
-#define ACS_LTEE    '+'
-#endif
-#ifndef ACS_BTEE
-#define ACS_BTEE    '+'
-#endif
-#ifndef ACS_TTEE
-#define ACS_TTEE    '+'
-#endif
-#ifndef ACS_BLOCK
-#define ACS_BLOCK   '?'
-#endif
-#ifndef ACS_LARROW
-#define ACS_LARROW  '<'
-#endif
-
-/* Color Definitionen */
-
-#define DIR_COLOR        1
-#define FILE_COLOR       2
-#define STATS_COLOR      3
-#define BORDERS_COLOR    4
-#define MENU_COLOR       5
-#define WINDIR_COLOR     6
-#define WINFILE_COLOR    7
-#define WINSTATS_COLOR   8
-#define WINERR_COLOR     9
-#define HIDIR_COLOR     10
-#define HIFILE_COLOR    11
-#define HISTATS_COLOR   12
-#define HIMENUS_COLOR   13
-#define WINHST_COLOR    14
-#define HST_COLOR       15
-#define HIHST_COLOR     16
-#define WINMTCH_COLOR   14
-#define MTCH_COLOR      15
-#define HIMTCH_COLOR    16
-#define GLOBAL_COLOR    17
-#define HIGLOBAL_COLOR  18
-
-/* Auswahl der benutzten UNIX-Kommandos */
-/*--------------------------------------*/
-
-inline constexpr const char* DEFAULT_TREE = ".";
-
-#define Error(msg) ErrorEx(msg, __FILE__, __LINE__)
-#define FormatError(...) ErrorEx(std::format(__VA_ARGS__), __FILE__, __LINE__)
-#define FormatWarning(...) Warning(std::format(__VA_ARGS__))
-#define FormatMessage(...) Message(std::format(__VA_ARGS__))
-
-inline constexpr char TAGGED_SYMBOL = '*';
-
-enum class Mode : int
-{
-  DISK_MODE = 0,
-  LL_FILE_MODE = 1,
-  TAR_FILE_MODE = 2,
-  ZOO_FILE_MODE = 3,
-  ZIP_FILE_MODE = 4,
-  LHA_FILE_MODE = 5,
-  ARC_FILE_MODE = 6,
-  RPM_FILE_MODE = 7,
-  RAR_FILE_MODE = 8,
-  TAPE_MODE = 9,
-  USER_MODE = 10,
-  SEVENZIP_FILE_MODE = 11,
-};
-
-inline constexpr int MAX_MODES = 12;
-
-enum class CompressMethod : int
-{
-  FREEZE_COMPRESS = 1,
-  MULTIPLE_FREEZE_COMPRESS = 2,
-  COMPRESS_COMPRESS = 3,
-  MULTIPLE_COMPRESS_COMPRESS = 4,
-  GZIP_COMPRESS = 5,
-  BZIP_COMPRESS = 6,
-  MULTIPLE_GZIP_COMPRESS = 7,
-  ZOO_COMPRESS = 8,
-  LHA_COMPRESS = 9,
-  ARC_COMPRESS = 10,
-  ZIP_COMPRESS = 11,
-  RPM_COMPRESS = 12,
-  TAPE_DIR_NO_COMPRESS = 13,
-  TAPE_DIR_FREEZE_COMPRESS = 14,
-  TAPE_DIR_COMPRESS_COMPRESS = 15,
-  TAPE_DIR_GZIP_COMPRESS = 16,
-  TAPE_DIR_BZIP_COMPRESS = 17,
-  RAR_COMPRESS = 18,
-  SEVENZIP_COMPRESS = 19,
-  XZ_COMPRESS = 20,
-  ZSTD_COMPRESS = 21,
-  TAPE_DIR_XZ_COMPRESS = 22,
-  TAPE_DIR_ZSTD_COMPRESS = 23,
-};
-
-enum class SortKey
-{
-  Name,
-  ModTime,
-  ChgTime,
-  AccTime,
-  Size,
-  Owner,
-  Group,
-  Extension,
-};
-
-enum class SortOrder
-{
-  Ascending,
-  Descending,
-};
-
-struct SortSpec
-{
-  SortKey key = SortKey::Name;
-  SortOrder order = SortOrder::Ascending;
-};
-
-inline constexpr const char* DEFAULT_FILE_SPEC = "*";
-
-inline constexpr const char* TAGSYMBOL_VIEWNAME = "tag";
-inline constexpr const char* FILENAME_VIEWNAME = "fnm";
-inline constexpr const char* ATTRIBUTE_VIEWNAME = "atr";
-inline constexpr const char* LINKCOUNT_VIEWNAME = "lct";
-inline constexpr const char* FILESIZE_VIEWNAME = "fsz";
-inline constexpr const char* MODTIME_VIEWNAME = "mot";
-inline constexpr const char* SYMLINK_VIEWNAME = "lnm";
-inline constexpr const char* UID_VIEWNAME = "uid";
-inline constexpr const char* GID_VIEWNAME = "gid";
-inline constexpr const char* INODE_VIEWNAME = "ino";
-inline constexpr const char* ACCTIME_VIEWNAME = "act";
-inline constexpr const char* CHGTIME_VIEWNAME = "sct";
-
-inline constexpr std::time_t CLOCK_INTERVAL = 1;
-
-inline constexpr const char* ERR_TO_NULL = " 2> /dev/null";
-inline constexpr const char* ERR_TO_STDOUT = " 2>&1 ";
-
-inline constexpr int CR = 13;
-inline constexpr int LF = 10;
-inline constexpr int ESC = 27;
-inline constexpr char LOGIN_ESC = '.';
-
-#define DIR_WINDOW_X         1
-#define DIR_WINDOW_Y         2
-#define DIR_WINDOW_WIDTH     (COLS - 26)
-#define DIR_WINDOW_HEIGHT    ((LINES * 8 / 14)-1)
-
-#define F2_WINDOW_X          DIR_WINDOW_X
-#define F2_WINDOW_Y          DIR_WINDOW_Y
-#define F2_WINDOW_WIDTH      DIR_WINDOW_WIDTH
-#define F2_WINDOW_HEIGHT     (DIR_WINDOW_HEIGHT + 1)
-
-#define FILE_WINDOW_1_X      1
-#define FILE_WINDOW_1_Y      DIR_WINDOW_HEIGHT + 3
-#define FILE_WINDOW_1_WIDTH  (COLS - 26)
-#define FILE_WINDOW_1_HEIGHT (LINES - DIR_WINDOW_HEIGHT - 7 )
-
-#define FILE_WINDOW_2_X      1
-#define FILE_WINDOW_2_Y      2
-#define FILE_WINDOW_2_WIDTH  (COLS - 26)
-#define FILE_WINDOW_2_HEIGHT (LINES - 6)
-
-#define ERROR_WINDOW_WIDTH   40
-#define ERROR_WINDOW_HEIGHT  10
-#define ERROR_WINDOW_X       ((COLS - ERROR_WINDOW_WIDTH) >> 1)
-#define ERROR_WINDOW_Y       ((LINES - ERROR_WINDOW_HEIGHT) >> 1)
-
-#define HISTORY_WINDOW_X       1
-#define HISTORY_WINDOW_Y       2
-#define HISTORY_WINDOW_WIDTH   (COLS - 26)
-#define HISTORY_WINDOW_HEIGHT  (LINES - 6)
-
-#define TIME_WINDOW_X        ((COLS > 20) ? (COLS - 20) : 1)
-#define TIME_WINDOW_Y        1
-#define TIME_WINDOW_WIDTH    ((COLS > 15) ? 15 : COLS)
-#define TIME_WINDOW_HEIGHT   1
-
-inline constexpr std::size_t PATH_LENGTH = 1024;
-inline constexpr std::size_t FILE_SPEC_LENGTH = 12 + 1;
-inline constexpr std::size_t DISK_NAME_LENGTH = 12 + 1;
-
-enum class ViewMode : int
-{
-  MODE_1 = 0,
-  MODE_2 = 1,
-  MODE_3 = 2,
-  MODE_4 = 3,
-  MODE_5 = 4,
-};
-
-inline constexpr int QUICK_BAUD_RATE = 9600;
-
-template<class Fn>
-class ScopeGuard
-{
-public:
-  explicit ScopeGuard(Fn fn)
-    : fn_(std::move(fn)) {}
-
-  ScopeGuard(ScopeGuard&& other) noexcept
-    : fn_(std::move(other.fn_))
-    , engaged_(other.engaged_)
-  {
-    other.engaged_ = false;
-  }
-
-  ~ScopeGuard()
-  {
-    if (engaged_)
-      fn_();
-  }
-
-  ScopeGuard(const ScopeGuard&) = delete;
-  ScopeGuard& operator=(const ScopeGuard&) = delete;
-
-  void release()
-  {
-    engaged_ = false;
-  }
-
-private:
-  Fn fn_;
-  bool engaged_{true};
-};
-
-template<class Fn>
-ScopeGuard(Fn) -> ScopeGuard<Fn>;
-
-#ifdef COLOR_SUPPORT
-extern void StartColors();
-extern void WbkgdSet(WINDOW *w, chtype c);
-#else
-#define StartColors() ;
-#define WbkgdSet(a, b)  ;
-#endif /* COLOR_SUPPORT */
-
-struct Entry
-{
-  std::string name;
-  EntryMeta meta{};
-
-  virtual ~Entry() = default;
-
-  virtual std::filesystem::path GetPath() const = 0;
-
-  bool ChangeModus();
-
-  bool SetModus(const std::string& new_modus_str);
-
-  bool ChangeOwner();
-
-  bool SetOwner(int new_user_id);
-
-  bool ChangeGroup();
-
-  bool SetGroup(int new_group_id);
-
-  virtual bool Delete() = 0;
-};
-
-struct DirEntry;
-
-/*
- * Ownership model:
- *  - Statistic::tree owns the root DirEntry.
- *  - DirEntry::children / DirEntry::files own their entries (shared_ptr).
- *  - DirEntry::parent and FileEntry::dir_entry are weak back-references
- *    (no ownership, no reference cycles).
- *  - Raw DirEntry* / FileEntry* in function signatures are short-lived,
- *    non-owning observers obtained from a shared_ptr.
- *  - SharedDirEntry() recovers the owning shared_ptr from a raw DirEntry*
- *    (via parent->children, or Statistic::tree / disk_statistic.tree).
- */
-struct FileEntry : Entry
-{
-  /** Back reference to owning directory. */
-  std::weak_ptr<DirEntry> dir_entry;
-  bool tagged = false;
-  bool matching = false;
-  std::string symlink_target;
-
-  /**
-   * Owning directory, or null if it has expired.
-   */
-  inline std::shared_ptr<DirEntry> Dir() const
-  {
-    return dir_entry.lock();
-  }
-
-  std::filesystem::path GetPath() const override;
-
-  std::filesystem::path GetRealPath() const;
-
-  std::optional<std::string> GetExtension() const
-  {
-    const auto extension = std::filesystem::path(name).extension();
-
-    if (extension.empty())
-    {
-      return std::nullopt;
-    }
-
-    return extension.string();
-  }
-
-  bool Delete() override;
-
-  bool Remove();
-
-  bool Pipe() const;
-
-  bool PipeTo(FILE* pipe) const;
-};
-
-struct DirEntry : Entry
-{
-  std::vector<std::shared_ptr<FileEntry>> files;
-  std::vector<std::shared_ptr<DirEntry>> children;
-  std::weak_ptr<DirEntry> parent;
-  std::int64_t total_bytes = 0;
-  std::int64_t matching_bytes = 0;
-  std::int64_t tagged_bytes = 0;
-  unsigned int total_files = 0;
-  unsigned int matching_files = 0;
-  unsigned int tagged_files = 0;
-  int cursor_pos = 0;
-  int start_file = 0;
-  bool access_denied = false;
-  bool global_flag = false;
-  bool tagged_flag = false;
-  bool only_tagged = false;
-  bool not_scanned = false;
-  bool big_window = false;
-  bool login_flag = false;
-
-  /**
-   * Parent directory, or null for the root (or if it has expired).
-   */
-  inline std::shared_ptr<DirEntry> Parent() const
-  {
-    return parent.lock();
-  }
-
-  std::filesystem::path GetPath() const override;
-
-  void SetMatchingParam();
-
-  bool Delete() override;
-
-  void UnReadTree();
-};
-
-struct Statistic
-{
-  std::shared_ptr<DirEntry> tree;
-  std::int64_t disk_space;
-  std::int64_t disk_capacity;
-  std::int64_t disk_total_files;
-  std::int64_t disk_total_bytes;
-  std::int64_t disk_matching_files;
-  std::int64_t disk_matching_bytes;
-  std::int64_t disk_tagged_files;
-  std::int64_t disk_tagged_bytes;
-  unsigned int  disk_total_directories;
-  int           disp_begin_pos;
-  int           cursor_pos;
-  SortSpec      kind_of_sort;
-  std::string   login_path;
-  std::string   path;
-  std::string   tape_name;
-  std::string   file_spec;
-  std::string   disk_name;
-};
-
-struct ArchivePathSplit
-{
-  std::string dir;
-  std::string name;
-};
-
-struct AsToParameter
-{
-  std::string to_file;
-  std::string to_dir;
-};
-
-extern WINDOW *dir_window;
-extern WINDOW *small_file_window;
-extern WINDOW *big_file_window;
-extern WINDOW *file_window;
-extern WINDOW *error_window;
-extern WINDOW *history_window;
-extern WINDOW *matches_window;
-extern WINDOW *f2_window;
-extern WINDOW *time_window;
-
-extern Statistic statistic;
-extern Statistic disk_statistic;
-extern Mode      mode;
-extern int       user_umask;
-extern bool  print_time;
-extern bool      resize_request;
-extern bool      bypass_small_window;
-extern std::optional<std::string> initial_directory;
 
 extern void DisplayMenu();
 extern void DisplayDiskStatistic();
@@ -537,53 +17,35 @@ extern void DisplayDiskTagged();
 extern void DisplayDiskName();
 extern void DisplayFileParameter(FileEntry *file_entry);
 extern void DisplayGlobalFileParameter(FileEntry *file_entry);
+void PaintDirStatistic(const ui::DirPanelInfo& info);
+void PaintDirParameter(const ui::DirPanelInfo& info);
+void PaintDirTagged(const ui::TaggedCounts& counts);
+void PaintFileParameter(const ui::FilePanelInfo& info);
+void PaintGlobalFileParameter(const ui::FilePanelInfo& info);
 void RefreshWindow(WINDOW* win);
-bool ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path, int depth);
-bool GetDiskParameter(
-  const std::string& path,
-  std::string* volume_name,
-  std::int64_t& avail_bytes,
-  std::int64_t* capacity
-);
+namespace ui {
+class IDirView;
+class IFileView;
+}
+ui::IDirView& NcursesDirViewInstance();
+ui::IFileView& NcursesFileViewInstance();
+ui::IViewerSurface& NcursesViewerSurfaceInstance();
 extern int  HandleDirWindow(DirEntry *start_dir_entry);
 extern void DisplayFileWindow(DirEntry *dir_entry);
 void Init(
   const std::optional<std::filesystem::path>& configuration_file,
   const std::optional<std::filesystem::path>& history_file
 );
-std::filesystem::path GetPath(const DirEntry* dir_entry);
-std::shared_ptr<DirEntry> SharedDirEntry(DirEntry* dir_entry);
-inline std::weak_ptr<DirEntry> WeakDirEntry(DirEntry* dir_entry)
-{
-  return SharedDirEntry(dir_entry);
-}
-bool Match(const std::string& file_name);
-bool SetMatchSpec(const std::string& new_spec);
-bool SetFileSpec(const std::string& file_spec);
-void ErrorEx(const std::string& msg, const std::string& module, int line);
-void Warning(const std::string& msg);
 void UnmapNoticeWindow();
 extern void SetFileMode(ViewMode new_file_mode);
 extern int  HandleFileWindow(DirEntry *dir_entry);
-std::string GetAttributes(unsigned short modus);
 extern void SwitchToSmallFileWindow();
 extern void SwitchToBigFileWindow();
-std::optional<std::string> GetGroupName(int gid);
-std::optional<int> GetGroupId(const std::string& name);
-std::optional<std::string> GetPasswdName(uid_t uid);
-std::optional<int> GetPasswdUid(const std::string& name);
-bool SystemCall(const std::string& command_line);
-bool QuerySystemCall(const std::string& command_line);
-bool SilentSystemCall(const std::string& command_line);
 bool View(DirEntry* dir_entry, const std::filesystem::path& file_path);
 bool ViewHex(const std::filesystem::path& file_path);
 bool InternalView(const std::filesystem::path& file_path);
-bool Edit(const DirEntry* dir_entry, const std::string& file_path);
 extern void DisplayAvailBytes();
 extern void DisplayFileSpec();
-extern void QuitTo(DirEntry * dir_entry);
-void Quit();
-std::optional<std::string> ReadFileSpec();
 std::optional<std::string> InputString(
   const std::string& initial,
   const int y,
@@ -592,206 +54,26 @@ std::optional<std::string> InputString(
   const std::size_t max_length
 );
 extern void RotateFileMode();
-bool Execute(const DirEntry* dir_entry, const FileEntry* file_entry);
-std::optional<std::string> GetPipeCommand(const std::string& initial = {});
 std::optional<SortSpec> GetKindOfSort();
-bool GetNewFileModus(int y, int x, std::string& modus, const char *term);
-int GetModus(const std::string& modus);
-bool ExecuteCommand(FileEntry* fe_ptr, const std::string& command);
-bool CopyFile(
-  Statistic* statistic_ptr,
-  FileEntry* fe_ptr,
-  bool confirm,
-  const std::string& to_file,
-  DirEntry* dest_dir_entry,
-  const std::string& to_dir_path,
-  bool path_copy
-);
-bool MoveFile(
-  FileEntry* fe_ptr,
-  bool confirm,
-  const std::string& to_file,
-  DirEntry* dest_dir_entry,
-  const std::string& to_dir_path,
-  FileEntry** new_fe_ptr
-);
-int InputChoise(const std::string& msg, const char *term);
-bool Confirm(const std::string& message);
-void Message(const std::string& msg);
-int GetDirEntry(
-  const std::shared_ptr<DirEntry>& tree,
-  DirEntry* current_dir_entry,
-  const std::string& dir_path,
-  DirEntry** dir_entry,
-  std::string& to_path
-);
-int GetFileEntry(
-  DirEntry* de_ptr,
-  const std::string& file_name,
-  FileEntry** file_entry
-);
-std::optional<AsToParameter> GetCopyParameter(
-  std::optional<std::string_view> from_file,
-  bool path_copy
-);
-std::optional<AsToParameter> GetMoveParameter(
-  std::optional<std::string_view> from_file
-);
-std::optional<std::string> GetNewOwner(int st_uid);
-std::optional<std::string> GetNewGroup(int st_gid);
 extern void DisplayDirHelp();
 extern void DisplayFileHelp();
 extern void ClearHelp();
-void GetAvailBytes(std::int64_t& avail_bytes);
-std::optional<std::string> GetCommandLine(const std::string& initial = {});
-std::optional<std::string> GetSearchCommandLine();
-extern bool RenameDirectory(DirEntry *de_ptr, const std::string& new_name);
-extern bool RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_fe_ptr);
-std::optional<std::string> GetRenameParameter(const std::string* old_name);
-std::string CTime(std::time_t f_time);
-
-/** Display helpers: unset optional EntryMeta fields render as "-". */
-std::string FormatMetaTime(const std::optional<EntryMeta::time_type>& tp);
-std::string FormatMetaOwner(const EntryMeta& meta);
-std::string FormatMetaGroup(const EntryMeta& meta);
-std::string FormatMetaInode(const EntryMeta& meta);
-std::string FormatMetaNlink(const EntryMeta& meta);
-
-bool LoginDisk(const std::string& path);
-std::optional<std::string> GetNewLoginPath(const std::string& initial);
 void PrintSpecialString(WINDOW* win, int y, int x, const std::string& str, int color);
 void Print(WINDOW* win, int y, int x, const std::string& str, int color);
 extern void PrintOptions(WINDOW *,int, int, const std::string&);
 void PrintMenuOptions(
   WINDOW* win,
-  int x,
   int y,
+  int x,
   const std::string& str,
   int ncolor,
   int hcolor
 );
-std::string FormFilename(const std::string& src, std::size_t max_len);
-std::string CutFilename(const std::string& src, std::size_t max_len);
-std::string CutPathname(const std::string& src, std::size_t max_len);
-ArchivePathSplit Fnsplit(std::string path);
-std::string MakeExtractCommandLine(
-  const std::string& path,
-  const std::string& file,
-  const std::string& cmd
-);
-std::optional<std::string> MakeDirectory(DirEntry *father_dir_entry);
-extern std::time_t Mktime(std::tm *tm);
-bool TryInsertArchiveDirEntry(
-  const std::shared_ptr<DirEntry>& tree,
-  const char* dir,
-  const EntryMeta& meta
-);
-bool InsertArchiveFileEntry(
-  const std::shared_ptr<DirEntry>& tree,
-  const std::string& path,
-  const EntryMeta& meta,
-  std::string symlink_target = {}
-);
-void MinimizeArchiveTree(const std::shared_ptr<DirEntry>& tree);
-void FinalizeArchiveTree(const std::shared_ptr<DirEntry>& dir_entry);
-
-using ArchiveLineFilter = bool (*)(std::string_view line);
-using ArchiveMetaParser = std::optional<archive_meta::NamedEntry> (*)(std::string_view line);
-
-bool ReadArchiveListingFilesOnly(
-  const std::shared_ptr<DirEntry>& dir_entry,
-  FILE* f,
-  ArchiveLineFilter is_entry,
-  ArchiveMetaParser parse,
-  std::string_view unknown_tag
-);
-bool ReadArchiveListingWithDirs(
-  const std::shared_ptr<DirEntry>& dir_entry,
-  FILE* f,
-  ArchiveMetaParser parse,
-  std::string_view unknown_tag
-);
-
-bool IsArchiveDirectoryEntry(const std::string& path, const EntryMeta& meta);
 extern void HitReturnToContinue();
-std::string BuildFilename(
-  const std::string& in_filename,
-  const std::string& pattern
-);
 int ViKey(int ch);
-std::optional<CompressMethod> GetFileMethod(const std::string& filename);
 extern bool KeyPressed();
 extern bool EscapeKeyPressed();
 std::optional<std::string> GetTapeDeviceName();
-extern bool MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry);
-extern bool MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name);
-std::string NormPath(const std::string& in_path);
-
-/* Non-destructive strtok replacement: splits a string_view on delimiters. */
-class StringTokenizer
-{
-public:
-  explicit StringTokenizer(std::string_view input) : rest_(input) {}
-
-  /**
-   * Next token. An empty `delimiters` string means "remainder of the line"
-   * (filenames may contain spaces), matching classic Strtok_r(..., "").
-   */
-  std::optional<std::string_view> Next(std::string_view delimiters)
-  {
-    while (!rest_.empty() &&
-           !delimiters.empty() &&
-           delimiters.find(rest_.front()) != std::string_view::npos)
-    {
-      rest_.remove_prefix(1);
-    }
-
-    if (rest_.empty())
-    {
-      return std::nullopt;
-    }
-
-    if (delimiters.empty())
-    {
-      const auto token = rest_;
-      rest_ = {};
-      return token;
-    }
-
-    const auto pos = rest_.find_first_of(delimiters);
-    std::string_view token;
-
-    if (pos == std::string_view::npos)
-    {
-      token = rest_;
-      rest_ = {};
-    }
-    else
-    {
-      token = rest_.substr(0, pos);
-      rest_.remove_prefix(pos + 1);
-    }
-
-    return token;
-  }
-
-private:
-  std::string_view rest_;
-};
-
-inline int SvAtoi(std::string_view s)
-{
-  return static_cast<int>(std::strtol(std::string(s).c_str(), nullptr, 10));
-}
-
-void ReadProfile(const std::optional<std::filesystem::path>& custom_path);
-std::optional<std::string> GetProfileValue(const std::string& key);
-double GetDoubleProfileValue(const std::string& key);
-int GetIntProfileValue(const std::string& key);
-bool GetBooleanProfileValue(const std::string& key);
-char GetNumberSeparator();
-void ScanSubTree(DirEntry* dir_entry);
-extern void GetMaxYX(WINDOW *win, int *height, int *width);
 std::optional<std::string> GetHistory();
 void InsHistory(const std::string& str);
 void ReadHistory(const std::optional<std::filesystem::path>& custom_path);
@@ -807,34 +89,12 @@ void MvAddStr(int y, int x, const std::string& str);
 void MvWAddStr(WINDOW* win, int y, int x, const std::string& str);
 void WAddStr(WINDOW* win, const std::string& str);
 extern void ClockHandler(int);
-std::optional<std::string> GetExtViewer(const std::filesystem::path& filename);
 extern void InitClock();
 extern void SuspendClock();
-std::string ShellQuote(const std::string& src);
-std::string BuildUserFileEntry(
-  const std::shared_ptr<FileEntry>& fe_ptr,
-  int max_filename_len,
-  int max_linkname_len,
-  const std::string& tmpl,
-  int linelen
-);
-int GetUserFileEntryLength(
-  int max_filename_len,
-  int max_linkname_len,
-  const std::string& tmpl
-);
-std::int64_t AtoLL(std::string_view s);
-std::optional<std::string> ReadLine(FILE* f);
+extern void GetMaxYX(WINDOW *win, int *height, int *width);
 extern void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no);
 extern void ReCreateWindows();
 extern int  Getch();
-extern int  DirUserMode(DirEntry *dir_entry, int ch);
-int FileUserMode(const std::shared_ptr<FileEntry>& file_entry, int ch);
-std::optional<std::string> GetUserFileAction(int chkey, int* pchremap);
-std::optional<std::string> GetUserDirAction(int chkey, int* pchremap);
-bool IsUserActionDefined();
-std::optional<std::filesystem::path> Getcwd();
-std::filesystem::path GetcwdOrDot();
 extern bool RefreshDirWindow();
 std::string StrLeft(const char* str, std::size_t count);
 std::string FitVisualWidth(std::string_view str, std::size_t width, bool left_justify);
@@ -842,62 +102,4 @@ const char* StrVisualIndex(const char* str, std::size_t index);
 void TruncateVisual(char* str, std::size_t max_len);
 int StrVisualLength(std::string_view str);
 void WAttrAddStr(WINDOW* win, int attr, const std::string& str);
-EntryMeta MetaOrAbort(const std::filesystem::path& path);
-std::optional<std::filesystem::path> GetXdgCachePath();
-std::optional<std::filesystem::path> GetXdgConfigPath();
-
-inline std::string GetProfileValueOrEmpty(const std::string& key)
-{
-  return GetProfileValue(key).value_or(std::string());
-}
-
-inline bool IsReadable(const std::filesystem::path& path)
-{
-  return !access(path.c_str(), R_OK);
-}
-
-inline bool IsWriteable(const std::filesystem::path& path)
-{
-  return !access(path.c_str(), W_OK);
-}
-
-template<class... Args>
-std::string Join(Args&&... args)
-{
-  std::string result;
-  bool first = true;
-  auto append = [&result, &first](const std::string& part)
-  {
-    if (first)
-    {
-      first = false;
-    } else {
-      result.append(1, ' ');
-    }
-    result.append(part);
-  };
-
-  (append(args), ...);
-
-  return result;
-}
-
-inline void ClearBottomPromptLines()
-{
-  move(LINES - 3, 1);
-  clrtoeol();
-  move(LINES - 2, 1);
-  clrtoeol();
-  move(LINES - 1, 1);
-  clrtoeol();
-}
-
-inline unsigned char MakePrintable(int ch)
-{
-  if (std::iscntrl(ch) && static_cast<unsigned char>(ch) < ' ')
-  {
-    return ACS_BLOCK;
-  }
-
-  return static_cast<unsigned char>(ch);
-}
+unsigned char MakePrintable(int ch);

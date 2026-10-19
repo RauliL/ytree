@@ -1,4 +1,5 @@
-#include "ytree.hpp"
+#include "core/api.hpp"
+#include "core/commands.hpp"
 
 using UserActionLookup = std::optional<std::string> (*)(int chkey, int* pchremap);
 
@@ -43,4 +44,17 @@ int DirUserMode(DirEntry *dir_entry, int ch)
 int FileUserMode(const std::shared_ptr<FileEntry>& file_entry, int ch)
 {
   return RunUserMode(ch, GetUserFileAction, file_entry->GetRealPath());
+}
+
+ui::InputEvent DirUserMode(DirEntry* dir_entry, const ui::InputEvent& ev)
+{
+  return EventFromLegacyChar(DirUserMode(dir_entry, LegacyCode(ev)));
+}
+
+ui::InputEvent FileUserMode(
+  const std::shared_ptr<FileEntry>& file_entry,
+  const ui::InputEvent& ev
+)
+{
+  return EventFromLegacyChar(FileUserMode(file_entry, LegacyCode(ev)));
 }

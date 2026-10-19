@@ -1,6 +1,7 @@
 #include <algorithm>
 
-#include "ytree.hpp"
+#include "core/api.hpp"
+#include "core/ui.hpp"
 
 inline constexpr std::string_view ARCHIVE_MONTH_NAMES[12] =
 {
@@ -346,8 +347,7 @@ bool ReadArchiveListingWithDirs(
       if (parsed->name != "./")
       {
         TryInsertArchiveDirEntry(dir_entry, parsed->name.c_str(), parsed->meta);
-        DisplayDiskStatistic();
-        doupdate();
+        ui::RefreshDiskStats();
       }
     } else {
 #ifdef DEBUG

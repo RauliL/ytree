@@ -3,7 +3,10 @@
 #include <functional>
 #include <type_traits>
 
+#include "core/commands.hpp"
+#include "core/ui.hpp"
 #include "ui/mouse.hpp"
+#include "ui/view_info.hpp"
 #include "ytree.hpp"
 
 static bool reverse_sort;
@@ -61,7 +64,12 @@ static bool SortBySize(const FileEntry* e1, const FileEntry* e2);
 static bool SortByOwner(const FileEntry* e1, const FileEntry* e2);
 static bool SortByGroup(const FileEntry* e1, const FileEntry* e2);
 static bool SortByExtension(const FileEntry* e1, const FileEntry* e2);
-static void DisplayFiles(DirEntry *de_ptr, int start_file_no, int hilight_no, int start_x);
+static void DisplayFiles(
+  int start_file_no,
+  int hilight_no,
+  int start_x,
+  bool access_denied
+);
 static void ReadGlobalFileList(const DirEntry* dir_entry);
 static bool IsMatchingTaggedFiles();
 static void RemoveFileEntry(int entry_no);
@@ -664,11 +672,20 @@ void DisplayFileWindow(DirEntry *dir_entry)
 {
   GetMaxYX(file_window, &window_height, &window_width);
   BuildFileEntryList(dir_entry);
-  DisplayFiles(dir_entry, dir_entry->start_file,
-                dir_entry->start_file + dir_entry->cursor_pos, 0);
+  DisplayFiles(
+    dir_entry->start_file,
+    dir_entry->start_file + dir_entry->cursor_pos,
+    0,
+    dir_entry->access_denied
+  );
 }
 
-static void DisplayFiles(DirEntry *de_ptr, int start_file_no, int hilight_no, int start_x)
+static void DisplayFiles(
+  int start_file_no,
+  int hilight_no,
+  int start_x,
+  bool access_denied
+)
 {
   int  x, y, p_x, p_y, j;
 
@@ -679,7 +696,7 @@ static void DisplayFiles(DirEntry *de_ptr, int start_file_no, int hilight_no, in
     mvwaddstr(file_window,
          0,
          3,
-         (de_ptr->access_denied) ? "Permission Denied!" : "No Files!"
+         access_denied ? "Permission Denied!" : "No Files!"
 );
   }
 
@@ -725,7 +742,7 @@ static void MoveDown(
   if (cursor_pos < max_disp_files - 1)
   {
     // DOWN ohne scroll moeglich.
-    PrintFileEntry(
+    ui::file_view().printEntry(
       start_file + cursor_pos,
       cursor_pos % window_height,
       cursor_pos / window_height,
@@ -733,7 +750,7 @@ static void MoveDown(
       start_x
     );
     ++cursor_pos;
-    PrintFileEntry(
+    ui::file_view().printEntry(
       start_file + cursor_pos,
       cursor_pos % window_height,
       cursor_pos / window_height,
@@ -745,12 +762,7 @@ static void MoveDown(
 
   // Scrollen.
   ++start_file;
-  DisplayFiles(
-    dir_entry,
-    start_file,
-    start_file + cursor_pos,
-    start_x
-  );
+  ui::file_view().showFiles(start_file, start_file + cursor_pos, start_x, dir_entry->access_denied);
 }
 
 static void MoveUp(
@@ -770,7 +782,7 @@ static void MoveUp(
   if (cursor_pos > 0)
   {
     // UP ohne scroll moeglich.
-    PrintFileEntry(
+    ui::file_view().printEntry(
       start_file + cursor_pos,
       cursor_pos % window_height,
       cursor_pos / window_height,
@@ -778,7 +790,7 @@ static void MoveUp(
       start_x
     );
     --cursor_pos;
-    PrintFileEntry(
+    ui::file_view().printEntry(
       start_file + cursor_pos,
       cursor_pos % window_height,
       cursor_pos / window_height,
@@ -790,12 +802,7 @@ static void MoveUp(
 
   // Scrollen.
   --start_file;
-  DisplayFiles(
-    dir_entry,
-    start_file,
-    start_file + cursor_pos,
-    start_x
-  );
+  ui::file_view().showFiles(start_file, start_file + cursor_pos, start_x, dir_entry->access_denied);
 }
 
 static void MoveRight(
@@ -810,7 +817,7 @@ static void MoveRight(
       /* Sonderfall: ganzes Filewindow scrollen */
       /*----------------------------------------*/
       (*start_x)++;
-      PrintFileEntry(*start_file + *cursor_pos,
+      ui::file_view().printEntry(*start_file + *cursor_pos,
                       *cursor_pos % window_height,
                       *cursor_pos / window_height,
                       true ,
@@ -841,14 +848,14 @@ static void MoveRight(
       {
           /* RIGHT ohne scroll moeglich */
           /*----------------------------*/
-          PrintFileEntry(*start_file + *cursor_pos,
+          ui::file_view().printEntry(*start_file + *cursor_pos,
                           *cursor_pos % window_height,
                           *cursor_pos / window_height,
                           false,
                           *start_x
 );
           *cursor_pos += my_x_step;
-          PrintFileEntry(*start_file + *cursor_pos,
+          ui::file_view().printEntry(*start_file + *cursor_pos,
                           *cursor_pos % window_height,
                           *cursor_pos / window_height,
                           true ,
@@ -861,11 +868,7 @@ static void MoveRight(
           /*----------*/
           *start_file += x_step;
           *cursor_pos -= x_step - my_x_step;
-          DisplayFiles(dir_entry,
-                        *start_file,
-                        *start_file + *cursor_pos,
-                        *start_x
-);
+          ui::file_view().showFiles(*start_file, *start_file + *cursor_pos, *start_x, dir_entry->access_denied);
       }
    }
 }
@@ -883,7 +886,7 @@ static void MoveLeft(
          /* Sonderfall: ganzes Filewindow scrollen */
          /*----------------------------------------*/
          if( *start_x > 0 ) (*start_x)--;
-            PrintFileEntry(*start_file + *cursor_pos,
+            ui::file_view().printEntry(*start_file + *cursor_pos,
                             *cursor_pos % window_height,
                             *cursor_pos / window_height,
                             true ,
@@ -913,14 +916,14 @@ static void MoveLeft(
          {
              /* LEFT ohne scroll moeglich */
              /*---------------------------*/
-             PrintFileEntry(*start_file + *cursor_pos,
+             ui::file_view().printEntry(*start_file + *cursor_pos,
                              *cursor_pos % window_height,
                              *cursor_pos / window_height,
                              false,
                              *start_x
 );
              *cursor_pos -= my_x_step;
-             PrintFileEntry(*start_file + *cursor_pos,
+             ui::file_view().printEntry(*start_file + *cursor_pos,
                              *cursor_pos % window_height,
                              *cursor_pos / window_height,
                              true,
@@ -933,11 +936,7 @@ static void MoveLeft(
              /*----------*/
              if( ( *start_file -= x_step ) < 0 )
                 *start_file = 0;
-             DisplayFiles(dir_entry,
-                           *start_file,
-                           *start_file + *cursor_pos,
-                           *start_x
-);
+             ui::file_view().showFiles(*start_file, *start_file + *cursor_pos, *start_x, dir_entry->access_denied);
          }
      }
      return;
@@ -960,7 +959,7 @@ static void fmovenpage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
          * Eintrag
          * ==> setzen
          */
-         PrintFileEntry(*start_file + *cursor_pos,
+         ui::file_view().printEntry(*start_file + *cursor_pos,
                          *cursor_pos % window_height,
                          *cursor_pos / window_height,
                          false,
@@ -970,7 +969,7 @@ static void fmovenpage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
             *cursor_pos = max_disp_files - 1;
          else
             *cursor_pos = file_entry_list.size() - *start_file - 1;
-         PrintFileEntry(*start_file + *cursor_pos,
+         ui::file_view().printEntry(*start_file + *cursor_pos,
                          *cursor_pos % window_height,
                          *cursor_pos / window_height,
                          true,
@@ -989,11 +988,7 @@ static void fmovenpage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
            *cursor_pos = max_disp_files - 1;
         else
            *cursor_pos = file_entry_list.size() - *start_file - 1;
-        DisplayFiles(dir_entry,
-                      *start_file,
-                      *start_file + *cursor_pos,
-                      *start_x
-);
+        ui::file_view().showFiles(*start_file, *start_file + *cursor_pos, *start_x, dir_entry->access_denied);
       }
    }
    return;
@@ -1017,14 +1012,14 @@ static void fmoveppage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
              * Eintrag
              * ==> setzen
              */
-             PrintFileEntry(*start_file + *cursor_pos,
+             ui::file_view().printEntry(*start_file + *cursor_pos,
                              *cursor_pos % window_height,
                              *cursor_pos / window_height,
                              false,
                              *start_x
 );
              *cursor_pos = 0;
-             PrintFileEntry(*start_file + *cursor_pos,
+             ui::file_view().printEntry(*start_file + *cursor_pos,
                              *cursor_pos % window_height,
                              *cursor_pos / window_height,
                              true,
@@ -1039,11 +1034,7 @@ static void fmoveppage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
                *start_file -= max_disp_files;
             else
                *start_file = 0;
-            DisplayFiles(dir_entry,
-                          *start_file,
-                          *start_file + *cursor_pos,
-                          *start_x
-);
+            ui::file_view().showFiles(*start_file, *start_file + *cursor_pos, *start_x, dir_entry->access_denied);
         }
      }
      return;
@@ -1064,13 +1055,13 @@ static void fmoveto(int target_pos, int *start_file, int *cursor_pos, int *start
 
   if (target_pos >= *start_file && target_pos < *start_file + max_disp_files)
   {
-    PrintFileEntry(*start_file + *cursor_pos,
+    ui::file_view().printEntry(*start_file + *cursor_pos,
                    *cursor_pos % window_height,
                    *cursor_pos / window_height,
                    false,
                    *start_x);
     *cursor_pos = target_pos - *start_file;
-    PrintFileEntry(*start_file + *cursor_pos,
+    ui::file_view().printEntry(*start_file + *cursor_pos,
                    *cursor_pos % window_height,
                    *cursor_pos / window_height,
                    true,
@@ -1085,7 +1076,7 @@ static void fmoveto(int target_pos, int *start_file, int *cursor_pos, int *start
       *start_file = std::max(0, static_cast<int>(file_entry_list.size()) - max_disp_files);
       *cursor_pos = target_pos - *start_file;
     }
-    DisplayFiles(dir_entry, *start_file, *start_file + *cursor_pos, *start_x);
+    ui::file_view().showFiles(*start_file, *start_file + *cursor_pos, *start_x, dir_entry->access_denied);
   }
 }
 
@@ -1107,18 +1098,23 @@ static int FileIndexFromMouse(int row, int col)
   return column * window_height + row;
 }
 
-static int HandleFileMouse(int *start_file, int *cursor_pos, int *start_x, DirEntry *dir_entry)
+static std::optional<ui::InputEvent> HandleFileMouse(
+  int *start_file,
+  int *cursor_pos,
+  int *start_x,
+  DirEntry *dir_entry
+)
 {
   const MouseEvent event = DecodeMouse(MouseFocus::File);
 
   switch (event.action)
   {
     case MouseAction::ScrollUp:
-      return KEY_UP;
+      return ui::InputEvent::Special(ui::Key::Up);
     case MouseAction::ScrollDown:
-      return KEY_DOWN;
+      return ui::InputEvent::Special(ui::Key::Down);
     case MouseAction::SwitchToDir:
-      return ESC;
+      return ui::InputEvent::Special(ui::Key::Escape);
     case MouseAction::Select:
     case MouseAction::Activate:
     case MouseAction::Tag:
@@ -1126,24 +1122,24 @@ static int HandleFileMouse(int *start_file, int *cursor_pos, int *start_x, DirEn
       const int relative = FileIndexFromMouse(event.row, event.col);
       if (relative < 0)
       {
-        return -1;
+        return std::nullopt;
       }
       fmoveto(*start_file + relative, start_file, cursor_pos, start_x, dir_entry);
       if (event.action == MouseAction::Activate)
       {
-        return 'v';
+        return ui::InputEvent::CharKey('v');
       }
       if (event.action == MouseAction::Tag)
       {
-        return 't';
+        return ui::InputEvent::CharKey('t');
       }
-      return -1;
+      return std::nullopt;
     }
     case MouseAction::Ignore:
     case MouseAction::None:
     case MouseAction::SwitchToFile:
     default:
-      return -1;
+      return std::nullopt;
   }
 }
 
@@ -1214,7 +1210,7 @@ static void WalkTaggedFiles(int start_file, int cursor_pos, F&& action)
       i < start_file + max_disp_files
     )
     {
-      PrintFileEntry(
+      ui::file_view().printEntry(
         start_file + cursor_pos,
         cursor_pos % window_height,
         cursor_pos / window_height,
@@ -1224,7 +1220,7 @@ static void WalkTaggedFiles(int start_file, int cursor_pos, F&& action)
 
       cursor_pos = static_cast<int>(i) - start_file;
 
-      PrintFileEntry(
+      ui::file_view().printEntry(
         start_file + cursor_pos,
         cursor_pos % window_height,
         cursor_pos / window_height,
@@ -1235,23 +1231,18 @@ static void WalkTaggedFiles(int start_file, int cursor_pos, F&& action)
       start_file = std::max(0, i - max_disp_files + 1);
       cursor_pos = i - start_file;
 
-      DisplayFiles(
-        fe_ptr->Dir().get(),
-        start_file,
-        start_file + cursor_pos,
-        start_x
-      );
+      ui::file_view().showFiles(start_file, start_file + cursor_pos, start_x, fe_ptr->Dir().get()->access_denied);
       maybe_change_x = false;
     }
 
     if (fe_ptr->Dir()->global_flag)
     {
-      DisplayGlobalFileParameter(fe_ptr);
+      ui::file_view().showGlobalFileParameter(MakeGlobalFilePanelInfo(*fe_ptr));
     } else {
-      DisplayFileParameter(fe_ptr);
+      ui::file_view().showFileParameter(MakeFilePanelInfo(*fe_ptr));
     }
 
-    RefreshWindow(file_window);
+    ui::file_view().refresh();
     doupdate();
 
     const auto step = InvokeTaggedFileAction(action, *fe_ptr);
@@ -1306,7 +1297,7 @@ struct FileWindowContext
   FileEntry* new_fe_ptr = nullptr;
   DirEntry* de_ptr = nullptr;
   DirEntry* dest_dir_entry = nullptr;
-  int unput_char = 0;
+  std::optional<ui::InputEvent> unput;
   int tmp2 = 0;
   int list_pos = 0;
   std::int64_t file_size = 0;
@@ -1330,19 +1321,9 @@ static inline const std::shared_ptr<FileEntry>& FileWindowCurrentEntry(const Dir
   return file_entry_list[dir_entry->start_file + dir_entry->cursor_pos];
 }
 
-static void DisplayFilesAtCursor(DirEntry* dir_entry, int start_x)
-{
-  DisplayFiles(
-    dir_entry,
-    dir_entry->start_file,
-    dir_entry->start_file + dir_entry->cursor_pos,
-    start_x
-  );
-}
-
 static void InitializeFileWindow(FileWindowContext& ctx)
 {
-  ctx.unput_char = '\0';
+  ctx.unput.reset();
   ctx.fe_ptr = nullptr;
   ctx.need_dsp_help = true;
   ctx.maybe_change_x_step = true;
@@ -1355,17 +1336,17 @@ static void InitializeFileWindow(FileWindowContext& ctx)
     ctx.dir_entry->tagged_flag
   )
   {
-    SwitchToBigFileWindow();
-    GetMaxYX(file_window, &window_height, &window_width);
-    DisplayDiskStatistic();
+    ui::file_view().switchToBig();
+    ui::file_view().getSize(window_height, window_width);
+    ui::file_view().showDiskStatistic();
   }
   else
   {
-    GetMaxYX(file_window, &window_height, &window_width);
-    DisplayDirStatistic(ctx.dir_entry);
+    ui::file_view().getSize(window_height, window_width);
+    ui::file_view().showDirStatistic(MakeDirPanelInfo(*ctx.dir_entry));
   }
 
-  DisplayFilesAtCursor(ctx.dir_entry, ctx.start_x);
+  ui::file_view().showFilesAtCursor(ctx.dir_entry->start_file, ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
 }
 
 static void UpdateFileWindowLayout(FileWindowContext& ctx)
@@ -1380,40 +1361,30 @@ static void UpdateFileWindowLayout(FileWindowContext& ctx)
   max_disp_files = window_height * max_column;
 }
 
-static int ReadFileWindowKey(FileWindowContext& ctx)
+static ui::InputEvent ReadFileWindowKey(FileWindowContext& ctx)
 {
-  if (ctx.unput_char)
+  if (ctx.unput)
   {
-    const int ch = ctx.unput_char;
-    ctx.unput_char = '\0';
-    return ch;
+    const auto ev = *ctx.unput;
+    ctx.unput.reset();
+    return ev;
   }
 
   ctx.fe_ptr = FileWindowCurrentEntry(ctx.dir_entry).get();
   if (ctx.dir_entry->global_flag)
   {
-    DisplayGlobalFileParameter(ctx.fe_ptr);
+    ui::file_view().showGlobalFileParameter(MakeGlobalFilePanelInfo(*ctx.fe_ptr));
   }
   else
   {
-    DisplayFileParameter(ctx.fe_ptr);
+    ui::file_view().showFileParameter(MakeFilePanelInfo(*ctx.fe_ptr));
   }
 
-  RefreshWindow(dir_window);
-  RefreshWindow(file_window);
+  ui::file_view().refreshDirSide();
+  ui::file_view().refresh();
   doupdate();
 
-  int ch = resize_request ? -1 : Getch();
-  if (ch == LF)
-  {
-    ch = CR;
-  }
-
-#ifdef VI_KEYS
-  ch = ViKey(ch);
-#endif
-
-  return ch;
+  return ui::ReadEvent();
 }
 
 static void HandleFileWindowResize(FileWindowContext& ctx)
@@ -1425,7 +1396,7 @@ static void HandleFileWindowResize(FileWindowContext& ctx)
 
   ReCreateWindows();
   RereadWindowSize(ctx.dir_entry);
-  DisplayMenu();
+  ui::DisplayMenu();
 
   GetMaxYX(dir_window, &ctx.dir_window_height, &ctx.dir_window_width);
   while (statistic.cursor_pos >= ctx.dir_window_height)
@@ -1440,59 +1411,63 @@ static void HandleFileWindowResize(FileWindowContext& ctx)
     ctx.dir_entry->tagged_flag
   )
   {
-    SwitchToBigFileWindow();
+    ui::file_view().switchToBig();
     DisplayFileWindow(ctx.dir_entry);
 
     if (ctx.dir_entry->global_flag)
     {
-      DisplayDiskStatistic();
-      DisplayGlobalFileParameter(ctx.fe_ptr);
+      ui::file_view().showDiskStatistic();
+      ui::file_view().showGlobalFileParameter(MakeGlobalFilePanelInfo(*ctx.fe_ptr));
     }
     else
     {
       DisplayFileWindow(ctx.dir_entry);
-      DisplayDirStatistic(ctx.dir_entry);
-      DisplayFileParameter(ctx.fe_ptr);
+      ui::file_view().showDirStatistic(MakeDirPanelInfo(*ctx.dir_entry));
+      ui::file_view().showFileParameter(MakeFilePanelInfo(*ctx.fe_ptr));
     }
   }
   else
   {
-    SwitchToSmallFileWindow();
-    DisplayTree(
-      dir_window,
-      statistic.disp_begin_pos,
+    ui::file_view().switchToSmall();
+    ui::file_view().showDirTree(statistic.disp_begin_pos,
       statistic.disp_begin_pos + statistic.cursor_pos
     );
     DisplayFileWindow(ctx.dir_entry);
-    DisplayDirStatistic(ctx.dir_entry);
-    DisplayFileParameter(ctx.fe_ptr);
+    ui::file_view().showDirStatistic(MakeDirPanelInfo(*ctx.dir_entry));
+    ui::file_view().showFileParameter(MakeFilePanelInfo(*ctx.fe_ptr));
   }
 
   ctx.need_dsp_help = true;
-  DisplayAvailBytes();
-  DisplayFileSpec();
-  DisplayDiskName();
+  ui::DisplayAvailBytes();
+  ui::DisplayFileSpec();
+  ui::DisplayDiskName();
   resize_request = false;
 }
 
-static void RemapFileModeNavigationKeys(int& ch)
+static void RemapFileModeNavigationKeys(ui::InputEvent& ev)
 {
   if (file_mode == ViewMode::MODE_1)
   {
-    if (ch == '\t')
+    if (ev.key == ui::Key::Tab)
     {
-      ch = KEY_DOWN;
+      ev = ui::InputEvent::Special(ui::Key::Down);
     }
-    else if (ch == KEY_BTAB)
+    else if (ev.key == ui::Key::BackTab)
     {
-      ch = KEY_UP;
+      ev = ui::InputEvent::Special(ui::Key::Up);
     }
   }
 }
 
-static void ResetFileWindowHorizontalScroll(int ch, FileWindowContext& ctx)
+static void ResetFileWindowHorizontalScroll(
+  const ui::InputEvent& ev,
+  FileWindowContext& ctx
+)
 {
-  if (x_step == 1 && (ch == KEY_RIGHT || ch == KEY_LEFT))
+  if (
+    x_step == 1 &&
+    (ev.key == ui::Key::Right || ev.key == ui::Key::Left)
+  )
   {
     return;
   }
@@ -1503,7 +1478,7 @@ static void ResetFileWindowHorizontalScroll(int ch, FileWindowContext& ctx)
   }
 
   ctx.start_x = 0;
-  PrintFileEntry(
+  ui::file_view().printEntry(
     ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
     ctx.dir_entry->cursor_pos % window_height,
     ctx.dir_entry->cursor_pos / window_height,
@@ -1512,141 +1487,150 @@ static void ResetFileWindowHorizontalScroll(int ch, FileWindowContext& ctx)
   );
 }
 
-static void ApplyFileUserMode(int& ch, const FileWindowContext& ctx)
+static void ApplyFileUserMode(ui::InputEvent& ev, const FileWindowContext& ctx)
 {
   if (mode == Mode::USER_MODE)
   {
-    ch = FileUserMode(FileWindowCurrentEntry(ctx.dir_entry), ch);
+    ev = FileUserMode(FileWindowCurrentEntry(ctx.dir_entry), ev);
   }
 }
 
-static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
+static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
 {
-  switch (ch)
-  {
-#ifdef KEY_RESIZE
-    case KEY_RESIZE:
-      resize_request = true;
-      break;
-#endif
+  const FileCommand cmd = MapFileCommand(ev);
 
-#ifdef KEY_MOUSE
-    case KEY_MOUSE:
-      ch = HandleFileMouse(
-        &ctx.dir_entry->start_file,
-        &ctx.dir_entry->cursor_pos,
-        &ctx.start_x,
-        ctx.dir_entry
-      );
-      if (ch == -1)
+  switch (cmd)
+  {
+      case FileCommand::Resize:
+        resize_request = true;
+        break;
+
+      case FileCommand::Mouse:
       {
+        if (const auto injected = HandleFileMouse(
+              &ctx.dir_entry->start_file,
+              &ctx.dir_entry->cursor_pos,
+              &ctx.start_x,
+              ctx.dir_entry
+            ))
+        {
+          ctx.unput = *injected;
+        }
         break;
       }
-      ctx.unput_char = ch;
-      break;
-#endif
 
-    case -1:
-      break;
+      case FileCommand::MoveDown:
+        MoveDown(
+          ctx.dir_entry->start_file,
+          ctx.dir_entry->cursor_pos,
+          ctx.start_x,
+          ctx.dir_entry
+        );
+        break;
 
-    case ' ':
-    case KEY_DOWN:
-      MoveDown(
-        ctx.dir_entry->start_file,
-        ctx.dir_entry->cursor_pos,
-        ctx.start_x,
-        ctx.dir_entry
-      );
-      break;
+      case FileCommand::MoveUp:
+        MoveUp(
+          ctx.dir_entry->start_file,
+          ctx.dir_entry->cursor_pos,
+          ctx.start_x,
+          ctx.dir_entry
+        );
+        break;
 
-    case KEY_UP:
-      MoveUp(
-        ctx.dir_entry->start_file,
-        ctx.dir_entry->cursor_pos,
-        ctx.start_x,
-        ctx.dir_entry
-      );
-      break;
+      case FileCommand::MoveRight:
+        MoveRight(
+          &ctx.dir_entry->start_file,
+          &ctx.dir_entry->cursor_pos,
+          &ctx.start_x,
+          ctx.dir_entry
+        );
+        break;
 
-    case KEY_RIGHT:
-      MoveRight(
-        &ctx.dir_entry->start_file,
-        &ctx.dir_entry->cursor_pos,
-        &ctx.start_x, ctx.dir_entry
-      );
-      break;
+      case FileCommand::MoveLeft:
+        MoveLeft(
+          &ctx.dir_entry->start_file,
+          &ctx.dir_entry->cursor_pos,
+          &ctx.start_x,
+          ctx.dir_entry
+        );
+        break;
 
-    case KEY_LEFT:
-      MoveLeft(
-        &ctx.dir_entry->start_file,
-        &ctx.dir_entry->cursor_pos,
-        &ctx.start_x,
-        ctx.dir_entry
-      );
-      break;
+      case FileCommand::PageDown:
+        fmovenpage(
+          &ctx.dir_entry->start_file,
+          &ctx.dir_entry->cursor_pos,
+          &ctx.start_x,
+          ctx.dir_entry
+        );
+        break;
 
-      case KEY_NPAGE: fmovenpage(&ctx.dir_entry->start_file, &ctx.dir_entry->cursor_pos, &ctx.start_x, ctx.dir_entry);
-          break;
+      case FileCommand::PageUp:
+        fmoveppage(
+          &ctx.dir_entry->start_file,
+          &ctx.dir_entry->cursor_pos,
+          &ctx.start_x,
+          ctx.dir_entry
+        );
+        break;
 
-      case KEY_PPAGE: fmoveppage(&ctx.dir_entry->start_file, &ctx.dir_entry->cursor_pos, &ctx.start_x, ctx.dir_entry);
-          break;
-
-      case KEY_END  : if( ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos + 1 >= (int)file_entry_list.size() )
+      case FileCommand::End:
+        if (
+          ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos + 1 >=
+          static_cast<int>(file_entry_list.size())
+        )
+        {
+          ui::Beep();
+        }
+        else
+        {
+          if (static_cast<int>(file_entry_list.size()) < max_disp_files)
           {
-      /* Letzte Position erreicht */
-      /*--------------------------*/
-
-      beep();
+            ctx.dir_entry->start_file = 0;
+            ctx.dir_entry->cursor_pos =
+              static_cast<int>(file_entry_list.size()) - 1;
           }
           else
           {
-      if( (int)file_entry_list.size() < max_disp_files )
-            {
-        ctx.dir_entry->start_file = 0;
-        ctx.dir_entry->cursor_pos = file_entry_list.size() - 1;
-            }
-            else
-                  {
-                          ctx.dir_entry->start_file = file_entry_list.size() - max_disp_files;
-        ctx.dir_entry->cursor_pos = file_entry_list.size() - ctx.dir_entry->start_file - 1;
-            }
-
-      DisplayFiles(ctx.dir_entry,
-              ctx.dir_entry->start_file,
-              ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-              ctx.start_x
-);
+            ctx.dir_entry->start_file =
+              static_cast<int>(file_entry_list.size()) - max_disp_files;
+            ctx.dir_entry->cursor_pos =
+              static_cast<int>(file_entry_list.size()) -
+              ctx.dir_entry->start_file - 1;
           }
-          break;
 
-      case KEY_HOME : if( ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos <= 0 )
-          {
-      /* erste Position erreicht */
-      /*-------------------------*/
+          ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
+        }
+        break;
 
-      beep();
-          }
-          else
-          {
-                        ctx.dir_entry->start_file = 0;
-      ctx.dir_entry->cursor_pos = 0;
+      case FileCommand::Home:
+        if (ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos <= 0)
+        {
+          ui::Beep();
+        }
+        else
+        {
+          ctx.dir_entry->start_file = 0;
+          ctx.dir_entry->cursor_pos = 0;
+          ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
+        }
+        break;
 
-      DisplayFiles(ctx.dir_entry,
-              ctx.dir_entry->start_file,
-              ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-              ctx.start_x
-);
+      case FileCommand::ListJump:
+        ListJump(ctx.dir_entry, "");
+        ctx.need_dsp_help = true;
+        break;
 
-          }
-          break;
+      case FileCommand::Leave:
+      case FileCommand::LoginEsc:
+      case FileCommand::None:
+        break;
 
-      case 'A':
-      case 'a':
+      case FileCommand::ChangeMode:
         ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
         ctx.need_dsp_help = true;
         if (!ctx.fe_ptr->ChangeModus())
         {
-          PrintFileEntry(
+          ui::file_view().printEntry(
             ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
             ctx.dir_entry->cursor_pos % window_height,
             ctx.dir_entry->cursor_pos / window_height,
@@ -1656,7 +1640,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
         }
         break;
 
-      case 'A' & 0x1F :
+      case FileCommand::ChangeModeTagged:
           if( (mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
           {
       beep();
@@ -1680,11 +1664,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           }
         );
 
-        DisplayFiles(ctx.dir_entry,
-          ctx.dir_entry->start_file,
-          ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-          ctx.start_x
-        );
+        ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
       }
       else
       {
@@ -1693,13 +1673,12 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           }
           break;
 
-      case 'O':
-      case 'o':
+      case FileCommand::ChangeOwner:
         ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
         ctx.need_dsp_help = true;
         if (ctx.fe_ptr->ChangeOwner())
         {
-          PrintFileEntry(
+          ui::file_view().printEntry(
             ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
             ctx.dir_entry->cursor_pos % window_height,
             ctx.dir_entry->cursor_pos / window_height,
@@ -1709,7 +1688,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
         }
         break;
 
-      case 'O' & 0x1F :
+      case FileCommand::ChangeOwnerTagged:
           if(( mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
           {
       beep();
@@ -1732,12 +1711,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
             }
           );
 
-          DisplayFiles(
-            ctx.dir_entry,
-            ctx.dir_entry->start_file,
-            ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-            ctx.start_x
-          );
+          ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
         } else {
           FormatMessage("Can't read Owner-ID:*{}", *owner);
         }
@@ -1745,13 +1719,12 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           }
           break;
 
-      case 'G':
-      case 'g':
+      case FileCommand::ChangeGroup:
         ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
         ctx.need_dsp_help = true;
         if (ctx.fe_ptr->ChangeGroup())
         {
-          PrintFileEntry(
+          ui::file_view().printEntry(
             ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
             ctx.dir_entry->cursor_pos % window_height,
             ctx.dir_entry->cursor_pos / window_height,
@@ -1761,7 +1734,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
         }
         break;
 
-      case 'G' & 0x1F :
+      case FileCommand::ChangeGroupTagged:
           if(( mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
           {
       beep();
@@ -1785,12 +1758,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
             }
           );
 
-          DisplayFiles(
-            ctx.dir_entry,
-            ctx.dir_entry->start_file,
-            ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-            ctx.start_x
-          );
+          ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
         } else {
           FormatMessage("Can't read Group-ID:*\"{}\"", *group);
         }
@@ -1798,15 +1766,14 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           }
           break;
 
-      case 'T' :
-      case 't' :      ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
+      case FileCommand::Tag:      ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
           ctx.de_ptr = ctx.fe_ptr->Dir().get();
 
           if( !ctx.fe_ptr->tagged )
           {
                         ctx.fe_ptr->tagged = true;
 
-      PrintFileEntry(ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
+      ui::file_view().printEntry(ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
                 ctx.dir_entry->cursor_pos % window_height,
                 ctx.dir_entry->cursor_pos / window_height,
                 true,
@@ -1817,21 +1784,20 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
                   statistic.disk_tagged_files++;
             statistic.disk_tagged_bytes += ctx.fe_ptr->meta.size;
       if( ctx.dir_entry->global_flag )
-        DisplayDiskTagged();
+        ui::file_view().showDiskTagged();
       else
-        DisplayDirTagged(ctx.de_ptr);
+        ui::file_view().showDirTagged(MakeTaggedCounts(*ctx.de_ptr));
           }
-          ctx.unput_char = KEY_DOWN;
+          ctx.unput = ui::InputEvent::Special(ui::Key::Down);
 
                       break;
-      case 'U' :
-      case 'u' :      ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
+      case FileCommand::Untag:      ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
           ctx.de_ptr = ctx.fe_ptr->Dir().get();
                       if( ctx.fe_ptr->tagged )
           {
       ctx.fe_ptr->tagged = false;
 
-      PrintFileEntry(ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
+      ui::file_view().printEntry(ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
                 ctx.dir_entry->cursor_pos % window_height,
                 ctx.dir_entry->cursor_pos / window_height,
                 true,
@@ -1843,16 +1809,16 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
       statistic.disk_tagged_files--;
       statistic.disk_tagged_bytes -= ctx.fe_ptr->meta.size;
       if( ctx.dir_entry->global_flag )
-        DisplayDiskTagged();
+        ui::file_view().showDiskTagged();
       else
-        DisplayDirTagged(ctx.de_ptr);
+        ui::file_view().showDirTagged(MakeTaggedCounts(*ctx.de_ptr));
           }
 
-          ctx.unput_char = KEY_DOWN;
+          ctx.unput = ui::InputEvent::Special(ui::Key::Down);
 
           break;
 
-      case 'F' & 0x1F :
+      case FileCommand::RotateMode:
           ctx.list_pos = ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos;
 
           RotateFileMode();
@@ -1869,14 +1835,10 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           }
 
           ctx.dir_entry->start_file = ctx.list_pos - ctx.dir_entry->cursor_pos;
-          DisplayFiles(ctx.dir_entry,
-            ctx.dir_entry->start_file,
-            ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-            ctx.start_x
-);
+          ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
           break;
 
-      case 'T' & 0x1F :
+      case FileCommand::TagAll:
                       for(ctx.i=0; ctx.i < (int)file_entry_list.size(); ctx.i++)
                       {
       ctx.fe_ptr = file_entry_list[ctx.i].get();
@@ -1895,19 +1857,15 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           }
 
           if( ctx.dir_entry->global_flag )
-            DisplayDiskTagged();
+            ui::file_view().showDiskTagged();
           else
-            DisplayDirTagged(ctx.dir_entry);
+            ui::file_view().showDirTagged(MakeTaggedCounts(*ctx.dir_entry));
 
-          DisplayFiles(ctx.dir_entry,
-            ctx.dir_entry->start_file,
-            ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-            ctx.start_x
-);
+          ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
           break;
 
 
-      case 'U' & 0x1F :
+      case FileCommand::UntagAll:
                       for(ctx.i=0; ctx.i < (int)file_entry_list.size(); ctx.i++)
                       {
       ctx.fe_ptr = file_entry_list[ctx.i].get();
@@ -1926,21 +1884,16 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           }
 
           if( ctx.dir_entry->global_flag )
-            DisplayDiskTagged();
+            ui::file_view().showDiskTagged();
           else
-            DisplayDirTagged(ctx.dir_entry);
+            ui::file_view().showDirTagged(MakeTaggedCounts(*ctx.dir_entry));
 
-          DisplayFiles(ctx.dir_entry,
-            ctx.dir_entry->start_file,
-            ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-            ctx.start_x
-);
+          ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
           break;
 
 
 
-      case ';':
-      case 't' | 0x80 :
+      case FileCommand::TagFromHere:
                       for(ctx.i=ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos; ctx.i < (int)file_entry_list.size(); ctx.i++)
                       {
       ctx.fe_ptr = file_entry_list[ctx.i].get();
@@ -1959,20 +1912,15 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           }
 
           if( ctx.dir_entry->global_flag )
-            DisplayDiskTagged();
+            ui::file_view().showDiskTagged();
           else
-            DisplayDirTagged(ctx.dir_entry);
+            ui::file_view().showDirTagged(MakeTaggedCounts(*ctx.dir_entry));
 
-          DisplayFiles(ctx.dir_entry,
-            ctx.dir_entry->start_file,
-            ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-            ctx.start_x
-);
+          ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
           break;
 
 
-      case ':':
-      case 'u' | 0x80 :
+      case FileCommand::UntagFromHere:
                       for(ctx.i=ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos; ctx.i < (int)file_entry_list.size(); ctx.i++)
                       {
       ctx.fe_ptr = file_entry_list[ctx.i].get();
@@ -1991,48 +1939,38 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           }
 
           if( ctx.dir_entry->global_flag )
-            DisplayDiskTagged();
+            ui::file_view().showDiskTagged();
           else
-            DisplayDirTagged(ctx.dir_entry);
+            ui::file_view().showDirTagged(MakeTaggedCounts(*ctx.dir_entry));
 
-          DisplayFiles(ctx.dir_entry,
-            ctx.dir_entry->start_file,
-            ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-            ctx.start_x
-);
+          ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
           break;
 
-      case 'V':
-      case 'v':
+      case FileCommand::View:
         ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
         ctx.de_ptr = ctx.fe_ptr->Dir().get();
         View(ctx.dir_entry, ctx.fe_ptr->GetRealPath());
         ctx.need_dsp_help = true;
         break;
 
-      case 'H':
-      case 'h':
+      case FileCommand::HexView:
         ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
         ctx.de_ptr = ctx.fe_ptr->Dir().get();
         ViewHex(ctx.fe_ptr->GetRealPath());
         ctx.need_dsp_help = true;
         break;
 
-      case 'E':
-      case 'e':
+      case FileCommand::Edit:
         ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
         ctx.de_ptr = ctx.fe_ptr->Dir().get();
         Edit(ctx.de_ptr, ctx.fe_ptr->GetPath());
         break;
 
-      case 'Y' :
-      case 'y' :
-      case 'C' :
-      case 'c' :      ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
+      case FileCommand::Copy:      ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
           ctx.de_ptr = ctx.fe_ptr->Dir().get();
 
           ctx.path_copy = false;
-          if( ch == 'y' || ch == 'Y' ) ctx.path_copy = true;
+          if (IsPathCopyKey(ev)) ctx.path_copy = true;
 
           ctx.need_dsp_help = true;
 
@@ -2080,7 +2018,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
         /* File wurde kopiert */
         /*--------------------*/
 
-                          DisplayAvailBytes();
+                          ui::DisplayAvailBytes();
 
         if( ctx.dest_dir_entry )
         {
@@ -2088,9 +2026,9 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           /*--------------------------------*/
 
           if( ctx.dir_entry->global_flag )
-            DisplayDiskStatistic();
+            ui::file_view().showDiskStatistic();
           else
-            DisplayDirStatistic(ctx.de_ptr);
+            ui::file_view().showDirStatistic(MakeDirPanelInfo(*ctx.de_ptr));
 
           if( ctx.dest_dir_entry == ctx.de_ptr )
           {
@@ -2099,11 +2037,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 
             BuildFileEntryList(ctx.dir_entry);
 
-            DisplayFiles(ctx.dir_entry,
-              ctx.dir_entry->start_file,
-              ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-              ctx.start_x
-);
+            ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
           }
         }
             }
@@ -2144,18 +2078,16 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
         /* File wurde kopiert */
         /*--------------------*/
 
-                          DisplayAvailBytes();
+                          ui::DisplayAvailBytes();
             }
           }
           break;
 
-      case 'Y' & 0x1F :
-      case 'K' & 0x1F :
-      case 'C' & 0x1F :
+      case FileCommand::CopyTagged:
           ctx.de_ptr = ctx.dir_entry;
 
                       ctx.path_copy = false;
-                      if( ch == ('Y' & 0x1F) ) ctx.path_copy = true;
+                      if (IsPathCopyKey(ev)) ctx.path_copy = true;
 
           if( !IsMatchingTaggedFiles() )
           {
@@ -2229,14 +2161,10 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           }
         );
 
-                          DisplayAvailBytes();
+                          ui::DisplayAvailBytes();
 
 
-        DisplayFiles(ctx.dir_entry,
-          ctx.dir_entry->start_file,
-          ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-          ctx.start_x
-);
+        ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
             }
             else
             {
@@ -2297,19 +2225,14 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           }
         );
 
-                          DisplayAvailBytes();
+                          ui::DisplayAvailBytes();
 
-        DisplayFiles(ctx.dir_entry,
-          ctx.dir_entry->start_file,
-          ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-          ctx.start_x
-);
+        ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
             }
           }
           break;
 
-      case 'M' :
-      case 'm' :      if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
+      case FileCommand::Move:      if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
                       {
       beep();
       break;
@@ -2358,16 +2281,16 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
       /* File wurde bewegt */
       /*-------------------*/
 
-                        DisplayAvailBytes();
+                        ui::DisplayAvailBytes();
 
       if( ctx.dir_entry->global_flag )
-        DisplayDiskStatistic();
+        ui::file_view().showDiskStatistic();
       else
-        DisplayDirStatistic(ctx.de_ptr);
+        ui::file_view().showDirStatistic(MakeDirPanelInfo(*ctx.de_ptr));
 
       BuildFileEntryList(ctx.dir_entry);
 
-      if( file_entry_list.size() == 0 ) ctx.unput_char = ESC;
+      if( file_entry_list.size() == 0 ) ctx.unput = ui::InputEvent::Special(ui::Key::Escape);
 
       if( ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos >= (int)file_entry_list.size() )
       {
@@ -2381,16 +2304,12 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
         }
       }
 
-      DisplayFiles(ctx.dir_entry,
-              ctx.dir_entry->start_file,
-              ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-              ctx.start_x
-);
+      ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
       ctx.maybe_change_x_step = true;
           }
           break;
 
-      case 'N' & 0x1F :
+      case FileCommand::MoveTagged:
           if(( mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
           {
       beep();
@@ -2468,22 +2387,17 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 
       BuildFileEntryList(ctx.dir_entry);
 
-      if( file_entry_list.size() == 0 ) ctx.unput_char = ESC;
+      if( file_entry_list.size() == 0 ) ctx.unput = ui::InputEvent::Special(ui::Key::Escape);
 
       ctx.dir_entry->start_file = 0;
       ctx.dir_entry->cursor_pos = 0;
 
-      DisplayFiles(ctx.dir_entry,
-              ctx.dir_entry->start_file,
-              ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-              ctx.start_x
-);
+      ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
       ctx.maybe_change_x_step = true;
           }
           break;
 
-      case 'D' :
-      case 'd' :      if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
+      case FileCommand::Delete:      if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
           {
       beep();
       break;
@@ -2506,15 +2420,15 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
       /*----------------------*/
 
       if( ctx.dir_entry->global_flag )
-        DisplayDiskStatistic();
+        ui::file_view().showDiskStatistic();
       else
-        DisplayDirStatistic(ctx.de_ptr);
+        ui::file_view().showDirStatistic(MakeDirPanelInfo(*ctx.de_ptr));
 
-      DisplayAvailBytes();
+      ui::DisplayAvailBytes();
 
                         RemoveFileEntry(ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos);
 
-      if( file_entry_list.size() == 0 ) ctx.unput_char = ESC;
+      if( file_entry_list.size() == 0 ) ctx.unput = ui::InputEvent::Special(ui::Key::Escape);
 
       if( ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos >= (int)file_entry_list.size() )
       {
@@ -2528,16 +2442,12 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
         }
       }
 
-      DisplayFiles(ctx.dir_entry,
-              ctx.dir_entry->start_file,
-              ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-              ctx.start_x
-);
+      ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
       ctx.maybe_change_x_step = true;
           }
                       break;
 
-      case 'D' & 0x1F :
+      case FileCommand::DeleteTagged:
           if(( mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
           {
       beep();
@@ -2546,21 +2456,16 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           {
             ctx.need_dsp_help = true;
       DeleteTaggedFiles(max_disp_files);
-      if( file_entry_list.size() == 0 ) ctx.unput_char = ESC;
+      if( file_entry_list.size() == 0 ) ctx.unput = ui::InputEvent::Special(ui::Key::Escape);
       ctx.dir_entry->start_file = 0;
       ctx.dir_entry->cursor_pos = 0;
-                        DisplayAvailBytes();
-      DisplayFiles(ctx.dir_entry,
-              ctx.dir_entry->start_file,
-              ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-              ctx.start_x
-);
+                        ui::DisplayAvailBytes();
+      ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
       ctx.maybe_change_x_step = true;
           }
           break;
 
-      case 'R':
-      case 'r':       if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
+      case FileCommand::Rename:       if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
           {
       beep();
       break;
@@ -2581,18 +2486,14 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 
         BuildFileEntryList(ctx.de_ptr);
 
-        DisplayFiles(ctx.de_ptr,
-                ctx.dir_entry->start_file,
-                ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-                ctx.start_x
-);
+        ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.de_ptr->access_denied);
         ctx.maybe_change_x_step = true;
                         }
           }
           ctx.need_dsp_help = true;
           break;
 
-      case 'R' & 0x1F :
+      case FileCommand::RenameTagged:
           if(( mode != Mode::DISK_MODE && mode != Mode::USER_MODE) || !IsMatchingTaggedFiles() )
           {
       beep();
@@ -2630,20 +2531,15 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 
       BuildFileEntryList(ctx.dir_entry);
 
-      if( file_entry_list.size() == 0 ) ctx.unput_char = ESC;
+      if( file_entry_list.size() == 0 ) ctx.unput = ui::InputEvent::Special(ui::Key::Escape);
 
-      DisplayFiles(ctx.dir_entry,
-              ctx.dir_entry->start_file,
-              ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-              ctx.start_x
-);
+      ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
 
       ctx.maybe_change_x_step = true;
           }
           break;
 
-      case 'S':
-      case 's':
+      case FileCommand::Sort:
         if (const auto sort = GetKindOfSort())
         {
           statistic.kind_of_sort = *sort;
@@ -2654,45 +2550,32 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 
         SortFileEntryList();
 
-        DisplayFiles(
-          ctx.dir_entry,
-          ctx.dir_entry->start_file,
-          ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-          ctx.start_x
-        );
+        ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
         ctx.need_dsp_help = true;
         break;
 
-      case 'F':
-      case 'f':       if(ReadFileSpec()) {
+      case FileCommand::FileSpec:       if(ReadFileSpec()) {
 
             ctx.dir_entry->start_file = 0;
             ctx.dir_entry->cursor_pos = 0;
 
             BuildFileEntryList(ctx.dir_entry);
 
-            DisplayFileSpec();
-            DisplayFiles(ctx.dir_entry,
-              ctx.dir_entry->start_file,
-              ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-              ctx.start_x
-);
+            ui::DisplayFileSpec();
+            ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
 
             if( ctx.dir_entry->global_flag )
-              DisplayDiskStatistic();
+              ui::file_view().showDiskStatistic();
             else
-              DisplayDirStatistic(ctx.dir_entry);
+              ui::file_view().showDirStatistic(MakeDirPanelInfo(*ctx.dir_entry));
 
-                        if( file_entry_list.size() == 0 ) ctx.unput_char = ESC;
+                        if( file_entry_list.size() == 0 ) ctx.unput = ui::InputEvent::Special(ui::Key::Escape);
             ctx.maybe_change_x_step = true;
                 }
           ctx.need_dsp_help = true;
           break;
 
-#ifndef VI_KEYS
-      case 'l':
-#endif /* VI_KEYS */
-      case 'L':
+      case FileCommand::ChangeLogin:
         ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
         if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
         {
@@ -2703,7 +2586,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
             if (LoginDisk(*login_path))
             {
               ctx.dir_entry->login_flag = true;
-              ctx.unput_char = LOGIN_ESC;
+              ctx.unput = ui::InputEvent::CharKey(LOGIN_ESC);
             }
           }
           ctx.need_dsp_help = true;
@@ -2712,32 +2595,14 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
         }
         break;
 
-      case LF:
-      case CR:        if( ctx.dir_entry->big_window ) break;
-          ctx.dir_entry->big_window = true;
-          ch = '\0';
-          SwitchToBigFileWindow();
-                      GetMaxYX(file_window, &window_height, &window_width);
-
-          x_step =  (max_column > 1) ? window_height : 1;
-                      max_disp_files = window_height * max_column;
-
-          DisplayFiles(ctx.dir_entry,
-            ctx.dir_entry->start_file,
-            ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-            ctx.start_x
-);
-          break;
-
-      case 'P':
-      case 'p':
+      case FileCommand::Pipe:
           ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
           ctx.de_ptr = ctx.fe_ptr->Dir().get();
           ctx.fe_ptr->Pipe();
           ctx.need_dsp_help = true;
           break;
 
-      case 'P' & 0x1F:
+      case FileCommand::PipeTagged:
           ctx.de_ptr = ctx.dir_entry;
 
           if (!IsMatchingTaggedFiles())
@@ -2776,7 +2641,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
               }
             );
 
-            clearok(stdscr, true);
+            ui::file_view().forceFullRedraw();
 
             if (pclose(pipe_file))
             {
@@ -2784,25 +2649,19 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
             }
 
             GetAvailBytes(statistic.disk_space);
-            DisplayAvailBytes();
+            ui::DisplayAvailBytes();
 
-            DisplayFiles(
-              ctx.dir_entry,
-              ctx.dir_entry->start_file,
-              ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-              ctx.start_x
-            );
+            ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
           }
           break;
 
-      case 'X':
-      case 'x' :      ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
+      case FileCommand::Execute:      ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
           ctx.de_ptr = ctx.fe_ptr->Dir().get();
           Execute(ctx.de_ptr, ctx.fe_ptr);
           ctx.need_dsp_help = true;
           break;
 
-      case 'S' & 0x1F :
+      case FileCommand::SearchTagged:
           if (!IsMatchingTaggedFiles())
           {
             beep();
@@ -2828,19 +2687,14 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
               HitReturnToContinue();
               refresh();
               InitClock();
-              RefreshWindow(file_window);
+              ui::file_view().refresh();
 
-              DisplayFiles(
-                ctx.dir_entry,
-                ctx.dir_entry->start_file,
-                ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-                ctx.start_x
-              );
+              ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
             }
           }
           break;
 
-      case 'X' & 0x1F:
+      case FileCommand::ExecuteTagged:
           if( !IsMatchingTaggedFiles() )
           {
             beep();
@@ -2864,60 +2718,48 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
               refresh();
               InitClock();
 
-              DisplayFiles(
-                ctx.dir_entry,
-                ctx.dir_entry->start_file,
-                ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-                ctx.start_x
-              );
+              ui::file_view().showFiles(ctx.dir_entry->start_file, ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos, ctx.start_x, ctx.dir_entry->access_denied);
             }
           }
           break;
 
-      case 'Q' & 0x1F:
+      case FileCommand::QuitTo:
                       ctx.need_dsp_help = true;
                       ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
                       ctx.de_ptr = ctx.fe_ptr->Dir().get();
                       QuitTo(ctx.de_ptr);
                       break;
 
-      case 'Q':
-      case 'q':       ctx.need_dsp_help = true;
+      case FileCommand::Quit:       ctx.need_dsp_help = true;
                       Quit();
           break;
 
-      case 'L' & 0x1F:
-          clearok(stdscr, true);
+      case FileCommand::Redraw:
+          ui::file_view().forceFullRedraw();
           break;
 
-      case '\033':    break;
-
-      case LOGIN_ESC :
-          break;
-
-      case KEY_F(12):
-                ListJump(ctx.dir_entry, "");
-          ctx.need_dsp_help = true;
-          break;
-
-      default:        beep();
+      case FileCommand::Unknown:
+      default:
+          ui::Beep();
           break;
   }
 }
 
-static bool ShouldContinueFileWindow(int ch)
+static bool ShouldContinueFileWindow(const ui::InputEvent& ev)
 {
-  return ch != CR && ch != ESC && ch != LOGIN_ESC;
+  const FileCommand cmd = MapFileCommand(ev);
+  return cmd != FileCommand::Leave && cmd != FileCommand::LoginEsc;
 }
 
-static void FinalizeFileWindow(FileWindowContext& ctx, int ch)
+static void FinalizeFileWindow(FileWindowContext& ctx, const ui::InputEvent& ev)
 {
   if (ctx.dir_entry->big_window)
   {
-    SwitchToSmallFileWindow();
+    ui::file_view().switchToSmall();
   }
 
-  if (ch != LOGIN_ESC)
+  const bool login_esc = MapFileCommand(ev) == FileCommand::LoginEsc;
+  if (!login_esc)
   {
     ctx.dir_entry->global_flag = false;
     ctx.dir_entry->tagged_flag = false;
@@ -2932,7 +2774,7 @@ int HandleFileWindow(DirEntry* dir_entry)
 
   InitializeFileWindow(ctx);
 
-  int ch = 0;
+  ui::InputEvent ev{};
   do
   {
     UpdateFileWindowLayout(ctx);
@@ -2940,19 +2782,19 @@ int HandleFileWindow(DirEntry* dir_entry)
     if (ctx.need_dsp_help)
     {
       ctx.need_dsp_help = false;
-      DisplayFileHelp();
+      ui::DisplayFileHelp();
     }
 
-    ch = ReadFileWindowKey(ctx);
+    ev = ReadFileWindowKey(ctx);
     HandleFileWindowResize(ctx);
-    RemapFileModeNavigationKeys(ch);
-    ResetFileWindowHorizontalScroll(ch, ctx);
-    ApplyFileUserMode(ch, ctx);
-    ProcessFileWindowKey(ch, ctx);
-  } while (ShouldContinueFileWindow(ch));
+    RemapFileModeNavigationKeys(ev);
+    ResetFileWindowHorizontalScroll(ev, ctx);
+    ApplyFileUserMode(ev, ctx);
+    ProcessFileWindowKey(ev, ctx);
+  } while (ShouldContinueFileWindow(ev));
 
-  FinalizeFileWindow(ctx, ch);
-  return ch;
+  FinalizeFileWindow(ctx, ev);
+  return WindowExitCode(ev);
 }
 
 
@@ -3014,18 +2856,14 @@ static bool DeleteTaggedFiles(int max_disp_files)
       start_file = std::max(0, i - max_disp_files + 1);
       cursor_pos = i - start_file;
 
-      DisplayFiles(de_ptr,
-        start_file,
-        start_file + cursor_pos,
-        start_x
-);
+      ui::file_view().showFiles(start_file, start_file + cursor_pos, start_x, de_ptr->access_denied);
 
       if( fe_ptr->Dir()->global_flag )
-        DisplayGlobalFileParameter(fe_ptr);
+        ui::file_view().showGlobalFileParameter(MakeGlobalFilePanelInfo(*fe_ptr));
       else
-        DisplayFileParameter(fe_ptr);
+        ui::file_view().showFileParameter(MakeFilePanelInfo(*fe_ptr));
 
-      RefreshWindow(file_window);
+      ui::file_view().refresh();
       doupdate();
 
       if( confirm ) term = InputChoise("Delete this file (Y/N) ? ", "YN\033");
@@ -3049,12 +2887,12 @@ static bool DeleteTaggedFiles(int max_disp_files)
 
           if (de_ptr->global_flag)
           {
-            DisplayDiskStatistic();
+            ui::file_view().showDiskStatistic();
           } else {
-            DisplayDirStatistic(de_ptr);
+            ui::file_view().showDirStatistic(MakeDirPanelInfo(*de_ptr));
           }
 
-          DisplayAvailBytes();
+          ui::DisplayAvailBytes();
 
           RemoveFileEntry(start_file + cursor_pos);
         } else {
@@ -3140,7 +2978,7 @@ static void ListJump(DirEntry * dir_entry, const char *str)
         MvAddStr(LINES - 2, 1, "Last entry!");
         beep();
         RefreshWindow(stdscr);
-        RefreshWindow(file_window);
+        ui::file_view().refresh();
         doupdate();
         sleep(1);
         return;
@@ -3159,7 +2997,7 @@ static void ListJump(DirEntry * dir_entry, const char *str)
         MvAddStr(LINES - 2, 1, "No match!");
         beep();
         RefreshWindow(stdscr);
-        RefreshWindow(file_window);
+        ui::file_view().refresh();
         doupdate();
         sleep(1);
         return;
@@ -3170,11 +3008,7 @@ static void ListJump(DirEntry * dir_entry, const char *str)
         /* first search start on top */
         dir_entry->start_file = 0;
         dir_entry->cursor_pos = 0;
-        DisplayFiles(dir_entry,
-              dir_entry->start_file,
-              dir_entry->start_file + dir_entry->cursor_pos,
-              start_x
-);
+        ui::file_view().showFiles(dir_entry->start_file, dir_entry->start_file + dir_entry->cursor_pos, start_x, dir_entry->access_denied);
     }
     for ( j=tmp2; j < i; j++ )
         MoveDown(
@@ -3184,7 +3018,123 @@ static void ListJump(DirEntry * dir_entry, const char *str)
           dir_entry
         );
     RefreshWindow(stdscr);
-    RefreshWindow(file_window);
+    ui::file_view().refresh();
     doupdate();
     ListJump(dir_entry, (incremental) ? newStr.c_str() : "");
+}
+
+namespace {
+
+class NcursesFileView final : public ui::IFileView
+{
+public:
+  void getSize(int& height, int& width) override
+  {
+    GetMaxYX(file_window, &height, &width);
+  }
+
+  void getDirPanelSize(int& height, int& width) override
+  {
+    GetMaxYX(dir_window, &height, &width);
+  }
+
+  void showFiles(
+    int start_file,
+    int hilight,
+    int start_x,
+    bool access_denied
+  ) override
+  {
+    DisplayFiles(start_file, hilight, start_x, access_denied);
+  }
+
+  void showFilesAtCursor(
+    int start_file,
+    int cursor_pos,
+    int start_x,
+    bool access_denied
+  ) override
+  {
+    DisplayFiles(start_file, start_file + cursor_pos, start_x, access_denied);
+  }
+
+  void showFileParameter(const ui::FilePanelInfo& info) override
+  {
+    PaintFileParameter(info);
+  }
+
+  void showGlobalFileParameter(const ui::FilePanelInfo& info) override
+  {
+    PaintGlobalFileParameter(info);
+  }
+
+  void showDirStatistic(const ui::DirPanelInfo& info) override
+  {
+    PaintDirStatistic(info);
+  }
+
+  void showDiskStatistic() override
+  {
+    DisplayDiskStatistic();
+  }
+
+  void showDirTagged(const ui::TaggedCounts& counts) override
+  {
+    PaintDirTagged(counts);
+  }
+
+  void showDiskTagged() override
+  {
+    DisplayDiskTagged();
+  }
+
+  void printEntry(
+    int entry_no,
+    int y,
+    int x,
+    bool hilight,
+    int start_x
+  ) override
+  {
+    PrintFileEntry(entry_no, y, x, hilight, start_x);
+  }
+
+  void refresh() override
+  {
+    RefreshWindow(file_window);
+  }
+
+  void refreshDirSide() override
+  {
+    RefreshWindow(dir_window);
+  }
+
+  void switchToBig() override
+  {
+    SwitchToBigFileWindow();
+  }
+
+  void switchToSmall() override
+  {
+    SwitchToSmallFileWindow();
+  }
+
+  void showDirTree(int start_entry_no, int hilight_no) override
+  {
+    DisplayTree(dir_window, start_entry_no, hilight_no);
+  }
+
+  void forceFullRedraw() override
+  {
+    clearok(stdscr, true);
+  }
+};
+
+NcursesFileView g_ncurses_file_view;
+
+} // namespace
+
+ui::IFileView& NcursesFileViewInstance()
+{
+  return g_ncurses_file_view;
 }

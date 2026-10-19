@@ -1,6 +1,7 @@
+#include "core/ui.hpp"
 #include "ytree.hpp"
 
-void InitClock()
+void InitClockImpl()
 {
 #if defined(CLOCK_SUPPORT)
   struct itimerval value;
@@ -24,6 +25,30 @@ void InitClock()
 
   ClockHandler(0);
 #endif
+}
+
+void SuspendClockImpl()
+{
+#if defined(CLOCK_SUPPORT)
+  struct itimerval value;
+  struct itimerval ovalue;
+
+  value.it_interval.tv_sec = 0;
+  value.it_value.tv_sec = 0;
+  value.it_interval.tv_usec = 0;
+  setitimer(ITIMER_REAL, &value, &ovalue);
+  std::signal(SIGALRM, SIG_IGN);
+#endif
+}
+
+void InitClock()
+{
+  ui::InitClock();
+}
+
+void SuspendClock()
+{
+  ui::SuspendClock();
 }
 
 void ClockHandler(int sig)
@@ -67,19 +92,5 @@ void ClockHandler(int sig)
     }
   }
   std::signal(SIGALRM, ClockHandler);
-#endif
-}
-
-void SuspendClock()
-{
-#if defined(CLOCK_SUPPORT)
-  struct itimerval value;
-  struct itimerval ovalue;
-
-  value.it_interval.tv_sec = 0;
-  value.it_value.tv_sec = 0;
-  value.it_interval.tv_usec = 0;
-  setitimer(ITIMER_REAL, &value, &ovalue);
-  std::signal(SIGALRM, SIG_IGN);
 #endif
 }

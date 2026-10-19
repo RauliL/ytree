@@ -1,4 +1,5 @@
-#include "ytree.hpp"
+#include "core/ui.hpp"
+#include "core/api.hpp"
 
 bool Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
 {
@@ -10,7 +11,6 @@ bool Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
     command_line = ShellQuote(file_entry->name);
   }
 
-  MvAddStr(LINES - 2, 1, "Command:");
   if (const auto command = GetCommandLine(command_line))
   {
     command_line = *command;
@@ -43,40 +43,23 @@ bool Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
 
 std::optional<std::string> GetCommandLine(const std::string& initial)
 {
-  ClearHelp();
-
-  MvAddStr(LINES - 2, 1, "Command: ");
-  const auto command = InputString(initial, LINES - 2, 10, 0, COLS - 11);
-  move(LINES - 2, 1);
-  clrtoeol();
-  return command;
+  return ui::Prompt("Command:", initial);
 }
 
 std::optional<std::string> GetSearchCommandLine()
 {
   auto command = GetProfileValueOrEmpty("SEARCHCOMMAND");
-  int pos;
+  std::size_t pos = 0;
 
-  ClearHelp();
-
-  MvAddStr(LINES - 2, 1, "Search untag command: ");
   if (
     const auto placeholder = command.find("{}");
     placeholder != std::string::npos
   )
   {
-    pos = static_cast<int>(placeholder) - 1;
-    if (pos < 0)
-    {
-      pos = 0;
-    }
-  } else {
-    pos = 0;
+    pos = placeholder > 0 ? placeholder - 1 : 0;
   }
-  const auto edited = InputString(command, LINES - 2, 23, pos, COLS - 24);
-  move(LINES - 2, 1);
-  clrtoeol();
-  return edited;
+
+  return ui::Prompt("Search untag command:", command, 0, pos);
 }
 
 bool ExecuteCommand(FileEntry* fe_ptr, const std::string& command)
