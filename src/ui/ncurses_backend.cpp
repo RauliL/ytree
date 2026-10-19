@@ -267,6 +267,16 @@ public:
     }
   }
 
+  void clearPromptLines() override
+  {
+    move(LINES - 3, 1);
+    clrtoeol();
+    move(LINES - 2, 1);
+    clrtoeol();
+    move(LINES - 1, 1);
+    clrtoeol();
+  }
+
   void beep() override
   {
     ::beep();

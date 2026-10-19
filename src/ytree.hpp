@@ -5,6 +5,7 @@
 
 #include "config.hpp"
 #include "core/entry_meta.hpp"
+#include "ui/curses.hpp"
 
 #include <cstdint>
 #include <cstdio>
@@ -32,28 +33,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
-#if defined(WITH_UTF8) && __has_include(<ncursesw/ncurses.h>)
-# include <ncursesw/ncurses.h>
-#elif defined(WITH_UTF8) && __has_include(<ncursesw/curses.h>)
-# include <ncursesw/curses.h>
-#elif defined(CURSES_HAVE_NCURSES_NCURSES_H)
-# include <ncurses/ncurses.h>
-#elif defined(CURSES_HAVE_NCURSES_H)
-# include <ncurses.h>
-#elif defined(CURSES_HAVE_NCURSES_CURSES_H)
-# include <ncurses/curses.h>
-#else
-# include <curses.h>
-#endif
-
-#ifndef KEY_BTAB
-#define KEY_BTAB  0x1d
-#endif
-
-#ifndef KEY_END
-#define KEY_END   KEY_EOL
-#endif
 
 #ifndef S_IFLNK
 #define readlink(a, b, c)  (-1)
@@ -94,70 +73,6 @@
 #define S_ISSOCK(mode)   FALSE
 #endif /* S_IFSOCK */
 #endif /* S_ISSOCK */
-
-/* Sonderzeichen fuer Liniengrafik */
-/*---------------------------------*/
-
-#ifndef ACS_ULCORNER
-#define ACS_ULCORNER '+'
-#endif
-#ifndef ACS_URCORNER
-#define ACS_URCORNER '+'
-#endif
-#ifndef ACS_LLCORNER
-#define ACS_LLCORNER '+'
-#endif
-#ifndef ACS_LRCORNER
-#define ACS_LRCORNER '+'
-#endif
-#ifndef ACS_VLINE
-#define ACS_VLINE    '|'
-#endif
-#ifndef ACS_HLINE
-#define ACS_HLINE    '-'
-#endif
-#ifndef ACS_RTEE
-#define ACS_RTEE    '+'
-#endif
-#ifndef ACS_LTEE
-#define ACS_LTEE    '+'
-#endif
-#ifndef ACS_BTEE
-#define ACS_BTEE    '+'
-#endif
-#ifndef ACS_TTEE
-#define ACS_TTEE    '+'
-#endif
-#ifndef ACS_BLOCK
-#define ACS_BLOCK   '?'
-#endif
-#ifndef ACS_LARROW
-#define ACS_LARROW  '<'
-#endif
-
-/* Color Definitionen */
-
-#define DIR_COLOR        1
-#define FILE_COLOR       2
-#define STATS_COLOR      3
-#define BORDERS_COLOR    4
-#define MENU_COLOR       5
-#define WINDIR_COLOR     6
-#define WINFILE_COLOR    7
-#define WINSTATS_COLOR   8
-#define WINERR_COLOR     9
-#define HIDIR_COLOR     10
-#define HIFILE_COLOR    11
-#define HISTATS_COLOR   12
-#define HIMENUS_COLOR   13
-#define WINHST_COLOR    14
-#define HST_COLOR       15
-#define HIHST_COLOR     16
-#define WINMTCH_COLOR   14
-#define MTCH_COLOR      15
-#define HIMTCH_COLOR    16
-#define GLOBAL_COLOR    17
-#define HIGLOBAL_COLOR  18
 
 /* Auswahl der benutzten UNIX-Kommandos */
 /*--------------------------------------*/
@@ -265,41 +180,6 @@ inline constexpr int LF = 10;
 inline constexpr int ESC = 27;
 inline constexpr char LOGIN_ESC = '.';
 
-#define DIR_WINDOW_X         1
-#define DIR_WINDOW_Y         2
-#define DIR_WINDOW_WIDTH     (COLS - 26)
-#define DIR_WINDOW_HEIGHT    ((LINES * 8 / 14)-1)
-
-#define F2_WINDOW_X          DIR_WINDOW_X
-#define F2_WINDOW_Y          DIR_WINDOW_Y
-#define F2_WINDOW_WIDTH      DIR_WINDOW_WIDTH
-#define F2_WINDOW_HEIGHT     (DIR_WINDOW_HEIGHT + 1)
-
-#define FILE_WINDOW_1_X      1
-#define FILE_WINDOW_1_Y      DIR_WINDOW_HEIGHT + 3
-#define FILE_WINDOW_1_WIDTH  (COLS - 26)
-#define FILE_WINDOW_1_HEIGHT (LINES - DIR_WINDOW_HEIGHT - 7 )
-
-#define FILE_WINDOW_2_X      1
-#define FILE_WINDOW_2_Y      2
-#define FILE_WINDOW_2_WIDTH  (COLS - 26)
-#define FILE_WINDOW_2_HEIGHT (LINES - 6)
-
-#define ERROR_WINDOW_WIDTH   40
-#define ERROR_WINDOW_HEIGHT  10
-#define ERROR_WINDOW_X       ((COLS - ERROR_WINDOW_WIDTH) >> 1)
-#define ERROR_WINDOW_Y       ((LINES - ERROR_WINDOW_HEIGHT) >> 1)
-
-#define HISTORY_WINDOW_X       1
-#define HISTORY_WINDOW_Y       2
-#define HISTORY_WINDOW_WIDTH   (COLS - 26)
-#define HISTORY_WINDOW_HEIGHT  (LINES - 6)
-
-#define TIME_WINDOW_X        ((COLS > 20) ? (COLS - 20) : 1)
-#define TIME_WINDOW_Y        1
-#define TIME_WINDOW_WIDTH    ((COLS > 15) ? 15 : COLS)
-#define TIME_WINDOW_HEIGHT   1
-
 inline constexpr std::size_t PATH_LENGTH = 1024;
 inline constexpr std::size_t FILE_SPEC_LENGTH = 12 + 1;
 inline constexpr std::size_t DISK_NAME_LENGTH = 12 + 1;
@@ -350,14 +230,6 @@ private:
 
 template<class Fn>
 ScopeGuard(Fn) -> ScopeGuard<Fn>;
-
-#ifdef COLOR_SUPPORT
-extern void StartColors();
-extern void WbkgdSet(WINDOW *w, chtype c);
-#else
-#define StartColors() ;
-#define WbkgdSet(a, b)  ;
-#endif /* COLOR_SUPPORT */
 
 struct Entry
 {
@@ -509,16 +381,6 @@ struct AsToParameter
   std::string to_dir;
 };
 
-extern WINDOW *dir_window;
-extern WINDOW *small_file_window;
-extern WINDOW *big_file_window;
-extern WINDOW *file_window;
-extern WINDOW *error_window;
-extern WINDOW *history_window;
-extern WINDOW *matches_window;
-extern WINDOW *f2_window;
-extern WINDOW *time_window;
-
 extern Statistic statistic;
 extern Statistic disk_statistic;
 extern Mode      mode;
@@ -664,8 +526,8 @@ void Print(WINDOW* win, int y, int x, const std::string& str, int color);
 extern void PrintOptions(WINDOW *,int, int, const std::string&);
 void PrintMenuOptions(
   WINDOW* win,
-  int x,
   int y,
+  int x,
   const std::string& str,
   int ncolor,
   int hcolor
@@ -882,22 +744,4 @@ std::string Join(Args&&... args)
   return result;
 }
 
-inline void ClearBottomPromptLines()
-{
-  move(LINES - 3, 1);
-  clrtoeol();
-  move(LINES - 2, 1);
-  clrtoeol();
-  move(LINES - 1, 1);
-  clrtoeol();
-}
-
-inline unsigned char MakePrintable(int ch)
-{
-  if (std::iscntrl(ch) && static_cast<unsigned char>(ch) < ' ')
-  {
-    return ACS_BLOCK;
-  }
-
-  return static_cast<unsigned char>(ch);
-}
+unsigned char MakePrintable(int ch);

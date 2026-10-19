@@ -24,7 +24,7 @@ bool CopyFile(
   bool        result = false;
   int       refresh_dirwindow = false;
 
-  const ScopeGuard clear_prompt_lines([] { ClearBottomPromptLines(); });
+  const ScopeGuard clear_prompt_lines([] { ui::ClearPromptLines(); });
 
   const auto is_root =
     to_dir_path.size() == 1 &&

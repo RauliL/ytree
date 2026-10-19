@@ -1,3 +1,4 @@
+#include "core/ui.hpp"
 #include "ytree.hpp"
 
 static bool Move(const std::string&, const std::string&);
@@ -20,7 +21,7 @@ bool MoveFile(
   bool        result = false;
   *new_fe_ptr = nullptr;
 
-  const ScopeGuard clear_prompt_lines([] { ClearBottomPromptLines(); });
+  const ScopeGuard clear_prompt_lines([] { ui::ClearPromptLines(); });
 
   const auto to_path =
     (std::filesystem::path(to_dir_path) / to_file).string();

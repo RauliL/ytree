@@ -53,6 +53,8 @@ public:
   virtual bool editFileMode(std::string& modus, const char* term) = 0;
   virtual void hitReturnToContinue() = 0;
   virtual void clearHelp() = 0;
+  /** Clear the bottom status/prompt lines (not the help strip alone). */
+  virtual void clearPromptLines() = 0;
   virtual void beep() = 0;
   virtual bool keyPressed() = 0;
   virtual bool escapePressed() = 0;
@@ -140,6 +142,11 @@ inline void HitReturnToContinue()
 inline void ClearHelp()
 {
   dialogs().clearHelp();
+}
+
+inline void ClearPromptLines()
+{
+  dialogs().clearPromptLines();
 }
 
 inline void Beep()
