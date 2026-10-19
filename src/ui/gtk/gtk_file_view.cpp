@@ -24,7 +24,7 @@ void PopulateFileModel(int hilight)
   }
 
   const ViewMode mode = GetFileViewMode();
-  std::vector<FileTableRow> rows;
+  std::vector<TableRow> rows;
   rows.reserve(FileListEntries().size());
   for (const auto& fe : FileListEntries())
   {

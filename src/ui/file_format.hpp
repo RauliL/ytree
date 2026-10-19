@@ -6,13 +6,15 @@
 #include <string>
 #include <vector>
 
+struct DirListRow;
+
 /** Format one file-list row for the current ViewMode / file metrics (curses). */
 std::string FormatFileEntryLine(const std::shared_ptr<FileEntry>& fe_ptr);
 
 /** Horizontal cell pitch for one column in the current file view mode. */
 int FileEntryColumnStride();
 
-struct FileTableColumn
+struct TableColumn
 {
   std::string id;
   std::string title;
@@ -21,16 +23,22 @@ struct FileTableColumn
   float xalign = 0.0f;
 };
 
-struct FileTableRow
+struct TableRow
 {
   std::vector<std::string> cells;
 };
 
 /** Column headers/layout for a file view mode (GTK table). */
-std::vector<FileTableColumn> FileTableColumnsForMode(ViewMode mode);
+std::vector<TableColumn> FileTableColumnsForMode(ViewMode mode);
 
 /** Cell values matching FileTableColumnsForMode(mode). */
-FileTableRow FormatFileTableRow(
+TableRow FormatFileTableRow(
   const std::shared_ptr<FileEntry>& fe_ptr,
   ViewMode mode
 );
+
+/** Column headers/layout for a directory view mode (GTK table). */
+std::vector<TableColumn> DirTableColumnsForMode(ViewMode mode);
+
+/** Cell values matching DirTableColumnsForMode(mode). */
+TableRow FormatDirTableRow(const DirListRow& row, ViewMode mode);

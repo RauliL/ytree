@@ -222,9 +222,9 @@ int FileEntryColumnStride()
   return 1;
 }
 
-std::vector<FileTableColumn> FileTableColumnsForMode(ViewMode mode)
+std::vector<TableColumn> FileTableColumnsForMode(ViewMode mode)
 {
-  std::vector<FileTableColumn> cols;
+  std::vector<TableColumn> cols;
   cols.push_back({"mark", "", false, 0.0f});
   cols.push_back({"name", "Name", true, 0.0f});
 
@@ -271,12 +271,12 @@ std::vector<FileTableColumn> FileTableColumnsForMode(ViewMode mode)
   return cols;
 }
 
-FileTableRow FormatFileTableRow(
+TableRow FormatFileTableRow(
   const std::shared_ptr<FileEntry>& fe_ptr,
   ViewMode mode
 )
 {
-  FileTableRow row;
+  TableRow row;
   row.cells.push_back(MarkCell(fe_ptr));
   row.cells.push_back(NameCell(fe_ptr));
 
@@ -355,4 +355,86 @@ FileTableRow FormatFileTableRow(
   }
 
   return row;
+}
+
+std::vector<TableColumn> DirTableColumnsForMode(ViewMode mode)
+{
+  std::vector<TableColumn> cols;
+  cols.push_back({"name", "Name", true, 0.0f});
+
+  switch (mode)
+  {
+    case ViewMode::MODE_1:
+      cols.push_back({"mode", "Mode", false, 0.0f});
+      cols.push_back({"links", "Links", false, 1.0f});
+      cols.push_back({"size", "Size", false, 1.0f});
+      cols.push_back({"modified", "Modified", false, 0.0f});
+      break;
+
+    case ViewMode::MODE_2:
+      cols.push_back({"inode", "Inode", false, 1.0f});
+      cols.push_back({"owner", "Owner", false, 0.0f});
+      cols.push_back({"group", "Group", false, 0.0f});
+      break;
+
+    case ViewMode::MODE_3:
+    case ViewMode::MODE_5:
+      break;
+
+    case ViewMode::MODE_4:
+      cols.push_back({"changed", "Changed", false, 0.0f});
+      cols.push_back({"accessed", "Accessed", false, 0.0f});
+      break;
+  }
+
+  return cols;
+}
+
+TableRow FormatDirTableRow(const DirListRow& row, ViewMode mode)
+{
+  TableRow out;
+  const DirEntry* de = row.dir_entry.get();
+  std::string name = (de && !de->name.empty()) ? de->name : ".";
+  if (de && de->not_scanned)
+  {
+    name += "/";
+  }
+  out.cells.push_back(std::string(row.level * 2, ' ') + name);
+
+  if (!de)
+  {
+    const auto cols = DirTableColumnsForMode(mode);
+    while (out.cells.size() < cols.size())
+    {
+      out.cells.emplace_back();
+    }
+    return out;
+  }
+
+  switch (mode)
+  {
+    case ViewMode::MODE_1:
+      out.cells.push_back(GetAttributes(de->meta.Mode()));
+      out.cells.push_back(FormatMetaNlink(de->meta));
+      out.cells.push_back(std::format("{}", static_cast<std::int64_t>(de->meta.size)));
+      out.cells.push_back(FormatMetaTime(de->meta.mtime));
+      break;
+
+    case ViewMode::MODE_2:
+      out.cells.push_back(FormatMetaInode(de->meta));
+      out.cells.push_back(FormatMetaOwner(de->meta));
+      out.cells.push_back(FormatMetaGroup(de->meta));
+      break;
+
+    case ViewMode::MODE_3:
+    case ViewMode::MODE_5:
+      break;
+
+    case ViewMode::MODE_4:
+      out.cells.push_back(FormatMetaTime(de->meta.ctime));
+      out.cells.push_back(FormatMetaTime(de->meta.atime));
+      break;
+  }
+
+  return out;
 }

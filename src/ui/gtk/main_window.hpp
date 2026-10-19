@@ -37,17 +37,21 @@ public:
   void setCurrentDirectory(const std::string& name, std::int64_t bytes);
   void setCurrentFile(const std::string& name, std::int64_t size);
 
-  void setDirRows(const std::vector<Glib::ustring>& rows, int hilight);
+  void setDirTable(
+    ViewMode mode,
+    const std::vector<TableRow>& rows,
+    int hilight
+  );
   void selectDirRow(int hilight);
   void setFileTable(
     ViewMode mode,
-    const std::vector<FileTableRow>& rows,
+    const std::vector<TableRow>& rows,
     int hilight
   );
   void selectFileRow(int hilight);
   void setFileTableMessage(const Glib::ustring& message);
 
-  Gtk::ListView& dirList() { return dir_list_; }
+  Gtk::ColumnView& dirTable() { return dir_table_; }
   Gtk::ColumnView& fileTable() { return file_table_; }
 
 private:
@@ -55,19 +59,29 @@ private:
   void buildSidebar();
   void setStatValue(Gtk::Label& label, std::int64_t value);
   void addSidebarRow(const Glib::ustring& caption, Gtk::Label& value);
-  void bindListView(Gtk::ListView& view);
-  void applyRows(
-    Gtk::ListView& view,
-    Glib::RefPtr<Gtk::StringList>& model,
-    const std::vector<Glib::ustring>& rows,
-    int hilight
-  );
-  void clearFileColumns();
-  void rebuildFileColumns(ViewMode mode);
-  Glib::RefPtr<Gtk::ColumnViewColumn> makeFileColumn(
-    const FileTableColumn& spec,
+
+  void configureColumnView(Gtk::ColumnView& view);
+  void clearColumns(Gtk::ColumnView& view);
+  Glib::RefPtr<Gtk::ColumnViewColumn> makeColumn(
+    const TableColumn& spec,
     guint column_index
   );
+  void rebuildColumns(
+    Gtk::ColumnView& view,
+    std::optional<ViewMode>& mode_slot,
+    ViewMode mode,
+    const std::vector<TableColumn>& specs
+  );
+  void setTable(
+    Gtk::ColumnView& view,
+    Glib::RefPtr<Gio::ListStoreBase>& model_slot,
+    std::optional<ViewMode>& mode_slot,
+    ViewMode mode,
+    const std::vector<TableColumn>& specs,
+    const std::vector<TableRow>& rows,
+    int hilight
+  );
+  void selectRow(Gtk::ColumnView& view, int hilight);
 
   Gtk::Box root_{Gtk::Orientation::VERTICAL};
   Gtk::Label path_;
@@ -75,7 +89,7 @@ private:
   Gtk::Box lists_{Gtk::Orientation::VERTICAL};
   Gtk::ScrolledWindow dir_scroll_;
   Gtk::ScrolledWindow file_scroll_;
-  Gtk::ListView dir_list_;
+  Gtk::ColumnView dir_table_;
   Gtk::ColumnView file_table_;
 
   Gtk::Frame sidebar_frame_;
@@ -99,8 +113,9 @@ private:
   Gtk::Label help_line1_;
   Gtk::Label status_;
 
-  Glib::RefPtr<Gtk::StringList> dir_model_;
+  Glib::RefPtr<Gio::ListStoreBase> dir_model_;
   Glib::RefPtr<Gio::ListStoreBase> file_model_;
+  std::optional<ViewMode> dir_table_mode_;
   std::optional<ViewMode> file_table_mode_;
 
   mutable std::mutex queue_mutex_;

@@ -1,12 +1,12 @@
 #include <gtkmm.h>
 
 #include "core/ui.hpp"
+#include "ui/file_format.hpp"
 #include "ui/gtk/main_window.hpp"
 #include "ui/ui.hpp"
 #include "ui/view_info.hpp"
 
 #include <algorithm>
-#include <string>
 #include <vector>
 
 #ifdef Error
@@ -24,11 +24,11 @@ public:
     width = 80;
     if (auto* win = GtkMainWindow())
     {
-      height = std::max(8, win->dirList().get_height() / 22);
+      height = std::max(8, win->dirTable().get_height() / 22);
     }
   }
 
-  void showTree(int start_entry_no, int hilight_no) override
+  void showTree(int /*start_entry_no*/, int hilight_no) override
   {
     auto* win = GtkMainWindow();
     if (!win)
@@ -36,22 +36,15 @@ public:
       return;
     }
 
-    std::vector<Glib::ustring> rows;
+    const ViewMode mode = GetDirViewMode();
+    std::vector<TableRow> rows;
     const auto& list = DirListRows();
     rows.reserve(list.size());
-    for (std::size_t i = 0; i < list.size(); ++i)
+    for (const auto& row : list)
     {
-      const auto& row = list[i];
-      std::string indent(row.level * 2, ' ');
-      std::string name = row.dir_entry->name.empty() ? "." : row.dir_entry->name;
-      if (row.dir_entry->not_scanned)
-      {
-        name += "/";
-      }
-      rows.emplace_back(indent + name);
+      rows.push_back(FormatDirTableRow(row, mode));
     }
-    (void)start_entry_no;
-    win->setDirRows(rows, hilight_no);
+    win->setDirTable(mode, rows, hilight_no);
   }
 
   void showTreeAtCursor() override
@@ -91,7 +84,7 @@ public:
   {
     if (auto* win = GtkMainWindow())
     {
-      win->dirList().queue_draw();
+      win->dirTable().queue_draw();
     }
   }
 
