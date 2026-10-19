@@ -1,4 +1,5 @@
 #include "ui/curses/curses_ui.hpp"
+#include "ui/file_format.hpp"
 #include "ui/ui.hpp"
 #include "ui/view_info.hpp"
 
@@ -9,13 +10,10 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   static std::string line_buffer;
   static int old_cols = -1;
 
-  char justify = GetFileReverseSort() ? '+' : '-';
-  char *line_ptr;
-  int  n, pos_x = 0;
-  std::shared_ptr<FileEntry> fe_ptr;
-  int ef_window_width = GetFileWindowWidth() - 2; /* Effektive Window-Width */
-  const char* sym_link_name = nullptr;
-  char type_of_file = ' ';
+  char* line_ptr;
+  int n;
+  const int ef_window_width = GetFileWindowWidth() - 2;
+  const int pos_x = x * FileEntryColumnStride();
 
   if (old_cols != COLS)
   {
@@ -23,211 +21,17 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
     line_buffer.resize(COLS + PATH_LENGTH);
   }
 
-  fe_ptr = FileListEntries()[entry_no];
-
-  if (fe_ptr && fe_ptr->meta.IsLink())
-  {
-    sym_link_name = fe_ptr->symlink_target.c_str();
-  } else {
-    sym_link_name = "";
-  }
-
-  type_of_file = fe_ptr ? fe_ptr->meta.TypeSymbol() : ' ';
-
-  const auto fitted_name = fe_ptr
-    ? FitVisualWidth(fe_ptr->name, GetFileMaxFilenameLen(), justify == '-')
-    : std::string{};
-  const auto fitted_link = FitVisualWidth(sym_link_name, GetFileMaxLinknameLen(), true);
-
-  switch (GetFileViewMode())
-  {
-    case ViewMode::MODE_1 : if( fe_ptr )
-      {
-        const auto attributes = GetAttributes(fe_ptr->meta.Mode());
-        const auto modify_time = FormatMetaTime(fe_ptr->meta.mtime);
-        const auto nlink = FormatMetaNlink(fe_ptr->meta);
-
-                    if( fe_ptr->meta.IsLink() )
-        {
-          line_buffer = std::format("{}{}{} {:>10} {:>3} {:11} {:>12} -> {}",
-              (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
-              type_of_file,
-              fitted_name,
-              attributes,
-              nlink,
-                                      (std::int64_t) fe_ptr->meta.size,
-              modify_time,
-              fitted_link
-);
-                    }
-        else
-        {
-          line_buffer = std::format("{}{}{} {:>10} {:>3} {:11} {:>12}",
-              (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
-              type_of_file,
-              fitted_name,
-              attributes,
-              nlink,
-                                      (std::int64_t) fe_ptr->meta.size,
-              modify_time
-);
-                    }
-      }
-      else
-      {
-        /* Empty Entry */
-        /*-------------*/
-
-        line_buffer = std::format("{:<{}}", "", GetFileMaxFilenameLen() + 42);
-      }
-
-      if( GetFileMaxLinknameLen() )
-        pos_x = x * (GetFileMaxFilenameLen() + GetFileMaxLinknameLen() + 47);
-      else
-        pos_x = x * (GetFileMaxFilenameLen() + 43);
-      break;
-
-    case ViewMode::MODE_2 : if( fe_ptr )
-      {
-        const auto owner = FormatMetaOwner(fe_ptr->meta);
-        const auto group = FormatMetaGroup(fe_ptr->meta);
-        const auto inode = FormatMetaInode(fe_ptr->meta);
-
-                    if( fe_ptr->meta.IsLink() )
-        {
-                      line_buffer = std::format("{}{}{} {:>10} {:<12} {:<12} -> {}",
-              (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
-              type_of_file,
-              fitted_name,
-              inode,
-              owner,
-              group,
-              fitted_link
-);
-                    }
-        else
-        {
-                      line_buffer = std::format("{}{}{} {:>10} {:<12} {:<12}",
-              (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
-              type_of_file,
-              fitted_name,
-              inode,
-              owner,
-              group
-);
-
-                    }
-            }
-      else
-      {
-        /* Empty-Entry */
-        /*-------------*/
-
-        line_buffer = std::format("{:<{}}", "", GetFileMaxFilenameLen() + 38);
-      }
-
-      if( GetFileMaxLinknameLen() )
-                    pos_x = x * (GetFileMaxFilenameLen() + GetFileMaxLinknameLen() + 43);
-      else
-                    pos_x = x * (GetFileMaxFilenameLen() + 39);
-      break;
-
-    case ViewMode::MODE_3 : if( fe_ptr )
-      {
-        line_buffer = std::format("{}{}{}",
-            (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
-            type_of_file,
-            fitted_name
-);
-                  }
-      else
-      {
-        /* Empty-Entry */
-        /*-------------*/
-
-        line_buffer = std::format("{:<{}}", "", GetFileMaxFilenameLen() + 2);
-      }
-
-      pos_x = x * (GetFileMaxFilenameLen() + 3);
-      break;
-
-    case ViewMode::MODE_4 : if( fe_ptr )
-      {
-        const auto change_time = FormatMetaTime(fe_ptr->meta.ctime);
-        const auto access_time = FormatMetaTime(fe_ptr->meta.atime);
-
-                    if( fe_ptr->meta.IsLink() )
-        {
-                      line_buffer = std::format("{}{}{} Chg: {:>12}  Acc: {:>12} -> {}",
-              (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
-              type_of_file,
-              fitted_name,
-              change_time,
-              access_time,
-              fitted_link
-);
-                    }
-        else
-        {
-                      line_buffer = std::format("{}{}{} Chg: {:>12}  Acc: {:>12}",
-              (fe_ptr->tagged) ? TAGGED_SYMBOL : ' ',
-              type_of_file,
-              fitted_name,
-              change_time,
-              access_time
-);
-                    }
-      }
-      else
-      {
-        /* Empty-Entry */
-        /*-------------*/
-
-        line_buffer = std::format("{:<{}}", "", GetFileMaxFilenameLen() + 39);
-      }
-
-
-      if( GetFileMaxLinknameLen() )
-        pos_x = x * (GetFileMaxFilenameLen() + GetFileMaxLinknameLen() + 44);
-      else
-        pos_x = x * (GetFileMaxFilenameLen() + 40);
-      break;
-
-    case ViewMode::MODE_5 : if( fe_ptr )
-      {
-        line_buffer = BuildUserFileEntry(fe_ptr, GetFileMaxFilenameLen(), GetFileMaxLinknameLen(),
-            GetProfileValueOrEmpty("USERVIEW"), 200);
-      }
-      else
-      {
-        /* Empty-Entry */
-        /*-------------*/
-
-        line_buffer = std::format("{:<{}}", "", GetFileMaxUserviewLen());
-      }
-      pos_x = x * (GetFileMaxUserviewLen() + 1);
-      break;
-
-  }
-
-  /* display line */
-  /*--------------*/
+  line_buffer = FormatFileEntryLine(FileListEntries()[entry_no]);
 
   n = StrVisualLength(line_buffer.c_str());
 
-  if( n <= ef_window_width )
+  if (n <= ef_window_width)
   {
-    /* line fits */
-    /*-----------*/
-
     SetFileHideScroll(0, 0);
     line_ptr = line_buffer.data();
   }
   else
   {
-    /* ... does not fit; use start_x */
-    /*-------------------------------*/
-
     const auto offset = (n > (start_x + ef_window_width))
       ? start_x
       : n - ef_window_width;
@@ -242,19 +46,21 @@ static void PrintFileEntry(int entry_no, int y, int x, unsigned char hilight, in
   mvwaddstr(file_window, y, pos_x + 1, line_ptr);
 #else
 #ifdef COLOR_SUPPORT
-  if( hilight )
-    WbkgdSet(file_window, COLOR_PAIR(HIFILE_COLOR)|A_BOLD);
+  if (hilight)
+    WbkgdSet(file_window, COLOR_PAIR(HIFILE_COLOR) | A_BOLD);
   else
     WbkgdSet(file_window, COLOR_PAIR(FILE_COLOR));
 
   mvwaddstr(file_window, y, pos_x + 1, line_ptr);
-  WbkgdSet(file_window, COLOR_PAIR(FILE_COLOR)|A_BOLD);
+  WbkgdSet(file_window, COLOR_PAIR(FILE_COLOR) | A_BOLD);
 
 #else
 #endif /* COLOR_SUPPORT */
-  if( hilight ) wattrset(file_window, A_REVERSE);
+  if (hilight)
+    wattrset(file_window, A_REVERSE);
   mvwaddstr(file_window, y, pos_x + 1, line_ptr);
-  if( hilight ) wattrset(file_window, 0);
+  if (hilight)
+    wattrset(file_window, 0);
 #endif /* NO_HIGHLIGHT */
 }
 
@@ -266,43 +72,45 @@ static void DisplayFiles(
   bool access_denied
 )
 {
-  int  x, y, p_x, p_y, j;
+  int x, y, p_x, p_y, j;
 
   werase(file_window);
 
-  if( FileListEntries().size() == 0 )
+  if (FileListEntries().size() == 0)
   {
-    mvwaddstr(file_window,
-         0,
-         3,
-         access_denied ? "Permission Denied!" : "No Files!"
-);
+    mvwaddstr(
+      file_window,
+      0,
+      3,
+      access_denied ? "Permission Denied!" : "No Files!"
+    );
   }
 
-  j = start_file_no; p_x = -1; p_y = 0;
-  for( x=0; x < GetFileMaxColumn(); x++)
+  j = start_file_no;
+  p_x = -1;
+  p_y = 0;
+  for (x = 0; x < GetFileMaxColumn(); x++)
   {
-    for( y=0; y < GetFileWindowHeight(); y++ )
+    for (y = 0; y < GetFileWindowHeight(); y++)
     {
-      if( j < (int)FileListEntries().size() )
+      if (j < (int)FileListEntries().size())
       {
-  if( j == hilight_no )
-  {
-    p_x = x;
-    p_y = y;
-  }
-  else
-  {
-    PrintFileEntry(j, y, x, false, start_x);
-  }
+        if (j == hilight_no)
+        {
+          p_x = x;
+          p_y = y;
+        }
+        else
+        {
+          PrintFileEntry(j, y, x, false, start_x);
+        }
       }
       j++;
     }
   }
 
-  if( p_x >= 0 )
+  if (p_x >= 0)
     PrintFileEntry(hilight_no, p_y, p_x, true, start_x);
-
 }
 
 

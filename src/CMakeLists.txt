@@ -146,6 +146,7 @@ set(
   ui/compat.cpp
   ui/help.cpp
   ui/format.cpp
+  ui/file_format.cpp
 )
 
 set(

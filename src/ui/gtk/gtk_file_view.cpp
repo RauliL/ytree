@@ -1,6 +1,7 @@
 #include <gtkmm.h>
 
 #include "core/ui.hpp"
+#include "ui/file_format.hpp"
 #include "ui/gtk/main_window.hpp"
 #include "ui/ui.hpp"
 #include "ui/view_info.hpp"
@@ -27,7 +28,7 @@ void PopulateFileModel(int hilight)
   rows.reserve(FileListEntries().size());
   for (const auto& fe : FileListEntries())
   {
-    rows.emplace_back(fe->name);
+    rows.emplace_back(FormatFileEntryLine(fe));
   }
   win->setFileRows(rows, hilight);
 }

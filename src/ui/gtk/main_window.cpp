@@ -170,6 +170,10 @@ YTreeMainWindow::YTreeMainWindow()
   bindListView(file_list_);
   dir_list_.set_model(Gtk::SingleSelection::create(dir_model_));
   file_list_.set_model(Gtk::SingleSelection::create(file_model_));
+  dir_list_.set_can_focus(false);
+  file_list_.set_can_focus(false);
+  dir_list_.set_focusable(false);
+  file_list_.set_focusable(false);
 
   dir_scroll_.set_child(dir_list_);
   file_scroll_.set_child(file_list_);
@@ -220,6 +224,7 @@ YTreeMainWindow::YTreeMainWindow()
   set_child(root_);
 
   auto controller = Gtk::EventControllerKey::create();
+  controller->set_propagation_phase(Gtk::PropagationPhase::CAPTURE);
   controller->signal_key_pressed().connect(
     sigc::mem_fun(*this, &YTreeMainWindow::on_key_pressed),
     false
