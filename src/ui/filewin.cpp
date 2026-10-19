@@ -727,7 +727,7 @@ static void MoveDown(
   if (cursor_pos < max_disp_files - 1)
   {
     // DOWN ohne scroll moeglich.
-    PrintFileEntry(
+    ui::file_view().printEntry(
       start_file + cursor_pos,
       cursor_pos % window_height,
       cursor_pos / window_height,
@@ -735,7 +735,7 @@ static void MoveDown(
       start_x
     );
     ++cursor_pos;
-    PrintFileEntry(
+    ui::file_view().printEntry(
       start_file + cursor_pos,
       cursor_pos % window_height,
       cursor_pos / window_height,
@@ -747,7 +747,7 @@ static void MoveDown(
 
   // Scrollen.
   ++start_file;
-  DisplayFiles(
+  ui::file_view().showFiles(
     dir_entry,
     start_file,
     start_file + cursor_pos,
@@ -772,7 +772,7 @@ static void MoveUp(
   if (cursor_pos > 0)
   {
     // UP ohne scroll moeglich.
-    PrintFileEntry(
+    ui::file_view().printEntry(
       start_file + cursor_pos,
       cursor_pos % window_height,
       cursor_pos / window_height,
@@ -780,7 +780,7 @@ static void MoveUp(
       start_x
     );
     --cursor_pos;
-    PrintFileEntry(
+    ui::file_view().printEntry(
       start_file + cursor_pos,
       cursor_pos % window_height,
       cursor_pos / window_height,
@@ -792,7 +792,7 @@ static void MoveUp(
 
   // Scrollen.
   --start_file;
-  DisplayFiles(
+  ui::file_view().showFiles(
     dir_entry,
     start_file,
     start_file + cursor_pos,
@@ -812,7 +812,7 @@ static void MoveRight(
       /* Sonderfall: ganzes Filewindow scrollen */
       /*----------------------------------------*/
       (*start_x)++;
-      PrintFileEntry(*start_file + *cursor_pos,
+      ui::file_view().printEntry(*start_file + *cursor_pos,
                       *cursor_pos % window_height,
                       *cursor_pos / window_height,
                       true ,
@@ -843,14 +843,14 @@ static void MoveRight(
       {
           /* RIGHT ohne scroll moeglich */
           /*----------------------------*/
-          PrintFileEntry(*start_file + *cursor_pos,
+          ui::file_view().printEntry(*start_file + *cursor_pos,
                           *cursor_pos % window_height,
                           *cursor_pos / window_height,
                           false,
                           *start_x
 );
           *cursor_pos += my_x_step;
-          PrintFileEntry(*start_file + *cursor_pos,
+          ui::file_view().printEntry(*start_file + *cursor_pos,
                           *cursor_pos % window_height,
                           *cursor_pos / window_height,
                           true ,
@@ -863,7 +863,7 @@ static void MoveRight(
           /*----------*/
           *start_file += x_step;
           *cursor_pos -= x_step - my_x_step;
-          DisplayFiles(dir_entry,
+          ui::file_view().showFiles(dir_entry,
                         *start_file,
                         *start_file + *cursor_pos,
                         *start_x
@@ -885,7 +885,7 @@ static void MoveLeft(
          /* Sonderfall: ganzes Filewindow scrollen */
          /*----------------------------------------*/
          if( *start_x > 0 ) (*start_x)--;
-            PrintFileEntry(*start_file + *cursor_pos,
+            ui::file_view().printEntry(*start_file + *cursor_pos,
                             *cursor_pos % window_height,
                             *cursor_pos / window_height,
                             true ,
@@ -915,14 +915,14 @@ static void MoveLeft(
          {
              /* LEFT ohne scroll moeglich */
              /*---------------------------*/
-             PrintFileEntry(*start_file + *cursor_pos,
+             ui::file_view().printEntry(*start_file + *cursor_pos,
                              *cursor_pos % window_height,
                              *cursor_pos / window_height,
                              false,
                              *start_x
 );
              *cursor_pos -= my_x_step;
-             PrintFileEntry(*start_file + *cursor_pos,
+             ui::file_view().printEntry(*start_file + *cursor_pos,
                              *cursor_pos % window_height,
                              *cursor_pos / window_height,
                              true,
@@ -935,7 +935,7 @@ static void MoveLeft(
              /*----------*/
              if( ( *start_file -= x_step ) < 0 )
                 *start_file = 0;
-             DisplayFiles(dir_entry,
+             ui::file_view().showFiles(dir_entry,
                            *start_file,
                            *start_file + *cursor_pos,
                            *start_x
@@ -962,7 +962,7 @@ static void fmovenpage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
          * Eintrag
          * ==> setzen
          */
-         PrintFileEntry(*start_file + *cursor_pos,
+         ui::file_view().printEntry(*start_file + *cursor_pos,
                          *cursor_pos % window_height,
                          *cursor_pos / window_height,
                          false,
@@ -972,7 +972,7 @@ static void fmovenpage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
             *cursor_pos = max_disp_files - 1;
          else
             *cursor_pos = file_entry_list.size() - *start_file - 1;
-         PrintFileEntry(*start_file + *cursor_pos,
+         ui::file_view().printEntry(*start_file + *cursor_pos,
                          *cursor_pos % window_height,
                          *cursor_pos / window_height,
                          true,
@@ -991,7 +991,7 @@ static void fmovenpage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
            *cursor_pos = max_disp_files - 1;
         else
            *cursor_pos = file_entry_list.size() - *start_file - 1;
-        DisplayFiles(dir_entry,
+        ui::file_view().showFiles(dir_entry,
                       *start_file,
                       *start_file + *cursor_pos,
                       *start_x
@@ -1019,14 +1019,14 @@ static void fmoveppage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
              * Eintrag
              * ==> setzen
              */
-             PrintFileEntry(*start_file + *cursor_pos,
+             ui::file_view().printEntry(*start_file + *cursor_pos,
                              *cursor_pos % window_height,
                              *cursor_pos / window_height,
                              false,
                              *start_x
 );
              *cursor_pos = 0;
-             PrintFileEntry(*start_file + *cursor_pos,
+             ui::file_view().printEntry(*start_file + *cursor_pos,
                              *cursor_pos % window_height,
                              *cursor_pos / window_height,
                              true,
@@ -1041,7 +1041,7 @@ static void fmoveppage(int *start_file, int *cursor_pos, int *start_x, DirEntry 
                *start_file -= max_disp_files;
             else
                *start_file = 0;
-            DisplayFiles(dir_entry,
+            ui::file_view().showFiles(dir_entry,
                           *start_file,
                           *start_file + *cursor_pos,
                           *start_x
@@ -1066,13 +1066,13 @@ static void fmoveto(int target_pos, int *start_file, int *cursor_pos, int *start
 
   if (target_pos >= *start_file && target_pos < *start_file + max_disp_files)
   {
-    PrintFileEntry(*start_file + *cursor_pos,
+    ui::file_view().printEntry(*start_file + *cursor_pos,
                    *cursor_pos % window_height,
                    *cursor_pos / window_height,
                    false,
                    *start_x);
     *cursor_pos = target_pos - *start_file;
-    PrintFileEntry(*start_file + *cursor_pos,
+    ui::file_view().printEntry(*start_file + *cursor_pos,
                    *cursor_pos % window_height,
                    *cursor_pos / window_height,
                    true,
@@ -1087,7 +1087,7 @@ static void fmoveto(int target_pos, int *start_file, int *cursor_pos, int *start
       *start_file = std::max(0, static_cast<int>(file_entry_list.size()) - max_disp_files);
       *cursor_pos = target_pos - *start_file;
     }
-    DisplayFiles(dir_entry, *start_file, *start_file + *cursor_pos, *start_x);
+    ui::file_view().showFiles(dir_entry, *start_file, *start_file + *cursor_pos, *start_x);
   }
 }
 
@@ -1216,7 +1216,7 @@ static void WalkTaggedFiles(int start_file, int cursor_pos, F&& action)
       i < start_file + max_disp_files
     )
     {
-      PrintFileEntry(
+      ui::file_view().printEntry(
         start_file + cursor_pos,
         cursor_pos % window_height,
         cursor_pos / window_height,
@@ -1226,7 +1226,7 @@ static void WalkTaggedFiles(int start_file, int cursor_pos, F&& action)
 
       cursor_pos = static_cast<int>(i) - start_file;
 
-      PrintFileEntry(
+      ui::file_view().printEntry(
         start_file + cursor_pos,
         cursor_pos % window_height,
         cursor_pos / window_height,
@@ -1237,7 +1237,7 @@ static void WalkTaggedFiles(int start_file, int cursor_pos, F&& action)
       start_file = std::max(0, i - max_disp_files + 1);
       cursor_pos = i - start_file;
 
-      DisplayFiles(
+      ui::file_view().showFiles(
         fe_ptr->Dir().get(),
         start_file,
         start_file + cursor_pos,
@@ -1248,12 +1248,12 @@ static void WalkTaggedFiles(int start_file, int cursor_pos, F&& action)
 
     if (fe_ptr->Dir()->global_flag)
     {
-      DisplayGlobalFileParameter(fe_ptr);
+      ui::file_view().showGlobalFileParameter(fe_ptr);
     } else {
-      DisplayFileParameter(fe_ptr);
+      ui::file_view().showFileParameter(fe_ptr);
     }
 
-    RefreshWindow(file_window);
+    ui::file_view().refresh();
     doupdate();
 
     const auto step = InvokeTaggedFileAction(action, *fe_ptr);
@@ -1357,17 +1357,17 @@ static void InitializeFileWindow(FileWindowContext& ctx)
     ctx.dir_entry->tagged_flag
   )
   {
-    SwitchToBigFileWindow();
-    GetMaxYX(file_window, &window_height, &window_width);
-    DisplayDiskStatistic();
+    ui::file_view().switchToBig();
+    ui::file_view().getSize(window_height, window_width);
+    ui::file_view().showDiskStatistic();
   }
   else
   {
-    GetMaxYX(file_window, &window_height, &window_width);
-    DisplayDirStatistic(ctx.dir_entry);
+    ui::file_view().getSize(window_height, window_width);
+    ui::file_view().showDirStatistic(ctx.dir_entry);
   }
 
-  DisplayFilesAtCursor(ctx.dir_entry, ctx.start_x);
+  ui::file_view().showFilesAtCursor(ctx.dir_entry, ctx.start_x);
 }
 
 static void UpdateFileWindowLayout(FileWindowContext& ctx)
@@ -1394,15 +1394,15 @@ static ui::InputEvent ReadFileWindowKey(FileWindowContext& ctx)
   ctx.fe_ptr = FileWindowCurrentEntry(ctx.dir_entry).get();
   if (ctx.dir_entry->global_flag)
   {
-    DisplayGlobalFileParameter(ctx.fe_ptr);
+    ui::file_view().showGlobalFileParameter(ctx.fe_ptr);
   }
   else
   {
-    DisplayFileParameter(ctx.fe_ptr);
+    ui::file_view().showFileParameter(ctx.fe_ptr);
   }
 
-  RefreshWindow(dir_window);
-  RefreshWindow(file_window);
+  ui::file_view().refreshDirSide();
+  ui::file_view().refresh();
   doupdate();
 
   return ui::ReadEvent();
@@ -1432,32 +1432,30 @@ static void HandleFileWindowResize(FileWindowContext& ctx)
     ctx.dir_entry->tagged_flag
   )
   {
-    SwitchToBigFileWindow();
-    DisplayFileWindow(ctx.dir_entry);
+    ui::file_view().switchToBig();
+    ui::file_view().showFileWindow(ctx.dir_entry);
 
     if (ctx.dir_entry->global_flag)
     {
-      DisplayDiskStatistic();
-      DisplayGlobalFileParameter(ctx.fe_ptr);
+      ui::file_view().showDiskStatistic();
+      ui::file_view().showGlobalFileParameter(ctx.fe_ptr);
     }
     else
     {
-      DisplayFileWindow(ctx.dir_entry);
-      DisplayDirStatistic(ctx.dir_entry);
-      DisplayFileParameter(ctx.fe_ptr);
+      ui::file_view().showFileWindow(ctx.dir_entry);
+      ui::file_view().showDirStatistic(ctx.dir_entry);
+      ui::file_view().showFileParameter(ctx.fe_ptr);
     }
   }
   else
   {
-    SwitchToSmallFileWindow();
-    DisplayTree(
-      dir_window,
-      statistic.disp_begin_pos,
+    ui::file_view().switchToSmall();
+    ui::file_view().showDirTree(statistic.disp_begin_pos,
       statistic.disp_begin_pos + statistic.cursor_pos
     );
-    DisplayFileWindow(ctx.dir_entry);
-    DisplayDirStatistic(ctx.dir_entry);
-    DisplayFileParameter(ctx.fe_ptr);
+    ui::file_view().showFileWindow(ctx.dir_entry);
+    ui::file_view().showDirStatistic(ctx.dir_entry);
+    ui::file_view().showFileParameter(ctx.fe_ptr);
   }
 
   ctx.need_dsp_help = true;
@@ -1501,7 +1499,7 @@ static void ResetFileWindowHorizontalScroll(
   }
 
   ctx.start_x = 0;
-  PrintFileEntry(
+  ui::file_view().printEntry(
     ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
     ctx.dir_entry->cursor_pos % window_height,
     ctx.dir_entry->cursor_pos / window_height,
@@ -1627,7 +1625,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
               ctx.dir_entry->start_file - 1;
           }
 
-          DisplayFiles(
+          ui::file_view().showFiles(
             ctx.dir_entry,
             ctx.dir_entry->start_file,
             ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
@@ -1645,7 +1643,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
         {
           ctx.dir_entry->start_file = 0;
           ctx.dir_entry->cursor_pos = 0;
-          DisplayFiles(
+          ui::file_view().showFiles(
             ctx.dir_entry,
             ctx.dir_entry->start_file,
             ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
@@ -1669,7 +1667,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
         ctx.need_dsp_help = true;
         if (!ctx.fe_ptr->ChangeModus())
         {
-          PrintFileEntry(
+          ui::file_view().printEntry(
             ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
             ctx.dir_entry->cursor_pos % window_height,
             ctx.dir_entry->cursor_pos / window_height,
@@ -1703,7 +1701,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
           }
         );
 
-        DisplayFiles(ctx.dir_entry,
+        ui::file_view().showFiles(ctx.dir_entry,
           ctx.dir_entry->start_file,
           ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
           ctx.start_x
@@ -1721,7 +1719,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
         ctx.need_dsp_help = true;
         if (ctx.fe_ptr->ChangeOwner())
         {
-          PrintFileEntry(
+          ui::file_view().printEntry(
             ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
             ctx.dir_entry->cursor_pos % window_height,
             ctx.dir_entry->cursor_pos / window_height,
@@ -1754,7 +1752,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
             }
           );
 
-          DisplayFiles(
+          ui::file_view().showFiles(
             ctx.dir_entry,
             ctx.dir_entry->start_file,
             ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
@@ -1772,7 +1770,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
         ctx.need_dsp_help = true;
         if (ctx.fe_ptr->ChangeGroup())
         {
-          PrintFileEntry(
+          ui::file_view().printEntry(
             ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
             ctx.dir_entry->cursor_pos % window_height,
             ctx.dir_entry->cursor_pos / window_height,
@@ -1806,7 +1804,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
             }
           );
 
-          DisplayFiles(
+          ui::file_view().showFiles(
             ctx.dir_entry,
             ctx.dir_entry->start_file,
             ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
@@ -1826,7 +1824,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
           {
                         ctx.fe_ptr->tagged = true;
 
-      PrintFileEntry(ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
+      ui::file_view().printEntry(ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
                 ctx.dir_entry->cursor_pos % window_height,
                 ctx.dir_entry->cursor_pos / window_height,
                 true,
@@ -1837,9 +1835,9 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
                   statistic.disk_tagged_files++;
             statistic.disk_tagged_bytes += ctx.fe_ptr->meta.size;
       if( ctx.dir_entry->global_flag )
-        DisplayDiskTagged();
+        ui::file_view().showDiskTagged();
       else
-        DisplayDirTagged(ctx.de_ptr);
+        ui::file_view().showDirTagged(ctx.de_ptr);
           }
           ctx.unput = ui::InputEvent::Special(ui::Key::Down);
 
@@ -1850,7 +1848,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
           {
       ctx.fe_ptr->tagged = false;
 
-      PrintFileEntry(ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
+      ui::file_view().printEntry(ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
                 ctx.dir_entry->cursor_pos % window_height,
                 ctx.dir_entry->cursor_pos / window_height,
                 true,
@@ -1862,9 +1860,9 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
       statistic.disk_tagged_files--;
       statistic.disk_tagged_bytes -= ctx.fe_ptr->meta.size;
       if( ctx.dir_entry->global_flag )
-        DisplayDiskTagged();
+        ui::file_view().showDiskTagged();
       else
-        DisplayDirTagged(ctx.de_ptr);
+        ui::file_view().showDirTagged(ctx.de_ptr);
           }
 
           ctx.unput = ui::InputEvent::Special(ui::Key::Down);
@@ -1888,7 +1886,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
           }
 
           ctx.dir_entry->start_file = ctx.list_pos - ctx.dir_entry->cursor_pos;
-          DisplayFiles(ctx.dir_entry,
+          ui::file_view().showFiles(ctx.dir_entry,
             ctx.dir_entry->start_file,
             ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
             ctx.start_x
@@ -1914,11 +1912,11 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
           }
 
           if( ctx.dir_entry->global_flag )
-            DisplayDiskTagged();
+            ui::file_view().showDiskTagged();
           else
-            DisplayDirTagged(ctx.dir_entry);
+            ui::file_view().showDirTagged(ctx.dir_entry);
 
-          DisplayFiles(ctx.dir_entry,
+          ui::file_view().showFiles(ctx.dir_entry,
             ctx.dir_entry->start_file,
             ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
             ctx.start_x
@@ -1945,11 +1943,11 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
           }
 
           if( ctx.dir_entry->global_flag )
-            DisplayDiskTagged();
+            ui::file_view().showDiskTagged();
           else
-            DisplayDirTagged(ctx.dir_entry);
+            ui::file_view().showDirTagged(ctx.dir_entry);
 
-          DisplayFiles(ctx.dir_entry,
+          ui::file_view().showFiles(ctx.dir_entry,
             ctx.dir_entry->start_file,
             ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
             ctx.start_x
@@ -1977,11 +1975,11 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
           }
 
           if( ctx.dir_entry->global_flag )
-            DisplayDiskTagged();
+            ui::file_view().showDiskTagged();
           else
-            DisplayDirTagged(ctx.dir_entry);
+            ui::file_view().showDirTagged(ctx.dir_entry);
 
-          DisplayFiles(ctx.dir_entry,
+          ui::file_view().showFiles(ctx.dir_entry,
             ctx.dir_entry->start_file,
             ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
             ctx.start_x
@@ -2008,11 +2006,11 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
           }
 
           if( ctx.dir_entry->global_flag )
-            DisplayDiskTagged();
+            ui::file_view().showDiskTagged();
           else
-            DisplayDirTagged(ctx.dir_entry);
+            ui::file_view().showDirTagged(ctx.dir_entry);
 
-          DisplayFiles(ctx.dir_entry,
+          ui::file_view().showFiles(ctx.dir_entry,
             ctx.dir_entry->start_file,
             ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
             ctx.start_x
@@ -2099,9 +2097,9 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
           /*--------------------------------*/
 
           if( ctx.dir_entry->global_flag )
-            DisplayDiskStatistic();
+            ui::file_view().showDiskStatistic();
           else
-            DisplayDirStatistic(ctx.de_ptr);
+            ui::file_view().showDirStatistic(ctx.de_ptr);
 
           if( ctx.dest_dir_entry == ctx.de_ptr )
           {
@@ -2110,7 +2108,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
 
             BuildFileEntryList(ctx.dir_entry);
 
-            DisplayFiles(ctx.dir_entry,
+            ui::file_view().showFiles(ctx.dir_entry,
               ctx.dir_entry->start_file,
               ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
               ctx.start_x
@@ -2241,7 +2239,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
                           ui::DisplayAvailBytes();
 
 
-        DisplayFiles(ctx.dir_entry,
+        ui::file_view().showFiles(ctx.dir_entry,
           ctx.dir_entry->start_file,
           ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
           ctx.start_x
@@ -2308,7 +2306,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
 
                           ui::DisplayAvailBytes();
 
-        DisplayFiles(ctx.dir_entry,
+        ui::file_view().showFiles(ctx.dir_entry,
           ctx.dir_entry->start_file,
           ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
           ctx.start_x
@@ -2369,9 +2367,9 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
                         ui::DisplayAvailBytes();
 
       if( ctx.dir_entry->global_flag )
-        DisplayDiskStatistic();
+        ui::file_view().showDiskStatistic();
       else
-        DisplayDirStatistic(ctx.de_ptr);
+        ui::file_view().showDirStatistic(ctx.de_ptr);
 
       BuildFileEntryList(ctx.dir_entry);
 
@@ -2389,7 +2387,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
         }
       }
 
-      DisplayFiles(ctx.dir_entry,
+      ui::file_view().showFiles(ctx.dir_entry,
               ctx.dir_entry->start_file,
               ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
               ctx.start_x
@@ -2481,7 +2479,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
       ctx.dir_entry->start_file = 0;
       ctx.dir_entry->cursor_pos = 0;
 
-      DisplayFiles(ctx.dir_entry,
+      ui::file_view().showFiles(ctx.dir_entry,
               ctx.dir_entry->start_file,
               ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
               ctx.start_x
@@ -2513,9 +2511,9 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
       /*----------------------*/
 
       if( ctx.dir_entry->global_flag )
-        DisplayDiskStatistic();
+        ui::file_view().showDiskStatistic();
       else
-        DisplayDirStatistic(ctx.de_ptr);
+        ui::file_view().showDirStatistic(ctx.de_ptr);
 
       ui::DisplayAvailBytes();
 
@@ -2535,7 +2533,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
         }
       }
 
-      DisplayFiles(ctx.dir_entry,
+      ui::file_view().showFiles(ctx.dir_entry,
               ctx.dir_entry->start_file,
               ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
               ctx.start_x
@@ -2557,7 +2555,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
       ctx.dir_entry->start_file = 0;
       ctx.dir_entry->cursor_pos = 0;
                         ui::DisplayAvailBytes();
-      DisplayFiles(ctx.dir_entry,
+      ui::file_view().showFiles(ctx.dir_entry,
               ctx.dir_entry->start_file,
               ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
               ctx.start_x
@@ -2587,7 +2585,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
 
         BuildFileEntryList(ctx.de_ptr);
 
-        DisplayFiles(ctx.de_ptr,
+        ui::file_view().showFiles(ctx.de_ptr,
                 ctx.dir_entry->start_file,
                 ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
                 ctx.start_x
@@ -2638,7 +2636,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
 
       if( file_entry_list.size() == 0 ) ctx.unput = ui::InputEvent::Special(ui::Key::Escape);
 
-      DisplayFiles(ctx.dir_entry,
+      ui::file_view().showFiles(ctx.dir_entry,
               ctx.dir_entry->start_file,
               ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
               ctx.start_x
@@ -2659,7 +2657,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
 
         SortFileEntryList();
 
-        DisplayFiles(
+        ui::file_view().showFiles(
           ctx.dir_entry,
           ctx.dir_entry->start_file,
           ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
@@ -2676,16 +2674,16 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
             BuildFileEntryList(ctx.dir_entry);
 
             ui::DisplayFileSpec();
-            DisplayFiles(ctx.dir_entry,
+            ui::file_view().showFiles(ctx.dir_entry,
               ctx.dir_entry->start_file,
               ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
               ctx.start_x
 );
 
             if( ctx.dir_entry->global_flag )
-              DisplayDiskStatistic();
+              ui::file_view().showDiskStatistic();
             else
-              DisplayDirStatistic(ctx.dir_entry);
+              ui::file_view().showDirStatistic(ctx.dir_entry);
 
                         if( file_entry_list.size() == 0 ) ctx.unput = ui::InputEvent::Special(ui::Key::Escape);
             ctx.maybe_change_x_step = true;
@@ -2759,7 +2757,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
               }
             );
 
-            clearok(stdscr, true);
+            ui::file_view().forceFullRedraw();
 
             if (pclose(pipe_file))
             {
@@ -2769,7 +2767,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
             GetAvailBytes(statistic.disk_space);
             ui::DisplayAvailBytes();
 
-            DisplayFiles(
+            ui::file_view().showFiles(
               ctx.dir_entry,
               ctx.dir_entry->start_file,
               ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
@@ -2810,9 +2808,9 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
               HitReturnToContinue();
               refresh();
               InitClock();
-              RefreshWindow(file_window);
+              ui::file_view().refresh();
 
-              DisplayFiles(
+              ui::file_view().showFiles(
                 ctx.dir_entry,
                 ctx.dir_entry->start_file,
                 ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
@@ -2846,7 +2844,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
               refresh();
               InitClock();
 
-              DisplayFiles(
+              ui::file_view().showFiles(
                 ctx.dir_entry,
                 ctx.dir_entry->start_file,
                 ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
@@ -2868,7 +2866,7 @@ static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
           break;
 
       case FileCommand::Redraw:
-          clearok(stdscr, true);
+          ui::file_view().forceFullRedraw();
           break;
 
       case FileCommand::Unknown:
@@ -2888,7 +2886,7 @@ static void FinalizeFileWindow(FileWindowContext& ctx, const ui::InputEvent& ev)
 {
   if (ctx.dir_entry->big_window)
   {
-    SwitchToSmallFileWindow();
+    ui::file_view().switchToSmall();
   }
 
   const bool login_esc = MapFileCommand(ev) == FileCommand::LoginEsc;
@@ -2989,18 +2987,18 @@ static bool DeleteTaggedFiles(int max_disp_files)
       start_file = std::max(0, i - max_disp_files + 1);
       cursor_pos = i - start_file;
 
-      DisplayFiles(de_ptr,
+      ui::file_view().showFiles(de_ptr,
         start_file,
         start_file + cursor_pos,
         start_x
 );
 
       if( fe_ptr->Dir()->global_flag )
-        DisplayGlobalFileParameter(fe_ptr);
+        ui::file_view().showGlobalFileParameter(fe_ptr);
       else
-        DisplayFileParameter(fe_ptr);
+        ui::file_view().showFileParameter(fe_ptr);
 
-      RefreshWindow(file_window);
+      ui::file_view().refresh();
       doupdate();
 
       if( confirm ) term = InputChoise("Delete this file (Y/N) ? ", "YN\033");
@@ -3024,9 +3022,9 @@ static bool DeleteTaggedFiles(int max_disp_files)
 
           if (de_ptr->global_flag)
           {
-            DisplayDiskStatistic();
+            ui::file_view().showDiskStatistic();
           } else {
-            DisplayDirStatistic(de_ptr);
+            ui::file_view().showDirStatistic(de_ptr);
           }
 
           ui::DisplayAvailBytes();
@@ -3115,7 +3113,7 @@ static void ListJump(DirEntry * dir_entry, const char *str)
         MvAddStr(LINES - 2, 1, "Last entry!");
         beep();
         RefreshWindow(stdscr);
-        RefreshWindow(file_window);
+        ui::file_view().refresh();
         doupdate();
         sleep(1);
         return;
@@ -3134,7 +3132,7 @@ static void ListJump(DirEntry * dir_entry, const char *str)
         MvAddStr(LINES - 2, 1, "No match!");
         beep();
         RefreshWindow(stdscr);
-        RefreshWindow(file_window);
+        ui::file_view().refresh();
         doupdate();
         sleep(1);
         return;
@@ -3145,7 +3143,7 @@ static void ListJump(DirEntry * dir_entry, const char *str)
         /* first search start on top */
         dir_entry->start_file = 0;
         dir_entry->cursor_pos = 0;
-        DisplayFiles(dir_entry,
+        ui::file_view().showFiles(dir_entry,
               dir_entry->start_file,
               dir_entry->start_file + dir_entry->cursor_pos,
               start_x
@@ -3159,7 +3157,123 @@ static void ListJump(DirEntry * dir_entry, const char *str)
           dir_entry
         );
     RefreshWindow(stdscr);
-    RefreshWindow(file_window);
+    ui::file_view().refresh();
     doupdate();
     ListJump(dir_entry, (incremental) ? newStr.c_str() : "");
+}
+
+namespace {
+
+class NcursesFileView final : public ui::IFileView
+{
+public:
+  void getSize(int& height, int& width) override
+  {
+    GetMaxYX(file_window, &height, &width);
+  }
+
+  void getDirPanelSize(int& height, int& width) override
+  {
+    GetMaxYX(dir_window, &height, &width);
+  }
+
+  void showFiles(
+    DirEntry* dir,
+    int start_file,
+    int hilight,
+    int start_x
+  ) override
+  {
+    DisplayFiles(dir, start_file, hilight, start_x);
+  }
+
+  void showFilesAtCursor(DirEntry* dir, int start_x) override
+  {
+    DisplayFilesAtCursor(dir, start_x);
+  }
+
+  void showFileWindow(DirEntry* dir) override
+  {
+    DisplayFileWindow(dir);
+  }
+
+  void showFileParameter(FileEntry* file) override
+  {
+    DisplayFileParameter(file);
+  }
+
+  void showGlobalFileParameter(FileEntry* file) override
+  {
+    DisplayGlobalFileParameter(file);
+  }
+
+  void showDirStatistic(DirEntry* dir) override
+  {
+    DisplayDirStatistic(dir);
+  }
+
+  void showDiskStatistic() override
+  {
+    DisplayDiskStatistic();
+  }
+
+  void showDirTagged(DirEntry* dir) override
+  {
+    DisplayDirTagged(dir);
+  }
+
+  void showDiskTagged() override
+  {
+    DisplayDiskTagged();
+  }
+
+  void printEntry(
+    int entry_no,
+    int y,
+    int x,
+    bool hilight,
+    int start_x
+  ) override
+  {
+    PrintFileEntry(entry_no, y, x, hilight, start_x);
+  }
+
+  void refresh() override
+  {
+    RefreshWindow(file_window);
+  }
+
+  void refreshDirSide() override
+  {
+    RefreshWindow(dir_window);
+  }
+
+  void switchToBig() override
+  {
+    SwitchToBigFileWindow();
+  }
+
+  void switchToSmall() override
+  {
+    SwitchToSmallFileWindow();
+  }
+
+  void showDirTree(int start_entry_no, int hilight_no) override
+  {
+    DisplayTree(dir_window, start_entry_no, hilight_no);
+  }
+
+  void forceFullRedraw() override
+  {
+    clearok(stdscr, true);
+  }
+};
+
+NcursesFileView g_ncurses_file_view;
+
+} // namespace
+
+ui::IFileView& NcursesFileViewInstance()
+{
+  return g_ncurses_file_view;
 }

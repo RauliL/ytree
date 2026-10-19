@@ -6,6 +6,9 @@
 #include <string_view>
 #include <utility>
 
+struct DirEntry;
+struct FileEntry;
+
 /**
  * UI-backend ports. Core talks only to these interfaces so alternate UIs
  * (non-ncurses) can be plugged in later.
@@ -189,16 +192,81 @@ public:
   virtual void displayDiskName() = 0;
 };
 
+/**
+ * Directory-tree panel. Controllers call this instead of painting directly.
+ * Step-1 methods still take domain pointers; a later step replaces those with DTOs.
+ */
+class IDirView
+{
+public:
+  virtual ~IDirView() = default;
+
+  virtual void getSize(int& height, int& width) = 0;
+  virtual void showTree(int start_entry_no, int hilight_no) = 0;
+  virtual void showTreeAtCursor() = 0;
+  virtual void showParameter(DirEntry* dir) = 0;
+  virtual void showDiskStatistic() = 0;
+  virtual void showFileSide(DirEntry* dir) = 0;
+  virtual void refresh() = 0;
+  virtual void refreshFileSide() = 0;
+  virtual void refreshBothFileWindows() = 0;
+  virtual void printEntry(int entry_no, int y, bool hilight) = 0;
+  virtual void forceFullRedraw() = 0;
+};
+
+/**
+ * File-list panel. Controllers call this instead of painting directly.
+ */
+class IFileView
+{
+public:
+  virtual ~IFileView() = default;
+
+  virtual void getSize(int& height, int& width) = 0;
+  virtual void getDirPanelSize(int& height, int& width) = 0;
+  virtual void showFiles(
+    DirEntry* dir,
+    int start_file,
+    int hilight,
+    int start_x
+  ) = 0;
+  virtual void showFilesAtCursor(DirEntry* dir, int start_x) = 0;
+  virtual void showFileWindow(DirEntry* dir) = 0;
+  virtual void showFileParameter(FileEntry* file) = 0;
+  virtual void showGlobalFileParameter(FileEntry* file) = 0;
+  virtual void showDirStatistic(DirEntry* dir) = 0;
+  virtual void showDiskStatistic() = 0;
+  virtual void showDirTagged(DirEntry* dir) = 0;
+  virtual void showDiskTagged() = 0;
+  virtual void printEntry(
+    int entry_no,
+    int y,
+    int x,
+    bool hilight,
+    int start_x
+  ) = 0;
+  virtual void refresh() = 0;
+  virtual void refreshDirSide() = 0;
+  virtual void switchToBig() = 0;
+  virtual void switchToSmall() = 0;
+  virtual void showDirTree(int start_entry_no, int hilight_no) = 0;
+  virtual void forceFullRedraw() = 0;
+};
+
 IDialogs& dialogs();
 ISession& session();
 IInput& input();
 IShellView& shell();
+IDirView& dir_view();
+IFileView& file_view();
 
 void set_backend(
   IDialogs* dialogs,
   ISession* session,
   IInput* input = nullptr,
-  IShellView* shell = nullptr
+  IShellView* shell = nullptr,
+  IDirView* dir_view = nullptr,
+  IFileView* file_view = nullptr
 );
 
 inline void Message(const std::string& msg)

@@ -710,6 +710,8 @@ ui::IDialogs* g_dialogs_ptr = &g_dialogs;
 ui::ISession* g_session_ptr = &g_session;
 ui::IInput* g_input_ptr = &g_input;
 ui::IShellView* g_shell_ptr = &g_shell;
+ui::IDirView* g_dir_view_ptr = nullptr;
+ui::IFileView* g_file_view_ptr = nullptr;
 
 } // namespace
 
@@ -735,11 +737,23 @@ IShellView& shell()
   return *g_shell_ptr;
 }
 
+IDirView& dir_view()
+{
+  return *g_dir_view_ptr;
+}
+
+IFileView& file_view()
+{
+  return *g_file_view_ptr;
+}
+
 void set_backend(
   IDialogs* dialogs_backend,
   ISession* session_backend,
   IInput* input_backend,
-  IShellView* shell_backend
+  IShellView* shell_backend,
+  IDirView* dir_view_backend,
+  IFileView* file_view_backend
 )
 {
   if (dialogs_backend != nullptr)
@@ -757,6 +771,14 @@ void set_backend(
   if (shell_backend != nullptr)
   {
     g_shell_ptr = shell_backend;
+  }
+  if (dir_view_backend != nullptr)
+  {
+    g_dir_view_ptr = dir_view_backend;
+  }
+  if (file_view_backend != nullptr)
+  {
+    g_file_view_ptr = file_view_backend;
   }
 }
 

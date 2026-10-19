@@ -17,6 +17,12 @@ extern void DisplayDiskName();
 extern void DisplayFileParameter(FileEntry *file_entry);
 extern void DisplayGlobalFileParameter(FileEntry *file_entry);
 void RefreshWindow(WINDOW* win);
+namespace ui {
+class IDirView;
+class IFileView;
+}
+ui::IDirView& NcursesDirViewInstance();
+ui::IFileView& NcursesFileViewInstance();
 extern int  HandleDirWindow(DirEntry *start_dir_entry);
 extern void DisplayFileWindow(DirEntry *dir_entry);
 void Init(
