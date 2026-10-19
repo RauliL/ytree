@@ -181,26 +181,26 @@ static void RemoveAllFiles(DirEntry* dir_entry)
   }
 }
 
-
-void UnReadTree(DirEntry *dir_entry)
+void DirEntry::UnReadTree()
 {
-  if( dir_entry == statistic.tree.get() )
+  if (this == statistic.tree.get()
+  )
   {
     Message("Can't delete ROOT");
+    return;
   }
-  else
-  {
-    RemoveAllFiles(dir_entry);
-    UnReadSubTree(dir_entry);
-    statistic.disk_total_directories--;
-    GetAvailBytes(&statistic.disk_space);
-    DisplayDiskStatistic();
-    doupdate();
-  }
+
+  RemoveAllFiles(this);
+  UnReadSubTree(this);
+  --statistic.disk_total_directories;
+  GetAvailBytes(&statistic.disk_space);
+  DisplayDiskStatistic();
+  doupdate();
 }
 
-/* Loescht alle Unterverzeichnisse von parent */
-/*--------------------------------------------*/
+/**
+ * Loescht alle Unterverzeichnisse von parent.
+ */
 static void UnReadSubTree(DirEntry *parent)
 {
   auto children = std::move(parent->children);

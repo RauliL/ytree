@@ -616,93 +616,76 @@ static void HandlePlus(
   *need_dsp_help = true;
 }
 
-void HandleReadSubTree(DirEntry *dir_entry, DirEntry *start_dir_entry,
-           bool *need_dsp_help)
+static void HandleReadSubTree(
+  DirEntry* dir_entry,
+  DirEntry* start_dir_entry,
+  bool& need_dsp_help
+)
 {
-    ScanSubTree(dir_entry);
-    BuildDirEntryList(start_dir_entry);
-    DisplayTree(dir_window, statistic.disp_begin_pos,
-     statistic.disp_begin_pos + statistic.cursor_pos);
-    DisplayDiskStatistic();
-    DisplayAvailBytes();
-    *need_dsp_help = true;
+  ScanSubTree(dir_entry);
+  BuildDirEntryList(start_dir_entry);
+  DisplayTree(
+    dir_window,
+    statistic.disp_begin_pos,
+    statistic.disp_begin_pos + statistic.cursor_pos
+  );
+  DisplayDiskStatistic();
+  DisplayAvailBytes();
+  need_dsp_help = true;
 }
 
-void HandleUnreadSubTree(DirEntry *dir_entry, DirEntry *de_ptr,
-       DirEntry *start_dir_entry, bool *need_dsp_help)
+static void HandleUnreadSubTree(
+  DirEntry* dir_entry,
+  DirEntry* de_ptr,
+  DirEntry* start_dir_entry,
+  bool& need_dsp_help
+)
 {
-    if( dir_entry->not_scanned || dir_entry->children.empty() ) {
-  beep();
-    } else {
-  for( const auto& child : dir_entry->children ) {
-      UnReadTree(child.get());
+  if (dir_entry->not_scanned || dir_entry->children.empty())
+  {
+    beep();
+    return;
+  }
+
+  for (const auto& child : dir_entry->children)
+  {
+    child->UnReadTree();
   }
   dir_entry->not_scanned = true;
   BuildDirEntryList(start_dir_entry);
-        DisplayTree(dir_window, statistic.disp_begin_pos,
-        statistic.disp_begin_pos + statistic.cursor_pos);
-        DisplayAvailBytes();
-        *need_dsp_help = true;
-    }
-    return;
+  DisplayTree(
+    dir_window,
+    statistic.disp_begin_pos,
+    statistic.disp_begin_pos + statistic.cursor_pos
+  );
+  DisplayAvailBytes();
+  need_dsp_help = true;
 }
 
-void HandleTagDir(DirEntry *dir_entry, bool value)
+static void HandleTagDir(DirEntry* dir_entry, bool value)
 {
-    for(const auto& fe_sp : dir_entry->files)
-    {
-  FileEntry *fe_ptr = fe_sp.get();
-  if( (fe_ptr->matching) && (fe_ptr->tagged != value ))
+  for (const auto& fe_sp : dir_entry->files)
   {
+    const auto fe_ptr = fe_sp.get();
+
+    if (fe_ptr->matching && fe_ptr->tagged != value)
+    {
       fe_ptr->tagged = value;
       if (value)
       {
-    dir_entry->tagged_files++;
-    dir_entry->tagged_bytes += fe_ptr->meta.size;
-          statistic.disk_tagged_files++;
-    statistic.disk_tagged_bytes += fe_ptr->meta.size;
-      }else{
-    dir_entry->tagged_files--;
-    dir_entry->tagged_bytes -= fe_ptr->meta.size;
-          statistic.disk_tagged_files--;
-    statistic.disk_tagged_bytes -= fe_ptr->meta.size;
+        ++dir_entry->tagged_files;
+        dir_entry->tagged_bytes += fe_ptr->meta.size;
+        ++statistic.disk_tagged_files;
+        statistic.disk_tagged_bytes += fe_ptr->meta.size;
+      } else {
+        --dir_entry->tagged_files;
+        dir_entry->tagged_bytes -= fe_ptr->meta.size;
+        --statistic.disk_tagged_files;
+        statistic.disk_tagged_bytes -= fe_ptr->meta.size;
       }
-  }
     }
-    dir_entry->start_file = 0;
-    dir_entry->cursor_pos = -1;
-    DisplayFileWindow(dir_entry);
-    RefreshWindow(file_window);
-    DisplayDiskStatistic();
-    return;
-}
+  }
 
-void HandleTagAllDirs(DirEntry* dir_entry, bool value)
-{
-  for (std::size_t i = 0; i < dir_entry_list.size(); ++i)
-  {
-    for (const auto& fe_sp : dir_entry_list[i].dir_entry->files)
-    {
-        FileEntry *fe_ptr = fe_sp.get();
-        if (fe_ptr->matching && fe_ptr->tagged != value)
-        {
-          if (value)
-          {
-            fe_ptr->tagged = value;
-                  dir_entry->tagged_files++;
-            dir_entry->tagged_bytes += fe_ptr->meta.size;
-                  statistic.disk_tagged_files++;
-            statistic.disk_tagged_bytes += fe_ptr->meta.size;
-          } else {
-            fe_ptr->tagged = value;
-                  dir_entry->tagged_files--;
-            dir_entry->tagged_bytes -= fe_ptr->meta.size;
-                  statistic.disk_tagged_files--;
-            statistic.disk_tagged_bytes -= fe_ptr->meta.size;
-          }
-        }
-    }
-  }
   dir_entry->start_file = 0;
   dir_entry->cursor_pos = -1;
   DisplayFileWindow(dir_entry);
@@ -710,122 +693,181 @@ void HandleTagAllDirs(DirEntry* dir_entry, bool value)
   DisplayDiskStatistic();
 }
 
-void HandleShowAllTagged(DirEntry *dir_entry,DirEntry *start_dir_entry, bool *need_dsp_help, int *ch)
+static void HandleTagAllDirs(DirEntry* dir_entry, bool value)
 {
-    if( statistic.disk_tagged_files )
-    {
-  if(dir_entry->login_flag)
+  for (std::size_t i = 0; i < dir_entry_list.size(); ++i)
   {
+    for (const auto& fe_sp : dir_entry_list[i].dir_entry->files)
+    {
+      const auto fe_ptr = fe_sp.get();
+
+      if (fe_ptr->matching && fe_ptr->tagged != value)
+      {
+        if (value)
+        {
+          fe_ptr->tagged = value;
+          ++dir_entry->tagged_files;
+          dir_entry->tagged_bytes += fe_ptr->meta.size;
+          ++statistic.disk_tagged_files;
+          statistic.disk_tagged_bytes += fe_ptr->meta.size;
+        } else {
+          fe_ptr->tagged = value;
+          --dir_entry->tagged_files;
+          dir_entry->tagged_bytes -= fe_ptr->meta.size;
+          --statistic.disk_tagged_files;
+          statistic.disk_tagged_bytes -= fe_ptr->meta.size;
+        }
+      }
+    }
+  }
+
+  dir_entry->start_file = 0;
+  dir_entry->cursor_pos = -1;
+  DisplayFileWindow(dir_entry);
+  RefreshWindow(file_window);
+  DisplayDiskStatistic();
+}
+
+static void HandleShowAllTagged(
+  DirEntry* dir_entry,
+  DirEntry* start_dir_entry,
+  bool& need_dsp_help,
+  int& ch
+)
+{
+  if (statistic.disk_tagged_files)
+  {
+    if (dir_entry->login_flag)
+    {
       dir_entry->login_flag = false;
-  } else {
+    } else {
       dir_entry->big_window  = true;
-            dir_entry->global_flag = true;
+      dir_entry->global_flag = true;
       dir_entry->tagged_flag = true;
       dir_entry->start_file  = 0;
       dir_entry->cursor_pos  = 0;
-  }
-  if( HandleFileWindow(dir_entry) != LOGIN_ESC )
-  {
+    }
+    if (HandleFileWindow(dir_entry) != LOGIN_ESC)
+    {
       DisplayDiskStatistic();
       dir_entry->start_file = 0;
       dir_entry->cursor_pos = -1;
-            DisplayFileWindow(dir_entry);
-            RefreshWindow(small_file_window);
-            RefreshWindow(big_file_window);
+      DisplayFileWindow(dir_entry);
+      RefreshWindow(small_file_window);
+      RefreshWindow(big_file_window);
       BuildDirEntryList(start_dir_entry);
-            DisplayTree(dir_window, statistic.disp_begin_pos,
-      statistic.disp_begin_pos + statistic.cursor_pos);
-  }else{
+      DisplayTree(
+        dir_window,
+        statistic.disp_begin_pos,
+        statistic.disp_begin_pos + statistic.cursor_pos
+      );
+    } else {
       BuildDirEntryList(statistic.tree.get());
-            DisplayTree(dir_window, statistic.disp_begin_pos,
+      DisplayTree(dir_window, statistic.disp_begin_pos,
       statistic.disp_begin_pos + statistic.cursor_pos);
-      *ch = 'L';
-  }
-    }else{
-  dir_entry->login_flag = false;
-  beep();
+      ch = 'L';
     }
-    *need_dsp_help = true;
-    return;
+  } else {
+    dir_entry->login_flag = false;
+    beep();
+  }
+  need_dsp_help = true;
 }
 
-void HandleShowAll(DirEntry *dir_entry, DirEntry *start_dir_entry, bool *need_dsp_help, int *ch)
+static void HandleShowAll(
+  DirEntry* dir_entry,
+  DirEntry* start_dir_entry,
+  bool& need_dsp_help,
+  int& ch
+)
 {
-    if( statistic.disk_matching_files )
-    {
-  if(dir_entry->login_flag)
+  if (statistic.disk_matching_files)
   {
+    if (dir_entry->login_flag)
+    {
       dir_entry->login_flag = false;
-  } else {
+    } else {
       dir_entry->big_window  = true;
       dir_entry->global_flag = true;
       dir_entry->tagged_flag = false;
       dir_entry->start_file  = 0;
       dir_entry->cursor_pos  = 0;
-  }
-  if( HandleFileWindow(dir_entry) != LOGIN_ESC )
-  {
-      DisplayDiskStatistic();
-      dir_entry->start_file = 0;
-      dir_entry->cursor_pos = -1;
-            DisplayFileWindow(dir_entry);
-            RefreshWindow(small_file_window);
-            RefreshWindow(big_file_window);
-      BuildDirEntryList(start_dir_entry);
-            DisplayTree(dir_window, statistic.disp_begin_pos,
-      statistic.disp_begin_pos + statistic.cursor_pos);
-  } else {
-      BuildDirEntryList(statistic.tree.get());
-            DisplayTree(dir_window, statistic.disp_begin_pos,
-      statistic.disp_begin_pos + statistic.cursor_pos);
-      *ch = 'L';
-  }
-    } else {
-  dir_entry->login_flag = false;
-  beep();
     }
-    *need_dsp_help = true;
-    return;
-}
-
-void HandleSwitchWindow(DirEntry *dir_entry, DirEntry *start_dir_entry, bool *need_dsp_help, int *ch)
-{
-    if( dir_entry->matching_files )
+    if (HandleFileWindow(dir_entry) != LOGIN_ESC)
     {
-  if(dir_entry->login_flag)
-  {
-      dir_entry->login_flag = false;
-  } else {
-      dir_entry->global_flag = false;
-            dir_entry->tagged_flag = false;
-      dir_entry->big_window  = bypass_small_window;
-      dir_entry->start_file  = 0;
-      dir_entry->cursor_pos  = 0;
-  }
-  if( HandleFileWindow(dir_entry) != LOGIN_ESC )
-        {
+      DisplayDiskStatistic();
       dir_entry->start_file = 0;
       dir_entry->cursor_pos = -1;
       DisplayFileWindow(dir_entry);
-            RefreshWindow(small_file_window);
-            RefreshWindow(big_file_window);
+      RefreshWindow(small_file_window);
+      RefreshWindow(big_file_window);
       BuildDirEntryList(start_dir_entry);
-            DisplayTree(dir_window, statistic.disp_begin_pos,
-      statistic.disp_begin_pos + statistic.cursor_pos);
-      DisplayDiskStatistic();
-  } else {
-      BuildDirEntryList(statistic.tree.get());
-            DisplayTree(dir_window, statistic.disp_begin_pos,
-      statistic.disp_begin_pos + statistic.cursor_pos);
-      *ch = 'L';
-  }
-  DisplayAvailBytes();
-  *need_dsp_help = true;
+      DisplayTree(
+        dir_window,
+        statistic.disp_begin_pos,
+        statistic.disp_begin_pos + statistic.cursor_pos
+      );
     } else {
-  dir_entry->login_flag = false;
-  beep();
+      BuildDirEntryList(statistic.tree.get());
+      DisplayTree(
+        dir_window,
+        statistic.disp_begin_pos,
+        statistic.disp_begin_pos + statistic.cursor_pos
+      );
+      ch = 'L';
     }
-    return;
+  } else {
+    dir_entry->login_flag = false;
+    beep();
+  }
+  need_dsp_help = true;
+}
+
+static void HandleSwitchWindow(
+  DirEntry* dir_entry,
+  DirEntry* start_dir_entry,
+  bool& need_dsp_help,
+  int& ch
+)
+{
+  if (dir_entry->matching_files)
+  {
+    if (dir_entry->login_flag)
+    {
+      dir_entry->login_flag = false;
+    } else {
+      dir_entry->global_flag = false;
+      dir_entry->tagged_flag = false;
+      dir_entry->big_window  = bypass_small_window;
+      dir_entry->start_file  = 0;
+      dir_entry->cursor_pos  = 0;
+    }
+    if (HandleFileWindow(dir_entry) != LOGIN_ESC)
+    {
+      dir_entry->start_file = 0;
+      dir_entry->cursor_pos = -1;
+      DisplayFileWindow(dir_entry);
+      RefreshWindow(small_file_window);
+      RefreshWindow(big_file_window);
+      BuildDirEntryList(start_dir_entry);
+      DisplayTree(
+        dir_window,
+        statistic.disp_begin_pos,
+        statistic.disp_begin_pos + statistic.cursor_pos
+      );
+      DisplayDiskStatistic();
+    } else {
+      BuildDirEntryList(statistic.tree.get());
+      DisplayTree(dir_window, statistic.disp_begin_pos,
+      statistic.disp_begin_pos + statistic.cursor_pos);
+      ch = 'L';
+    }
+    DisplayAvailBytes();
+    need_dsp_help = true;
+  } else {
+    dir_entry->login_flag = false;
+    beep();
+  }
 }
 
 struct DirWindowContext
@@ -1188,7 +1230,11 @@ static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
 
     case '\t':
     case '*':
-      HandleReadSubTree(ctx.dir_entry, ctx.start_dir_entry, &ctx.need_dsp_help);
+      HandleReadSubTree(
+        ctx.dir_entry,
+        ctx.start_dir_entry,
+        ctx.need_dsp_help
+      );
       break;
 
     case KEY_LEFT:
@@ -1198,7 +1244,7 @@ static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
         ctx.dir_entry,
         ctx.de_ptr,
         ctx.start_dir_entry,
-        &ctx.need_dsp_help
+        ctx.need_dsp_help
       );
       break;
 
@@ -1233,17 +1279,32 @@ static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
       break;
 
     case 'S' & 0x1f:
-      HandleShowAllTagged(ctx.dir_entry, ctx.start_dir_entry, &ctx.need_dsp_help, &ch);
+      HandleShowAllTagged(
+        ctx.dir_entry,
+        ctx.start_dir_entry,
+        ctx.need_dsp_help,
+        ch
+      );
       break;
 
     case 'S':
     case 's':
-      HandleShowAll(ctx.dir_entry, ctx.start_dir_entry, &ctx.need_dsp_help, &ch);
+      HandleShowAll(
+        ctx.dir_entry,
+        ctx.start_dir_entry,
+        ctx.need_dsp_help,
+        ch
+      );
       break;
 
     case LF:
     case CR:
-      HandleSwitchWindow(ctx.dir_entry, ctx.start_dir_entry, &ctx.need_dsp_help, &ch);
+      HandleSwitchWindow(
+        ctx.dir_entry,
+        ctx.start_dir_entry,
+        ctx.need_dsp_help,
+        ch
+      );
       break;
 
     case 'X':

@@ -469,6 +469,8 @@ struct DirEntry : Entry
   std::filesystem::path GetPath() const override;
 
   bool Delete() override;
+
+  void UnReadTree();
 };
 
 struct Statistic
@@ -535,7 +537,6 @@ extern void DisplayFileParameter(FileEntry *file_entry);
 extern void DisplayGlobalFileParameter(FileEntry *file_entry);
 void RefreshWindow(WINDOW* win);
 int ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path, int depth);
-extern void UnReadTree(DirEntry *dir_entry);
 bool GetDiskParameter(
   const std::string& path,
   std::string* volume_name,
