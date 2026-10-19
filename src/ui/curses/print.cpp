@@ -1,4 +1,4 @@
-#include "ytree.hpp"
+#include "ui/curses/curses_ui.hpp"
 
 void MvAddStr(int y, int x, const std::string& str)
 {
@@ -313,7 +313,7 @@ void GetMaxYX(WINDOW *win, int *height, int *width)
   }
   else
   {
-    Error("Unknown Window-ID*ABORT");
+    YTreeError("Unknown Window-ID*ABORT");
     std::exit(EXIT_FAILURE);
   }
 }

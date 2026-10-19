@@ -72,7 +72,7 @@
 
 inline constexpr const char* DEFAULT_TREE = ".";
 
-#define Error(msg) ErrorEx(msg, __FILE__, __LINE__)
+#define YTreeError(msg) ErrorEx(msg, __FILE__, __LINE__)
 #define FormatError(...) ErrorEx(std::format(__VA_ARGS__), __FILE__, __LINE__)
 #define FormatWarning(...) Warning(std::format(__VA_ARGS__))
 #define FormatMessage(...) Message(std::format(__VA_ARGS__))

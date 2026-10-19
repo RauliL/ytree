@@ -1,6 +1,6 @@
 #include "core/ui.hpp"
 #include "ui/mouse.hpp"
-#include "ytree.hpp"
+#include "ui/curses/curses_ui.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -700,97 +700,41 @@ public:
   {
     ::DisplayDiskName();
   }
+
+  void relayout() override
+  {
+    ::ReCreateWindows();
+  }
+
+  void present() override
+  {
+    doupdate();
+  }
 };
 
 NcursesDialogs g_dialogs;
 NcursesSession g_session;
 NcursesInput g_input;
 NcursesShellView g_shell;
-ui::IDialogs* g_dialogs_ptr = &g_dialogs;
-ui::ISession* g_session_ptr = &g_session;
-ui::IInput* g_input_ptr = &g_input;
-ui::IShellView* g_shell_ptr = &g_shell;
-ui::IDirView* g_dir_view_ptr = nullptr;
-ui::IFileView* g_file_view_ptr = nullptr;
-ui::IViewerSurface* g_viewer_surface_ptr = nullptr;
 
 } // namespace
 
-namespace ui {
-
-IDialogs& dialogs()
+ui::IDialogs& NcursesDialogsInstance()
 {
-  return *g_dialogs_ptr;
+  return g_dialogs;
 }
 
-ISession& session()
+ui::ISession& NcursesSessionInstance()
 {
-  return *g_session_ptr;
+  return g_session;
 }
 
-IInput& input()
+ui::IInput& NcursesInputInstance()
 {
-  return *g_input_ptr;
+  return g_input;
 }
 
-IShellView& shell()
+ui::IShellView& NcursesShellViewInstance()
 {
-  return *g_shell_ptr;
+  return g_shell;
 }
-
-IDirView& dir_view()
-{
-  return *g_dir_view_ptr;
-}
-
-IFileView& file_view()
-{
-  return *g_file_view_ptr;
-}
-
-IViewerSurface& viewer_surface()
-{
-  return *g_viewer_surface_ptr;
-}
-
-void set_backend(
-  IDialogs* dialogs_backend,
-  ISession* session_backend,
-  IInput* input_backend,
-  IShellView* shell_backend,
-  IDirView* dir_view_backend,
-  IFileView* file_view_backend,
-  IViewerSurface* viewer_backend
-)
-{
-  if (dialogs_backend != nullptr)
-  {
-    g_dialogs_ptr = dialogs_backend;
-  }
-  if (session_backend != nullptr)
-  {
-    g_session_ptr = session_backend;
-  }
-  if (input_backend != nullptr)
-  {
-    g_input_ptr = input_backend;
-  }
-  if (shell_backend != nullptr)
-  {
-    g_shell_ptr = shell_backend;
-  }
-  if (dir_view_backend != nullptr)
-  {
-    g_dir_view_ptr = dir_view_backend;
-  }
-  if (file_view_backend != nullptr)
-  {
-    g_file_view_ptr = file_view_backend;
-  }
-  if (viewer_backend != nullptr)
-  {
-    g_viewer_surface_ptr = viewer_backend;
-  }
-}
-
-} // namespace ui

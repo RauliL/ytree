@@ -1,6 +1,6 @@
 #include "core/ui.hpp"
 #include "ui/mouse.hpp"
-#include "ytree.hpp"
+#include "ui/curses/curses_ui.hpp"
 
 static WINDOW *Subwin(WINDOW *orig, int nlines, int ncols,
                       int begin_y, int begin_x);
@@ -13,10 +13,10 @@ void Init(
 )
 {
   ui::set_backend(
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
+    &NcursesDialogsInstance(),
+    &NcursesSessionInstance(),
+    &NcursesInputInstance(),
+    &NcursesShellViewInstance(),
     &NcursesDirViewInstance(),
     &NcursesFileViewInstance(),
     &NcursesViewerSurfaceInstance()

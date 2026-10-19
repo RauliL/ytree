@@ -2,7 +2,7 @@
 
 #include "ui/mouse.hpp"
 #include "core/tilde.hpp"
-#include "ytree.hpp"
+#include "ui/curses/curses_ui.hpp"
 
 static std::vector<std::string> Mtchs;
 static int total_matches  = 0;

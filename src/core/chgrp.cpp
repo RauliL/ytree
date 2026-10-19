@@ -50,7 +50,7 @@ bool Entry::SetGroup(int new_group_id)
     {
       meta = *new_meta;
     } else {
-      Error("stat() failed");
+      YTreeError("stat() failed");
     }
 
     return true;

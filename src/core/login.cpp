@@ -186,7 +186,7 @@ bool LoginDisk(const std::string& path)
 
     if (pipe(p))
     {
-      Error("pipe() failed");
+      YTreeError("pipe() failed");
 
       return false;
     }
@@ -478,7 +478,7 @@ bool LoginDisk(const std::string& path)
 
     if (pid == -1)
     {
-      Error("fork() failed");
+      YTreeError("fork() failed");
       close(p[0]);
       close(p[1]);
 
@@ -508,7 +508,7 @@ bool LoginDisk(const std::string& path)
 
       if (!(f = fdopen(p[0], "r")))
       {
-        Error("fdopen() failed");
+        YTreeError("fdopen() failed");
 
         return false;
       }
@@ -522,7 +522,7 @@ bool LoginDisk(const std::string& path)
       }
       if (!callback(statistic.tree, f))
       {
-        Error("Reading tree from archive failed");
+        YTreeError("Reading tree from archive failed");
         std::fclose(f);
         wait(&status);
 
@@ -558,7 +558,7 @@ bool LoginDisk(const std::string& path)
     depth = GetDoubleProfileValue("TREEDEPTH");
     if (!ReadTree(statistic.tree, path, depth))
     {
-      Error("ReadTree() failed");
+      YTreeError("ReadTree() failed");
 
       return false;
     }
