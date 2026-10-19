@@ -614,6 +614,7 @@ int MoveFile(
   FileEntry** new_fe_ptr
 );
 int InputChoise(const std::string& msg, const char *term);
+bool Confirm(const std::string& message);
 void Message(const std::string& msg);
 int GetDirEntry(
   const std::shared_ptr<DirEntry>& tree,

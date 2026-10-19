@@ -23,7 +23,7 @@ bool DirEntry::Delete()
   }
   else if (!files.empty() || !children.empty())
   {
-    if (InputChoise("Directory not empty, PRUNE ? (Y/N) ? ", "YN\033") == 'Y')
+    if (Confirm("Directory not empty, PRUNE?"))
     {
       if (!children.empty())
       {
@@ -41,7 +41,7 @@ bool DirEntry::Delete()
       return true;
     }
   }
-  else if (InputChoise("Delete this directory (Y/N) ? ", "YN\033") == 'Y')
+  else if (Confirm("Delete this directory?"))
   {
     const auto path = GetPath();
     std::error_code ec;

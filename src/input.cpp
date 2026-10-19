@@ -737,9 +737,10 @@ int InputChoise(const std::string& msg, const char *term)
   return( c );
 }
 
-
-
-
+bool Confirm(const std::string& message)
+{
+  return InputChoise(message + " (Y/N)", "YN\033") == 'Y';
+}
 
 std::optional<std::string> GetTapeDeviceName()
 {

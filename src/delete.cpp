@@ -10,24 +10,19 @@ bool FileEntry::Delete()
 
   if (meta.IsLink() && !IsWriteable(path))
   {
-    int term;
-
     if (!std::filesystem::exists(path))
     {
       // Datei existiert nicht ==> fertig
       goto UNLINK_DONE;
     }
 
-    term = InputChoise(
+    if (!Confirm(
       std::format(
-        "overriding mode {:04o} for \"{}\" (Y/N) ? ",
+        "Overriding mode {:04o} for \"{}\"?",
         meta.Mode() & 0777,
         name
-      ),
-      "YN\033"
-    );
-
-    if (term != 'Y')
+      )
+    ))
     {
       FormatMessage(
         "Can't delete file*\"{}\"*{}",
