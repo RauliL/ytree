@@ -1025,6 +1025,20 @@ static void InitializeFileWindow(FileWindowContext& ctx)
 
   BuildFileEntryList(ctx.dir_entry);
 
+  if (ctx.dir_entry->cursor_pos < 0)
+  {
+    ctx.dir_entry->cursor_pos = 0;
+  }
+  if (
+    !file_entry_list.empty() &&
+    ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos >=
+      static_cast<int>(file_entry_list.size())
+  )
+  {
+    ctx.dir_entry->start_file = 0;
+    ctx.dir_entry->cursor_pos = 0;
+  }
+
   if (
     ctx.dir_entry->global_flag ||
     ctx.dir_entry->big_window ||

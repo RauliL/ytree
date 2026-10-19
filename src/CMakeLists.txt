@@ -145,6 +145,7 @@ set(
   ui/visual.cpp
   ui/compat.cpp
   ui/help.cpp
+  ui/format.cpp
 )
 
 set(

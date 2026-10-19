@@ -38,6 +38,7 @@ public:
 
     std::vector<Glib::ustring> rows;
     const auto& list = DirListRows();
+    rows.reserve(list.size());
     for (std::size_t i = 0; i < list.size(); ++i)
     {
       const auto& row = list[i];
@@ -49,21 +50,8 @@ public:
       }
       rows.emplace_back(indent + name);
     }
-    win->dirModel()->splice(0, win->dirModel()->get_n_items(), rows);
-
-    if (auto selection = std::dynamic_pointer_cast<Gtk::SingleSelection>(
-          win->dirList().get_model()
-        ))
-    {
-      if (!rows.empty())
-      {
-        const auto idx = static_cast<guint>(
-          std::clamp(hilight_no, 0, static_cast<int>(rows.size()) - 1)
-        );
-        selection->set_selected(idx);
-        (void)start_entry_no;
-      }
-    }
+    (void)start_entry_no;
+    win->setDirRows(rows, hilight_no);
   }
 
   void showTreeAtCursor() override
@@ -79,14 +67,17 @@ public:
     if (auto* win = GtkMainWindow())
     {
       win->setPath(info.path_line);
-      win->setStatus(
-        info.name_label + "  files=" + std::to_string(info.total_files) +
-        "  tagged=" + std::to_string(info.tagged_files)
-      );
+      win->setCurrentDirectory(info.name_label, info.total_bytes);
     }
   }
 
-  void showDiskStatistic() override {}
+  void showDiskStatistic() override
+  {
+    if (auto* win = GtkMainWindow())
+    {
+      win->showDiskStatistics();
+    }
+  }
 
   void showFileSide() override
   {

@@ -1,10 +1,15 @@
 #include <gtkmm.h>
 
+#include "core/domain.hpp"
+#include "ui/format.hpp"
 #include "ui/gtk/main_window.hpp"
 
 #ifdef Error
 # undef Error
 #endif
+
+#include <algorithm>
+#include <format>
 
 namespace {
 
@@ -19,7 +24,6 @@ ui::InputEvent KeyvalToEvent(guint keyval, Gdk::ModifierType state)
 {
   using ui::Key;
 
-  // Ctrl+Letter → curses-style control codes ('A'&0x1f … 'Z'&0x1f).
   if (HasControl(state))
   {
     const guint upper = gdk_keyval_to_upper(keyval);
@@ -89,6 +93,21 @@ ui::InputEvent KeyvalToEvent(guint keyval, Gdk::ModifierType state)
   return ui::InputEvent{};
 }
 
+void StyleMono(Gtk::Label& label)
+{
+  label.set_xalign(0.0f);
+  label.add_css_class("monospace");
+}
+
+Gtk::Label& MakeHeading(Gtk::Box& parent, const Glib::ustring& text)
+{
+  auto* label = Gtk::make_managed<Gtk::Label>(text);
+  label->set_xalign(0.0f);
+  label->add_css_class("heading");
+  parent.append(*label);
+  return *label;
+}
+
 } // namespace
 
 YTreeMainWindow* GtkMainWindow()
@@ -101,78 +120,101 @@ void SetGtkMainWindow(YTreeMainWindow* window)
   g_main_window = window;
 }
 
+void YTreeMainWindow::bindListView(Gtk::ListView& view)
+{
+  auto factory = Gtk::SignalListItemFactory::create();
+  factory->signal_setup().connect([](const Glib::RefPtr<Gtk::ListItem>& item) {
+    auto* label = Gtk::make_managed<Gtk::Label>();
+    label->set_xalign(0.0f);
+    label->set_ellipsize(Pango::EllipsizeMode::END);
+    item->set_child(*label);
+  });
+  factory->signal_bind().connect([](const Glib::RefPtr<Gtk::ListItem>& item) {
+    auto* label = dynamic_cast<Gtk::Label*>(item->get_child());
+    auto obj = item->get_item();
+    auto* row = dynamic_cast<Gtk::StringObject*>(obj ? obj.get() : nullptr);
+    if (label && row)
+    {
+      label->set_text(row->get_string());
+    }
+  });
+  view.set_factory(factory);
+}
+
+void YTreeMainWindow::applyRows(
+  Gtk::ListView& view,
+  Glib::RefPtr<Gtk::StringList>& model,
+  const std::vector<Glib::ustring>& rows,
+  int hilight
+)
+{
+  model = Gtk::StringList::create(rows);
+  auto selection = Gtk::SingleSelection::create(model);
+  if (!rows.empty())
+  {
+    selection->set_selected(static_cast<guint>(
+      std::clamp(hilight, 0, static_cast<int>(rows.size()) - 1)
+    ));
+  }
+  view.set_model(selection);
+}
+
 YTreeMainWindow::YTreeMainWindow()
 {
   set_title("ytree");
-  set_default_size(960, 640);
+  set_default_size(1024, 700);
 
   dir_model_ = Gtk::StringList::create({});
   file_model_ = Gtk::StringList::create({});
-
-  auto dir_factory = Gtk::SignalListItemFactory::create();
-  dir_factory->signal_setup().connect([](const Glib::RefPtr<Gtk::ListItem>& item) {
-    item->set_child(*Gtk::make_managed<Gtk::Label>());
-  });
-  dir_factory->signal_bind().connect([](const Glib::RefPtr<Gtk::ListItem>& item) {
-    auto* label = dynamic_cast<Gtk::Label*>(item->get_child());
-    auto row = std::dynamic_pointer_cast<Gtk::StringObject>(item->get_item());
-    if (label && row)
-    {
-      label->set_text(row->get_string());
-      label->set_xalign(0.0f);
-    }
-  });
-
-  auto file_factory = Gtk::SignalListItemFactory::create();
-  file_factory->signal_setup().connect([](const Glib::RefPtr<Gtk::ListItem>& item) {
-    item->set_child(*Gtk::make_managed<Gtk::Label>());
-  });
-  file_factory->signal_bind().connect([](const Glib::RefPtr<Gtk::ListItem>& item) {
-    auto* label = dynamic_cast<Gtk::Label*>(item->get_child());
-    auto row = std::dynamic_pointer_cast<Gtk::StringObject>(item->get_item());
-    if (label && row)
-    {
-      label->set_text(row->get_string());
-      label->set_xalign(0.0f);
-    }
-  });
-
-  auto dir_selection = Gtk::SingleSelection::create(dir_model_);
-  auto file_selection = Gtk::SingleSelection::create(file_model_);
-  dir_list_.set_model(dir_selection);
-  file_list_.set_model(file_selection);
-  dir_list_.set_factory(dir_factory);
-  file_list_.set_factory(file_factory);
+  bindListView(dir_list_);
+  bindListView(file_list_);
+  dir_list_.set_model(Gtk::SingleSelection::create(dir_model_));
+  file_list_.set_model(Gtk::SingleSelection::create(file_model_));
 
   dir_scroll_.set_child(dir_list_);
   file_scroll_.set_child(file_list_);
   dir_scroll_.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
   file_scroll_.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
+  dir_scroll_.set_vexpand(true);
+  file_scroll_.set_vexpand(true);
+  dir_scroll_.set_hexpand(true);
+  file_scroll_.set_hexpand(true);
+  dir_scroll_.set_size_request(-1, 120);
+  file_scroll_.set_size_request(-1, 120);
 
-  paned_.set_start_child(dir_scroll_);
-  paned_.set_end_child(file_scroll_);
-  paned_.set_position(420);
-  paned_.set_vexpand(true);
+  lists_.set_spacing(6);
+  lists_.set_homogeneous(true);
+  lists_.set_hexpand(true);
+  lists_.set_vexpand(true);
+  lists_.append(dir_scroll_);
+  lists_.append(file_scroll_);
 
-  title_.add_css_class("title-1");
+  buildSidebar();
+  sidebar_frame_.set_child(sidebar_);
+  sidebar_frame_.set_label("Stats");
+  sidebar_frame_.set_margin_start(8);
+  sidebar_frame_.set_size_request(240, -1);
+
+  body_.set_spacing(0);
+  body_.set_vexpand(true);
+  body_.append(lists_);
+  body_.append(sidebar_frame_);
+
+  path_.set_xalign(0.0f);
+  path_.add_css_class("monospace");
   help_line0_.set_xalign(0.0f);
   help_line1_.set_xalign(0.0f);
-  help_line0_.set_selectable(false);
-  help_line1_.set_selectable(false);
   help_line0_.add_css_class("monospace");
   help_line1_.add_css_class("monospace");
-  help_box_.set_spacing(0);
   help_box_.append(help_line0_);
   help_box_.append(help_line1_);
   status_.set_wrap(true);
+  status_.set_xalign(0.0f);
 
   root_.set_margin(8);
   root_.set_spacing(6);
-  root_.append(title_);
   root_.append(path_);
-  root_.append(disk_);
-  root_.append(filespec_);
-  root_.append(paned_);
+  root_.append(body_);
   root_.append(help_box_);
   root_.append(status_);
   set_child(root_);
@@ -186,6 +228,74 @@ YTreeMainWindow::YTreeMainWindow()
 
   setStatus("Ready");
   setHelp(DirHelpLines());
+  showDiskStatistics();
+}
+
+void YTreeMainWindow::buildSidebar()
+{
+  sidebar_.set_spacing(2);
+  sidebar_.set_margin(8);
+
+  MakeHeading(sidebar_, "FILE");
+  StyleMono(file_spec_value_);
+  file_spec_value_.set_text("[]");
+  sidebar_.append(file_spec_value_);
+
+  MakeHeading(sidebar_, "DISK");
+  StyleMono(disk_name_value_);
+  disk_name_value_.set_text("[]");
+  sidebar_.append(disk_name_value_);
+
+  auto* avail_row = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
+  auto* avail_caption = Gtk::make_managed<Gtk::Label>("Avail");
+  avail_caption->set_xalign(0.0f);
+  StyleMono(avail_value_);
+  avail_value_.set_text(FormatStatNumber(0));
+  avail_row->append(*avail_caption);
+  avail_row->append(avail_value_);
+  sidebar_.append(*avail_row);
+
+  stats_heading_.set_text("DISK Statistics");
+  stats_heading_.set_xalign(0.0f);
+  stats_heading_.add_css_class("heading");
+  sidebar_.append(stats_heading_);
+  MakeHeading(sidebar_, "Total");
+  addSidebarRow("Files", total_files_value_);
+  addSidebarRow("Bytes", total_bytes_value_);
+  MakeHeading(sidebar_, "Matching");
+  addSidebarRow("Files", matching_files_value_);
+  addSidebarRow("Bytes", matching_bytes_value_);
+  MakeHeading(sidebar_, "Tagged");
+  addSidebarRow("Files", tagged_files_value_);
+  addSidebarRow("Bytes", tagged_bytes_value_);
+
+  current_heading_.set_text("Current Directory");
+  current_heading_.set_xalign(0.0f);
+  current_heading_.add_css_class("heading");
+  sidebar_.append(current_heading_);
+  StyleMono(current_name_value_);
+  current_name_value_.set_text("[]");
+  sidebar_.append(current_name_value_);
+  addSidebarRow("Bytes", current_bytes_value_);
+}
+
+void YTreeMainWindow::addSidebarRow(const Glib::ustring& caption, Gtk::Label& value)
+{
+  auto* row = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
+  auto* cap = Gtk::make_managed<Gtk::Label>(caption);
+  cap->set_xalign(0.0f);
+  cap->set_size_request(56, -1);
+  StyleMono(value);
+  value.set_text(FormatStatNumber(0));
+  value.set_hexpand(true);
+  row->append(*cap);
+  row->append(value);
+  sidebar_.append(*row);
+}
+
+void YTreeMainWindow::setStatValue(Gtk::Label& label, std::int64_t value)
+{
+  label.set_text(FormatStatNumber(value));
 }
 
 bool YTreeMainWindow::on_key_pressed(
@@ -252,15 +362,81 @@ void YTreeMainWindow::clearHelp()
 
 void YTreeMainWindow::setPath(const Glib::ustring& text)
 {
-  path_.set_text(text);
+  path_.set_text(std::format("Path: {}", std::string(text)));
 }
 
-void YTreeMainWindow::setFileSpec(const Glib::ustring& text)
+void YTreeMainWindow::setFileSpec(const std::string& spec)
 {
-  filespec_.set_text(text);
+  file_spec_value_.set_text(std::format("[{:<17}]", spec));
 }
 
-void YTreeMainWindow::setDiskName(const Glib::ustring& text)
+void YTreeMainWindow::setDiskName(const std::string& name)
 {
-  disk_.set_text(text);
+  disk_name_value_.set_text(std::format("[{:<17}]", name));
+}
+
+void YTreeMainWindow::setAvailKb(std::int64_t avail_kb)
+{
+  setStatValue(avail_value_, avail_kb);
+}
+
+void YTreeMainWindow::showDiskStatistics()
+{
+  stats_heading_.set_text("DISK Statistics");
+  current_heading_.set_text("Current Directory");
+  setFileSpec(statistic.file_spec);
+  setDiskName(statistic.disk_name);
+  setAvailKb(statistic.disk_space / 1024);
+  setStatValue(total_files_value_, statistic.disk_total_files);
+  setStatValue(total_bytes_value_, statistic.disk_total_bytes);
+  setStatValue(matching_files_value_, statistic.disk_matching_files);
+  setStatValue(matching_bytes_value_, statistic.disk_matching_bytes);
+  setStatValue(tagged_files_value_, statistic.disk_tagged_files);
+  setStatValue(tagged_bytes_value_, statistic.disk_tagged_bytes);
+}
+
+void YTreeMainWindow::showDirStatistics(const ui::DirPanelInfo& info)
+{
+  stats_heading_.set_text("DIR Statistics");
+  current_heading_.set_text("Current File");
+  setPath(info.path_line);
+  setStatValue(total_files_value_, info.total_files);
+  setStatValue(total_bytes_value_, info.total_bytes);
+  setStatValue(matching_files_value_, info.matching_files);
+  setStatValue(matching_bytes_value_, info.matching_bytes);
+  setStatValue(tagged_files_value_, info.tagged_files);
+  setStatValue(tagged_bytes_value_, info.tagged_bytes);
+}
+
+void YTreeMainWindow::setTagged(const ui::TaggedCounts& counts)
+{
+  setStatValue(tagged_files_value_, counts.files);
+  setStatValue(tagged_bytes_value_, counts.bytes);
+}
+
+void YTreeMainWindow::setCurrentDirectory(
+  const std::string& name,
+  std::int64_t bytes
+)
+{
+  current_heading_.set_text("Current Directory");
+  current_name_value_.set_text(std::format("[{:<20}]", name));
+  setStatValue(current_bytes_value_, bytes);
+}
+
+void YTreeMainWindow::setCurrentFile(const std::string& name, std::int64_t size)
+{
+  current_heading_.set_text("Current File");
+  current_name_value_.set_text(std::format("[{:<20}]", name));
+  setStatValue(current_bytes_value_, size);
+}
+
+void YTreeMainWindow::setDirRows(const std::vector<Glib::ustring>& rows, int hilight)
+{
+  applyRows(dir_list_, dir_model_, rows, hilight);
+}
+
+void YTreeMainWindow::setFileRows(const std::vector<Glib::ustring>& rows, int hilight)
+{
+  applyRows(file_list_, file_model_, rows, hilight);
 }

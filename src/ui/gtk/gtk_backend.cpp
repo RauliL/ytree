@@ -342,17 +342,24 @@ public:
   {
     if (auto* win = GtkMainWindow())
     {
-      win->setStatus("ytree GTK");
+      win->showDiskStatistics();
+      win->setPath(statistic.path.empty() ? statistic.login_path : statistic.path);
     }
   }
 
-  void displayAvailBytes() override {}
+  void displayAvailBytes() override
+  {
+    if (auto* win = GtkMainWindow())
+    {
+      win->setAvailKb(statistic.disk_space / 1024);
+    }
+  }
 
   void displayFileSpec() override
   {
     if (auto* win = GtkMainWindow())
     {
-      win->setFileSpec("Filespec: " + statistic.file_spec);
+      win->setFileSpec(statistic.file_spec);
     }
   }
 
@@ -360,7 +367,7 @@ public:
   {
     if (auto* win = GtkMainWindow())
     {
-      win->setDiskName(disk_statistic.disk_name);
+      win->setDiskName(statistic.disk_name);
     }
   }
 

@@ -24,23 +24,12 @@ void PopulateFileModel(int hilight)
   }
 
   std::vector<Glib::ustring> rows;
+  rows.reserve(FileListEntries().size());
   for (const auto& fe : FileListEntries())
   {
     rows.emplace_back(fe->name);
   }
-  win->fileModel()->splice(0, win->fileModel()->get_n_items(), rows);
-
-  if (auto selection = std::dynamic_pointer_cast<Gtk::SingleSelection>(
-        win->fileList().get_model()
-      ))
-  {
-    if (!rows.empty())
-    {
-      selection->set_selected(static_cast<guint>(
-        std::clamp(hilight, 0, static_cast<int>(rows.size()) - 1)
-      ));
-    }
-  }
+  win->setFileRows(rows, hilight);
 }
 
 class GtkFileView final : public ui::IFileView
@@ -52,8 +41,16 @@ public:
     width = 80;
     if (auto* win = GtkMainWindow())
     {
-      height = std::max(8, win->fileList().get_height() / 22);
-      width = std::max(40, win->fileList().get_width() / 8);
+      const int widget_height = win->fileList().get_height();
+      const int widget_width = win->fileList().get_width();
+      if (widget_height > 0)
+      {
+        height = std::max(8, widget_height / 22);
+      }
+      if (widget_width > 0)
+      {
+        width = std::max(40, widget_width / 8);
+      }
     }
   }
 
@@ -69,21 +66,23 @@ public:
     bool access_denied
   ) override
   {
+    auto* win = GtkMainWindow();
+    if (!win)
+    {
+      return;
+    }
+
     if (FileListEntries().empty())
     {
-      auto* win = GtkMainWindow();
-      if (!win)
-      {
-        return;
-      }
-      win->fileModel()->splice(
-        0,
-        win->fileModel()->get_n_items(),
-        {access_denied ? "Permission Denied!" : "No Files!"}
+      win->setFileRows(
+        {access_denied ? "Permission Denied!" : "No Files!"},
+        0
       );
       return;
     }
-    PopulateFileModel(hilight);
+
+    const int safe_hilight = hilight < 0 ? 0 : hilight;
+    PopulateFileModel(safe_hilight);
   }
 
   void showFilesAtCursor(
@@ -93,16 +92,15 @@ public:
     bool access_denied
   ) override
   {
-    showFiles(start_file, start_file + cursor_pos, start_x, access_denied);
+    const int pos = cursor_pos < 0 ? 0 : cursor_pos;
+    showFiles(start_file, start_file + pos, start_x, access_denied);
   }
 
   void showFileParameter(const ui::FilePanelInfo& info) override
   {
     if (auto* win = GtkMainWindow())
     {
-      win->setStatus(
-        info.name_label + "  size=" + std::to_string(info.size)
-      );
+      win->setCurrentFile(info.name_label, info.size);
     }
   }
 
@@ -110,29 +108,45 @@ public:
   {
     if (auto* win = GtkMainWindow())
     {
-      win->setStatus(info.path_line + " / " + info.name_label);
+      win->setPath(info.path_line);
+      win->setCurrentFile(info.name_label, info.size);
     }
   }
 
   void showDirStatistic(const ui::DirPanelInfo& info) override
   {
-    showFileParameter(ui::FilePanelInfo{info.path_line, info.name_label, info.total_bytes});
+    if (auto* win = GtkMainWindow())
+    {
+      win->showDirStatistics(info);
+    }
   }
 
-  void showDiskStatistic() override {}
+  void showDiskStatistic() override
+  {
+    if (auto* win = GtkMainWindow())
+    {
+      win->showDiskStatistics();
+    }
+  }
 
   void showDirTagged(const ui::TaggedCounts& counts) override
   {
     if (auto* win = GtkMainWindow())
     {
-      win->setStatus(
-        "Tagged " + std::to_string(counts.files) + " files / " +
-        std::to_string(counts.bytes) + " bytes"
-      );
+      win->setTagged(counts);
     }
   }
 
-  void showDiskTagged() override {}
+  void showDiskTagged() override
+  {
+    if (auto* win = GtkMainWindow())
+    {
+      win->setTagged(ui::TaggedCounts{
+        statistic.disk_tagged_files,
+        statistic.disk_tagged_bytes
+      });
+    }
+  }
 
   void printEntry(
     int entry_no,
