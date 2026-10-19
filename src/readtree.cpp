@@ -193,7 +193,7 @@ void DirEntry::UnReadTree()
   RemoveAllFiles(this);
   UnReadSubTree(this);
   --statistic.disk_total_directories;
-  GetAvailBytes(&statistic.disk_space);
+  GetAvailBytes(statistic.disk_space);
   DisplayDiskStatistic();
   doupdate();
 }

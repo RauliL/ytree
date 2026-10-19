@@ -198,7 +198,7 @@ bool CopyFile(
       dest_dir_entry->files.insert(dest_dir_entry->files.begin(), fen_ptr);
     }
 
-    GetAvailBytes(&statistic_ptr->disk_space);
+    GetAvailBytes(statistic_ptr->disk_space);
 
     result = true;
   }

@@ -45,7 +45,7 @@ bool FileEntry::Delete()
 UNLINK_DONE:
   // File austragen
   result = Remove();
-  GetAvailBytes(&statistic.disk_space);
+  GetAvailBytes(statistic.disk_space);
 
   return result;
 }

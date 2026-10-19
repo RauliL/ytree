@@ -125,7 +125,7 @@ bool MoveFile(
       *new_fe_ptr          = fen_ptr.get();
     }
 
-    GetAvailBytes(&statistic.disk_space);
+    GetAvailBytes(statistic.disk_space);
 
     result = true;
   }

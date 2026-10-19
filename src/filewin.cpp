@@ -2783,7 +2783,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
               Warning("pclose() failed");
             }
 
-            GetAvailBytes(&statistic.disk_space);
+            GetAvailBytes(statistic.disk_space);
             DisplayAvailBytes();
 
             DisplayFiles(

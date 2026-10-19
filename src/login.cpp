@@ -158,7 +158,7 @@ bool LoginDisk(const std::string& path)
   GetDiskParameter(
     path,
     &statistic.disk_name,
-    &statistic.disk_space,
+    statistic.disk_space,
     &statistic.disk_capacity
   );
 

@@ -65,7 +65,7 @@ bool DirEntry::Delete()
       // Directory geloescht => aus Baum loeschen
       --statistic.disk_total_directories;
       UnlinkDirEntry(this);
-      GetAvailBytes(&statistic.disk_space);
+      GetAvailBytes(statistic.disk_space);
 
       return true;
     }

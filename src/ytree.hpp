@@ -540,7 +540,7 @@ bool ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& pat
 bool GetDiskParameter(
   const std::string& path,
   std::string* volume_name,
-  std::int64_t* avail_bytes,
+  std::int64_t& avail_bytes,
   std::int64_t* capacity
 );
 extern int  HandleDirWindow(DirEntry *start_dir_entry);
@@ -641,7 +641,7 @@ std::optional<std::string> GetNewGroup(int st_gid);
 extern void DisplayDirHelp();
 extern void DisplayFileHelp();
 extern void ClearHelp();
-bool GetAvailBytes(std::int64_t* avail_bytes);
+void GetAvailBytes(std::int64_t& avail_bytes);
 std::optional<std::string> GetCommandLine(const std::string& initial = {});
 std::optional<std::string> GetSearchCommandLine();
 extern bool RenameDirectory(DirEntry *de_ptr, const std::string& new_name);
