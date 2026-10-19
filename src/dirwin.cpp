@@ -602,7 +602,7 @@ static void HandlePlus(
 
     std::snprintf(new_login_path, PATH_LENGTH + 1, "%s", path.c_str());
     ReadTree(child, new_login_path, 0);
-    SetMatchingParam(child.get());
+    child->SetMatchingParam();
   }
   dir_entry->not_scanned = false;
   BuildDirEntryList(start_dir_entry);
@@ -1381,8 +1381,8 @@ void ScanSubTree(DirEntry* dir_entry)
   {
     for (const auto& de_ptr : dir_entry->children)
     {
-      ReadTree(de_ptr, GetPath(de_ptr.get()), 999);
-      SetMatchingParam(de_ptr.get());
+      ReadTree(de_ptr, de_ptr->GetPath(), 999);
+      de_ptr->SetMatchingParam();
     }
     dir_entry->not_scanned = false;
   } else {

@@ -2,7 +2,7 @@
 
 bool SetFileSpec(const std::string& file_spec)
 {
-  if (SetMatchSpec(file_spec))
+  if (!SetMatchSpec(file_spec))
   {
     return false;
   }
@@ -10,43 +10,39 @@ bool SetFileSpec(const std::string& file_spec)
   statistic.disk_matching_files = 0L;
   statistic.disk_matching_bytes = 0L;
 
-  SetMatchingParam(statistic.tree.get());
+  statistic.tree->SetMatchingParam();
 
   return true;
 }
 
-void SetMatchingParam(DirEntry *dir_entry)
+void DirEntry::SetMatchingParam()
 {
-  unsigned long matching_files = 0L;
-  std::int64_t matching_bytes = 0L;
+  unsigned long new_matching_files = 0L;
+  std::int64_t new_matching_bytes = 0L;
 
-  for( const auto& fe_ptr : dir_entry->files )
+  for (const auto& fe_ptr : files)
   {
-    if( Match(fe_ptr->name) )
+    if (Match(fe_ptr->name))
     {
-      matching_files++;
-      matching_bytes += fe_ptr->meta.size;
+      ++new_matching_files;
+      new_matching_bytes += fe_ptr->meta.size;
       fe_ptr->matching = true;
-    }
-    else
-    {
+    } else {
       fe_ptr->matching = false;
     }
   }
 
-  dir_entry->matching_files = matching_files;
-  dir_entry->matching_bytes = matching_bytes;
+  matching_files = new_matching_files;
+  matching_bytes = new_matching_bytes;
 
-  statistic.disk_matching_files += matching_files;
-  statistic.disk_matching_bytes += matching_bytes;
+  statistic.disk_matching_files += new_matching_files;
+  statistic.disk_matching_bytes += new_matching_bytes;
 
-  for( const auto& child : dir_entry->children )
+  for (const auto& child : children)
   {
-    SetMatchingParam(child.get());
+    child->SetMatchingParam();
   }
 }
-
-
 
 /***************************************************************>>
 ReadFileSpec.

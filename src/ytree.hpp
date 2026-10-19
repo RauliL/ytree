@@ -457,6 +457,8 @@ struct DirEntry : Entry
   }
 
   std::filesystem::path GetPath() const override;
+
+  void SetMatchingParam();
 };
 
 struct Statistic
@@ -543,9 +545,8 @@ inline std::weak_ptr<DirEntry> WeakDirEntry(DirEntry* dir_entry)
   return SharedDirEntry(dir_entry);
 }
 bool Match(const std::string& file_name);
-int SetMatchSpec(const std::string& new_spec);
+bool SetMatchSpec(const std::string& new_spec);
 bool SetFileSpec(const std::string& file_spec);
-extern void SetMatchingParam(DirEntry *dir_entry);
 void ErrorEx(const std::string& msg, const std::string& module, int line);
 void Warning(const std::string& msg);
 void UnmapNoticeWindow();
@@ -554,7 +555,7 @@ extern int  HandleFileWindow(DirEntry *dir_entry);
 std::string GetAttributes(unsigned short modus);
 extern void SwitchToSmallFileWindow();
 extern void SwitchToBigFileWindow();
-std::optional<std::string> GetGroupName(gid_t gid);
+std::optional<std::string> GetGroupName(int gid);
 std::optional<int> GetGroupId(const std::string& name);
 std::optional<std::string> GetPasswdName(uid_t uid);
 std::optional<int> GetPasswdUid(const std::string& name);
