@@ -614,7 +614,7 @@ static void HandlePlus(
     statistic.disp_begin_pos + statistic.cursor_pos
 );
   DisplayDiskStatistic();
-  DisplayAvailBytes();
+  ui::DisplayAvailBytes();
   *need_dsp_help = true;
 }
 
@@ -632,7 +632,7 @@ static void HandleReadSubTree(
     statistic.disp_begin_pos + statistic.cursor_pos
   );
   DisplayDiskStatistic();
-  DisplayAvailBytes();
+  ui::DisplayAvailBytes();
   need_dsp_help = true;
 }
 
@@ -660,7 +660,7 @@ static void HandleUnreadSubTree(
     statistic.disp_begin_pos,
     statistic.disp_begin_pos + statistic.cursor_pos
   );
-  DisplayAvailBytes();
+  ui::DisplayAvailBytes();
   need_dsp_help = true;
 }
 
@@ -866,7 +866,7 @@ static int HandleSwitchWindow(
       statistic.disp_begin_pos + statistic.cursor_pos);
       ch = 'L';
     }
-    DisplayAvailBytes();
+    ui::DisplayAvailBytes();
     need_dsp_help = true;
   } else {
     dir_entry->login_flag = false;
@@ -1021,7 +1021,7 @@ static void HandleDirWindowResize(DirEntry* dir_entry, bool& need_dsp_help)
   }
 
   ReCreateWindows();
-  DisplayMenu();
+  ui::DisplayMenu();
   GetMaxYX(dir_window, &window_height, &window_width);
   while (statistic.cursor_pos >= window_height)
   {
@@ -1034,9 +1034,9 @@ static void HandleDirWindowResize(DirEntry* dir_entry, bool& need_dsp_help)
   DisplayDiskStatistic();
   DisplayDirParameter(dir_entry);
   need_dsp_help = true;
-  DisplayAvailBytes();
-  DisplayFileSpec();
-  DisplayDiskName();
+  ui::DisplayAvailBytes();
+  ui::DisplayFileSpec();
+  ui::DisplayDiskName();
   resize_request = false;
 }
 
@@ -1056,7 +1056,7 @@ static void HandleDirKeyMakeDirectory(DirWindowContext& ctx)
   {
     BuildDirEntryList(ctx.start_dir_entry);
     DisplayDirTreeAtCursor();
-    DisplayAvailBytes();
+    ui::DisplayAvailBytes();
   }
   ctx.need_dsp_help = true;
 }
@@ -1080,7 +1080,7 @@ static void HandleDirKeyDeleteDirectory(DirWindowContext& ctx)
   SyncDirEntryFromList(ctx.dir_entry);
   RefreshDirEntryFilePane(ctx.dir_entry);
   DisplayDirTreeAtCursor();
-  DisplayAvailBytes();
+  ui::DisplayAvailBytes();
   ctx.need_dsp_help = true;
 }
 
@@ -1092,7 +1092,7 @@ static void HandleDirKeyRename(DirWindowContext& ctx)
     {
       BuildDirEntryList(ctx.start_dir_entry);
       DisplayDirTreeAtCursor();
-      DisplayAvailBytes();
+      ui::DisplayAvailBytes();
       SyncDirEntryFromList(ctx.dir_entry);
     }
   }
@@ -1122,7 +1122,7 @@ static void HandleDirKeyChangeLogin(DirEntry* dir_entry, bool& need_dsp_help)
 
   if (const auto new_path = GetNewLoginPath(login_path))
   {
-    DisplayMenu();
+    ui::DisplayMenu();
     doupdate();
     LoginDisk(*new_path);
   }
@@ -1307,7 +1307,7 @@ static std::optional<int> ProcessDirWindowKey(ui::InputEvent& ev, DirWindowConte
     case DirCommand::Execute:
       Execute(ctx.dir_entry, nullptr);
       ctx.need_dsp_help = true;
-      DisplayAvailBytes();
+      ui::DisplayAvailBytes();
       break;
 
     case DirCommand::MakeDirectory:
@@ -1399,7 +1399,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
     if (ctx.need_dsp_help)
     {
       ctx.need_dsp_help = false;
-      DisplayDirHelp();
+      ui::DisplayDirHelp();
     }
 
     DisplayDirParameter(ctx.dir_entry);
@@ -1683,7 +1683,7 @@ bool RefreshDirWindow()
           statistic.disp_begin_pos + statistic.cursor_pos
 );
 
-    DisplayAvailBytes();
+    ui::DisplayAvailBytes();
     result = true;
   }
 

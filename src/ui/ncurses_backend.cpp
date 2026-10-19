@@ -290,7 +290,7 @@ public:
   {
     RefreshWindow(stdscr);
     RefreshWindow(dir_window);
-    DisplayMenu();
+    ::DisplayMenu();
     doupdate();
   }
 
@@ -658,17 +658,47 @@ class NcursesShellView final : public ui::IShellView
 public:
   bool refreshDirWindow() override
   {
-    return RefreshDirWindow();
+    return ::RefreshDirWindow();
   }
 
   bool internalView(const std::filesystem::path& file_path) override
   {
-    return InternalView(file_path);
+    return ::InternalView(file_path);
   }
 
   void saveHistory() override
   {
-    SaveHistory();
+    ::SaveHistory();
+  }
+
+  void displayDirHelp() override
+  {
+    ::DisplayDirHelp();
+  }
+
+  void displayFileHelp() override
+  {
+    ::DisplayFileHelp();
+  }
+
+  void displayMenu() override
+  {
+    ::DisplayMenu();
+  }
+
+  void displayAvailBytes() override
+  {
+    ::DisplayAvailBytes();
+  }
+
+  void displayFileSpec() override
+  {
+    ::DisplayFileSpec();
+  }
+
+  void displayDiskName() override
+  {
+    ::DisplayDiskName();
   }
 };
 

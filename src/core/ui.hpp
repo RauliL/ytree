@@ -179,6 +179,14 @@ public:
   virtual bool refreshDirWindow() = 0;
   virtual bool internalView(const std::filesystem::path& file_path) = 0;
   virtual void saveHistory() = 0;
+
+  /** Paint helpers for main-window chrome (no domain pointers). */
+  virtual void displayDirHelp() = 0;
+  virtual void displayFileHelp() = 0;
+  virtual void displayMenu() = 0;
+  virtual void displayAvailBytes() = 0;
+  virtual void displayFileSpec() = 0;
+  virtual void displayDiskName() = 0;
 };
 
 IDialogs& dialogs();
@@ -312,6 +320,36 @@ inline bool InternalView(const std::filesystem::path& file_path)
 inline void SaveHistory()
 {
   shell().saveHistory();
+}
+
+inline void DisplayDirHelp()
+{
+  shell().displayDirHelp();
+}
+
+inline void DisplayFileHelp()
+{
+  shell().displayFileHelp();
+}
+
+inline void DisplayMenu()
+{
+  shell().displayMenu();
+}
+
+inline void DisplayAvailBytes()
+{
+  shell().displayAvailBytes();
+}
+
+inline void DisplayFileSpec()
+{
+  shell().displayFileSpec();
+}
+
+inline void DisplayDiskName()
+{
+  shell().displayDiskName();
 }
 
 inline void InitClock()
