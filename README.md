@@ -12,7 +12,8 @@ New features include:
 - Mouse support.
 - [TOML] configuration file.
 - [Gruvbox] colorscheme.
-- Support for [7zip], [xz]/lzma) and [zstd] archives.
+- Support for [7zip], [xz]/lzma and [zstd] archives.
+- [GTK] based GUI. (Very very work in progress.)
 
 [C++20]: https://fi.wikipedia.org/wiki/C++20
 [TOML]: https://en.wikipedia.org/wiki/TOML
@@ -20,6 +21,7 @@ New features include:
 [7zip]: https://www.7-zip.org/
 [xz]: https://tukaani.org/xz/
 [zstd]: https://facebook.github.io/zstd/
+[GTK]: https://www.gtk.org/
 
 ## Building
 
