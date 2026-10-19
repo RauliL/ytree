@@ -46,15 +46,7 @@ bool DirEntry::Delete()
     const auto path = GetPath();
     std::error_code ec;
 
-    if (!IsWriteable(path))
-    {
-      FormatMessage(
-        "Can't delete directory*\"{}\"*{}",
-        path.string(),
-        std::strerror(errno)
-      );
-    }
-    else if (!std::filesystem::remove(path, ec))
+    if (!std::filesystem::remove(path, ec))
     {
       FormatMessage(
         "Can't delete directory*\"{}\"*{}",
