@@ -206,7 +206,7 @@ bool CopyFile(
 
   if( refresh_dirwindow)
   {
-    RefreshDirWindow();
+    ui::RefreshDirWindow();
   }
 
   return result;

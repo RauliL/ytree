@@ -7,6 +7,9 @@
 #include <cstdio>
 #include <cstring>
 
+void InitClockImpl();
+void SuspendClockImpl();
+
 namespace {
 
 class NcursesDialogs final : public ui::IDialogs
@@ -454,7 +457,7 @@ public:
     curs_set(0);
     if (restart_clock)
     {
-      InitClock();
+      initClock();
     }
   }
 
@@ -462,12 +465,74 @@ public:
   {
     endwin();
   }
+
+  void initClock() override
+  {
+    InitClockImpl();
+  }
+
+  void suspendClock() override
+  {
+    SuspendClockImpl();
+  }
+};
+
+class NcursesInput final : public ui::IInput
+{
+public:
+  int readKey() override
+  {
+    int c = getch();
+
+#ifdef KEY_RESIZE
+    if (c == KEY_RESIZE)
+    {
+      resize_request = true;
+      c = -1;
+    }
+#endif
+
+    return c;
+  }
+
+  ui::MouseEvent decodeMouse(ui::MouseFocus focus) override
+  {
+    return DecodeMouse(focus);
+  }
+
+  int translateOverlayMouse(int ch) override
+  {
+    return TranslateOverlayMouse(ch);
+  }
+};
+
+class NcursesShellView final : public ui::IShellView
+{
+public:
+  bool refreshDirWindow() override
+  {
+    return RefreshDirWindow();
+  }
+
+  bool internalView(const std::filesystem::path& file_path) override
+  {
+    return InternalView(file_path);
+  }
+
+  void saveHistory() override
+  {
+    SaveHistory();
+  }
 };
 
 NcursesDialogs g_dialogs;
 NcursesSession g_session;
+NcursesInput g_input;
+NcursesShellView g_shell;
 ui::IDialogs* g_dialogs_ptr = &g_dialogs;
 ui::ISession* g_session_ptr = &g_session;
+ui::IInput* g_input_ptr = &g_input;
+ui::IShellView* g_shell_ptr = &g_shell;
 
 } // namespace
 
@@ -483,7 +548,22 @@ ISession& session()
   return *g_session_ptr;
 }
 
-void set_backend(IDialogs* dialogs_backend, ISession* session_backend)
+IInput& input()
+{
+  return *g_input_ptr;
+}
+
+IShellView& shell()
+{
+  return *g_shell_ptr;
+}
+
+void set_backend(
+  IDialogs* dialogs_backend,
+  ISession* session_backend,
+  IInput* input_backend,
+  IShellView* shell_backend
+)
 {
   if (dialogs_backend != nullptr)
   {
@@ -492,6 +572,14 @@ void set_backend(IDialogs* dialogs_backend, ISession* session_backend)
   if (session_backend != nullptr)
   {
     g_session_ptr = session_backend;
+  }
+  if (input_backend != nullptr)
+  {
+    g_input_ptr = input_backend;
+  }
+  if (shell_backend != nullptr)
+  {
+    g_shell_ptr = shell_backend;
   }
 }
 

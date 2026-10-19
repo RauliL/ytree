@@ -32,7 +32,7 @@ bool SilentSystemCall(const std::string& command_line)
 {
   int status;
 
-  SuspendClock();
+  ui::SuspendClock();
   ui::session().suspend();
   status = std::system(command_line.c_str());
   GetAvailBytes(statistic.disk_space);

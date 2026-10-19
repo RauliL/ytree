@@ -44,7 +44,7 @@ static bool ViewHexFile(const std::filesystem::path& file_path)
     return false;
   }
 
-  return InternalView(file_path);
+  return ui::InternalView(file_path);
 }
 
 static bool ViewHexArchiveFile(const std::filesystem::path& file_path)

@@ -781,16 +781,5 @@ int ViKey(int ch)
 
 int Getch()
 {
-  int c;
-
-  c = getch();
-
-#ifdef KEY_RESIZE
-  if(c == KEY_RESIZE) {
-    resize_request = true;
-    c = -1;
-  }
-#endif
-
-  return(c);
+  return ui::ReadKey();
 }

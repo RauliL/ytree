@@ -171,7 +171,7 @@ bool LoginDisk(const std::string& path)
     /* zugehoeriges tape-device ermitteln */
     /*------------------------------------*/
 
-    if (const auto tape = GetTapeDeviceName())
+    if (const auto tape = ui::Prompt("Tape-Device:", statistic.tape_name))
     {
       statistic.tape_name = *tape;
     } else {

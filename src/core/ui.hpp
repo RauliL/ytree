@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -30,6 +31,34 @@ struct AsToPromptResult
 {
   std::string as_value;
   std::string to_value;
+};
+
+/** Backend-neutral mouse focus for input decoding. */
+enum class MouseFocus
+{
+  Dir,
+  File,
+  Overlay,
+};
+
+enum class MouseAction
+{
+  None,
+  Ignore,
+  Select,
+  Activate,
+  Tag,
+  ScrollUp,
+  ScrollDown,
+  SwitchToDir,
+  SwitchToFile,
+};
+
+struct MouseEvent
+{
+  MouseAction action = MouseAction::None;
+  int row = 0;
+  int col = 0;
 };
 
 class IDialogs
@@ -75,12 +104,48 @@ public:
   virtual void resume(bool restart_clock) = 0;
   /** Tear down the UI (e.g. on quit). */
   virtual void shutdown() = 0;
+  virtual void initClock() = 0;
+  virtual void suspendClock() = 0;
+};
+
+/**
+ * Raw input. Key codes currently match the historic ncurses/Getch values so
+ * existing window loops can migrate incrementally.
+ */
+class IInput
+{
+public:
+  virtual ~IInput() = default;
+
+  /** Next key, or -1 on resize / ignored input. */
+  virtual int readKey() = 0;
+  virtual MouseEvent decodeMouse(MouseFocus focus) = 0;
+  /** Map overlay mouse scroll to KEY_UP/KEY_DOWN; other mouse to -1. */
+  virtual int translateOverlayMouse(int ch) = 0;
+};
+
+/** High-level shell chrome / viewers that core may invoke. */
+class IShellView
+{
+public:
+  virtual ~IShellView() = default;
+
+  virtual bool refreshDirWindow() = 0;
+  virtual bool internalView(const std::filesystem::path& file_path) = 0;
+  virtual void saveHistory() = 0;
 };
 
 IDialogs& dialogs();
 ISession& session();
+IInput& input();
+IShellView& shell();
 
-void set_backend(IDialogs* dialogs, ISession* session);
+void set_backend(
+  IDialogs* dialogs,
+  ISession* session,
+  IInput* input = nullptr,
+  IShellView* shell = nullptr
+);
 
 inline void Message(const std::string& msg)
 {
@@ -176,6 +241,36 @@ inline bool KeyPressed()
 inline bool EscapePressed()
 {
   return dialogs().escapePressed();
+}
+
+inline int ReadKey()
+{
+  return input().readKey();
+}
+
+inline bool RefreshDirWindow()
+{
+  return shell().refreshDirWindow();
+}
+
+inline bool InternalView(const std::filesystem::path& file_path)
+{
+  return shell().internalView(file_path);
+}
+
+inline void SaveHistory()
+{
+  shell().saveHistory();
+}
+
+inline void InitClock()
+{
+  session().initClock();
+}
+
+inline void SuspendClock()
+{
+  session().suspendClock();
 }
 
 } // namespace ui

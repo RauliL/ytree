@@ -134,7 +134,7 @@ void Quit()
 
   if (term == 'Y' || term == 'Q' || term == 'q')
   {
-    SaveHistory();
+    ui::SaveHistory();
     ui::session().shutdown();
     std::exit(EXIT_SUCCESS);
   }

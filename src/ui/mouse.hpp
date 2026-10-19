@@ -1,31 +1,10 @@
 #pragma once
 
-enum class MouseFocus
-{
-  Dir,
-  File,
-  Overlay,
-};
+#include "core/ui.hpp"
 
-enum class MouseAction
-{
-  None,
-  Ignore,
-  Select,
-  Activate,
-  Tag,
-  ScrollUp,
-  ScrollDown,
-  SwitchToDir,
-  SwitchToFile,
-};
-
-struct MouseEvent
-{
-  MouseAction action = MouseAction::None;
-  int row = 0;
-  int col = 0;
-};
+using ui::MouseFocus;
+using ui::MouseAction;
+using ui::MouseEvent;
 
 void EnableMouse();
 MouseEvent DecodeMouse(MouseFocus focus);
