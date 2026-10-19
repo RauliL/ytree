@@ -2,7 +2,7 @@
 
 static bool Move(const std::string&, const std::string&);
 
-int MoveFile(
+bool MoveFile(
   FileEntry* fe_ptr,
   bool confirm,
   const std::string& to_file,
@@ -17,9 +17,7 @@ int MoveFile(
   std::int64_t file_size;
   FileEntry   *dest_file_entry;
   int         term;
-  int         result;
-
-  result = -1;
+  bool        result = false;
   *new_fe_ptr = nullptr;
 
   const ScopeGuard clear_prompt_lines([] { ClearBottomPromptLines(); });
@@ -57,7 +55,7 @@ int MoveFile(
   term = InputChoise("file exist; overwrite (Y/N) ? ", "YN\033");
 
         if( term != 'Y' ) {
-    result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
+    result = (term == 'N');  /* Abort on escape */
     return result;
   }
       }
@@ -77,7 +75,7 @@ int MoveFile(
       term = InputChoise("file exist; overwrite (Y/N) ? ", "YN\033");
       if (term != 'Y')
       {
-        result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
+        result = (term == 'N');  /* Abort on escape */
         return result;
       }
     }
@@ -129,7 +127,7 @@ int MoveFile(
 
     GetAvailBytes(&statistic.disk_space);
 
-    result = 0;
+    result = true;
   }
 
   return result;

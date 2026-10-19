@@ -23,7 +23,7 @@ std::optional<std::string> MakeDirectory(DirEntry *father_dir_entry)
     return std::nullopt;
   }
 
-  if (MakeDirEntry(father_dir_entry, *name) != 0)
+  if (!MakeDirEntry(father_dir_entry, *name))
   {
     return std::nullopt;
   }
@@ -34,9 +34,9 @@ std::optional<std::string> MakeDirectory(DirEntry *father_dir_entry)
 
 
 
-int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name)
+bool MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name)
 {
-  int result = -1;
+  bool result = false;
 
   if( mode != Mode::DISK_MODE && mode != Mode::USER_MODE )
   {
@@ -93,7 +93,7 @@ int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name)
 
     GetAvailBytes(&statistic.disk_space);
 
-    result = 0;
+    result = true;
   }
 
   return( result );
@@ -101,11 +101,11 @@ int MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name)
 
 
 
-int MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry)
+bool MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry)
 {
   DirEntry *de_ptr, *sde_ptr;
   int n;
-  int result = -1;
+  bool result = false;
 
   auto path = NormPath(dir_path);
   *dest_dir_entry = nullptr;
@@ -152,7 +152,7 @@ int MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path,
                      static_cast<int>(token->size()), token->data());
 #endif /* DEBUG */
 
-        if (MakeDirEntry(de_ptr, std::string(*token)))
+        if (!MakeDirEntry(de_ptr, std::string(*token)))
         {
           return result;
         }
@@ -168,7 +168,7 @@ int MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path,
       }
     }
     *dest_dir_entry = de_ptr;
-    result = 0;
+    result = true;
   }
   else
   {
@@ -182,10 +182,10 @@ int MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path,
     std::error_code ec;
     std::filesystem::create_directories(path, ec);
     /* Old progressive mkdir broke on non-EEXIST errors but still fell
-     * through to result = 0; preserve that return value for compatibility.
+     * through to result = true; preserve that return value for compatibility.
      * create_directories treats an existing directory as success (!ec). */
     (void)ec;
-    result = 0;
+    result = true;
   }
 
   return result;

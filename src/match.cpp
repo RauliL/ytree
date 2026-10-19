@@ -4,7 +4,7 @@
 
 static std::optional<std::regex> re;
 
-int SetMatchSpec(const std::string& new_spec)
+bool SetMatchSpec(const std::string& new_spec)
 {
   bool meta_flag = false;
   std::string result;
@@ -53,10 +53,10 @@ int SetMatchSpec(const std::string& new_spec)
   }
   catch(const std::regex_error&)
   {
-    return 1;
+    return false;
   }
 
-  return 0;
+  return true;
 }
 
 bool Match(const std::string& filename)

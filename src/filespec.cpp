@@ -2,7 +2,7 @@
 
 bool SetFileSpec(const std::string& file_spec)
 {
-  if (SetMatchSpec(file_spec))
+  if (!SetMatchSpec(file_spec))
   {
     return false;
   }

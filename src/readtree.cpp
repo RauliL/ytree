@@ -7,7 +7,7 @@ static void UnReadSubTree(DirEntry *dir_entry);
 /* Dateibaum lesen: path = "Root"-Pfad
  * dir_entry wird von der Funktion gefuellt
  */
-int ReadTree(
+bool ReadTree(
   const std::shared_ptr<DirEntry>& dir_entry,
   const std::string& path,
   int depth
@@ -38,7 +38,7 @@ int ReadTree(
 
   if (dir_entry->meta.IsBlock())
   {
-    return 0; // Block device
+    return true; // Block device
   }
 
   if (depth < 0)
@@ -47,7 +47,7 @@ int ReadTree(
     {
       parent->not_scanned = true;
 
-      return 1;
+      return false;
     }
   }
 
@@ -61,7 +61,7 @@ int ReadTree(
   {
     dir_entry->access_denied = true;
 
-    return 1;
+    return false;
   }
 
   file_count = 0;
@@ -170,7 +170,7 @@ int ReadTree(
   DisplayDiskStatistic();
   doupdate();
 
-  return 0;
+  return true;
 }
 
 static void RemoveAllFiles(DirEntry* dir_entry)

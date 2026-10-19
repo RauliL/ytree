@@ -21,7 +21,7 @@ static int RunUserMode(
     } else {
       command_line = Join(*aux, filepath.string());
     }
-    if (SilentSystemCall(command_line))
+    if (!SilentSystemCall(command_line))
     {
       FormatMessage("Can't execute*{}", command_line);
     }

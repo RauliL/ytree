@@ -1,9 +1,9 @@
 #include "./ytree.hpp"
 
-static int Copy(const std::string& to_path, const std::string& from_path);
-static int CopyArchiveFile(const std::string& to_path, const std::string& from_path);
+static bool Copy(const std::string& to_path, const std::string& from_path);
+static bool CopyArchiveFile(const std::string& to_path, const std::string& from_path);
 
-int CopyFile(
+bool CopyFile(
   Statistic* statistic_ptr,
   FileEntry* fe_ptr,
   bool confirm,
@@ -20,11 +20,8 @@ int CopyFile(
   std::string to_path;
   FileEntry   *dest_file_entry;
   int         term;
-  int         result;
+  bool        result = false;
   int       refresh_dirwindow = false;
-
-
-  result = -1;
 
   const ScopeGuard clear_prompt_lines([] { ClearBottomPromptLines(); });
 
@@ -61,7 +58,7 @@ int CopyFile(
     }
 
     to_path = to_fs_path.string();
-    if (MakePath(statistic_ptr->tree, to_path, &dest_dir_entry))
+    if (!MakePath(statistic_ptr->tree, to_path, &dest_dir_entry))
     {
       FormatMessage("Can't create path*\"{}\"*{}", to_path.c_str(), std::strerror(errno));
 
@@ -88,7 +85,7 @@ int CopyFile(
           to_fs_path = std::filesystem::path(from_dir) / to_fs_path;
         }
         to_path = to_fs_path.string();
-        if (MakePath(statistic_ptr->tree, to_path, &dest_dir_entry))
+        if (!MakePath(statistic_ptr->tree, to_path, &dest_dir_entry))
         {
           FormatMessage("Can't create path*\"{}\"*{}", to_path.c_str(), std::strerror(errno));
 
@@ -143,7 +140,7 @@ int CopyFile(
 
         if( term != 'Y' )
         {
-    result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
+    result = (term == 'N');  /* Abort on escape */
           return result;
         }
       }
@@ -160,13 +157,13 @@ int CopyFile(
     term = InputChoise("file exist; overwrite (Y/N) ? ", "YN\033");
     if (term != 'Y')
     {
-      result = (term == 'N' ) ? 0 : -1;  /* Abort on escape */
+      result = (term == 'N');  /* Abort on escape */
       return result;
     }
   }
 
 
-  if( !Copy(to_path, from_path) )
+  if (Copy(to_path, from_path))
   {
     /* File wurde kopiert */
     /*--------------------*/
@@ -203,7 +200,7 @@ int CopyFile(
 
     GetAvailBytes(&statistic_ptr->disk_space);
 
-    result = 0;
+    result = true;
   }
 
   if( refresh_dirwindow)
@@ -271,7 +268,7 @@ std::optional<AsToParameter> GetMoveParameter(
   return GetAsToParameter(header, from_file);
 }
 
-static int Copy(const std::string& to_path, const std::string& from_path)
+static bool Copy(const std::string& to_path, const std::string& from_path)
 {
   if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
@@ -286,7 +283,7 @@ static int Copy(const std::string& to_path, const std::string& from_path)
   {
     Message("Can't copy file into itself");
 
-    return -1;
+    return false;
   }
 
   std::error_code ec;
@@ -300,13 +297,13 @@ static int Copy(const std::string& to_path, const std::string& from_path)
   {
     FormatMessage("Can't copy file*\"{}\"*to*\"{}\"*{}", from_path.c_str(), to_path.c_str(), ec.message().c_str());
 
-    return -1;
+    return false;
   }
 
-  return 0;
+  return true;
 }
 
-static int CopyArchiveFile(
+static bool CopyArchiveFile(
   const std::string& to_path,
   const std::string& from_path
 )
@@ -318,7 +315,7 @@ static int CopyArchiveFile(
 );
   const auto result = SilentSystemCall(command_line);
 
-  if (result)
+  if (!result)
   {
     FormatWarning("Can't copy file*{}*to file*{}", from_path.c_str(), to_path.c_str());
   }

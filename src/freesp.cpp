@@ -20,12 +20,12 @@ using FsStat = struct statvfs;
 using FsStat = struct statfs;
 #endif
 
-static int QueryFs(const char* path, FsStat* buf)
+static bool QueryFs(const char* path, FsStat* buf)
 {
 #if defined(__NetBSD__)
-  return ::statvfs(path, buf);
+  return ::statvfs(path, buf) == 0;
 #else
-  return ::statfs(path, buf);
+  return ::statfs(path, buf) == 0;
 #endif
 }
 
@@ -110,7 +110,7 @@ bool GetDiskParameter(
   std::int64_t bfree;
   std::int64_t this_disk_space;
 
-  if (QueryFs(path.c_str(), &fs) != 0)
+  if (!QueryFs(path.c_str(), &fs))
   {
     return false;
   }

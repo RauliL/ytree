@@ -1,22 +1,22 @@
 #include "./ytree.hpp"
 
-int Edit(const DirEntry* dir_entry, const std::string& file_path)
+bool Edit(const DirEntry* dir_entry, const std::string& file_path)
 {
   std::string command_line;
-  int result = -1;
+  bool result = false;
 
   if (mode != Mode::DISK_MODE && mode != Mode::USER_MODE)
   {
     beep();
 
-    return -1;
+    return false;
   }
 
   if (!IsReadable(file_path))
   {
     FormatMessage("Edit not possible!*\"{}\"*{}", file_path.c_str(), std::strerror(errno));
 
-    return -1;
+    return false;
   }
 
   command_line = Join(GetProfileValueOrEmpty("EDITOR"), ShellQuote(file_path));

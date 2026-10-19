@@ -1,9 +1,9 @@
 #include "./ytree.hpp"
 
-int Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
+bool Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
 {
   std::string command_line;
-  int result = -1;
+  bool result = false;
 
   if (file_entry && file_entry->meta.IsExecutable())
   {
@@ -96,5 +96,5 @@ bool ExecuteCommand(FileEntry* fe_ptr, const std::string& command)
     }
   }
 
-  return SilentSystemCall(command_line) == 0;
+  return SilentSystemCall(command_line);
 }

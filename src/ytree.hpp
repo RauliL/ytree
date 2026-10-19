@@ -536,7 +536,7 @@ extern void DisplayDiskName();
 extern void DisplayFileParameter(FileEntry *file_entry);
 extern void DisplayGlobalFileParameter(FileEntry *file_entry);
 void RefreshWindow(WINDOW* win);
-int ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path, int depth);
+bool ReadTree(const std::shared_ptr<DirEntry>& dir_entry, const std::string& path, int depth);
 bool GetDiskParameter(
   const std::string& path,
   std::string* volume_name,
@@ -556,7 +556,7 @@ inline std::weak_ptr<DirEntry> WeakDirEntry(DirEntry* dir_entry)
   return SharedDirEntry(dir_entry);
 }
 bool Match(const std::string& file_name);
-int SetMatchSpec(const std::string& new_spec);
+bool SetMatchSpec(const std::string& new_spec);
 bool SetFileSpec(const std::string& file_spec);
 extern void SetMatchingParam(DirEntry *dir_entry);
 void ErrorEx(const std::string& msg, const std::string& module, int line);
@@ -571,13 +571,13 @@ std::optional<std::string> GetGroupName(gid_t gid);
 std::optional<int> GetGroupId(const std::string& name);
 std::optional<std::string> GetPasswdName(uid_t uid);
 std::optional<int> GetPasswdUid(const std::string& name);
-int SystemCall(const std::string& command_line);
-int QuerySystemCall(const std::string& command_line);
-int SilentSystemCall(const std::string& command_line);
-int View(DirEntry* dir_entry, const std::filesystem::path& file_path);
-int ViewHex(const std::filesystem::path& file_path);
-int InternalView(const std::filesystem::path& file_path);
-int Edit(const DirEntry* dir_entry, const std::string& file_path);
+bool SystemCall(const std::string& command_line);
+bool QuerySystemCall(const std::string& command_line);
+bool SilentSystemCall(const std::string& command_line);
+bool View(DirEntry* dir_entry, const std::filesystem::path& file_path);
+bool ViewHex(const std::filesystem::path& file_path);
+bool InternalView(const std::filesystem::path& file_path);
+bool Edit(const DirEntry* dir_entry, const std::string& file_path);
 extern void DisplayAvailBytes();
 extern void DisplayFileSpec();
 extern void QuitTo(DirEntry * dir_entry);
@@ -591,13 +591,13 @@ std::optional<std::string> InputString(
   const std::size_t max_length
 );
 extern void RotateFileMode();
-int Execute(const DirEntry* dir_entry, const FileEntry* file_entry);
+bool Execute(const DirEntry* dir_entry, const FileEntry* file_entry);
 std::optional<std::string> GetPipeCommand(const std::string& initial = {});
 std::optional<SortSpec> GetKindOfSort();
 bool GetNewFileModus(int y, int x, std::string& modus, const char *term);
 int GetModus(const std::string& modus);
 bool ExecuteCommand(FileEntry* fe_ptr, const std::string& command);
-int CopyFile(
+bool CopyFile(
   Statistic* statistic_ptr,
   FileEntry* fe_ptr,
   bool confirm,
@@ -606,7 +606,7 @@ int CopyFile(
   const std::string& to_dir_path,
   bool path_copy
 );
-int MoveFile(
+bool MoveFile(
   FileEntry* fe_ptr,
   bool confirm,
   const std::string& to_file,
@@ -644,8 +644,8 @@ extern void ClearHelp();
 bool GetAvailBytes(std::int64_t* avail_bytes);
 std::optional<std::string> GetCommandLine(const std::string& initial = {});
 std::optional<std::string> GetSearchCommandLine();
-extern int  RenameDirectory(DirEntry *de_ptr, const std::string& new_name);
-extern int  RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_fe_ptr);
+extern bool RenameDirectory(DirEntry *de_ptr, const std::string& new_name);
+extern bool RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_fe_ptr);
 std::optional<std::string> GetRenameParameter(const std::string* old_name);
 std::string CTime(std::time_t f_time);
 
@@ -685,7 +685,7 @@ bool TryInsertArchiveDirEntry(
   const char* dir,
   const EntryMeta& meta
 );
-int InsertArchiveFileEntry(
+bool InsertArchiveFileEntry(
   const std::shared_ptr<DirEntry>& tree,
   const std::string& path,
   const EntryMeta& meta,
@@ -722,8 +722,8 @@ std::optional<CompressMethod> GetFileMethod(const std::string& filename);
 extern bool KeyPressed();
 extern bool EscapeKeyPressed();
 std::optional<std::string> GetTapeDeviceName();
-extern int  MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry);
-extern int  MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name);
+extern bool MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry);
+extern bool MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name);
 std::string NormPath(const std::string& in_path);
 
 /* Non-destructive strtok replacement: splits a string_view on delimiters. */
@@ -796,7 +796,7 @@ void InsHistory(const std::string& str);
 void ReadHistory(const std::optional<std::filesystem::path>& custom_path);
 void SaveHistory();
 std::optional<std::string> GetMatches(const std::string& base);
-extern int  KeyF2Get(DirEntry *start_dir_entry,
+extern bool KeyF2Get(DirEntry *start_dir_entry,
                int disp_begin_pos,
                int cursor_pos,
                char *path);
@@ -834,7 +834,7 @@ std::optional<std::string> GetUserDirAction(int chkey, int* pchremap);
 bool IsUserActionDefined();
 std::optional<std::filesystem::path> Getcwd();
 std::filesystem::path GetcwdOrDot();
-extern int  RefreshDirWindow();
+extern bool RefreshDirWindow();
 std::string StrLeft(const char* str, std::size_t count);
 std::string FitVisualWidth(std::string_view str, std::size_t width, bool left_justify);
 const char* StrVisualIndex(const char* str, std::size_t index);

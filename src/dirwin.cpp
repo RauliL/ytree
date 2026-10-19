@@ -1093,7 +1093,7 @@ static void HandleDirKeyRename(DirWindowContext& ctx)
 {
   if (const auto renamed = GetRenameParameter(&ctx.dir_entry->name))
   {
-    if (!RenameDirectory(ctx.dir_entry, *renamed))
+    if (RenameDirectory(ctx.dir_entry, *renamed))
     {
       BuildDirEntryList(ctx.start_dir_entry);
       DisplayDirTreeAtCursor();
@@ -1454,13 +1454,13 @@ void ScanSubTree(DirEntry* dir_entry)
   }
 }
 
-int KeyF2Get(DirEntry *start_dir_entry,
+bool KeyF2Get(DirEntry *start_dir_entry,
              int disp_begin_pos,
        int cursor_pos,
              char *path)
 {
   int ch;
-  int result = -1;
+  bool result = false;
   int win_width, win_height;
 
 
@@ -1630,7 +1630,7 @@ int KeyF2Get(DirEntry *start_dir_entry,
         const auto tmp_path = GetPath(dir_entry_list[cursor_pos + disp_begin_pos].dir_entry.get());
 
         std::snprintf(path, PATH_LENGTH + 1, "%s", tmp_path.c_str());
-        result = 0;
+        result = true;
         break;
       }
 
@@ -1649,12 +1649,12 @@ int KeyF2Get(DirEntry *start_dir_entry,
 
 
 
-int RefreshDirWindow()
+bool RefreshDirWindow()
 {
   DirEntry *de_ptr;
   int i;
   int n;
-  int result = -1;
+  bool result = false;
   int window_width, window_height;
 
   de_ptr = dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos].dir_entry.get();
@@ -1673,7 +1673,7 @@ int RefreshDirWindow()
   if(n == -1) {
     /* Directory disapeared */
     Error("Current directory disappeared");
-    result = -1;
+    result = false;
   } else {
 
     if( n != (statistic.disp_begin_pos + statistic.cursor_pos)) {
@@ -1696,7 +1696,7 @@ int RefreshDirWindow()
 );
 
     DisplayAvailBytes();
-    result = 0;
+    result = true;
   }
 
   return(result);

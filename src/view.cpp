@@ -30,10 +30,10 @@ bool hexoffset=true;
 #define CANTX(x) ((inhex)? (x*2):x)
 #define THECOLOR ((inedit)? COLOR_PAIR(STATS_COLOR):COLOR_PAIR(DIR_COLOR))
 
-static int ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path);
-static int ViewArchiveFile(const std::filesystem::path& file_path);
+static bool ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path);
+static bool ViewArchiveFile(const std::filesystem::path& file_path);
 
-int View(DirEntry* dir_entry, const std::filesystem::path& file_path)
+bool View(DirEntry* dir_entry, const std::filesystem::path& file_path)
 {
   switch (mode)
   {
@@ -57,14 +57,14 @@ int View(DirEntry* dir_entry, const std::filesystem::path& file_path)
       beep();
   }
 
-  return -1;
+  return false;
 }
 
-static int ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path)
+static bool ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path)
 {
   std::string command_line;
   const auto file_p_aux = ShellQuote(file_path.string());
-  int result = -1;
+  bool result = false;
   bool notice_mapped = false;
 
   if (!IsReadable(file_path))
@@ -75,7 +75,7 @@ static int ViewFile(DirEntry* dir_entry, const std::filesystem::path& file_path)
       std::strerror(errno)
     );
 
-    return -1;
+    return false;
   }
 
   if (const auto aux = GetExtViewer(file_path))
@@ -151,7 +151,7 @@ the ytree starting cwd. new code grabbed from execute.c.
     result = SystemCall(command_line);
   }
 
-  if (result)
+  if (!result)
   {
     FormatMessage("can't execute*{}", command_line);
   }
@@ -164,11 +164,11 @@ the ytree starting cwd. new code grabbed from execute.c.
   return result;
 }
 
-static int ViewArchiveFile(const std::filesystem::path& file_path)
+static bool ViewArchiveFile(const std::filesystem::path& file_path)
 {
   std::string command_line;
   std::string buffer = "| ";
-  int result = -1;
+  bool result = false;
 
   if (const auto aux = GetExtViewer(file_path))
   {
@@ -188,7 +188,7 @@ static int ViewArchiveFile(const std::filesystem::path& file_path)
     buffer
   );
   result = SystemCall(command_line);
-  if (result)
+  if (!result)
   {
     FormatMessage("can't execute*{}", command_line.c_str());
   }
@@ -682,7 +682,7 @@ void hex_edit(const std::string& file_path)
 }
 
 
-int InternalView(const std::filesystem::path& file_path)
+bool InternalView(const std::filesystem::path& file_path)
 {
     long oldpos;
     int ch;
@@ -691,12 +691,12 @@ int InternalView(const std::filesystem::path& file_path)
     hexoffset = GetProfileValueOrEmpty("HEXEDITOFFSET") == "HEX";
 
     if (stat(file_path.c_str(), &fdstat)!=0)
-    return -1;
+    return false;
     if (!(S_ISREG(fdstat.st_mode)) || S_ISBLK(fdstat.st_mode))
-    return -1;
+    return false;
     fd=open(file_path.c_str(),O_RDONLY);
     if (fd == -1)
-    return -1;
+    return false;
     SetupViewWindow(file_path);
     current_line = 1;
     oldpos = 1;
@@ -809,5 +809,5 @@ int InternalView(const std::filesystem::path& file_path)
     touchwin(stdscr);
     wnoutrefresh(stdscr);
     close(fd);
-    return 0;
+    return true;
 }
