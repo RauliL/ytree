@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/api.hpp"
+#include "core/ui.hpp"
 #include "ui/curses.hpp"
 
 #if defined(WITH_UTF8)
@@ -16,6 +17,11 @@ extern void DisplayDiskTagged();
 extern void DisplayDiskName();
 extern void DisplayFileParameter(FileEntry *file_entry);
 extern void DisplayGlobalFileParameter(FileEntry *file_entry);
+void PaintDirStatistic(const ui::DirPanelInfo& info);
+void PaintDirParameter(const ui::DirPanelInfo& info);
+void PaintDirTagged(const ui::TaggedCounts& counts);
+void PaintFileParameter(const ui::FilePanelInfo& info);
+void PaintGlobalFileParameter(const ui::FilePanelInfo& info);
 void RefreshWindow(WINDOW* win);
 namespace ui {
 class IDirView;

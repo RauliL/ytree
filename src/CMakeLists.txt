@@ -147,6 +147,7 @@ add_executable(
   ui/sort.cpp
   ui/stat.cpp
   ui/view.cpp
+  ui/view_info.cpp
 )
 
 target_compile_features(

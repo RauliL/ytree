@@ -1,13 +1,11 @@
 #pragma once
 
+#include <cstdint>
 #include <filesystem>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
-
-struct DirEntry;
-struct FileEntry;
 
 /**
  * UI-backend ports. Core talks only to these interfaces so alternate UIs
@@ -192,9 +190,36 @@ public:
   virtual void displayDiskName() = 0;
 };
 
+/** Snapshot of directory stats/labels for panel chrome (no domain pointers). */
+struct DirPanelInfo
+{
+  std::string path_line;
+  std::string name_label;
+  std::int64_t total_files = 0;
+  std::int64_t total_bytes = 0;
+  std::int64_t matching_files = 0;
+  std::int64_t matching_bytes = 0;
+  std::int64_t tagged_files = 0;
+  std::int64_t tagged_bytes = 0;
+};
+
+/** Snapshot of the current file for the status strip. */
+struct FilePanelInfo
+{
+  std::string path_line;
+  std::string name_label;
+  std::int64_t size = 0;
+};
+
+struct TaggedCounts
+{
+  std::int64_t files = 0;
+  std::int64_t bytes = 0;
+};
+
 /**
  * Directory-tree panel. Controllers call this instead of painting directly.
- * Step-1 methods still take domain pointers; a later step replaces those with DTOs.
+ * List APIs are index-based; status APIs take DTOs.
  */
 class IDirView
 {
@@ -204,9 +229,10 @@ public:
   virtual void getSize(int& height, int& width) = 0;
   virtual void showTree(int start_entry_no, int hilight_no) = 0;
   virtual void showTreeAtCursor() = 0;
-  virtual void showParameter(DirEntry* dir) = 0;
+  virtual void showParameter(const DirPanelInfo& info) = 0;
   virtual void showDiskStatistic() = 0;
-  virtual void showFileSide(DirEntry* dir) = 0;
+  /** Refresh the file pane for the directory under the tree cursor. */
+  virtual void showFileSide() = 0;
   virtual void refresh() = 0;
   virtual void refreshFileSide() = 0;
   virtual void refreshBothFileWindows() = 0;
@@ -216,6 +242,7 @@ public:
 
 /**
  * File-list panel. Controllers call this instead of painting directly.
+ * The file-entry list is prepared by the controller before show* calls.
  */
 class IFileView
 {
@@ -225,18 +252,17 @@ public:
   virtual void getSize(int& height, int& width) = 0;
   virtual void getDirPanelSize(int& height, int& width) = 0;
   virtual void showFiles(
-    DirEntry* dir,
     int start_file,
     int hilight,
-    int start_x
+    int start_x,
+    bool access_denied
   ) = 0;
-  virtual void showFilesAtCursor(DirEntry* dir, int start_x) = 0;
-  virtual void showFileWindow(DirEntry* dir) = 0;
-  virtual void showFileParameter(FileEntry* file) = 0;
-  virtual void showGlobalFileParameter(FileEntry* file) = 0;
-  virtual void showDirStatistic(DirEntry* dir) = 0;
+  virtual void showFilesAtCursor(int start_file, int cursor_pos, int start_x, bool access_denied) = 0;
+  virtual void showFileParameter(const FilePanelInfo& info) = 0;
+  virtual void showGlobalFileParameter(const FilePanelInfo& info) = 0;
+  virtual void showDirStatistic(const DirPanelInfo& info) = 0;
   virtual void showDiskStatistic() = 0;
-  virtual void showDirTagged(DirEntry* dir) = 0;
+  virtual void showDirTagged(const TaggedCounts& counts) = 0;
   virtual void showDiskTagged() = 0;
   virtual void printEntry(
     int entry_no,
