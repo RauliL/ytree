@@ -1,5 +1,9 @@
+#include "core/commands.hpp"
+#include "core/ui.hpp"
 #include "ui/mouse.hpp"
 #include "ytree.hpp"
+
+#include <optional>
 
 typedef struct MODIF {
     long pos;
@@ -364,6 +368,35 @@ void SetupViewWindow(const std::string& file_path)
 
 
 
+static ui::InputEvent ReadViewerEvent()
+{
+  if (resize_request)
+  {
+    return ui::InputEvent::Special(ui::Key::Resize);
+  }
+
+  ui::InputEvent ev = ui::ReadEvent();
+#ifdef VI_KEYS
+  ev = EventFromLegacyChar(ViKey(LegacyCode(ev)));
+#endif
+  if (ev.key == ui::Key::Mouse)
+  {
+    const int translated = ui::input().translateOverlayMouse(
+      ev.raw != 0 ? ev.raw : KEY_MOUSE
+    );
+    if (translated == KEY_UP)
+    {
+      return ui::InputEvent::Special(ui::Key::Up);
+    }
+    if (translated == KEY_DOWN)
+    {
+      return ui::InputEvent::Special(ui::Key::Down);
+    }
+    return ui::InputEvent{};
+  }
+  return ev;
+}
+
 unsigned char hexval(unsigned char v) {
     if (v >= 'a' && v <= 'f')
         v = v - 'a' + 10;
@@ -478,8 +511,6 @@ void move_right(WINDOW *win)
 
 void hex_edit(const std::string& file_path)
 {
-    int ch;
-
     bool QUIT=false;
 
     cursor_pos_x = cursor_pos_y = 0;
@@ -493,32 +524,28 @@ void hex_edit(const std::string& file_path)
     }
     inedit=true;
     update_all_lines(VIEW,WLINES-1);
-    leaveok(VIEW, false);
-    curs_set(1);
-    wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
-    wnoutrefresh(VIEW);
+    ui::ViewerSurface().leaveOk(false);
+    ui::ViewerSurface().setCursorVisible(true);
+    ui::ViewerSurface().moveCursor(cursor_pos_y, CURSOR_POS_X);
+    ui::ViewerSurface().present();
     while (!QUIT) {
-    doupdate();
-    ch = (resize_request) ? -1 : Getch();
-#ifdef VI_KEYS
-    ch = ViKey(ch);
-#endif
-    ch = TranslateOverlayMouse(ch);
-       if (resize_request)
+    ui::ViewerSurface().present();
+    const ui::InputEvent ev = ReadViewerEvent();
+    const ViewerCommand cmd = MapViewerCommand(ev, true, inhex);
+       if (cmd == ViewerCommand::Resize || resize_request)
        {
             SetupViewWindow(file_path);
         Change2Edit(file_path);
 /*      current_line = oldpos/BYTES;*/
         update_all_lines(VIEW,WLINES-1);
-        wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
-        wnoutrefresh(VIEW);
-        doupdate();
+        ui::ViewerSurface().moveCursor(cursor_pos_y, CURSOR_POS_X);
+        ui::ViewerSurface().present();
     }
 
-    switch(ch){
-        case ESC: QUIT=true;
+    switch(cmd){
+        case ViewerCommand::Quit: QUIT=true;
               break;
-        case KEY_DOWN: /*ScrollDown();*/
+        case ViewerCommand::MoveDown: /*ScrollDown();*/
                fstat(fd,&fdstat);
                if (fdstat.st_size > ((cursor_pos_y + current_line - 1) * BYTES + CURSOR_POSX)) {
 
@@ -555,7 +582,7 @@ void hex_edit(const std::string& file_path)
                 beep();
                 }
                 break;
-        case KEY_UP: /*ScroollUp();*/
+        case ViewerCommand::MoveUp: /*ScroollUp();*/
             if (cursor_pos_y > 0)
             {
                 wmove(VIEW, --cursor_pos_y, CURSOR_POS_X);
@@ -568,7 +595,7 @@ void hex_edit(const std::string& file_path)
             } else
                 beep();
                     break;
-        case KEY_LEFT: /* move 1 char left */
+        case ViewerCommand::MoveLeft: /* move 1 char left */
                 if ( cursor_pos_x > 0 ) {
                     cursor_pos_x-=1;
                 wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
@@ -585,7 +612,7 @@ void hex_edit(const std::string& file_path)
                 beep();
             wnoutrefresh(VIEW);
             break;
-        case KEY_PPAGE: /*ScrollPageDown();*/
+        case ViewerCommand::PageUp: /*ScrollPageDown();*/
                 if (current_line > WLINES)
                 current_line -= WLINES;
                 else
@@ -598,10 +625,10 @@ void hex_edit(const std::string& file_path)
                 wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
                 wnoutrefresh(VIEW);
                 break;
-        case KEY_RIGHT: move_right(VIEW);
+        case ViewerCommand::MoveRight: move_right(VIEW);
                 wnoutrefresh(VIEW);
                     break;
-        case KEY_NPAGE: /*ScroollPageUp();*/
+        case ViewerCommand::PageDown: /*ScroollPageUp();*/
                 fstat(fd,&fdstat);
                 if (fdstat.st_size > ((current_line - 1 + WLINES + cursor_pos_y) * BYTES) + CURSOR_POSX ) {
                 current_line += WLINES;
@@ -624,7 +651,7 @@ void hex_edit(const std::string& file_path)
                 wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
                 wnoutrefresh(VIEW);
                     break;
-        case KEY_HOME:
+        case ViewerCommand::Home:
                 if (CURSOR_POSX > 0) {
                 cursor_pos_x = 0;
                 wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
@@ -632,7 +659,7 @@ void hex_edit(const std::string& file_path)
                 beep();
                 wnoutrefresh(VIEW);
                         break;
-        case KEY_END:
+        case ViewerCommand::End:
              fstat(fd,&fdstat);
              if ( ((cursor_pos_y + current_line) * BYTES) > fdstat.st_size ) {
                     cursor_pos_x = CANTX(fdstat.st_size % BYTES) - 1;
@@ -642,7 +669,7 @@ void hex_edit(const std::string& file_path)
              wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
              wnoutrefresh(VIEW);
                      break;
-        case '\t' :
+        case ViewerCommand::TogglePane:
             /* move cursor to the the other part of the window*/
             if (inhex){
                 inhex=false;
@@ -654,27 +681,27 @@ void hex_edit(const std::string& file_path)
             wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
             wnoutrefresh(VIEW);
             break;
-        case 'L' & 0x1f:
-            clearok(stdscr,true);
+        case ViewerCommand::Redraw:
+            ui::ViewerSurface().forceFullRedraw();
             RefreshWindow(stdscr);
             break;
 
-        case 'q':
-        case 'Q': if (inhex) {
-                QUIT=true;
-            break;
-            }
-        default:
-            change_char(ch);
+        case ViewerCommand::CharInput:
+            change_char(ev.code);
             wmove(VIEW, cursor_pos_y, 0);
             update_line(VIEW, current_line+cursor_pos_y);
             move_right(VIEW);
             wmove(VIEW, cursor_pos_y, CURSOR_POS_X);
             wnoutrefresh(VIEW);
             break;
+        case ViewerCommand::Idle:
+        case ViewerCommand::Resize:
+        case ViewerCommand::Edit:
+        case ViewerCommand::Unknown:
+            break;
     }
     }
-    curs_set(0);
+    ui::ViewerSurface().setCursorVisible(false);
     close(fd);
     fd=fd2;
     inedit=false;
@@ -685,7 +712,6 @@ void hex_edit(const std::string& file_path)
 bool InternalView(const std::filesystem::path& file_path)
 {
     long oldpos;
-    int ch;
     bool QUIT=false;
 
     hexoffset = GetProfileValueOrEmpty("HEXEDITOFFSET") == "HEX";
@@ -702,30 +728,24 @@ bool InternalView(const std::filesystem::path& file_path)
     oldpos = 1;
     update_all_lines(VIEW,WLINES-1);
     while (!QUIT) {
-    ch = (resize_request) ? -1 : Getch();
-#ifdef VI_KEYS
-    ch = ViKey(ch);
-#endif
-    ch = TranslateOverlayMouse(ch);
-       if (resize_request)
+    const ui::InputEvent ev = ReadViewerEvent();
+    const ViewerCommand cmd = MapViewerCommand(ev, false, true);
+       if (cmd == ViewerCommand::Resize || resize_request)
        {
             SetupViewWindow(file_path);
         current_line = oldpos/BYTES;
         update_all_lines(VIEW,WLINES-1);
     }
 
-    switch(ch){
-        case ESC:
-        case 'q':
-        case 'Q': QUIT=true;
+    switch(cmd){
+        case ViewerCommand::Quit: QUIT=true;
               break;
-        case 'e':
-        case 'E': Change2Edit(file_path);
+        case ViewerCommand::Edit: Change2Edit(file_path);
                   hex_edit(file_path);
               update_all_lines(VIEW,WLINES-1);
               Change2View(file_path);
               break;
-        case KEY_DOWN: /*ScrollDown();*/
+        case ViewerCommand::MoveDown: /*ScrollDown();*/
                fstat(fd,&fdstat);
                if (fdstat.st_size > (current_line * BYTES) )
                {
@@ -736,7 +756,7 @@ bool InternalView(const std::filesystem::path& file_path)
                 else
                 beep();
                 break;
-        case KEY_UP: /*ScroollUp();*/
+        case ViewerCommand::MoveUp: /*ScroollUp();*/
             if (current_line > 1)
             {
                 current_line--;
@@ -746,8 +766,8 @@ bool InternalView(const std::filesystem::path& file_path)
             else
                 beep();
                     break;
-        case KEY_LEFT:
-        case KEY_PPAGE: /*ScrollPageDown();*/
+        case ViewerCommand::MoveLeft:
+        case ViewerCommand::PageUp: /*ScrollPageDown();*/
                 if (current_line > WLINES)
                 current_line -= WLINES;
                 else
@@ -758,8 +778,8 @@ bool InternalView(const std::filesystem::path& file_path)
                 oldpos = current_line * BYTES;
                 update_all_lines(VIEW,WLINES);
                 break;
-        case KEY_RIGHT:
-        case KEY_NPAGE: /*ScroollPageUp();*/
+        case ViewerCommand::MoveRight:
+        case ViewerCommand::PageDown: /*ScroollPageUp();*/
                 fstat(fd,&fdstat);
                 if (fdstat.st_size > ((current_line - 1 + WLINES) * BYTES) ) {
                 current_line += WLINES;
@@ -778,7 +798,7 @@ bool InternalView(const std::filesystem::path& file_path)
                 oldpos = current_line * BYTES;
                 update_all_lines(VIEW,WLINES);
                     break;
-        case KEY_HOME: /*ScrollHome();*/
+        case ViewerCommand::Home: /*ScrollHome();*/
                 if (current_line > 1)
                 {
                 current_line = 1;
@@ -787,7 +807,7 @@ bool InternalView(const std::filesystem::path& file_path)
                 }else
                 beep();
                         break;
-        case KEY_END: /*ScrollEnd();*/
+        case ViewerCommand::End: /*ScrollEnd();*/
              fstat(fd,&fdstat);
              if (fdstat.st_size >= BYTES * 2)
                 current_line = (fdstat.st_size - BYTES) / BYTES;
@@ -796,11 +816,16 @@ bool InternalView(const std::filesystem::path& file_path)
             oldpos = current_line * BYTES;
             update_all_lines(VIEW,WLINES);
                     break;
-        case 'L' & 0x1f:
-            clearok(stdscr,true);
+        case ViewerCommand::Redraw:
+            ui::ViewerSurface().forceFullRedraw();
             RefreshWindow(stdscr);
             break;
-        default: break;
+        case ViewerCommand::Unknown:
+        case ViewerCommand::Idle:
+        case ViewerCommand::TogglePane:
+        case ViewerCommand::CharInput:
+        case ViewerCommand::Resize:
+            break;
     }
     }
     Print(stdscr, 0, 0, "Path: ", MENU_COLOR);
@@ -810,4 +835,63 @@ bool InternalView(const std::filesystem::path& file_path)
     wnoutrefresh(stdscr);
     close(fd);
     return true;
+}
+
+namespace {
+
+class NcursesViewerSurface final : public ui::IViewerSurface
+{
+public:
+  void present() override
+  {
+    if (VIEW)
+    {
+      wnoutrefresh(VIEW);
+    }
+    doupdate();
+  }
+
+  void moveCursor(int row, int col) override
+  {
+    if (VIEW)
+    {
+      wmove(VIEW, row, col);
+      wnoutrefresh(VIEW);
+    }
+  }
+
+  void setCursorVisible(bool visible) override
+  {
+    curs_set(visible ? 1 : 0);
+  }
+
+  void leaveOk(bool enabled) override
+  {
+    if (VIEW)
+    {
+      leaveok(VIEW, enabled);
+    }
+  }
+
+  void forceFullRedraw() override
+  {
+    clearok(stdscr, true);
+  }
+
+  void touch() override
+  {
+    if (VIEW)
+    {
+      touchwin(VIEW);
+    }
+  }
+};
+
+NcursesViewerSurface g_ncurses_viewer_surface;
+
+} // namespace
+
+ui::IViewerSurface& NcursesViewerSurfaceInstance()
+{
+  return g_ncurses_viewer_surface;
 }

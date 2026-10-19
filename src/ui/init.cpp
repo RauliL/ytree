@@ -18,7 +18,8 @@ void Init(
     nullptr,
     nullptr,
     &NcursesDirViewInstance(),
-    &NcursesFileViewInstance()
+    &NcursesFileViewInstance(),
+    &NcursesViewerSurfaceInstance()
   );
 
   user_umask = umask(0);

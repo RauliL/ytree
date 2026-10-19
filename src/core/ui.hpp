@@ -279,12 +279,30 @@ public:
   virtual void forceFullRedraw() = 0;
 };
 
+/**
+ * Abstract surface for the fullscreen document/hex viewer.
+ * Ncurses owns WINDOW* details; a GUI would map these to a canvas widget.
+ */
+class IViewerSurface
+{
+public:
+  virtual ~IViewerSurface() = default;
+
+  virtual void present() = 0;
+  virtual void moveCursor(int row, int col) = 0;
+  virtual void setCursorVisible(bool visible) = 0;
+  virtual void leaveOk(bool enabled) = 0;
+  virtual void forceFullRedraw() = 0;
+  virtual void touch() = 0;
+};
+
 IDialogs& dialogs();
 ISession& session();
 IInput& input();
 IShellView& shell();
 IDirView& dir_view();
 IFileView& file_view();
+IViewerSurface& viewer_surface();
 
 void set_backend(
   IDialogs* dialogs,
@@ -292,7 +310,8 @@ void set_backend(
   IInput* input = nullptr,
   IShellView* shell = nullptr,
   IDirView* dir_view = nullptr,
-  IFileView* file_view = nullptr
+  IFileView* file_view = nullptr,
+  IViewerSurface* viewer = nullptr
 );
 
 inline void Message(const std::string& msg)
@@ -454,6 +473,11 @@ inline void InitClock()
 inline void SuspendClock()
 {
   session().suspendClock();
+}
+
+inline IViewerSurface& ViewerSurface()
+{
+  return viewer_surface();
 }
 
 } // namespace ui

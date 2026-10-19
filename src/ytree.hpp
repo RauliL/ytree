@@ -29,6 +29,7 @@ class IFileView;
 }
 ui::IDirView& NcursesDirViewInstance();
 ui::IFileView& NcursesFileViewInstance();
+ui::IViewerSurface& NcursesViewerSurfaceInstance();
 extern int  HandleDirWindow(DirEntry *start_dir_entry);
 extern void DisplayFileWindow(DirEntry *dir_entry);
 void Init(

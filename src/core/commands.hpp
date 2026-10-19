@@ -360,6 +360,82 @@ inline FileCommand MapFileCommand(const ui::InputEvent& ev)
   }
 }
 
+/**
+ * Commands for the internal hex/text viewer (browse + edit).
+ */
+enum class ViewerCommand
+{
+  Idle,
+  Resize,
+  Quit,
+  Edit,
+  MoveDown,
+  MoveUp,
+  MoveLeft,
+  MoveRight,
+  PageUp,
+  PageDown,
+  Home,
+  End,
+  TogglePane,
+  Redraw,
+  CharInput,
+  Unknown,
+};
+
+inline ViewerCommand MapViewerCommand(
+  const ui::InputEvent& ev,
+  bool editing,
+  bool in_hex_pane
+)
+{
+  using ui::Key;
+
+  switch (ev.key)
+  {
+    case Key::Resize:
+      return ViewerCommand::Resize;
+    case Key::Escape:
+      return ViewerCommand::Quit;
+    case Key::Down:
+      return ViewerCommand::MoveDown;
+    case Key::Up:
+      return ViewerCommand::MoveUp;
+    case Key::Left:
+      return ViewerCommand::MoveLeft;
+    case Key::Right:
+      return ViewerCommand::MoveRight;
+    case Key::PageUp:
+      return ViewerCommand::PageUp;
+    case Key::PageDown:
+      return ViewerCommand::PageDown;
+    case Key::Home:
+      return ViewerCommand::Home;
+    case Key::End:
+      return ViewerCommand::End;
+    case Key::Tab:
+      return ViewerCommand::TogglePane;
+    case Key::Char:
+      switch (ev.code)
+      {
+        case 'q':
+        case 'Q':
+          return (editing && !in_hex_pane)
+            ? ViewerCommand::CharInput
+            : ViewerCommand::Quit;
+        case 'e':
+        case 'E':
+          return editing ? ViewerCommand::CharInput : ViewerCommand::Edit;
+        case 'L' & 0x1f:
+          return ViewerCommand::Redraw;
+        default:
+          return editing ? ViewerCommand::CharInput : ViewerCommand::Unknown;
+      }
+    default:
+      return ViewerCommand::Unknown;
+  }
+}
+
 /** True when Y/y (or tagged Ctrl-Y) should copy with path. */
 inline bool IsPathCopyKey(const ui::InputEvent& ev)
 {
