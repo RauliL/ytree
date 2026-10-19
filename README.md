@@ -12,7 +12,8 @@ New features include:
 - Mouse support.
 - [TOML] configuration file.
 - [Gruvbox] colorscheme.
-- Support for [7zip], [xz]/lzma) and [zstd] archives.
+- Support for [7zip], [xz]/lzma and [zstd] archives.
+- [GTK] based GUI. (Very very work in progress.)
 
 [C++20]: https://fi.wikipedia.org/wiki/C++20
 [TOML]: https://en.wikipedia.org/wiki/TOML
@@ -20,6 +21,7 @@ New features include:
 [7zip]: https://www.7-zip.org/
 [xz]: https://tukaani.org/xz/
 [zstd]: https://facebook.github.io/zstd/
+[GTK]: https://www.gtk.org/
 
 ## Building
 
@@ -34,6 +36,19 @@ cmake -S . -B build
 cmake --build build
 sudo cmake --install build
 ```
+
+### Optional GTK frontend
+
+An experimental GTKmm 4 UI (`ytree-gtk`) shares the same core and directory/file
+controllers as the curses binary. Enable it with:
+
+```shell
+cmake -S . -B build -DWITH_GTK=ON
+cmake --build build
+```
+
+This requires `gtkmm-4.0` development packages (for example `libgtkmm-4.0-dev`
+on Debian/Ubuntu).
 
 For customizing ytree edit `ytree.toml` and copy it to
 `$XDG_CONFIG_HOME/ytree/config.toml` (typically `~/.config/ytree/config.toml`).

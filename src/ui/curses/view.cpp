@@ -1,7 +1,7 @@
 #include "core/commands.hpp"
 #include "core/ui.hpp"
 #include "ui/mouse.hpp"
-#include "ytree.hpp"
+#include "ui/curses/curses_ui.hpp"
 
 #include <optional>
 

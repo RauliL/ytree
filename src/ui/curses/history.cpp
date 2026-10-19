@@ -1,7 +1,7 @@
 #include <algorithm>
 
 #include "ui/mouse.hpp"
-#include "ytree.hpp"
+#include "ui/curses/curses_ui.hpp"
 
 static constexpr std::size_t MAX_HST_FILE_LINES = 50;
 

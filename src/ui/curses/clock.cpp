@@ -1,5 +1,5 @@
 #include "core/ui.hpp"
-#include "ytree.hpp"
+#include "ui/curses/curses_ui.hpp"
 
 void InitClockImpl()
 {

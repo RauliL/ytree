@@ -1,5 +1,5 @@
 #include "ui/view_info.hpp"
-#include "ytree.hpp"
+#include "ui/curses/curses_ui.hpp"
 
 static void PrettyPrintNumber(int y, int x, std::int64_t number);
 

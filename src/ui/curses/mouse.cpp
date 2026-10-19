@@ -1,5 +1,5 @@
 #include "ui/mouse.hpp"
-#include "ytree.hpp"
+#include "ui/curses/curses_ui.hpp"
 
 #ifdef NCURSES_MOUSE_VERSION
 

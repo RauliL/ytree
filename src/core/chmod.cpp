@@ -50,7 +50,7 @@ bool Entry::SetModus(const std::string& new_modus_str)
     {
       meta = *new_meta;
     } else {
-      Error("stat() failed");
+      YTreeError("stat() failed");
     }
 
     return true;

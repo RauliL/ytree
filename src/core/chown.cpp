@@ -50,7 +50,7 @@ bool Entry::SetOwner(int new_owner_id)
     {
       meta = *new_meta;
     } else {
-      Error("stat() failed");
+      YTreeError("stat() failed");
     }
 
     return true;

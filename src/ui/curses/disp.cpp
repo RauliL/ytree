@@ -1,14 +1,11 @@
 #include "core/ui.hpp"
 #include "core/version.hpp"
-#include "ytree.hpp"
-
-using HelpPair = std::array<std::string, 2>;
+#include "ui/curses/curses_ui.hpp"
+#include "ui/help.hpp"
 
 static void PrintMenuLine(WINDOW* win, int y, int x, const std::string& line);
 static void PrintLine(WINDOW *win, int y, int x, const std::string& line, int len);
 static void DisplayVersion();
-
-static constexpr std::size_t HELP_LABEL_WIDTH = 10;
 
 static const std::vector<std::string> mask =
 {
@@ -50,147 +47,6 @@ static const std::string extended_line = "| |                       |";
 static const std::string last_line = "3-8-----------------------4";
 static const std::string first_line = "1-5";
 
-static const HelpPair disk_dir_help =
-{
-  "DIR       (A)ttribute (D)elete  (F)ilespec  (G)roup (L)og (M)akedir                 (Q)uit",
-  "COMMANDS  (O)wner (R)ename (S)howall (^S)how-tagged (T)ag (U)ntag e(X)ecute   (^F) dirmode"
-};
-
-static const HelpPair ll_dir_help =
-{
-  "DIR       (F)ilespec (L)ogin (S)howall (T)ag (U)ntag e(X)ecute   (^F) dirmode  (Q)uit       ",
-  "COMMANDS                                                                    "
-};
-
-static const std::string archive_dir_actions =
-  "(F)ilespec (L)og (S)howall (T)ag (U)ntag e(X)ecute   (^F) dirmode  (Q)uit         ";
-static const std::string archive_dir_commands =
-  "COMMANDS                                                                    ";
-
-static const HelpPair disk_file_help =
-{
-  "FILE      (A)ttribute (C)opy (D)elete (E)dit (F)ilespec (G)roup (H)ex (L)ogin (M)ove    (Q)uit ",
-  "COMMANDS  (O)wner (P)ipe (R)ename (S)ort (T)ag (U)ntag (V)iew e(X)ecute pathcop(Y) (^F)ilemode "
-};
-
-static const HelpPair ll_file_help =
-{
-  "FILE      (F)ilespec (L)ogin (S)ort (T)ag (U)ntag e(X)ecute (^F)ilemode      (Q)uit        ",
-  "COMMANDS                                                                   "
-};
-
-static const std::string archive_file_actions =
-  "(C)opy (F)ilespec (H)ex (P)ipe (S)ort (T)ag (U)ntag (V)iew pathcop(Y) (Q)uit         ";
-static const std::string archive_file_commands =
-  "COMMANDS  (^F)ilemode                                                        ";
-
-/* Overridable USER_MODE banners; start as disk-mode defaults. */
-static HelpPair user_dir_help = disk_dir_help;
-static HelpPair user_file_help = disk_file_help;
-
-struct HelpContext
-{
-  const HelpPair& disk;
-  HelpPair& user;
-  const HelpPair& ll;
-  const std::string& archive_actions;
-  const std::string& archive_commands;
-  const char* archive_suffix;
-  const char* profile_key0;
-  const char* profile_key1;
-};
-
-static const HelpContext dir_help_context =
-{
-  disk_dir_help,
-  user_dir_help,
-  ll_dir_help,
-  archive_dir_actions,
-  archive_dir_commands,
-  "-DIR",
-  "DIR1",
-  "DIR2"
-};
-
-static const HelpContext file_help_context =
-{
-  disk_file_help,
-  user_file_help,
-  ll_file_help,
-  archive_file_actions,
-  archive_file_commands,
-  "-FILE",
-  "FILE1",
-  "FILE2"
-};
-
-static std::string PadHelpLabel(std::string label)
-{
-  if (label.size() < HELP_LABEL_WIDTH)
-  {
-    label.append(HELP_LABEL_WIDTH - label.size(), ' ');
-  }
-
-  return label;
-}
-
-static HelpPair MakeArchiveHelp(
-  std::string_view kind,
-  std::string_view suffix,
-  const std::string& actions,
-  const std::string& commands
-)
-{
-  return {
-    PadHelpLabel(std::string(kind) + std::string(suffix)) + actions,
-    commands
-  };
-}
-
-static std::optional<std::string_view> ArchiveHelpKind(Mode m)
-{
-  switch (m)
-  {
-    using enum Mode;
-    case TAR_FILE_MODE: return "TAR";
-    case ZOO_FILE_MODE: return "ZOO";
-    case ZIP_FILE_MODE: return "ZIP";
-    case LHA_FILE_MODE: return "LHA";
-    case ARC_FILE_MODE: return "ARC";
-    case RPM_FILE_MODE: return "RPM";
-    case RAR_FILE_MODE: return "RAR";
-    case TAPE_MODE: return "TAPE";
-    case SEVENZIP_FILE_MODE: return "7ZIP";
-    default: return std::nullopt;
-  }
-}
-
-static HelpPair GetHelp(const HelpContext& ctx, Mode m)
-{
-  if (m == Mode::DISK_MODE)
-  {
-    return ctx.disk;
-  }
-  if (m == Mode::USER_MODE)
-  {
-    return ctx.user;
-  }
-  if (m == Mode::LL_FILE_MODE)
-  {
-    return ctx.ll;
-  }
-  if (const auto kind = ArchiveHelpKind(m))
-  {
-    return MakeArchiveHelp(
-      *kind,
-      ctx.archive_suffix,
-      ctx.archive_actions,
-      ctx.archive_commands
-    );
-  }
-  return ctx.disk;
-}
-
 static void DisplayVersion()
 {
   const auto version = std::format(
@@ -208,27 +64,8 @@ static void DisplayVersion()
   );
 }
 
-static void DisplayHelp(const HelpContext& ctx)
+static void DisplayHelpLines(const HelpLines& help)
 {
-  if (mode == Mode::USER_MODE)
-  {
-    if (ctx.user[0] == ctx.disk[0])
-    {
-      if (const auto cptr = GetProfileValue(ctx.profile_key0))
-      {
-        ctx.user[0] = *cptr;
-      }
-    }
-    if (ctx.user[1] == ctx.disk[1])
-    {
-      if (const auto cptr = GetProfileValue(ctx.profile_key1))
-      {
-        ctx.user[1] = *cptr;
-      }
-    }
-  }
-
-  const auto help = GetHelp(ctx, mode);
   for (std::size_t i = 0; i < help.size(); ++i)
   {
     PrintOptions(stdscr, LINES - 2 + static_cast<int>(i), 0, help[i]);
@@ -238,12 +75,12 @@ static void DisplayHelp(const HelpContext& ctx)
 
 void DisplayDirHelp()
 {
-  DisplayHelp(dir_help_context);
+  DisplayHelpLines(DirHelpLines());
 }
 
 void DisplayFileHelp()
 {
-  DisplayHelp(file_help_context);
+  DisplayHelpLines(FileHelpLines());
 }
 
 void ClearHelp()

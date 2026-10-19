@@ -1,14 +1,7 @@
-#include "ytree.hpp"
+#include "core/domain.hpp"
 
-WINDOW* dir_window;
-WINDOW* small_file_window;
-WINDOW* big_file_window;
-WINDOW* file_window;
-WINDOW* error_window;
-WINDOW* history_window;
-WINDOW* matches_window;
-WINDOW* f2_window;
-WINDOW* time_window;
+#include <optional>
+#include <string>
 
 Statistic statistic;
 Statistic disk_statistic;

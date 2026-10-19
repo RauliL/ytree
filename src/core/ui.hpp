@@ -60,6 +60,11 @@ struct MouseEvent
   MouseAction action = MouseAction::None;
   int row = 0;
   int col = 0;
+  /**
+   * Absolute list index when >= 0 (GTK ColumnView clicks).
+   * When < 0, row/col are curses window-relative coordinates.
+   */
+  int index = -1;
 };
 
 /** Backend-neutral keys for window command loops. */
@@ -188,6 +193,14 @@ public:
   virtual void displayAvailBytes() = 0;
   virtual void displayFileSpec() = 0;
   virtual void displayDiskName() = 0;
+
+  /**
+   * Recreate panel geometry after a resize (curses windows / GTK allocate).
+   * Controllers call this instead of backend-specific window recreation.
+   */
+  virtual void relayout() = 0;
+  /** Flush pending display updates (e.g. doupdate); may be a no-op. */
+  virtual void present() = 0;
 };
 
 /** Snapshot of directory stats/labels for panel chrome (no domain pointers). */
@@ -463,6 +476,16 @@ inline void DisplayFileSpec()
 inline void DisplayDiskName()
 {
   shell().displayDiskName();
+}
+
+inline void Relayout()
+{
+  shell().relayout();
+}
+
+inline void Present()
+{
+  shell().present();
 }
 
 inline void InitClock()

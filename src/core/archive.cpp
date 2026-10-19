@@ -121,7 +121,7 @@ bool InsertArchiveFileEntry(
 
     if (!TryInsertArchiveDirEntry(tree, split.dir.c_str(), archive_meta::Directory()))
     {
-      Error("Inserting directory failed");
+      YTreeError("Inserting directory failed");
       return false;
     }
     if (!GetArchiveDirEntry(tree, split.dir.c_str(), &de_ptr))

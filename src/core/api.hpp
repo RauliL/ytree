@@ -187,6 +187,8 @@ std::optional<std::filesystem::path> GetXdgConfigPath();
 std::string StrLeft(const char* str, std::size_t count);
 std::string FitVisualWidth(std::string_view str, std::size_t width, bool left_justify);
 int StrVisualLength(std::string_view str);
+const char* StrVisualIndex(const char* str, std::size_t index);
+void TruncateVisual(char* str, std::size_t max_len);
 
 void ErrorEx(const std::string& msg, const std::string& module, int line);
 void Warning(const std::string& msg);

@@ -5,25 +5,15 @@
 
 #include "core/commands.hpp"
 #include "core/ui.hpp"
-#include "ui/mouse.hpp"
 #include "ui/view_info.hpp"
-#include "ytree.hpp"
+#include "ui/ui.hpp"
 
-struct DirEntryList
-{
-  std::size_t indent;
-  std::shared_ptr<DirEntry> dir_entry;
-  unsigned short level;
-  bool has_next_sibling;
-};
-
-static std::vector<DirEntryList> dir_entry_list;
-static std::vector<DirEntryList>::size_type current_dir_entry;
+static std::vector<DirListRow> dir_entry_list;
+static std::vector<DirListRow>::size_type current_dir_entry;
 static int window_height;
 static int window_width;
 
 static void ReadDirList(const std::vector<std::shared_ptr<DirEntry>>& dir_entries);
-static void PrintDirEntry(WINDOW *win, int entry_no, int y, unsigned char hilight);
 static void BuildDirEntryList(DirEntry* dir_entry);
 
 static ViewMode dir_mode;
@@ -95,190 +85,13 @@ static void ReadDirList(const std::vector<std::shared_ptr<DirEntry>>& dir_entrie
   }
 }
 
-static void PrintDirEntry(WINDOW *win,
-                          int entry_no,
-                          int y,
-                          unsigned char hilight)
-{
-  unsigned int j, l1, l2;
-  int  n;
-  int  aux=0;
-  int  color, hi_color;
-  std::string buffer;
-  std::string line_buffer;
-  const DirEntry* de_ptr;
-  bool suppress_output = false;
-
-
-  if(win == f2_window) {
-    color     = HST_COLOR;
-    hi_color  = HIHST_COLOR;
-  } else {
-    color     = DIR_COLOR;
-    hi_color  = HIDIR_COLOR;
-  }
-
-  for(j=0; j < dir_entry_list[entry_no].level; j++)
-  {
-    if( dir_entry_list[entry_no].indent & ( 1L << j ) )
-      buffer += "| ";
-    else
-      buffer += "  ";
-  }
-  de_ptr = dir_entry_list[entry_no].dir_entry.get();
-  if( dir_entry_list[entry_no].has_next_sibling )
-    buffer += "6-";
-  else
-    buffer += "3-";
-
-  switch( dir_mode )
-  {
-    case ViewMode::MODE_1:
-      {
-        const auto attributes = GetAttributes(de_ptr->meta.Mode());
-        const auto modify_time = FormatMetaTime(de_ptr->meta.mtime);
-        line_buffer = std::format(
-          "{:>10} {:>3} {:8} {:>12}",
-          attributes,
-          FormatMetaNlink(de_ptr->meta),
-          static_cast<std::int64_t>(de_ptr->meta.size),
-          modify_time
-);
-      }
-      break;
-
-    case ViewMode::MODE_2 :
-                 {
-                   line_buffer = std::format(
-                     "{:>12}  {:<12} {:<12}",
-                     FormatMetaInode(de_ptr->meta),
-                     FormatMetaOwner(de_ptr->meta),
-                     FormatMetaGroup(de_ptr->meta)
-);
-                 }
-                 break;
-    case ViewMode::MODE_3 :
-    case ViewMode::MODE_5 : /* unused for dirs */
-      break;
-    case ViewMode::MODE_4 :
-                 line_buffer = std::format(
-                   "Chg.: {:>12}  Acc.: {:>12}",
-                   FormatMetaTime(de_ptr->meta.ctime),
-                   FormatMetaTime(de_ptr->meta.atime)
-);
-                 break;
-  }
-
-  if(window_width == 1)
-    suppress_output = true;
-
-  aux = 0;
-  /* Output optional Attributes */
-  if (!suppress_output) {
-     WbkgdSet(win, COLOR_PAIR(color)| A_BOLD);
-     if(!line_buffer.empty()) {
-       aux = StrVisualLength(line_buffer.c_str());
-       if(window_width <= aux) {
-         TruncateVisual(line_buffer.data(), window_width - 1);
-         line_buffer.resize(std::strlen(line_buffer.c_str()));
-         suppress_output = true;
-       }
-       mvwaddstr(win, y, 0, line_buffer.c_str());
-    }
-  }
-
-  if(!suppress_output) {
-    /* Output Graph */
-    l1 = StrVisualLength(buffer.c_str());
-    n = window_width - aux;
-    if((int)l1 > n) {
-       TruncateVisual(buffer.data(), std::max(n - 1, 0));
-       buffer.resize(std::strlen(buffer.c_str()));
-       suppress_output = true;
-    }
-    PrintSpecialString(win, y, aux, buffer, color);
-  }
-
-  if(!suppress_output) {
-
-    /* Output Dirname */
-    buffer = de_ptr->name.empty() ? "." : de_ptr->name;
-    if( de_ptr->not_scanned ) {
-      buffer += "/";
-    }
-
-#ifdef NO_HIGHLIGHT
-    buffer += (hilight) ? " <" : "  ";
-#else /* NO_HIGHLIGHT */
-#ifdef COLOR_SUPPORT
-    if( hilight )
-      WbkgdSet(win, COLOR_PAIR(hi_color)|A_BOLD);
-    else
-      WbkgdSet(win, COLOR_PAIR(color));
-
-    n = window_width - aux - l1;
-    l2 = StrVisualLength(buffer.c_str());
-    if((int)l2 > n) {
-      TruncateVisual(buffer.data(), std::max(n - 1, 0));
-      buffer.resize(std::strlen(buffer.c_str()));
-    }
-
-/*    waddstr( win, buffer );*/
-    mvwaddstr(win, y, aux + l1, buffer.c_str());
-    WbkgdSet(win, COLOR_PAIR(color)|A_BOLD);
-
-#else
-    if( hilight ) wattrset(win, A_REVERSE);
-/*    waddstr( win, buffer );*/
-    mvwaddstr(win, y, aux + l1, buffer.c_str());
-
-    if( hilight ) wattrset(win, 0);
-#endif /* COLOR_SUPPORT */
-#endif /* NO_HIGHLIGHT */
-  }
-}
-
-
-
-
-void DisplayTree(WINDOW *win, int start_entry_no, int hilight_no)
-{
-  int i, y;
-  int width, height;
-
-  y = -1;
-  GetMaxYX(win, &height, &width);
-  if(win == dir_window) {
-    window_width  = width;
-    window_height = height;
-  }
-  for(i=0; i < height; i++)
-  {
-    wmove(win, i, 0);
-    wclrtoeol(win);
-  }
-
-  for(i=0; i < height; i++)
-  {
-    if( start_entry_no + i >= (int)statistic.disk_total_directories ) break;
-
-    if( start_entry_no + i != hilight_no )
-      PrintDirEntry(win, start_entry_no + i, i, false);
-    else
-      y = i;
-  }
-
-  if( y >= 0 ) PrintDirEntry(win, start_entry_no + y, y, true);
-
-}
-
 static void Movedown(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
 {
    if (*disp_begin_pos + *cursor_pos + 1 >= static_cast<int>(dir_entry_list.size()))
    {
       /* Element nicht vorhanden */
       /*-------------------------*/
-      beep();
+      ui::Beep();
    }
    else
    {
@@ -302,16 +115,8 @@ static void Movedown(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
       {
           /* Es muss gescrollt werden */
           /*--------------------------*/
-          ui::dir_view().printEntry(*disp_begin_pos + *cursor_pos,
-                         *cursor_pos,
-                         false
-);
-          scroll(dir_window);
           (*disp_begin_pos)++;
-          ui::dir_view().printEntry(*disp_begin_pos + *cursor_pos,
-                         *cursor_pos,
-                         true
-);
+          ui::dir_view().showTree(*disp_begin_pos, *disp_begin_pos + *cursor_pos);
       }
       *dir_entry = dir_entry_list[*disp_begin_pos + *cursor_pos].dir_entry.get();
       (*dir_entry)->start_file = 0;
@@ -328,7 +133,7 @@ static void Moveup(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
    {
       /* Element nicht vorhanden */
       /*-------------------------*/
-      beep();
+      ui::Beep();
    }
    else
    {
@@ -352,17 +157,8 @@ static void Moveup(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry)
       {
           /* Es muss gescrollt werden */
           /*--------------------------*/
-          ui::dir_view().printEntry(*disp_begin_pos + *cursor_pos,
-                         *cursor_pos,
-                         false
-);
-          wmove(dir_window, 0, 0);
-          winsertln(dir_window);
           (*disp_begin_pos)--;
-          ui::dir_view().printEntry(*disp_begin_pos + *cursor_pos,
-                         *cursor_pos,
-                         true
-);
+          ui::dir_view().showTree(*disp_begin_pos, *disp_begin_pos + *cursor_pos);
       }
       *dir_entry = dir_entry_list[*disp_begin_pos + *cursor_pos].dir_entry.get();
       (*dir_entry)->start_file = 0;
@@ -379,7 +175,7 @@ static void Movenpage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
    {
       /* Letzte Position */
       /*-----------------*/
-      beep();
+      ui::Beep();
    }
    else
    {
@@ -436,7 +232,7 @@ static void Moveppage(int *disp_begin_pos, int *cursor_pos, DirEntry **dir_entry
    {
       /* Erste Position */
       /*----------------*/
-      beep();
+      ui::Beep();
    }
    else
    {
@@ -496,7 +292,7 @@ void MoveHome(DirEntry **dir_entry)
     if( statistic.disp_begin_pos == 0 && statistic.cursor_pos == 0 )
     {  /* Position 1 bereits errecht */
        /*----------------------------*/
-       beep();
+       ui::Beep();
     }
     else
     {
@@ -536,34 +332,88 @@ static void MoveToRow(int row, int *disp_begin_pos, int *cursor_pos, DirEntry **
   ui::dir_view().showFileSide();
 }
 
+static void MoveToIndex(
+  int index,
+  int *disp_begin_pos,
+  int *cursor_pos,
+  DirEntry **dir_entry
+)
+{
+  if (index < 0 || index >= static_cast<int>(dir_entry_list.size()))
+  {
+    return;
+  }
+
+  const int current = *disp_begin_pos + *cursor_pos;
+  if (index == current)
+  {
+    return;
+  }
+
+  if (index >= *disp_begin_pos && index < *disp_begin_pos + window_height)
+  {
+    ui::dir_view().printEntry(current, *cursor_pos, false);
+    *cursor_pos = index - *disp_begin_pos;
+    ui::dir_view().printEntry(index, *cursor_pos, true);
+  }
+  else if (index < window_height)
+  {
+    *disp_begin_pos = 0;
+    *cursor_pos = index;
+    ui::dir_view().showTree(*disp_begin_pos, *disp_begin_pos + *cursor_pos);
+  }
+  else
+  {
+    *disp_begin_pos = index - window_height + 1;
+    *cursor_pos = window_height - 1;
+    ui::dir_view().showTree(*disp_begin_pos, *disp_begin_pos + *cursor_pos);
+  }
+
+  *dir_entry = dir_entry_list[*disp_begin_pos + *cursor_pos].dir_entry.get();
+  (*dir_entry)->start_file = 0;
+  (*dir_entry)->cursor_pos = -1;
+  ui::dir_view().showFileSide();
+}
+
 static std::optional<ui::InputEvent> HandleDirMouse(
   int *disp_begin_pos,
   int *cursor_pos,
   DirEntry **dir_entry
 )
 {
-  const MouseEvent event = DecodeMouse(MouseFocus::Dir);
+  const ui::MouseEvent event = ui::input().decodeMouse(ui::MouseFocus::Dir);
 
   switch (event.action)
   {
-    case MouseAction::ScrollUp:
+    case ui::MouseAction::ScrollUp:
       return ui::InputEvent::Special(ui::Key::Up);
-    case MouseAction::ScrollDown:
+    case ui::MouseAction::ScrollDown:
       return ui::InputEvent::Special(ui::Key::Down);
-    case MouseAction::SwitchToFile:
+    case ui::MouseAction::SwitchToFile:
       return ui::InputEvent::Special(ui::Key::Enter);
-    case MouseAction::Select:
-      MoveToRow(event.row, disp_begin_pos, cursor_pos, dir_entry);
+    case ui::MouseAction::Select:
+    case ui::MouseAction::Activate:
+    case ui::MouseAction::Tag:
+      if (event.index >= 0)
+      {
+        MoveToIndex(event.index, disp_begin_pos, cursor_pos, dir_entry);
+      }
+      else
+      {
+        MoveToRow(event.row, disp_begin_pos, cursor_pos, dir_entry);
+      }
+      if (event.action == ui::MouseAction::Activate)
+      {
+        return ui::InputEvent::Special(ui::Key::Enter);
+      }
+      if (event.action == ui::MouseAction::Tag)
+      {
+        return ui::InputEvent::CharKey('t');
+      }
       return std::nullopt;
-    case MouseAction::Activate:
-      MoveToRow(event.row, disp_begin_pos, cursor_pos, dir_entry);
-      return ui::InputEvent::Special(ui::Key::Enter);
-    case MouseAction::Tag:
-      MoveToRow(event.row, disp_begin_pos, cursor_pos, dir_entry);
-      return ui::InputEvent::CharKey('t');
-    case MouseAction::Ignore:
-    case MouseAction::None:
-    case MouseAction::SwitchToDir:
+    case ui::MouseAction::Ignore:
+    case ui::MouseAction::None:
+    case ui::MouseAction::SwitchToDir:
     default:
       return std::nullopt;
   }
@@ -579,7 +429,7 @@ static void HandlePlus(
 {
   if (!dir_entry->not_scanned)
   {
-    beep();
+    ui::Beep();
     return;
   }
   for (const auto& child : dir_entry->children)
@@ -625,7 +475,7 @@ static void HandleUnreadSubTree(
 {
   if (dir_entry->not_scanned || dir_entry->children.empty())
   {
-    beep();
+    ui::Beep();
     return;
   }
 
@@ -744,7 +594,7 @@ static bool HandleShowAllTagged(
     }
   } else {
     dir_entry->login_flag = false;
-    beep();
+    ui::Beep();
   }
   need_dsp_help = true;
   return request_change_login;
@@ -789,7 +639,7 @@ static bool HandleShowAll(
     }
   } else {
     dir_entry->login_flag = false;
-    beep();
+    ui::Beep();
   }
   need_dsp_help = true;
   return request_change_login;
@@ -835,7 +685,7 @@ static bool HandleSwitchWindow(
     need_dsp_help = true;
   } else {
     dir_entry->login_flag = false;
-    beep();
+    ui::Beep();
   }
   return request_change_login;
 }
@@ -849,15 +699,6 @@ struct DirWindowContext
   bool need_dsp_help = true;
   char new_login_path[PATH_LENGTH + 1]{};
 };
-
-static void DisplayDirTreeAtCursor()
-{
-  DisplayTree(
-    dir_window,
-    statistic.disp_begin_pos,
-    statistic.disp_begin_pos + statistic.cursor_pos
-  );
-}
 
 static void RefreshDirEntryFilePane(DirEntry* dir_entry)
 {
@@ -948,8 +789,7 @@ static void InitializeDirWindowDisplay(DirWindowContext& ctx)
 
   ui::dir_view().showFileSide();
   ui::dir_view().showTreeAtCursor();
-  touchwin(dir_window);
-
+  
   if (ctx.dir_entry->login_flag)
   {
     if (ctx.dir_entry->global_flag || ctx.dir_entry->tagged_flag)
@@ -972,7 +812,7 @@ static ui::InputEvent ReadDirWindowKey(DirWindowContext& ctx)
     return ev;
   }
 
-  doupdate();
+  ui::Present();
   return ui::ReadEvent();
 }
 
@@ -983,7 +823,7 @@ static void HandleDirWindowResize(DirEntry* dir_entry, bool& need_dsp_help)
     return;
   }
 
-  ReCreateWindows();
+  ui::Relayout();
   ui::DisplayMenu();
   ui::dir_view().getSize(window_height, window_width);
   while (statistic.cursor_pos >= window_height)
@@ -1086,7 +926,7 @@ static void HandleDirKeyChangeLogin(DirEntry* dir_entry, bool& need_dsp_help)
   if (const auto new_path = GetNewLoginPath(login_path))
   {
     ui::DisplayMenu();
-    doupdate();
+    ui::Present();
     LoginDisk(*new_path);
   }
   need_dsp_help = true;
@@ -1396,201 +1236,6 @@ void ScanSubTree(DirEntry* dir_entry)
   }
 }
 
-bool KeyF2Get(DirEntry *start_dir_entry,
-             int disp_begin_pos,
-       int cursor_pos,
-             char *path)
-{
-  int ch;
-  bool result = false;
-  int win_width, win_height;
-
-
-  GetMaxYX(f2_window, &win_height, &win_width);
-  MapF2Window();
-  DisplayTree(f2_window, disp_begin_pos, disp_begin_pos + cursor_pos);
-  do
-  {
-    RefreshWindow(f2_window);
-    doupdate();
-    ch = Getch();
-    GetMaxYX(f2_window, &win_height, &win_width);  /* Maybe changed... */
-    if( ch == LF ) ch = CR;
-
-
-#ifdef VI_KEYS
-
-    ch = ViKey(ch);
-
-#endif /* VI_KEYS */
-
-    switch( ch )
-    {
-      case -1:       break;
-      case ' ':      break;  /* Quick-Key */
-      case KEY_DOWN:
-        if (disp_begin_pos + cursor_pos + 1 >= static_cast<int>(dir_entry_list.size()))
-         {
-           beep();
-         }
-         else
-         {
-           if( cursor_pos + 1 < win_height )
-           {
-       PrintDirEntry(f2_window,
-                      disp_begin_pos + cursor_pos,
-          cursor_pos, false);
-       cursor_pos++;
-
-       PrintDirEntry(f2_window, disp_begin_pos + cursor_pos,
-          cursor_pos, true);
-                       }
-           else
-           {
-       disp_begin_pos++;
-                         DisplayTree(f2_window, disp_begin_pos,
-              disp_begin_pos + cursor_pos);
-                       }
-         }
-                     break;
-
-      case KEY_UP  : if( disp_begin_pos + cursor_pos - 1 < 0 )
-         {
-           beep();
-         }
-         else
-         {
-           if( cursor_pos - 1 >= 0 )
-           {
-       PrintDirEntry(f2_window,
-                      disp_begin_pos + cursor_pos,
-          cursor_pos, false);
-       cursor_pos--;
-       PrintDirEntry(f2_window,
-                      disp_begin_pos + cursor_pos,
-          cursor_pos, true);
-                       }
-           else
-           {
-       disp_begin_pos--;
-                         DisplayTree(f2_window, disp_begin_pos,
-              disp_begin_pos + cursor_pos);
-                       }
-         }
-                     break;
-
-      case KEY_NPAGE:
-         if (disp_begin_pos + cursor_pos >= static_cast<int>(dir_entry_list.size() - 1))
-         {
-           beep();
-         }
-         else
-         {
-           if( cursor_pos < win_height - 1 )
-           {
-       PrintDirEntry(f2_window,
-                      disp_begin_pos + cursor_pos,
-          cursor_pos, false);
-             if (disp_begin_pos + win_height > static_cast<int>(dir_entry_list.size() - 1))
-         cursor_pos = dir_entry_list.size() - disp_begin_pos - 1;
-       else
-         cursor_pos = win_height - 1;
-       PrintDirEntry(f2_window,
-                      disp_begin_pos + cursor_pos,
-          cursor_pos, true);
-           }
-           else
-           {
-       if (disp_begin_pos + cursor_pos + win_height < static_cast<int>(dir_entry_list.size()))
-       {
-         disp_begin_pos += win_height;
-         cursor_pos = win_height - 1;
-       }
-       else
-       {
-         disp_begin_pos = dir_entry_list.size() - win_height;
-         if( disp_begin_pos < 0 ) disp_begin_pos = 0;
-         cursor_pos = dir_entry_list.size() - disp_begin_pos - 1;
-       }
-                         DisplayTree(f2_window, disp_begin_pos,
-              disp_begin_pos + cursor_pos);
-           }
-         }
-                     break;
-
-      case KEY_PPAGE:
-         if( disp_begin_pos + cursor_pos <= 0 )
-         {
-           beep();
-         }
-         else
-         {
-           if( cursor_pos > 0 )
-           {
-       PrintDirEntry(f2_window,
-                      disp_begin_pos + cursor_pos,
-          cursor_pos, false);
-       cursor_pos = 0;
-       PrintDirEntry(f2_window,
-                      disp_begin_pos + cursor_pos,
-          cursor_pos, true);
-           }
-           else
-           {
-       if( (disp_begin_pos -= win_height) < 0 )
-       {
-         disp_begin_pos = 0;
-       }
-                         cursor_pos = 0;
-                         DisplayTree(f2_window, disp_begin_pos,
-              disp_begin_pos + cursor_pos);
-           }
-         }
-                     break;
-
-      case KEY_HOME: if( disp_begin_pos == 0 && cursor_pos == 0 )
-         { beep(); }
-         else
-         {
-           disp_begin_pos = 0;
-           cursor_pos     = 0;
-                       DisplayTree(f2_window, disp_begin_pos,
-            disp_begin_pos + cursor_pos);
-         }
-                     break;
-
-      case KEY_END:
-        disp_begin_pos = std::max<int>(0, dir_entry_list.size() - win_height);
-         cursor_pos     = dir_entry_list.size() - disp_begin_pos - 1;
-                     DisplayTree(f2_window, disp_begin_pos,
-          disp_begin_pos + cursor_pos);
-                     break;
-
-      case LF:
-      case CR:
-      {
-        const auto tmp_path = GetPath(dir_entry_list[cursor_pos + disp_begin_pos].dir_entry.get());
-
-        std::snprintf(path, PATH_LENGTH + 1, "%s", tmp_path.c_str());
-        result = true;
-        break;
-      }
-
-      case ESC:
-      case 'Q':
-      case 'q':      break;
-
-      default :      beep();
-         break;
-    } /* switch */
-  } while( (ch != 'q') && (ch != ESC) && (ch != 'Q') && (ch != CR) && (ch != -1) );
-
-  UnmapF2Window();
-  return( result );
-}
-
-
-
 bool RefreshDirWindow()
 {
   DirEntry *de_ptr;
@@ -1614,7 +1259,7 @@ bool RefreshDirWindow()
 
   if(n == -1) {
     /* Directory disapeared */
-    Error("Current directory disappeared");
+    YTreeError("Current directory disappeared");
     result = false;
   } else {
 
@@ -1644,77 +1289,43 @@ bool RefreshDirWindow()
   return(result);
 }
 
-namespace {
 
-class NcursesDirView final : public ui::IDirView
+DirEntry* CurrentDirListEntry()
 {
-public:
-  void getSize(int& height, int& width) override
+  if (dir_entry_list.empty())
   {
-    GetMaxYX(dir_window, &height, &width);
+    return nullptr;
   }
-
-  void showTree(int start_entry_no, int hilight_no) override
+  const auto idx = statistic.disp_begin_pos + statistic.cursor_pos;
+  if (idx < 0 || idx >= static_cast<int>(dir_entry_list.size()))
   {
-    DisplayTree(dir_window, start_entry_no, hilight_no);
+    return nullptr;
   }
+  return dir_entry_list[idx].dir_entry.get();
+}
 
-  void showTreeAtCursor() override
-  {
-    DisplayDirTreeAtCursor();
-  }
-
-  void showParameter(const ui::DirPanelInfo& info) override
-  {
-    PaintDirParameter(info);
-  }
-
-  void showDiskStatistic() override
-  {
-    DisplayDiskStatistic();
-  }
-
-  void showFileSide() override
-  {
-    DirEntry* dir =
-      dir_entry_list[statistic.disp_begin_pos + statistic.cursor_pos]
-        .dir_entry.get();
-    DisplayFileWindow(dir);
-    RefreshWindow(file_window);
-  }
-
-  void refresh() override
-  {
-    RefreshWindow(dir_window);
-  }
-
-  void refreshFileSide() override
-  {
-    RefreshWindow(file_window);
-  }
-
-  void refreshBothFileWindows() override
-  {
-    RefreshWindow(small_file_window);
-    RefreshWindow(big_file_window);
-  }
-
-  void printEntry(int entry_no, int y, bool hilight) override
-  {
-    PrintDirEntry(dir_window, entry_no, y, hilight);
-  }
-
-  void forceFullRedraw() override
-  {
-    clearok(stdscr, true);
-  }
-};
-
-NcursesDirView g_ncurses_dir_view;
-
-} // namespace
-
-ui::IDirView& NcursesDirViewInstance()
+const std::vector<DirListRow>& DirListRows()
 {
-  return g_ncurses_dir_view;
+  return dir_entry_list;
+}
+
+ViewMode GetDirViewMode()
+{
+  return dir_mode;
+}
+
+void SetDirWindowMetrics(int height, int width)
+{
+  window_height = height;
+  window_width = width;
+}
+
+int GetDirWindowHeight()
+{
+  return window_height;
+}
+
+int GetDirWindowWidth()
+{
+  return window_width;
 }

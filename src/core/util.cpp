@@ -123,7 +123,7 @@ int GetDirEntry(
   {
     current_path = *cwd;
   } else {
-    Error("Getcwd failed");
+    YTreeError("Getcwd failed");
 
     return -1;
   }
@@ -137,7 +137,7 @@ int GetDirEntry(
     std::filesystem::current_path(GetPath(current_dir_entry), ec);
     if (ec)
     {
-      Error("chdir() failed");
+      YTreeError("chdir() failed");
 
       return -1;
     }
@@ -166,7 +166,7 @@ int GetDirEntry(
   std::filesystem::current_path(current_path, ec);
   if (ec)
   {
-    Error("chdir() failed; Can't resume");
+    YTreeError("chdir() failed; Can't resume");
 
     return -1;
   }
@@ -749,7 +749,7 @@ EntryMeta MetaOrAbort(const std::filesystem::path& path)
     return *meta;
   }
 
-  Error("stat() failed*ABORT");
+  YTreeError("stat() failed*ABORT");
   std::exit(EXIT_FAILURE);
   return {};
 }
