@@ -2500,7 +2500,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
           ctx.de_ptr = ctx.fe_ptr->Dir().get();
 
-          if( !DeleteFile(ctx.fe_ptr) )
+          if (ctx.fe_ptr->Delete())
           {
             /* File wurde geloescht */
       /*----------------------*/
@@ -2729,10 +2729,11 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 );
           break;
 
-      case 'P' :
-      case 'p' :      ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
+      case 'P':
+      case 'p':
+          ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
           ctx.de_ptr = ctx.fe_ptr->Dir().get();
-          Pipe(ctx.de_ptr, ctx.fe_ptr);
+          ctx.fe_ptr->Pipe();
           ctx.need_dsp_help = true;
           break;
 
@@ -2748,6 +2749,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
             Message("ctx.i am sorry*^P not supported in Archive-mode");
           } else {
             std::string filepath;
+            FILE* pipe_file;
 
             ctx.need_dsp_help = true;
 
@@ -2759,8 +2761,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
               break;
             }
 
-            FILE* pipe_file = popen(filepath.c_str(), "w");
-            if (!pipe_file)
+            if (!(pipe_file = popen(filepath.c_str(), "w")))
             {
               FormatMessage("execution of command*{}*failed", filepath);
               break;
@@ -2769,7 +2770,10 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
             WalkTaggedFiles(
               ctx.dir_entry->start_file,
               ctx.dir_entry->cursor_pos,
-              [&](FileEntry& fe) { return PipeFileTo(&fe, pipe_file); }
+              [&](FileEntry& fe)
+              {
+                return fe.PipeTo(pipe_file);
+              }
             );
 
             clearok(stdscr, true);
@@ -3034,31 +3038,41 @@ static int DeleteTaggedFiles(int max_disp_files)
   break;
       }
 
-      if( term == 'Y' )
+      if (term == 'Y')
       {
-        if( ( result = DeleteFile(fe_ptr) ) == 0 )
+        if (fe_ptr->Delete())
         {
-    /* File wurde geloescht */
-    /*----------------------*/
+          // File wurde geloescht
 
-    deleted = true;
+          deleted = true;
+          result = 0;
 
-      if( de_ptr->global_flag )
-      DisplayDiskStatistic();
-    else
-      DisplayDirStatistic(de_ptr);
+          if (de_ptr->global_flag)
+          {
+            DisplayDiskStatistic();
+          } else {
+            DisplayDirStatistic(de_ptr);
+          }
 
-    DisplayAvailBytes();
+          DisplayAvailBytes();
 
           RemoveFileEntry(start_file + cursor_pos);
+        } else {
+          result = -1;
         }
       }
     }
-    if( !deleted ) i++;
+    if (!deleted)
+    {
+      i++;
+    }
   }
-  if( baudrate() >= QUICK_BAUD_RATE ) typeahead(-1);
+  if (baudrate() >= QUICK_BAUD_RATE)
+  {
+    typeahead(-1);
+  }
 
-  return( result );
+  return result;
 }
 
 

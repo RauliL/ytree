@@ -379,6 +379,8 @@ struct Entry
   bool ChangeGroup();
 
   bool SetGroup(int new_group_id);
+
+  virtual bool Delete() = 0;
 };
 
 struct DirEntry;
@@ -425,6 +427,14 @@ struct FileEntry : Entry
 
     return extension.string();
   }
+
+  bool Delete() override;
+
+  bool Remove();
+
+  bool Pipe() const;
+
+  bool PipeTo(FILE* pipe) const;
 };
 
 struct DirEntry : Entry
@@ -457,6 +467,8 @@ struct DirEntry : Entry
   }
 
   std::filesystem::path GetPath() const override;
+
+  bool Delete() override;
 };
 
 struct Statistic
@@ -579,13 +591,11 @@ std::optional<std::string> InputString(
 );
 extern void RotateFileMode();
 int Execute(const DirEntry* dir_entry, const FileEntry* file_entry);
-extern int  Pipe(DirEntry *dir_entry, FileEntry *file_entry);
 std::optional<std::string> GetPipeCommand(const std::string& initial = {});
 std::optional<SortSpec> GetKindOfSort();
 bool GetNewFileModus(int y, int x, std::string& modus, const char *term);
 int GetModus(const std::string& modus);
 bool ExecuteCommand(FileEntry* fe_ptr, const std::string& command);
-bool PipeFileTo(FileEntry* fe_ptr, FILE* pipe_file);
 int CopyFile(
   Statistic* statistic_ptr,
   FileEntry* fe_ptr,
@@ -630,11 +640,8 @@ extern void DisplayDirHelp();
 extern void DisplayFileHelp();
 extern void ClearHelp();
 bool GetAvailBytes(std::int64_t* avail_bytes);
-extern int  DeleteDirectory(DirEntry *dir_entry);
 std::optional<std::string> GetCommandLine(const std::string& initial = {});
 std::optional<std::string> GetSearchCommandLine();
-extern int  DeleteFile(FileEntry *fe_ptr);
-extern int  RemoveFile(FileEntry *fe_ptr);
 extern int  RenameDirectory(DirEntry *de_ptr, const std::string& new_name);
 extern int  RenameFile(FileEntry *fe_ptr, const std::string& new_name, FileEntry **new_fe_ptr);
 std::optional<std::string> GetRenameParameter(const std::string* old_name);

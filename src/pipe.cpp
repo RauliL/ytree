@@ -1,17 +1,16 @@
 #include "./ytree.hpp"
 
-int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
+bool FileEntry::Pipe() const
 {
   std::string input_buffer;
-  const auto file_name_path = file_entry->GetRealPath();
-  std::string command_line;
-  int result = -1;
 
   ClearHelp();
-
   MvAddStr(LINES - 2, 1, "Pipe-Command:");
   if (const auto command = GetPipeCommand(input_buffer))
   {
+    const auto file_name_path = GetRealPath();
+    std::string command_line;
+
     input_buffer = *command;
     input_buffer.insert(0, "| ");
     move(LINES - 2, 1);
@@ -19,16 +18,14 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
 
     if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
     {
-      /* Kommandozeile zusammenbasteln */
-      /*-------------------------------*/
+      // Kommandozeile zusammenbasteln
       command_line = Join(
         GetProfileValueOrEmpty("CAT"),
         ShellQuote(file_name_path.string()),
         input_buffer
       );
     } else {
-      /* TAR/ZOO/Mode::ZIP_FILE_MODE */
-      /*-----------------------*/
+      // TAR/ZOO/Mode::ZIP_FILE_MODE
       command_line = MakeExtractCommandLine(
         mode == Mode::TAPE_MODE ? statistic.tape_name : statistic.login_path,
         file_name_path.string(),
@@ -36,29 +33,32 @@ int Pipe(DirEntry* dir_entry, FileEntry* file_entry)
       );
     }
     refresh();
-    result = QuerySystemCall(command_line);
-  } else {
-    move(LINES - 2, 1);
-    clrtoeol();
+
+    return QuerySystemCall(command_line);
   }
 
-  return result;
+  move(LINES - 2, 1);
+  clrtoeol();
+
+  return false;
 }
 
 std::optional<std::string> GetPipeCommand(const std::string& initial)
 {
-  ClearHelp();
+  std::optional<std::string> command;
 
+  ClearHelp();
   MvAddStr(LINES - 2, 1, "Pipe-Command: ");
-  const auto command = InputString(initial, LINES - 2, 15, 0, COLS - 16);
+  command = InputString(initial, LINES - 2, 15, 0, COLS - 16);
   move(LINES - 2, 1);
   clrtoeol();
+
   return command;
 }
 
-bool PipeFileTo(FileEntry* fe_ptr, FILE* pipe_file)
+bool FileEntry::PipeTo(FILE* pipe_file) const
 {
-  const auto from_path = fe_ptr->GetRealPath();
+  const auto from_path = GetRealPath();
   int i;
   int n;
   char buffer[2048];

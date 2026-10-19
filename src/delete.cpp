@@ -2,109 +2,104 @@
 
 #include "./ytree.hpp"
 
-int DeleteFile(FileEntry* fe_ptr)
+bool FileEntry::Delete()
 {
-  const auto filepath = fe_ptr->GetPath();
-  int result = -1;
+  const auto path = GetPath();
   std::error_code ec;
+  bool result;
 
-  if (!fe_ptr->meta.IsLink())
+  if (meta.IsLink() && !IsWriteable(path))
   {
-    if (!IsWriteable(filepath))
+    int term;
+
+    if (!std::filesystem::exists(path))
     {
-      int term;
+      // Datei existiert nicht ==> fertig
+      goto UNLINK_DONE;
+    }
 
-      if (!std::filesystem::exists(filepath))
-      {
-        // Datei existiert nicht ==> fertig
-        goto UNLINK_DONE;
-      }
+    term = InputChoise(
+      std::format(
+        "overriding mode {:04o} for \"{}\" (Y/N) ? ",
+        meta.Mode() & 0777,
+        name
+      ),
+      "YN\033"
+    );
 
-      term = InputChoise(
-        std::format(
-          "overriding mode {:04o} for \"{}\" (Y/N) ? ",
-          fe_ptr->meta.Mode() & 0777,
-          fe_ptr->name
-        ),
-        "YN\033"
+    if (term != 'Y')
+    {
+      FormatMessage(
+        "Can't delete file*\"{}\"*{}",
+        path.string(),
+        std::strerror(errno)
       );
 
-      if (term != 'Y')
-      {
-        FormatMessage(
-          "Can't delete file*\"{}\"*{}",
-          filepath.string(),
-          std::strerror(errno)
-        );
-
-        return result;
-      }
+      return false;
     }
   }
 
-  std::filesystem::remove(filepath, ec);
+  std::filesystem::remove(path, ec);
   if (ec)
   {
-    FormatMessage(
-      "Can't delete file*\"{}\"*{}",
-      filepath.string(),
-      ec.message()
-    );
+    FormatMessage("Can't delete file*\"{}\"*{}", path.string(), ec.message());
 
-    return result;
+    return false;
   }
 
 UNLINK_DONE:
   // File austragen
-  result = RemoveFile(fe_ptr);
+  result = Remove();
   GetAvailBytes(&statistic.disk_space);
 
   return result;
 }
 
-int RemoveFile(FileEntry *fe_ptr)
+bool FileEntry::Remove()
 {
   std::int64_t file_size;
-
-  const auto de_ptr = fe_ptr->Dir();
+  const auto de_ptr = Dir();
 
   if (!de_ptr)
   {
-    return -1;
+    return false;
   }
 
-  file_size = fe_ptr->meta.size;
+  file_size = meta.size;
 
   de_ptr->total_bytes -= file_size;
-  de_ptr->total_files--;
+  --de_ptr->total_files;
   statistic.disk_total_bytes -= file_size;
-  statistic.disk_total_files--;
-  if( fe_ptr->matching ) {
+  --statistic.disk_total_files;
+  if (matching)
+  {
     de_ptr->matching_bytes -= file_size;
-    de_ptr->matching_files--;
+    --de_ptr->matching_files;
     statistic.disk_matching_bytes -= file_size;
-    statistic.disk_matching_files--;
+    --statistic.disk_matching_files;
   }
-  if( fe_ptr->tagged )
+  if (tagged)
   {
     de_ptr->tagged_bytes -= file_size;
-    de_ptr->tagged_files--;
+    --de_ptr->tagged_files;
     statistic.disk_tagged_bytes -= file_size;
-    statistic.disk_tagged_files--;
+    --statistic.disk_tagged_files;
   }
 
-  /* File austragen */
-  /*----------------*/
+  // File austragen
 
-  /* The entry is destroyed here unless something else still shares it. */
+  // The entry is destroyed here unless something else still shares it.
   de_ptr->files.erase(
     std::remove_if(
-      de_ptr->files.begin(),
-      de_ptr->files.end(),
-      [fe_ptr](const std::shared_ptr<FileEntry>& f) { return f.get() == fe_ptr; }
-),
+      std::begin(de_ptr->files),
+      std::end(de_ptr->files),
+      [&](const std::shared_ptr<FileEntry>& f)
+      {
+        return f.get() == this;
+      }
+    ),
     de_ptr->files.end()
-);
+  );
 
-  return( 0 );
+  return true;
 }

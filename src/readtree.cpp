@@ -177,7 +177,7 @@ static void RemoveAllFiles(DirEntry* dir_entry)
 {
   while (!dir_entry->files.empty())
   {
-    RemoveFile(dir_entry->files.back().get());
+    dir_entry->files.back()->Remove();
   }
 }
 

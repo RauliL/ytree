@@ -62,7 +62,7 @@ int MoveFile(
   }
       }
 
-      DeleteFile(dest_file_entry);
+      dest_file_entry->Delete();
     }
   }
   /* access benutzen */
@@ -98,7 +98,7 @@ int MoveFile(
     /* Original aus Baum austragen */
     /*-----------------------------*/
 
-    RemoveFile(fe_ptr);
+    fe_ptr->Remove();
 
 
     if( dest_dir_entry )

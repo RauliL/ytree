@@ -1026,7 +1026,7 @@ static void HandleDirKeyMakeDirectory(DirWindowContext& ctx)
 
 static void HandleDirKeyDeleteDirectory(DirWindowContext& ctx)
 {
-  if (!DeleteDirectory(ctx.dir_entry))
+  if (ctx.dir_entry->Delete())
   {
     if (statistic.disp_begin_pos + statistic.cursor_pos > 0)
     {

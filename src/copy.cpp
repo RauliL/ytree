@@ -148,7 +148,7 @@ int CopyFile(
         }
       }
 
-      DeleteFile(dest_file_entry);
+      dest_file_entry->Delete();
     }
   }
   /* access benutzen */
