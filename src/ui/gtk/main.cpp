@@ -48,8 +48,13 @@ int main(int argc, char** argv)
 {
   std::setlocale(LC_ALL, "");
 
+  // Parse ytree options before Gtk::Application sees argv; otherwise a path
+  // argument is treated as an unknown GApplication option / open request.
   const auto opts = ParseAppOptions(argc, argv);
-  auto app = Gtk::Application::create("org.ytree.gtk");
+  auto app = Gtk::Application::create(
+    "org.ytree.gtk",
+    Gio::Application::Flags::NON_UNIQUE
+  );
 
   app->signal_activate().connect([app, opts]() {
     auto* window = new YTreeMainWindow();
@@ -82,5 +87,9 @@ int main(int argc, char** argv)
     });
   });
 
-  return app->run(argc, argv);
+  // Only pass the program name to GTK so our [-p/-h] [path] args are not
+  // re-parsed or rejected by GApplication.
+  char* gtk_argv[] = { argv[0], nullptr };
+  int gtk_argc = 1;
+  return app->run(gtk_argc, gtk_argv);
 }
