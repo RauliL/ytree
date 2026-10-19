@@ -99,7 +99,7 @@ public:
   {
     if (auto* win = GtkMainWindow())
     {
-      win->fileList().queue_draw();
+      win->fileTable().queue_draw();
     }
   }
 

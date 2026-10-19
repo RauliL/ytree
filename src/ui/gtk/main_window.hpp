@@ -2,12 +2,15 @@
 
 #include <gtkmm.h>
 
+#include "core/domain.hpp"
 #include "core/ui.hpp"
+#include "ui/file_format.hpp"
 #include "ui/help.hpp"
 
 #include <cstdint>
 #include <deque>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -35,10 +38,15 @@ public:
   void setCurrentFile(const std::string& name, std::int64_t size);
 
   void setDirRows(const std::vector<Glib::ustring>& rows, int hilight);
-  void setFileRows(const std::vector<Glib::ustring>& rows, int hilight);
+  void setFileTable(
+    ViewMode mode,
+    const std::vector<FileTableRow>& rows,
+    int hilight
+  );
+  void setFileTableMessage(const Glib::ustring& message);
 
   Gtk::ListView& dirList() { return dir_list_; }
-  Gtk::ListView& fileList() { return file_list_; }
+  Gtk::ColumnView& fileTable() { return file_table_; }
 
 private:
   bool on_key_pressed(guint keyval, guint keycode, Gdk::ModifierType state);
@@ -52,6 +60,12 @@ private:
     const std::vector<Glib::ustring>& rows,
     int hilight
   );
+  void clearFileColumns();
+  void rebuildFileColumns(ViewMode mode);
+  Glib::RefPtr<Gtk::ColumnViewColumn> makeFileColumn(
+    const FileTableColumn& spec,
+    guint column_index
+  );
 
   Gtk::Box root_{Gtk::Orientation::VERTICAL};
   Gtk::Label path_;
@@ -60,7 +74,7 @@ private:
   Gtk::ScrolledWindow dir_scroll_;
   Gtk::ScrolledWindow file_scroll_;
   Gtk::ListView dir_list_;
-  Gtk::ListView file_list_;
+  Gtk::ColumnView file_table_;
 
   Gtk::Frame sidebar_frame_;
   Gtk::Box sidebar_{Gtk::Orientation::VERTICAL};
@@ -84,7 +98,8 @@ private:
   Gtk::Label status_;
 
   Glib::RefPtr<Gtk::StringList> dir_model_;
-  Glib::RefPtr<Gtk::StringList> file_model_;
+  Glib::RefPtr<Gio::ListStoreBase> file_model_;
+  std::optional<ViewMode> file_table_mode_;
 
   mutable std::mutex queue_mutex_;
   std::deque<ui::InputEvent> event_queue_;

@@ -5,6 +5,42 @@
 
 #include <format>
 
+namespace {
+
+std::string MarkCell(const std::shared_ptr<FileEntry>& fe_ptr)
+{
+  if (!fe_ptr)
+  {
+    return {};
+  }
+  return std::format(
+    "{}{}",
+    fe_ptr->tagged ? TAGGED_SYMBOL : ' ',
+    fe_ptr->meta.TypeSymbol()
+  );
+}
+
+std::string NameCell(const std::shared_ptr<FileEntry>& fe_ptr)
+{
+  return fe_ptr ? fe_ptr->name : std::string{};
+}
+
+std::string LinkCell(const std::shared_ptr<FileEntry>& fe_ptr)
+{
+  if (!fe_ptr || !fe_ptr->meta.IsLink())
+  {
+    return {};
+  }
+  return fe_ptr->symlink_target;
+}
+
+bool ShowLinkColumn()
+{
+  return GetFileMaxLinknameLen() > 0;
+}
+
+} // namespace
+
 std::string FormatFileEntryLine(const std::shared_ptr<FileEntry>& fe_ptr)
 {
   const char justify = GetFileReverseSort() ? '+' : '-';
@@ -184,4 +220,139 @@ int FileEntryColumnStride()
   }
 
   return 1;
+}
+
+std::vector<FileTableColumn> FileTableColumnsForMode(ViewMode mode)
+{
+  std::vector<FileTableColumn> cols;
+  cols.push_back({"mark", "", false, 0.0f});
+  cols.push_back({"name", "Name", true, 0.0f});
+
+  switch (mode)
+  {
+    case ViewMode::MODE_1:
+      cols.push_back({"mode", "Mode", false, 0.0f});
+      cols.push_back({"links", "Links", false, 1.0f});
+      cols.push_back({"size", "Size", false, 1.0f});
+      cols.push_back({"modified", "Modified", false, 0.0f});
+      if (ShowLinkColumn())
+      {
+        cols.push_back({"link", "Link", true, 0.0f});
+      }
+      break;
+
+    case ViewMode::MODE_2:
+      cols.push_back({"inode", "Inode", false, 1.0f});
+      cols.push_back({"owner", "Owner", false, 0.0f});
+      cols.push_back({"group", "Group", false, 0.0f});
+      if (ShowLinkColumn())
+      {
+        cols.push_back({"link", "Link", true, 0.0f});
+      }
+      break;
+
+    case ViewMode::MODE_3:
+      break;
+
+    case ViewMode::MODE_4:
+      cols.push_back({"changed", "Changed", false, 0.0f});
+      cols.push_back({"accessed", "Accessed", false, 0.0f});
+      if (ShowLinkColumn())
+      {
+        cols.push_back({"link", "Link", true, 0.0f});
+      }
+      break;
+
+    case ViewMode::MODE_5:
+      cols.push_back({"details", "Details", true, 0.0f});
+      break;
+  }
+
+  return cols;
+}
+
+FileTableRow FormatFileTableRow(
+  const std::shared_ptr<FileEntry>& fe_ptr,
+  ViewMode mode
+)
+{
+  FileTableRow row;
+  row.cells.push_back(MarkCell(fe_ptr));
+  row.cells.push_back(NameCell(fe_ptr));
+
+  switch (mode)
+  {
+    case ViewMode::MODE_1:
+      if (fe_ptr)
+      {
+        row.cells.push_back(GetAttributes(fe_ptr->meta.Mode()));
+        row.cells.push_back(FormatMetaNlink(fe_ptr->meta));
+        row.cells.push_back(std::format("{}", static_cast<std::int64_t>(fe_ptr->meta.size)));
+        row.cells.push_back(FormatMetaTime(fe_ptr->meta.mtime));
+      }
+      else
+      {
+        row.cells.insert(row.cells.end(), 4, {});
+      }
+      if (ShowLinkColumn())
+      {
+        row.cells.push_back(LinkCell(fe_ptr));
+      }
+      break;
+
+    case ViewMode::MODE_2:
+      if (fe_ptr)
+      {
+        row.cells.push_back(FormatMetaInode(fe_ptr->meta));
+        row.cells.push_back(FormatMetaOwner(fe_ptr->meta));
+        row.cells.push_back(FormatMetaGroup(fe_ptr->meta));
+      }
+      else
+      {
+        row.cells.insert(row.cells.end(), 3, {});
+      }
+      if (ShowLinkColumn())
+      {
+        row.cells.push_back(LinkCell(fe_ptr));
+      }
+      break;
+
+    case ViewMode::MODE_3:
+      break;
+
+    case ViewMode::MODE_4:
+      if (fe_ptr)
+      {
+        row.cells.push_back(FormatMetaTime(fe_ptr->meta.ctime));
+        row.cells.push_back(FormatMetaTime(fe_ptr->meta.atime));
+      }
+      else
+      {
+        row.cells.insert(row.cells.end(), 2, {});
+      }
+      if (ShowLinkColumn())
+      {
+        row.cells.push_back(LinkCell(fe_ptr));
+      }
+      break;
+
+    case ViewMode::MODE_5:
+      if (fe_ptr)
+      {
+        row.cells.push_back(BuildUserFileEntry(
+          fe_ptr,
+          GetFileMaxFilenameLen(),
+          GetFileMaxLinknameLen(),
+          GetProfileValueOrEmpty("USERVIEW"),
+          200
+        ));
+      }
+      else
+      {
+        row.cells.emplace_back();
+      }
+      break;
+  }
+
+  return row;
 }

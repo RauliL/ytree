@@ -15,6 +15,30 @@ namespace {
 
 YTreeMainWindow* g_main_window = nullptr;
 
+class FileRowObject : public Glib::Object
+{
+public:
+  static Glib::RefPtr<FileRowObject> create(std::vector<Glib::ustring> cells)
+  {
+    return Glib::make_refptr_for_instance<FileRowObject>(
+      new FileRowObject(std::move(cells))
+    );
+  }
+
+  const std::vector<Glib::ustring>& cells() const { return cells_; }
+
+protected:
+  explicit FileRowObject(std::vector<Glib::ustring> cells)
+  : Glib::ObjectBase(typeid(FileRowObject))
+  , Glib::Object()
+  , cells_(std::move(cells))
+  {
+  }
+
+private:
+  std::vector<Glib::ustring> cells_;
+};
+
 bool HasControl(Gdk::ModifierType state)
 {
   return (state & Gdk::ModifierType::CONTROL_MASK) == Gdk::ModifierType::CONTROL_MASK;
@@ -159,24 +183,91 @@ void YTreeMainWindow::applyRows(
   view.set_model(selection);
 }
 
+void YTreeMainWindow::clearFileColumns()
+{
+  auto columns = file_table_.get_columns();
+  while (columns && columns->get_n_items() > 0)
+  {
+    auto col = std::dynamic_pointer_cast<Gtk::ColumnViewColumn>(
+      columns->get_object(0)
+    );
+    if (!col)
+    {
+      break;
+    }
+    file_table_.remove_column(col);
+  }
+}
+
+Glib::RefPtr<Gtk::ColumnViewColumn> YTreeMainWindow::makeFileColumn(
+  const FileTableColumn& spec,
+  guint column_index
+)
+{
+  const float xalign = spec.xalign;
+  auto factory = Gtk::SignalListItemFactory::create();
+  factory->signal_setup().connect([xalign](const Glib::RefPtr<Gtk::ListItem>& item) {
+    auto* label = Gtk::make_managed<Gtk::Label>();
+    label->set_xalign(xalign);
+    label->set_ellipsize(Pango::EllipsizeMode::END);
+    item->set_child(*label);
+  });
+  factory->signal_bind().connect(
+    [column_index](const Glib::RefPtr<Gtk::ListItem>& item) {
+      auto* label = dynamic_cast<Gtk::Label*>(item->get_child());
+      auto row = std::dynamic_pointer_cast<FileRowObject>(item->get_item());
+      if (!label || !row)
+      {
+        return;
+      }
+      if (column_index < row->cells().size())
+      {
+        label->set_text(row->cells()[column_index]);
+      }
+      else
+      {
+        label->set_text({});
+      }
+    }
+  );
+
+  auto column = Gtk::ColumnViewColumn::create(spec.title, factory);
+  column->set_expand(spec.expand);
+  column->set_resizable(true);
+  return column;
+}
+
+void YTreeMainWindow::rebuildFileColumns(ViewMode mode)
+{
+  clearFileColumns();
+  const auto specs = FileTableColumnsForMode(mode);
+  for (guint i = 0; i < specs.size(); ++i)
+  {
+    file_table_.append_column(makeFileColumn(specs[i], i));
+  }
+  file_table_mode_ = mode;
+}
+
 YTreeMainWindow::YTreeMainWindow()
 {
   set_title("ytree");
   set_default_size(1024, 700);
 
   dir_model_ = Gtk::StringList::create({});
-  file_model_ = Gtk::StringList::create({});
   bindListView(dir_list_);
-  bindListView(file_list_);
   dir_list_.set_model(Gtk::SingleSelection::create(dir_model_));
-  file_list_.set_model(Gtk::SingleSelection::create(file_model_));
   dir_list_.set_can_focus(false);
-  file_list_.set_can_focus(false);
   dir_list_.set_focusable(false);
-  file_list_.set_focusable(false);
+
+  file_table_.set_show_column_separators(true);
+  file_table_.set_show_row_separators(false);
+  file_table_.set_reorderable(false);
+  file_table_.set_can_focus(false);
+  file_table_.set_focusable(false);
+  rebuildFileColumns(ViewMode::MODE_3);
 
   dir_scroll_.set_child(dir_list_);
-  file_scroll_.set_child(file_list_);
+  file_scroll_.set_child(file_table_);
   dir_scroll_.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
   file_scroll_.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
   dir_scroll_.set_vexpand(true);
@@ -441,7 +532,67 @@ void YTreeMainWindow::setDirRows(const std::vector<Glib::ustring>& rows, int hil
   applyRows(dir_list_, dir_model_, rows, hilight);
 }
 
-void YTreeMainWindow::setFileRows(const std::vector<Glib::ustring>& rows, int hilight)
+void YTreeMainWindow::setFileTable(
+  ViewMode mode,
+  const std::vector<FileTableRow>& rows,
+  int hilight
+)
 {
-  applyRows(file_list_, file_model_, rows, hilight);
+  if (!file_table_mode_ || *file_table_mode_ != mode)
+  {
+    rebuildFileColumns(mode);
+  }
+  else
+  {
+    // Link column may appear/disappear when the directory contents change.
+    const auto expected = FileTableColumnsForMode(mode).size();
+    const auto current = file_table_.get_columns()
+      ? file_table_.get_columns()->get_n_items()
+      : 0u;
+    if (current != expected)
+    {
+      rebuildFileColumns(mode);
+    }
+  }
+
+  auto store = Gio::ListStore<FileRowObject>::create();
+  for (const auto& row : rows)
+  {
+    std::vector<Glib::ustring> cells;
+    cells.reserve(row.cells.size());
+    for (const auto& cell : row.cells)
+    {
+      cells.emplace_back(cell);
+    }
+    store->append(FileRowObject::create(std::move(cells)));
+  }
+  file_model_ = store;
+
+  auto selection = Gtk::SingleSelection::create(store);
+  if (!rows.empty())
+  {
+    selection->set_selected(static_cast<guint>(
+      std::clamp(hilight, 0, static_cast<int>(rows.size()) - 1)
+    ));
+  }
+  file_table_.set_model(selection);
+}
+
+void YTreeMainWindow::setFileTableMessage(const Glib::ustring& message)
+{
+  const ViewMode mode = file_table_mode_.value_or(ViewMode::MODE_3);
+  rebuildFileColumns(mode);
+
+  FileTableRow row;
+  const auto cols = FileTableColumnsForMode(mode);
+  row.cells.assign(cols.size(), {});
+  if (row.cells.size() >= 2)
+  {
+    row.cells[1] = message;
+  }
+  else if (!row.cells.empty())
+  {
+    row.cells[0] = message;
+  }
+  setFileTable(mode, {row}, 0);
 }

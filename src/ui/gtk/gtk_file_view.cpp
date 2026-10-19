@@ -7,7 +7,6 @@
 #include "ui/view_info.hpp"
 
 #include <algorithm>
-#include <string>
 #include <vector>
 
 #ifdef Error
@@ -24,13 +23,14 @@ void PopulateFileModel(int hilight)
     return;
   }
 
-  std::vector<Glib::ustring> rows;
+  const ViewMode mode = GetFileViewMode();
+  std::vector<FileTableRow> rows;
   rows.reserve(FileListEntries().size());
   for (const auto& fe : FileListEntries())
   {
-    rows.emplace_back(FormatFileEntryLine(fe));
+    rows.push_back(FormatFileTableRow(fe, mode));
   }
-  win->setFileRows(rows, hilight);
+  win->setFileTable(mode, rows, hilight);
 }
 
 class GtkFileView final : public ui::IFileView
@@ -42,8 +42,8 @@ public:
     width = 80;
     if (auto* win = GtkMainWindow())
     {
-      const int widget_height = win->fileList().get_height();
-      const int widget_width = win->fileList().get_width();
+      const int widget_height = win->fileTable().get_height();
+      const int widget_width = win->fileTable().get_width();
       if (widget_height > 0)
       {
         height = std::max(8, widget_height / 22);
@@ -75,15 +75,13 @@ public:
 
     if (FileListEntries().empty())
     {
-      win->setFileRows(
-        {access_denied ? "Permission Denied!" : "No Files!"},
-        0
+      win->setFileTableMessage(
+        access_denied ? "Permission Denied!" : "No Files!"
       );
       return;
     }
 
-    const int safe_hilight = hilight < 0 ? 0 : hilight;
-    PopulateFileModel(safe_hilight);
+    PopulateFileModel(hilight < 0 ? 0 : hilight);
   }
 
   void showFilesAtCursor(
@@ -167,7 +165,7 @@ public:
   {
     if (auto* win = GtkMainWindow())
     {
-      win->fileList().queue_draw();
+      win->fileTable().queue_draw();
     }
   }
 
