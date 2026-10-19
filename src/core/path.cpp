@@ -8,7 +8,7 @@ static inline bool IsAbsolute(const std::string& path)
     path[0] == std::filesystem::path::preferred_separator;
 }
 
-static inline bool IsRoot(const std::string& path)
+bool IsRoot(const std::string& path)
 {
   return path.length() == 1 &&
     path[0] == std::filesystem::path::preferred_separator;

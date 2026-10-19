@@ -188,42 +188,6 @@ enum class ViewMode : int
 
 inline constexpr int QUICK_BAUD_RATE = 9600;
 
-template<class Fn>
-class ScopeGuard
-{
-public:
-  explicit ScopeGuard(Fn fn)
-    : fn_(std::move(fn)) {}
-
-  ScopeGuard(ScopeGuard&& other) noexcept
-    : fn_(std::move(other.fn_))
-    , engaged_(other.engaged_)
-  {
-    other.engaged_ = false;
-  }
-
-  ~ScopeGuard()
-  {
-    if (engaged_)
-      fn_();
-  }
-
-  ScopeGuard(const ScopeGuard&) = delete;
-  ScopeGuard& operator=(const ScopeGuard&) = delete;
-
-  void release()
-  {
-    engaged_ = false;
-  }
-
-private:
-  Fn fn_;
-  bool engaged_{true};
-};
-
-template<class Fn>
-ScopeGuard(Fn) -> ScopeGuard<Fn>;
-
 struct Entry
 {
   std::string name;

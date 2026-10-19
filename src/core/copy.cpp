@@ -1,5 +1,6 @@
 #include "core/ui.hpp"
 #include "core/api.hpp"
+#include "util/scope-guard.hpp"
 
 static bool Copy(const std::string& to_path, const std::string& from_path);
 static bool CopyArchiveFile(const std::string& to_path, const std::string& from_path);
@@ -24,11 +25,9 @@ bool CopyFile(
   bool        result = false;
   int       refresh_dirwindow = false;
 
-  const ScopeGuard clear_prompt_lines([] { ui::ClearPromptLines(); });
+  const ScopeGuard clear_prompt_lines(ui::ClearPromptLines);
 
-  const auto is_root =
-    to_dir_path.size() == 1 &&
-    to_dir_path.front() == std::filesystem::path::preferred_separator;
+  const auto is_root = IsRoot(to_dir_path);
 
   if (!is_root)
   {

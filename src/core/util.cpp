@@ -174,9 +174,7 @@ int GetDirEntry(
   n = tree->name.size();
   const char preferred_separator_str[]{
     std::filesystem::path::preferred_separator, '\0'};
-  const auto tree_is_root =
-    tree->name.size() == 1 &&
-    tree->name[0] == std::filesystem::path::preferred_separator;
+  const auto tree_is_root = IsRoot(tree->name);
 
   if( tree_is_root ||
       (static_cast<int>(dest_path.size()) >= n &&

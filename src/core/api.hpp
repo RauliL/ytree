@@ -11,6 +11,7 @@ bool GetDiskParameter(
   std::int64_t* capacity
 );
 std::filesystem::path GetPath(const DirEntry* dir_entry);
+bool IsRoot(const std::string& path);
 std::shared_ptr<DirEntry> SharedDirEntry(DirEntry* dir_entry);
 inline std::weak_ptr<DirEntry> WeakDirEntry(DirEntry* dir_entry)
 {
