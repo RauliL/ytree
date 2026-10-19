@@ -332,6 +332,49 @@ static void MoveToRow(int row, int *disp_begin_pos, int *cursor_pos, DirEntry **
   ui::dir_view().showFileSide();
 }
 
+static void MoveToIndex(
+  int index,
+  int *disp_begin_pos,
+  int *cursor_pos,
+  DirEntry **dir_entry
+)
+{
+  if (index < 0 || index >= static_cast<int>(dir_entry_list.size()))
+  {
+    return;
+  }
+
+  const int current = *disp_begin_pos + *cursor_pos;
+  if (index == current)
+  {
+    return;
+  }
+
+  if (index >= *disp_begin_pos && index < *disp_begin_pos + window_height)
+  {
+    ui::dir_view().printEntry(current, *cursor_pos, false);
+    *cursor_pos = index - *disp_begin_pos;
+    ui::dir_view().printEntry(index, *cursor_pos, true);
+  }
+  else if (index < window_height)
+  {
+    *disp_begin_pos = 0;
+    *cursor_pos = index;
+    ui::dir_view().showTree(*disp_begin_pos, *disp_begin_pos + *cursor_pos);
+  }
+  else
+  {
+    *disp_begin_pos = index - window_height + 1;
+    *cursor_pos = window_height - 1;
+    ui::dir_view().showTree(*disp_begin_pos, *disp_begin_pos + *cursor_pos);
+  }
+
+  *dir_entry = dir_entry_list[*disp_begin_pos + *cursor_pos].dir_entry.get();
+  (*dir_entry)->start_file = 0;
+  (*dir_entry)->cursor_pos = -1;
+  ui::dir_view().showFileSide();
+}
+
 static std::optional<ui::InputEvent> HandleDirMouse(
   int *disp_begin_pos,
   int *cursor_pos,
@@ -349,14 +392,25 @@ static std::optional<ui::InputEvent> HandleDirMouse(
     case ui::MouseAction::SwitchToFile:
       return ui::InputEvent::Special(ui::Key::Enter);
     case ui::MouseAction::Select:
-      MoveToRow(event.row, disp_begin_pos, cursor_pos, dir_entry);
-      return std::nullopt;
     case ui::MouseAction::Activate:
-      MoveToRow(event.row, disp_begin_pos, cursor_pos, dir_entry);
-      return ui::InputEvent::Special(ui::Key::Enter);
     case ui::MouseAction::Tag:
-      MoveToRow(event.row, disp_begin_pos, cursor_pos, dir_entry);
-      return ui::InputEvent::CharKey('t');
+      if (event.index >= 0)
+      {
+        MoveToIndex(event.index, disp_begin_pos, cursor_pos, dir_entry);
+      }
+      else
+      {
+        MoveToRow(event.row, disp_begin_pos, cursor_pos, dir_entry);
+      }
+      if (event.action == ui::MouseAction::Activate)
+      {
+        return ui::InputEvent::Special(ui::Key::Enter);
+      }
+      if (event.action == ui::MouseAction::Tag)
+      {
+        return ui::InputEvent::CharKey('t');
+      }
+      return std::nullopt;
     case ui::MouseAction::Ignore:
     case ui::MouseAction::None:
     case ui::MouseAction::SwitchToDir:

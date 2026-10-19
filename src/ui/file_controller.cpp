@@ -820,12 +820,21 @@ static std::optional<ui::InputEvent> HandleFileMouse(
     case ui::MouseAction::Activate:
     case ui::MouseAction::Tag:
     {
-      const int relative = FileIndexFromMouse(event.row, event.col);
-      if (relative < 0)
+      int target = -1;
+      if (event.index >= 0)
       {
-        return std::nullopt;
+        target = event.index;
       }
-      fmoveto(*start_file + relative, start_file, cursor_pos, start_x, dir_entry);
+      else
+      {
+        const int relative = FileIndexFromMouse(event.row, event.col);
+        if (relative < 0)
+        {
+          return std::nullopt;
+        }
+        target = *start_file + relative;
+      }
+      fmoveto(target, start_file, cursor_pos, start_x, dir_entry);
       if (event.action == ui::MouseAction::Activate)
       {
         return ui::InputEvent::CharKey('v');

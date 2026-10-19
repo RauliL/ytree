@@ -169,22 +169,70 @@ void YTreeMainWindow::clearColumns(Gtk::ColumnView& view)
   }
 }
 
+void YTreeMainWindow::attachRowClickHandlers(
+  ui::MouseFocus pane,
+  const Glib::RefPtr<Gtk::ListItem>& item,
+  Gtk::Widget& widget
+)
+{
+  auto left = Gtk::GestureClick::create();
+  left->set_button(1);
+  left->signal_pressed().connect(
+    [this, pane, item](int n_press, double, double) {
+      const int index = static_cast<int>(item->get_position());
+      if (index < 0)
+      {
+        return;
+      }
+      pushMouse(
+        pane,
+        n_press >= 2 ? ui::MouseAction::Activate : ui::MouseAction::Select,
+        index
+      );
+    }
+  );
+  widget.add_controller(left);
+
+  auto right = Gtk::GestureClick::create();
+  right->set_button(3);
+  right->signal_pressed().connect(
+    [this, pane, item](int, double, double) {
+      const int index = static_cast<int>(item->get_position());
+      if (index < 0)
+      {
+        return;
+      }
+      pushMouse(pane, ui::MouseAction::Tag, index);
+    }
+  );
+  widget.add_controller(right);
+}
+
 Glib::RefPtr<Gtk::ColumnViewColumn> YTreeMainWindow::makeColumn(
+  ui::MouseFocus pane,
   const TableColumn& spec,
   guint column_index
 )
 {
   const float xalign = spec.xalign;
   auto factory = Gtk::SignalListItemFactory::create();
-  factory->signal_setup().connect([xalign](const Glib::RefPtr<Gtk::ListItem>& item) {
-    auto* label = Gtk::make_managed<Gtk::Label>();
-    label->set_xalign(xalign);
-    label->set_ellipsize(Pango::EllipsizeMode::END);
-    item->set_child(*label);
-  });
+  factory->signal_setup().connect(
+    [this, pane, xalign](const Glib::RefPtr<Gtk::ListItem>& item) {
+      auto* box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL);
+      box->set_hexpand(true);
+      auto* label = Gtk::make_managed<Gtk::Label>();
+      label->set_xalign(xalign);
+      label->set_ellipsize(Pango::EllipsizeMode::END);
+      label->set_hexpand(true);
+      box->append(*label);
+      item->set_child(*box);
+      attachRowClickHandlers(pane, item, *box);
+    }
+  );
   factory->signal_bind().connect(
     [column_index](const Glib::RefPtr<Gtk::ListItem>& item) {
-      auto* label = dynamic_cast<Gtk::Label*>(item->get_child());
+      auto* box = dynamic_cast<Gtk::Box*>(item->get_child());
+      auto* label = box ? dynamic_cast<Gtk::Label*>(box->get_first_child()) : nullptr;
       auto row = std::dynamic_pointer_cast<TableRowObject>(item->get_item());
       if (!label || !row)
       {
@@ -209,6 +257,7 @@ Glib::RefPtr<Gtk::ColumnViewColumn> YTreeMainWindow::makeColumn(
 
 void YTreeMainWindow::rebuildColumns(
   Gtk::ColumnView& view,
+  ui::MouseFocus pane,
   std::optional<ViewMode>& mode_slot,
   ViewMode mode,
   const std::vector<TableColumn>& specs
@@ -217,13 +266,14 @@ void YTreeMainWindow::rebuildColumns(
   clearColumns(view);
   for (guint i = 0; i < specs.size(); ++i)
   {
-    view.append_column(makeColumn(specs[i], i));
+    view.append_column(makeColumn(pane, specs[i], i));
   }
   mode_slot = mode;
 }
 
 void YTreeMainWindow::setTable(
   Gtk::ColumnView& view,
+  ui::MouseFocus pane,
   Glib::RefPtr<Gio::ListStoreBase>& model_slot,
   std::optional<ViewMode>& mode_slot,
   ViewMode mode,
@@ -234,14 +284,14 @@ void YTreeMainWindow::setTable(
 {
   if (!mode_slot || *mode_slot != mode)
   {
-    rebuildColumns(view, mode_slot, mode, specs);
+    rebuildColumns(view, pane, mode_slot, mode, specs);
   }
   else
   {
     const auto current = view.get_columns() ? view.get_columns()->get_n_items() : 0u;
     if (current != specs.size())
     {
-      rebuildColumns(view, mode_slot, mode, specs);
+      rebuildColumns(view, pane, mode_slot, mode, specs);
     }
   }
 
@@ -295,12 +345,14 @@ YTreeMainWindow::YTreeMainWindow()
   configureColumnView(file_table_);
   rebuildColumns(
     dir_table_,
+    ui::MouseFocus::Dir,
     dir_table_mode_,
     ViewMode::MODE_3,
     DirTableColumnsForMode(ViewMode::MODE_3)
   );
   rebuildColumns(
     file_table_,
+    ui::MouseFocus::File,
     file_table_mode_,
     ViewMode::MODE_3,
     FileTableColumnsForMode(ViewMode::MODE_3)
@@ -455,6 +507,44 @@ void YTreeMainWindow::pushEvent(ui::InputEvent ev)
   event_queue_.push_back(std::move(ev));
 }
 
+void YTreeMainWindow::pushMouse(
+  ui::MouseFocus pane,
+  ui::MouseAction action,
+  int index
+)
+{
+  std::lock_guard lock(queue_mutex_);
+  pending_mouse_pane_ = pane;
+  pending_mouse_ = {};
+  pending_mouse_.action = action;
+  pending_mouse_.index = index;
+  event_queue_.push_back(ui::InputEvent::Special(ui::Key::Mouse));
+}
+
+ui::MouseEvent YTreeMainWindow::takeMouse(ui::MouseFocus focus)
+{
+  std::lock_guard lock(queue_mutex_);
+  if (!pending_mouse_pane_)
+  {
+    return {};
+  }
+
+  const ui::MouseFocus pane = *pending_mouse_pane_;
+  const ui::MouseEvent event = pending_mouse_;
+  pending_mouse_pane_.reset();
+  pending_mouse_ = {};
+
+  if (pane != focus)
+  {
+    ui::MouseEvent switched{};
+    switched.action = (pane == ui::MouseFocus::Dir)
+      ? ui::MouseAction::SwitchToDir
+      : ui::MouseAction::SwitchToFile;
+    return switched;
+  }
+  return event;
+}
+
 ui::InputEvent YTreeMainWindow::waitEvent()
 {
   auto context = Glib::MainContext::get_default();
@@ -575,6 +665,7 @@ void YTreeMainWindow::setDirTable(
 {
   setTable(
     dir_table_,
+    ui::MouseFocus::Dir,
     dir_model_,
     dir_table_mode_,
     mode,
@@ -597,6 +688,7 @@ void YTreeMainWindow::setFileTable(
 {
   setTable(
     file_table_,
+    ui::MouseFocus::File,
     file_model_,
     file_table_mode_,
     mode,

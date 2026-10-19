@@ -292,8 +292,12 @@ public:
     return ev.raw;
   }
 
-  ui::MouseEvent decodeMouse(ui::MouseFocus) override
+  ui::MouseEvent decodeMouse(ui::MouseFocus focus) override
   {
+    if (auto* win = GtkMainWindow())
+    {
+      return win->takeMouse(focus);
+    }
     return {};
   }
 

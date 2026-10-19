@@ -60,6 +60,11 @@ struct MouseEvent
   MouseAction action = MouseAction::None;
   int row = 0;
   int col = 0;
+  /**
+   * Absolute list index when >= 0 (GTK ColumnView clicks).
+   * When < 0, row/col are curses window-relative coordinates.
+   */
+  int index = -1;
 };
 
 /** Backend-neutral keys for window command loops. */

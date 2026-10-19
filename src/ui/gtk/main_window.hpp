@@ -23,6 +23,9 @@ public:
   ui::InputEvent waitEvent();
   bool hasPendingEvent() const;
 
+  void pushMouse(ui::MouseFocus pane, ui::MouseAction action, int index);
+  ui::MouseEvent takeMouse(ui::MouseFocus focus);
+
   void setStatus(const Glib::ustring& text);
   void setHelp(const HelpLines& lines);
   void clearHelp();
@@ -63,17 +66,20 @@ private:
   void configureColumnView(Gtk::ColumnView& view);
   void clearColumns(Gtk::ColumnView& view);
   Glib::RefPtr<Gtk::ColumnViewColumn> makeColumn(
+    ui::MouseFocus pane,
     const TableColumn& spec,
     guint column_index
   );
   void rebuildColumns(
     Gtk::ColumnView& view,
+    ui::MouseFocus pane,
     std::optional<ViewMode>& mode_slot,
     ViewMode mode,
     const std::vector<TableColumn>& specs
   );
   void setTable(
     Gtk::ColumnView& view,
+    ui::MouseFocus pane,
     Glib::RefPtr<Gio::ListStoreBase>& model_slot,
     std::optional<ViewMode>& mode_slot,
     ViewMode mode,
@@ -82,6 +88,11 @@ private:
     int hilight
   );
   void selectRow(Gtk::ColumnView& view, int hilight);
+  void attachRowClickHandlers(
+    ui::MouseFocus pane,
+    const Glib::RefPtr<Gtk::ListItem>& item,
+    Gtk::Widget& widget
+  );
 
   Gtk::Box root_{Gtk::Orientation::VERTICAL};
   Gtk::Label path_;
@@ -120,6 +131,8 @@ private:
 
   mutable std::mutex queue_mutex_;
   std::deque<ui::InputEvent> event_queue_;
+  std::optional<ui::MouseFocus> pending_mouse_pane_;
+  ui::MouseEvent pending_mouse_{};
 };
 
 YTreeMainWindow* GtkMainWindow();
