@@ -1,0 +1,84 @@
+#include "ytree.hpp"
+
+int main(int argc, char **argv)
+{
+  const char *p;
+  int argi;
+  std::optional<std::filesystem::path> config_file;
+  std::optional<std::filesystem::path> history_file;
+
+  std::setlocale(LC_ALL, "");
+
+  p = DEFAULT_TREE;
+  for (argi = 1; argi < argc; argi++)
+  {
+    if (*(argv[argi]) != '-')
+    {
+      p = argv[argi];
+      break;
+    }
+    switch (*(argv[argi]+1))
+    {
+      case 'p':
+      case 'P':
+        if (*(argv[argi] + 2) <= ' ')
+        {
+          config_file = argv[++argi];
+        } else {
+          config_file = argv[argi] + 2;
+        }
+        break;
+
+      case 'h':
+      case 'H':
+        if (*(argv[argi] + 2) <= ' ')
+        {
+          history_file = argv[++argi];
+        } else {
+          history_file = argv[argi] + 2;
+        }
+        break;
+
+      default:
+        std::printf(
+          "Usage: %s [-p profile_file] [-h hist_file] [initial_dir]\n",
+          argv[0]
+);
+        std::exit(EXIT_FAILURE);
+        break;
+    }
+  }
+
+  Init(config_file, history_file);
+
+  std::string startup_path = p;
+  if (std::filesystem::path(startup_path).is_relative())
+  {
+    if (const auto cwd = Getcwd())
+    {
+      startup_path = (*cwd / p).string();
+    }
+    else
+    {
+      startup_path = (std::filesystem::path(".") / p).string();
+    }
+  }
+
+  /* Normalize path */
+
+  auto path = NormPath(startup_path);
+
+  statistic.login_path.clear();
+  statistic.path.clear();
+
+  if( !LoginDisk(path) )
+  {
+    endwin();
+    std::exit(1);
+  }
+
+  while( 1 )
+  {
+    if( HandleDirWindow(statistic.tree.get()) == 'q' ) Quit();
+  }
+}

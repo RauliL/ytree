@@ -3,8 +3,8 @@
 #define _LARGEFILE64_SOURCE 1
 #define _FILE_OFFSET_BITS 64
 
-#include "./config.hpp"
-#include "./entry_meta.hpp"
+#include "config.hpp"
+#include "core/entry_meta.hpp"
 
 #include <cstdint>
 #include <cstdio>

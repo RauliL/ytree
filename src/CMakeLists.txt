@@ -88,61 +88,64 @@ configure_file(
 
 add_executable(
   ytree
-  arc.cpp
-  archive.cpp
-  chgrp.cpp
-  chmod.cpp
-  chown.cpp
-  clock.cpp
-  color.cpp
-  copy.cpp
-  delete.cpp
-  dirwin.cpp
-  disp.cpp
-  edit.cpp
-  entry_meta.cpp
-  error.cpp
-  execute.cpp
-  filespec.cpp
-  filewin.cpp
-  freesp.cpp
-  global.cpp
-  group.cpp
-  hex.cpp
-  history.cpp
-  init.cpp
-  input.cpp
-  keyhtab.cpp
-  lha.cpp
-  login.cpp
-  main.cpp
-  match.cpp
-  mkdir.cpp
-  mktime.cpp
-  mouse.cpp
-  move.cpp
-  passwd.cpp
-  path.cpp
-  pipe.cpp
-  print.cpp
-  profile.cpp
-  quit.cpp
-  rar.cpp
-  readtree.cpp
-  rename.cpp
-  rmdir.cpp
-  rpm.cpp
-  sevenzip.cpp
-  sort.cpp
-  stat.cpp
-  system.cpp
-  tar.cpp
-  tilde.cpp
-  usermode.cpp
-  util.cpp
-  view.cpp
-  zip.cpp
-  zoo.cpp
+
+  archive/arc.cpp
+  archive/lha.cpp
+  archive/rar.cpp
+  archive/rpm.cpp
+  archive/sevenzip.cpp
+  archive/tar.cpp
+  archive/zip.cpp
+  archive/zoo.cpp
+
+  core/archive.cpp
+  core/chgrp.cpp
+  core/chmod.cpp
+  core/chown.cpp
+  core/copy.cpp
+  core/delete.cpp
+  core/edit.cpp
+  core/entry_meta.cpp
+  core/execute.cpp
+  core/filespec.cpp
+  core/freesp.cpp
+  core/group.cpp
+  core/hex.cpp
+  core/login.cpp
+  core/match.cpp
+  core/mkdir.cpp
+  core/mktime.cpp
+  core/move.cpp
+  core/passwd.cpp
+  core/path.cpp
+  core/pipe.cpp
+  core/profile.cpp
+  core/quit.cpp
+  core/readtree.cpp
+  core/rename.cpp
+  core/rmdir.cpp
+  core/system.cpp
+  core/tilde.cpp
+  core/usermode.cpp
+  core/util.cpp
+
+  ui/clock.cpp
+  ui/color.cpp
+  ui/dirwin.cpp
+  ui/disp.cpp
+  ui/error.cpp
+  ui/filewin.cpp
+  ui/global.cpp
+  ui/history.cpp
+  ui/init.cpp
+  ui/input.cpp
+  ui/keyhtab.cpp
+  ui/main.cpp
+  ui/mouse.cpp
+  ui/print.cpp
+  ui/sort.cpp
+  ui/stat.cpp
+  ui/view.cpp
 )
 
 target_compile_features(
@@ -160,6 +163,7 @@ target_compile_options(
 target_include_directories(
   ytree
   PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
     $<BUILD_INTERFACE:${CURSES_INCLUDE_DIR}>
 )
 
