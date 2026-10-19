@@ -277,6 +277,20 @@ public:
     clrtoeol();
   }
 
+  void refreshDiskStats() override
+  {
+    DisplayDiskStatistic();
+    doupdate();
+  }
+
+  void refreshChrome() override
+  {
+    RefreshWindow(stdscr);
+    RefreshWindow(dir_window);
+    DisplayMenu();
+    doupdate();
+  }
+
   void beep() override
   {
     ::beep();

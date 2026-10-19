@@ -55,6 +55,10 @@ public:
   virtual void clearHelp() = 0;
   /** Clear the bottom status/prompt lines (not the help strip alone). */
   virtual void clearPromptLines() = 0;
+  /** Optional live stats refresh while a long core operation runs. */
+  virtual void refreshDiskStats() = 0;
+  /** Redraw main chrome (menu / primary windows) after a mode change. */
+  virtual void refreshChrome() = 0;
   virtual void beep() = 0;
   virtual bool keyPressed() = 0;
   virtual bool escapePressed() = 0;
@@ -147,6 +151,16 @@ inline void ClearHelp()
 inline void ClearPromptLines()
 {
   dialogs().clearPromptLines();
+}
+
+inline void RefreshDiskStats()
+{
+  dialogs().refreshDiskStats();
+}
+
+inline void RefreshChrome()
+{
+  dialogs().refreshChrome();
 }
 
 inline void Beep()

@@ -1,7 +1,7 @@
 #include <functional>
 
+#include "core/api.hpp"
 #include "core/ui.hpp"
-#include "ytree.hpp"
 
 using read_tree_callback = std::function<
   bool(const std::shared_ptr<DirEntry>&, FILE*)
@@ -163,10 +163,7 @@ bool LoginDisk(const std::string& path)
     &statistic.disk_capacity
   );
 
-  RefreshWindow(stdscr);
-  RefreshWindow(dir_window);
-  DisplayMenu();
-  doupdate();
+  ui::RefreshChrome();
 
 
   if( mode == Mode::TAPE_MODE )
