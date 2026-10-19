@@ -3,6 +3,8 @@
 
 #include <peelo/xdg.hpp>
 
+#include "core/commands.hpp"
+#include "core/ui.hpp"
 #include "ui/mouse.hpp"
 #include "ytree.hpp"
 
@@ -728,11 +730,11 @@ static void HandleTagAllDirs(DirEntry* dir_entry, bool value)
   DisplayDiskStatistic();
 }
 
-static void HandleShowAllTagged(
+static int HandleShowAllTagged(
   DirEntry* dir_entry,
   DirEntry* start_dir_entry,
   bool& need_dsp_help,
-  int& ch
+  int ch
 )
 {
   if (statistic.disk_tagged_files)
@@ -772,13 +774,14 @@ static void HandleShowAllTagged(
     beep();
   }
   need_dsp_help = true;
+  return ch;
 }
 
-static void HandleShowAll(
+static int HandleShowAll(
   DirEntry* dir_entry,
   DirEntry* start_dir_entry,
   bool& need_dsp_help,
-  int& ch
+  int ch
 )
 {
   if (statistic.disk_matching_files)
@@ -821,13 +824,14 @@ static void HandleShowAll(
     beep();
   }
   need_dsp_help = true;
+  return ch;
 }
 
-static void HandleSwitchWindow(
+static int HandleSwitchWindow(
   DirEntry* dir_entry,
   DirEntry* start_dir_entry,
   bool& need_dsp_help,
-  int& ch
+  int ch
 )
 {
   if (dir_entry->matching_files)
@@ -868,6 +872,7 @@ static void HandleSwitchWindow(
     dir_entry->login_flag = false;
     beep();
   }
+  return ch;
 }
 
 struct DirWindowContext
@@ -875,7 +880,7 @@ struct DirWindowContext
   DirEntry* start_dir_entry = nullptr;
   DirEntry* dir_entry = nullptr;
   DirEntry* de_ptr = nullptr;
-  int unput_char = 0;
+  std::optional<ui::InputEvent> unput;
   bool need_dsp_help = true;
   char new_login_path[PATH_LENGTH + 1]{};
 };
@@ -915,7 +920,7 @@ static void ApplyStartupDirectorySelection(DirWindowContext& ctx)
   {
     statistic.disp_begin_pos = 0;
     statistic.cursor_pos = 0;
-    ctx.unput_char = CR;
+    ctx.unput = ui::InputEvent::Special(ui::Key::Enter);
   } else {
     if (!initial_directory->empty() && initial_directory->at(1) == '.')
     {
@@ -956,7 +961,7 @@ static void ApplyStartupDirectorySelection(DirWindowContext& ctx)
       {
         statistic.disp_begin_pos = i;
         statistic.cursor_pos = 0;
-        ctx.unput_char = CR;
+        ctx.unput = ui::InputEvent::Special(ui::Key::Enter);
         break;
       }
     }
@@ -986,36 +991,26 @@ static void InitializeDirWindowDisplay(DirWindowContext& ctx)
   {
     if (ctx.dir_entry->global_flag || ctx.dir_entry->tagged_flag)
     {
-      ctx.unput_char = 'S';
+      ctx.unput = ui::InputEvent::CharKey('S');
     }
     else
     {
-      ctx.unput_char = CR;
+      ctx.unput = ui::InputEvent::Special(ui::Key::Enter);
     }
   }
 }
 
-static int ReadDirWindowKey(int& unput_char)
+static ui::InputEvent ReadDirWindowKey(DirWindowContext& ctx)
 {
-  if (unput_char)
+  if (ctx.unput)
   {
-    const int ch = unput_char;
-    unput_char = '\0';
-    return ch;
+    const auto ev = *ctx.unput;
+    ctx.unput.reset();
+    return ev;
   }
 
   doupdate();
-  int ch = resize_request ? -1 : Getch();
-  if (ch == LF)
-  {
-    ch = CR;
-  }
-
-#ifdef VI_KEYS
-  ch = ViKey(ch);
-#endif
-
-  return ch;
+  return ui::ReadEvent();
 }
 
 static void HandleDirWindowResize(DirEntry* dir_entry, bool& need_dsp_help)
@@ -1164,61 +1159,59 @@ static int HandleDirKeyLogParent(DirWindowContext& ctx, int ch)
   return ch;
 }
 
-static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
+static std::optional<int> ProcessDirWindowKey(ui::InputEvent& ev, DirWindowContext& ctx)
 {
-  switch (ch)
+  const auto cmd = MapDirCommand(ev);
+  int legacy = LegacyCode(ev);
+
+  switch (cmd)
   {
-#ifdef KEY_RESIZE
-    case KEY_RESIZE:
+    case DirCommand::Resize:
       resize_request = true;
       break;
-#endif
 
-#ifdef KEY_MOUSE
-    case KEY_MOUSE:
-      ch = HandleDirMouse(
+    case DirCommand::Mouse:
+    {
+      const int ch = HandleDirMouse(
         &statistic.disp_begin_pos,
         &statistic.cursor_pos,
         &ctx.dir_entry
       );
-      if (ch == -1)
+      if (ch != -1)
       {
-        break;
+        ctx.unput = EventFromLegacyChar(ch);
       }
-      ctx.unput_char = ch;
       break;
-#endif
+    }
 
-    case -1:
+    case DirCommand::None:
       break;
 
-    case ' ':
-    case KEY_DOWN:
+    case DirCommand::MoveDown:
       Movedown(&statistic.disp_begin_pos, &statistic.cursor_pos, &ctx.dir_entry);
       break;
 
-    case KEY_UP:
+    case DirCommand::MoveUp:
       Moveup(&statistic.disp_begin_pos, &statistic.cursor_pos, &ctx.dir_entry);
       break;
 
-    case KEY_NPAGE:
+    case DirCommand::PageDown:
       Movenpage(&statistic.disp_begin_pos, &statistic.cursor_pos, &ctx.dir_entry);
       break;
 
-    case KEY_PPAGE:
+    case DirCommand::PageUp:
       Moveppage(&statistic.disp_begin_pos, &statistic.cursor_pos, &ctx.dir_entry);
       break;
 
-    case KEY_HOME:
+    case DirCommand::Home:
       MoveHome(&ctx.dir_entry);
       break;
 
-    case KEY_END:
+    case DirCommand::End:
       MoveEnd(&ctx.dir_entry);
       break;
 
-    case KEY_RIGHT:
-    case '+':
+    case DirCommand::Expand:
       HandlePlus(
         ctx.dir_entry,
         ctx.de_ptr,
@@ -1228,8 +1221,7 @@ static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
       );
       break;
 
-    case '\t':
-    case '*':
+    case DirCommand::ReadSubtree:
       HandleReadSubTree(
         ctx.dir_entry,
         ctx.start_dir_entry,
@@ -1237,9 +1229,7 @@ static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
       );
       break;
 
-    case KEY_LEFT:
-    case '-':
-    case KEY_BTAB:
+    case DirCommand::Collapse:
       HandleUnreadSubTree(
         ctx.dir_entry,
         ctx.de_ptr,
@@ -1248,89 +1238,91 @@ static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
       );
       break;
 
-    case 'F':
-    case 'f':
+    case DirCommand::FileSpec:
       HandleDirKeyFileSpec(ctx.dir_entry, ctx.need_dsp_help);
       break;
 
-    case 'T':
-    case 't':
+    case DirCommand::Tag:
       HandleTagDir(ctx.dir_entry, true);
       break;
 
-    case 'U':
-    case 'u':
+    case DirCommand::Untag:
       HandleTagDir(ctx.dir_entry, false);
       break;
 
-    case 'T' & 0x1f:
+    case DirCommand::TagAll:
       HandleTagAllDirs(ctx.dir_entry, true);
       break;
 
-    case 'U' & 0x1f:
+    case DirCommand::UntagAll:
       HandleTagAllDirs(ctx.dir_entry, false);
       break;
 
-    case 'F' & 0x1f:
+    case DirCommand::RotateMode:
       RotateDirMode();
       DisplayDirTreeAtCursor();
       DisplayDiskStatistic();
       ctx.need_dsp_help = true;
       break;
 
-    case 'S' & 0x1f:
-      HandleShowAllTagged(
+    case DirCommand::ShowTagged:
+      legacy = HandleShowAllTagged(
         ctx.dir_entry,
         ctx.start_dir_entry,
         ctx.need_dsp_help,
-        ch
+        legacy
       );
+      if (legacy == 'L')
+      {
+        ev = EventFromLegacyChar('L');
+      }
       break;
 
-    case 'S':
-    case 's':
-      HandleShowAll(
+    case DirCommand::ShowAll:
+      legacy = HandleShowAll(
         ctx.dir_entry,
         ctx.start_dir_entry,
         ctx.need_dsp_help,
-        ch
+        legacy
       );
+      if (legacy == 'L')
+      {
+        ev = EventFromLegacyChar('L');
+      }
       break;
 
-    case LF:
-    case CR:
-      HandleSwitchWindow(
+    case DirCommand::EnterFiles:
+      legacy = HandleSwitchWindow(
         ctx.dir_entry,
         ctx.start_dir_entry,
         ctx.need_dsp_help,
-        ch
+        legacy
       );
+      if (legacy == 'L')
+      {
+        ev = EventFromLegacyChar('L');
+      }
       break;
 
-    case 'X':
-    case 'x':
+    case DirCommand::Execute:
       Execute(ctx.dir_entry, nullptr);
       ctx.need_dsp_help = true;
       DisplayAvailBytes();
       break;
 
-    case 'M':
-    case 'm':
+    case DirCommand::MakeDirectory:
       HandleDirKeyMakeDirectory(ctx);
       break;
 
-    case 'D':
-    case 'd':
+    case DirCommand::Delete:
       HandleDirKeyDeleteDirectory(ctx);
       break;
 
-    case 'r':
-    case 'R':
+    case DirCommand::Rename:
       HandleDirKeyRename(ctx);
       break;
 
-    case 'G':
-    case 'g':
+    case DirCommand::ChangeGroup:
       HandleDirKeyAttributeChange(
         ctx.dir_entry,
         ctx.need_dsp_help,
@@ -1338,8 +1330,7 @@ static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
       );
       break;
 
-    case 'O':
-    case 'o':
+    case DirCommand::ChangeOwner:
       HandleDirKeyAttributeChange(
         ctx.dir_entry,
         ctx.need_dsp_help,
@@ -1347,8 +1338,7 @@ static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
       );
       break;
 
-    case 'A':
-    case 'a':
+    case DirCommand::ChangeMode:
       HandleDirKeyAttributeChange(
         ctx.dir_entry,
         ctx.need_dsp_help,
@@ -1356,42 +1346,39 @@ static std::optional<int> ProcessDirWindowKey(int& ch, DirWindowContext& ctx)
       );
       break;
 
-    case 'Q' & 0x1f:
+    case DirCommand::QuitTo:
       ctx.need_dsp_help = true;
       QuitTo(ctx.dir_entry);
       break;
 
-    case 'Q':
-    case 'q':
+    case DirCommand::Quit:
       ctx.need_dsp_help = true;
       break;
 
-#if !defined(VI_KEYS)
-    case 'l':
-#endif
-    case 'L':
+    case DirCommand::ChangeLogin:
       HandleDirKeyChangeLogin(ctx.dir_entry, ctx.need_dsp_help);
       break;
 
-    case 'L' & 0x1f:
+    case DirCommand::Redraw:
       clearok(stdscr, true);
       break;
 
-    case 'P':
-    case 'p':
-      return HandleDirKeyLogParent(ctx, ch);
+    case DirCommand::LogParent:
+      return HandleDirKeyLogParent(ctx, legacy);
 
+    case DirCommand::Unknown:
     default:
-      beep();
+      ui::Beep();
       break;
   }
 
   return std::nullopt;
 }
 
-static bool ShouldContinueDirWindow(int ch)
+static bool ShouldContinueDirWindow(const ui::InputEvent& ev)
 {
-  return ch != 'q' && ch != 'Q' && ch != 'l' && ch != 'L';
+  const auto cmd = MapDirCommand(ev);
+  return cmd != DirCommand::Quit && cmd != DirCommand::ChangeLogin;
 }
 
 int HandleDirWindow(DirEntry *start_dir_entry)
@@ -1406,7 +1393,7 @@ int HandleDirWindow(DirEntry *start_dir_entry)
   ApplyStartupDirectorySelection(ctx);
   InitializeDirWindowDisplay(ctx);
 
-  int ch = 0;
+  ui::InputEvent ev{};
   do
   {
     if (ctx.need_dsp_help)
@@ -1418,21 +1405,22 @@ int HandleDirWindow(DirEntry *start_dir_entry)
     DisplayDirParameter(ctx.dir_entry);
     RefreshWindow(dir_window);
 
-    ch = ReadDirWindowKey(ctx.unput_char);
+    ev = ReadDirWindowKey(ctx);
     HandleDirWindowResize(ctx.dir_entry, ctx.need_dsp_help);
 
     if (mode == Mode::USER_MODE)
     {
-      ch = DirUserMode(ctx.dir_entry, ch);
+      const int remapped = DirUserMode(ctx.dir_entry, LegacyCode(ev));
+      ev = EventFromLegacyChar(remapped);
     }
 
-    if (const auto exit_key = ProcessDirWindowKey(ch, ctx))
+    if (const auto exit_key = ProcessDirWindowKey(ev, ctx))
     {
       return *exit_key;
     }
-  } while (ShouldContinueDirWindow(ch));
+  } while (ShouldContinueDirWindow(ev));
 
-  return ch;
+  return LegacyCode(ev);
 }
 
 

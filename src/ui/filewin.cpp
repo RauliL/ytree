@@ -3,6 +3,8 @@
 #include <functional>
 #include <type_traits>
 
+#include "core/commands.hpp"
+#include "core/ui.hpp"
 #include "ui/mouse.hpp"
 #include "ytree.hpp"
 
@@ -1306,7 +1308,7 @@ struct FileWindowContext
   FileEntry* new_fe_ptr = nullptr;
   DirEntry* de_ptr = nullptr;
   DirEntry* dest_dir_entry = nullptr;
-  int unput_char = 0;
+  std::optional<ui::InputEvent> unput;
   int tmp2 = 0;
   int list_pos = 0;
   std::int64_t file_size = 0;
@@ -1342,7 +1344,7 @@ static void DisplayFilesAtCursor(DirEntry* dir_entry, int start_x)
 
 static void InitializeFileWindow(FileWindowContext& ctx)
 {
-  ctx.unput_char = '\0';
+  ctx.unput.reset();
   ctx.fe_ptr = nullptr;
   ctx.need_dsp_help = true;
   ctx.maybe_change_x_step = true;
@@ -1380,13 +1382,13 @@ static void UpdateFileWindowLayout(FileWindowContext& ctx)
   max_disp_files = window_height * max_column;
 }
 
-static int ReadFileWindowKey(FileWindowContext& ctx)
+static ui::InputEvent ReadFileWindowKey(FileWindowContext& ctx)
 {
-  if (ctx.unput_char)
+  if (ctx.unput)
   {
-    const int ch = ctx.unput_char;
-    ctx.unput_char = '\0';
-    return ch;
+    const auto ev = *ctx.unput;
+    ctx.unput.reset();
+    return ev;
   }
 
   ctx.fe_ptr = FileWindowCurrentEntry(ctx.dir_entry).get();
@@ -1403,17 +1405,7 @@ static int ReadFileWindowKey(FileWindowContext& ctx)
   RefreshWindow(file_window);
   doupdate();
 
-  int ch = resize_request ? -1 : Getch();
-  if (ch == LF)
-  {
-    ch = CR;
-  }
-
-#ifdef VI_KEYS
-  ch = ViKey(ch);
-#endif
-
-  return ch;
+  return ui::ReadEvent();
 }
 
 static void HandleFileWindowResize(FileWindowContext& ctx)
@@ -1475,24 +1467,30 @@ static void HandleFileWindowResize(FileWindowContext& ctx)
   resize_request = false;
 }
 
-static void RemapFileModeNavigationKeys(int& ch)
+static void RemapFileModeNavigationKeys(ui::InputEvent& ev)
 {
   if (file_mode == ViewMode::MODE_1)
   {
-    if (ch == '\t')
+    if (ev.key == ui::Key::Tab)
     {
-      ch = KEY_DOWN;
+      ev = ui::InputEvent::Special(ui::Key::Down);
     }
-    else if (ch == KEY_BTAB)
+    else if (ev.key == ui::Key::BackTab)
     {
-      ch = KEY_UP;
+      ev = ui::InputEvent::Special(ui::Key::Up);
     }
   }
 }
 
-static void ResetFileWindowHorizontalScroll(int ch, FileWindowContext& ctx)
+static void ResetFileWindowHorizontalScroll(
+  const ui::InputEvent& ev,
+  FileWindowContext& ctx
+)
 {
-  if (x_step == 1 && (ch == KEY_RIGHT || ch == KEY_LEFT))
+  if (
+    x_step == 1 &&
+    (ev.key == ui::Key::Right || ev.key == ui::Key::Left)
+  )
   {
     return;
   }
@@ -1512,134 +1510,175 @@ static void ResetFileWindowHorizontalScroll(int ch, FileWindowContext& ctx)
   );
 }
 
-static void ApplyFileUserMode(int& ch, const FileWindowContext& ctx)
+static void ApplyFileUserMode(ui::InputEvent& ev, const FileWindowContext& ctx)
 {
   if (mode == Mode::USER_MODE)
   {
-    ch = FileUserMode(FileWindowCurrentEntry(ctx.dir_entry), ch);
+    const int remapped = FileUserMode(
+      FileWindowCurrentEntry(ctx.dir_entry),
+      LegacyCode(ev)
+    );
+    ev = EventFromLegacyChar(remapped);
   }
 }
 
-static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
+static bool ProcessFileNavigationKey(ui::InputEvent& ev, FileWindowContext& ctx)
 {
-  switch (ch)
-  {
-#ifdef KEY_RESIZE
-    case KEY_RESIZE:
-      resize_request = true;
-      break;
-#endif
+  using ui::Key;
 
-#ifdef KEY_MOUSE
-    case KEY_MOUSE:
-      ch = HandleFileMouse(
+  switch (ev.key)
+  {
+    case Key::Resize:
+      resize_request = true;
+      return true;
+
+    case Key::Mouse:
+    {
+      const int ch = HandleFileMouse(
         &ctx.dir_entry->start_file,
         &ctx.dir_entry->cursor_pos,
         &ctx.start_x,
         ctx.dir_entry
       );
-      if (ch == -1)
+      if (ch != -1)
       {
-        break;
+        ctx.unput = EventFromLegacyChar(ch);
       }
-      ctx.unput_char = ch;
-      break;
-#endif
+      return true;
+    }
 
-    case -1:
-      break;
-
-    case ' ':
-    case KEY_DOWN:
+    case Key::Down:
+    case Key::Space:
       MoveDown(
         ctx.dir_entry->start_file,
         ctx.dir_entry->cursor_pos,
         ctx.start_x,
         ctx.dir_entry
       );
-      break;
+      return true;
 
-    case KEY_UP:
+    case Key::Up:
       MoveUp(
         ctx.dir_entry->start_file,
         ctx.dir_entry->cursor_pos,
         ctx.start_x,
         ctx.dir_entry
       );
-      break;
+      return true;
 
-    case KEY_RIGHT:
+    case Key::Right:
       MoveRight(
         &ctx.dir_entry->start_file,
         &ctx.dir_entry->cursor_pos,
-        &ctx.start_x, ctx.dir_entry
+        &ctx.start_x,
+        ctx.dir_entry
       );
-      break;
+      return true;
 
-    case KEY_LEFT:
+    case Key::Left:
       MoveLeft(
         &ctx.dir_entry->start_file,
         &ctx.dir_entry->cursor_pos,
         &ctx.start_x,
         ctx.dir_entry
       );
-      break;
+      return true;
 
-      case KEY_NPAGE: fmovenpage(&ctx.dir_entry->start_file, &ctx.dir_entry->cursor_pos, &ctx.start_x, ctx.dir_entry);
-          break;
+    case Key::PageDown:
+      fmovenpage(
+        &ctx.dir_entry->start_file,
+        &ctx.dir_entry->cursor_pos,
+        &ctx.start_x,
+        ctx.dir_entry
+      );
+      return true;
 
-      case KEY_PPAGE: fmoveppage(&ctx.dir_entry->start_file, &ctx.dir_entry->cursor_pos, &ctx.start_x, ctx.dir_entry);
-          break;
+    case Key::PageUp:
+      fmoveppage(
+        &ctx.dir_entry->start_file,
+        &ctx.dir_entry->cursor_pos,
+        &ctx.start_x,
+        ctx.dir_entry
+      );
+      return true;
 
-      case KEY_END  : if( ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos + 1 >= (int)file_entry_list.size() )
-          {
-      /* Letzte Position erreicht */
-      /*--------------------------*/
+    case Key::End:
+      if (
+        ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos + 1 >=
+        static_cast<int>(file_entry_list.size())
+      )
+      {
+        ui::Beep();
+      }
+      else
+      {
+        if (static_cast<int>(file_entry_list.size()) < max_disp_files)
+        {
+          ctx.dir_entry->start_file = 0;
+          ctx.dir_entry->cursor_pos =
+            static_cast<int>(file_entry_list.size()) - 1;
+        }
+        else
+        {
+          ctx.dir_entry->start_file =
+            static_cast<int>(file_entry_list.size()) - max_disp_files;
+          ctx.dir_entry->cursor_pos =
+            static_cast<int>(file_entry_list.size()) -
+            ctx.dir_entry->start_file - 1;
+        }
 
-      beep();
-          }
-          else
-          {
-      if( (int)file_entry_list.size() < max_disp_files )
-            {
+        DisplayFiles(
+          ctx.dir_entry,
+          ctx.dir_entry->start_file,
+          ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
+          ctx.start_x
+        );
+      }
+      return true;
+
+    case Key::Home:
+      if (ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos <= 0)
+      {
+        ui::Beep();
+      }
+      else
+      {
         ctx.dir_entry->start_file = 0;
-        ctx.dir_entry->cursor_pos = file_entry_list.size() - 1;
-            }
-            else
-                  {
-                          ctx.dir_entry->start_file = file_entry_list.size() - max_disp_files;
-        ctx.dir_entry->cursor_pos = file_entry_list.size() - ctx.dir_entry->start_file - 1;
-            }
+        ctx.dir_entry->cursor_pos = 0;
+        DisplayFiles(
+          ctx.dir_entry,
+          ctx.dir_entry->start_file,
+          ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
+          ctx.start_x
+        );
+      }
+      return true;
 
-      DisplayFiles(ctx.dir_entry,
-              ctx.dir_entry->start_file,
-              ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-              ctx.start_x
-);
-          }
-          break;
+    case Key::Function:
+      if (ev.code == 12)
+      {
+        ListJump(ctx.dir_entry, "");
+        ctx.need_dsp_help = true;
+        return true;
+      }
+      return false;
 
-      case KEY_HOME : if( ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos <= 0 )
-          {
-      /* erste Position erreicht */
-      /*-------------------------*/
+    default:
+      return false;
+  }
+}
 
-      beep();
-          }
-          else
-          {
-                        ctx.dir_entry->start_file = 0;
-      ctx.dir_entry->cursor_pos = 0;
+static void ProcessFileWindowKey(ui::InputEvent& ev, FileWindowContext& ctx)
+{
+  if (ProcessFileNavigationKey(ev, ctx))
+  {
+    return;
+  }
 
-      DisplayFiles(ctx.dir_entry,
-              ctx.dir_entry->start_file,
-              ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos,
-              ctx.start_x
-);
+  int ch = LegacyCode(ev);
 
-          }
-          break;
-
+  switch (ch)
+  {
       case 'A':
       case 'a':
         ctx.fe_ptr = file_entry_list[ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos].get();
@@ -1821,7 +1860,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
       else
         DisplayDirTagged(ctx.de_ptr);
           }
-          ctx.unput_char = KEY_DOWN;
+          ctx.unput = ui::InputEvent::Special(ui::Key::Down);
 
                       break;
       case 'U' :
@@ -1848,7 +1887,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
         DisplayDirTagged(ctx.de_ptr);
           }
 
-          ctx.unput_char = KEY_DOWN;
+          ctx.unput = ui::InputEvent::Special(ui::Key::Down);
 
           break;
 
@@ -2367,7 +2406,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 
       BuildFileEntryList(ctx.dir_entry);
 
-      if( file_entry_list.size() == 0 ) ctx.unput_char = ESC;
+      if( file_entry_list.size() == 0 ) ctx.unput = ui::InputEvent::Special(ui::Key::Escape);
 
       if( ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos >= (int)file_entry_list.size() )
       {
@@ -2468,7 +2507,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 
       BuildFileEntryList(ctx.dir_entry);
 
-      if( file_entry_list.size() == 0 ) ctx.unput_char = ESC;
+      if( file_entry_list.size() == 0 ) ctx.unput = ui::InputEvent::Special(ui::Key::Escape);
 
       ctx.dir_entry->start_file = 0;
       ctx.dir_entry->cursor_pos = 0;
@@ -2514,7 +2553,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 
                         RemoveFileEntry(ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos);
 
-      if( file_entry_list.size() == 0 ) ctx.unput_char = ESC;
+      if( file_entry_list.size() == 0 ) ctx.unput = ui::InputEvent::Special(ui::Key::Escape);
 
       if( ctx.dir_entry->start_file + ctx.dir_entry->cursor_pos >= (int)file_entry_list.size() )
       {
@@ -2546,7 +2585,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
           {
             ctx.need_dsp_help = true;
       DeleteTaggedFiles(max_disp_files);
-      if( file_entry_list.size() == 0 ) ctx.unput_char = ESC;
+      if( file_entry_list.size() == 0 ) ctx.unput = ui::InputEvent::Special(ui::Key::Escape);
       ctx.dir_entry->start_file = 0;
       ctx.dir_entry->cursor_pos = 0;
                         DisplayAvailBytes();
@@ -2630,7 +2669,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
 
       BuildFileEntryList(ctx.dir_entry);
 
-      if( file_entry_list.size() == 0 ) ctx.unput_char = ESC;
+      if( file_entry_list.size() == 0 ) ctx.unput = ui::InputEvent::Special(ui::Key::Escape);
 
       DisplayFiles(ctx.dir_entry,
               ctx.dir_entry->start_file,
@@ -2683,7 +2722,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
             else
               DisplayDirStatistic(ctx.dir_entry);
 
-                        if( file_entry_list.size() == 0 ) ctx.unput_char = ESC;
+                        if( file_entry_list.size() == 0 ) ctx.unput = ui::InputEvent::Special(ui::Key::Escape);
             ctx.maybe_change_x_step = true;
                 }
           ctx.need_dsp_help = true;
@@ -2703,7 +2742,7 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
             if (LoginDisk(*login_path))
             {
               ctx.dir_entry->login_flag = true;
-              ctx.unput_char = LOGIN_ESC;
+              ctx.unput = ui::InputEvent::CharKey(LOGIN_ESC);
             }
           }
           ctx.need_dsp_help = true;
@@ -2895,29 +2934,30 @@ static void ProcessFileWindowKey(int& ch, FileWindowContext& ctx)
       case LOGIN_ESC :
           break;
 
-      case KEY_F(12):
-                ListJump(ctx.dir_entry, "");
-          ctx.need_dsp_help = true;
-          break;
-
-      default:        beep();
+      default:        ui::Beep();
           break;
   }
 }
 
-static bool ShouldContinueFileWindow(int ch)
+static bool ShouldContinueFileWindow(const ui::InputEvent& ev)
 {
-  return ch != CR && ch != ESC && ch != LOGIN_ESC;
+  if (ev.key == ui::Key::Enter || ev.key == ui::Key::Escape)
+  {
+    return false;
+  }
+  return !(ev.key == ui::Key::Char && ev.code == LOGIN_ESC);
 }
 
-static void FinalizeFileWindow(FileWindowContext& ctx, int ch)
+static void FinalizeFileWindow(FileWindowContext& ctx, const ui::InputEvent& ev)
 {
   if (ctx.dir_entry->big_window)
   {
     SwitchToSmallFileWindow();
   }
 
-  if (ch != LOGIN_ESC)
+  const bool login_esc =
+    ev.key == ui::Key::Char && ev.code == LOGIN_ESC;
+  if (!login_esc)
   {
     ctx.dir_entry->global_flag = false;
     ctx.dir_entry->tagged_flag = false;
@@ -2932,7 +2972,7 @@ int HandleFileWindow(DirEntry* dir_entry)
 
   InitializeFileWindow(ctx);
 
-  int ch = 0;
+  ui::InputEvent ev{};
   do
   {
     UpdateFileWindowLayout(ctx);
@@ -2943,16 +2983,16 @@ int HandleFileWindow(DirEntry* dir_entry)
       DisplayFileHelp();
     }
 
-    ch = ReadFileWindowKey(ctx);
+    ev = ReadFileWindowKey(ctx);
     HandleFileWindowResize(ctx);
-    RemapFileModeNavigationKeys(ch);
-    ResetFileWindowHorizontalScroll(ch, ctx);
-    ApplyFileUserMode(ch, ctx);
-    ProcessFileWindowKey(ch, ctx);
-  } while (ShouldContinueFileWindow(ch));
+    RemapFileModeNavigationKeys(ev);
+    ResetFileWindowHorizontalScroll(ev, ctx);
+    ApplyFileUserMode(ev, ctx);
+    ProcessFileWindowKey(ev, ctx);
+  } while (ShouldContinueFileWindow(ev));
 
-  FinalizeFileWindow(ctx, ch);
-  return ch;
+  FinalizeFileWindow(ctx, ev);
+  return LegacyCode(ev);
 }
 
 

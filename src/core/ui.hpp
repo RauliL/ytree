@@ -61,6 +61,51 @@ struct MouseEvent
   int col = 0;
 };
 
+/** Backend-neutral keys for window command loops. */
+enum class Key
+{
+  None,
+  Resize,
+  Mouse,
+  Up,
+  Down,
+  Left,
+  Right,
+  PageUp,
+  PageDown,
+  Home,
+  End,
+  Enter,
+  Escape,
+  Tab,
+  BackTab,
+  Space,
+  /** Printable / control character; see InputEvent::code. */
+  Char,
+  /** Function key; InputEvent::code is the F-number (e.g. 12). */
+  Function,
+};
+
+struct InputEvent
+{
+  Key key = Key::None;
+  /** Character code for Key::Char, or Fn number for Key::Function. */
+  int code = 0;
+  /** Original backend key code (for legacy user-mode remaps). */
+  int raw = 0;
+  MouseEvent mouse{};
+
+  static InputEvent CharKey(int ch)
+  {
+    return InputEvent{Key::Char, ch, ch, {}};
+  }
+
+  static InputEvent Special(Key key, int raw = 0)
+  {
+    return InputEvent{key, 0, raw, {}};
+  }
+};
+
 class IDialogs
 {
 public:
@@ -108,19 +153,20 @@ public:
   virtual void suspendClock() = 0;
 };
 
-/**
- * Raw input. Key codes currently match the historic ncurses/Getch values so
- * existing window loops can migrate incrementally.
- */
 class IInput
 {
 public:
   virtual ~IInput() = default;
 
-  /** Next key, or -1 on resize / ignored input. */
+  /** Next normalized input event (resize, mouse, navigation, or character). */
+  virtual InputEvent readEvent() = 0;
+  /**
+   * Legacy raw key code (ncurses-compatible). Prefer readEvent() for new code.
+   * Returns -1 on resize.
+   */
   virtual int readKey() = 0;
   virtual MouseEvent decodeMouse(MouseFocus focus) = 0;
-  /** Map overlay mouse scroll to KEY_UP/KEY_DOWN; other mouse to -1. */
+  /** Map overlay mouse scroll to up/down; other mouse to Key::None raw -1. */
   virtual int translateOverlayMouse(int ch) = 0;
 };
 
@@ -241,6 +287,11 @@ inline bool KeyPressed()
 inline bool EscapePressed()
 {
   return dialogs().escapePressed();
+}
+
+inline InputEvent ReadEvent()
+{
+  return input().readEvent();
 }
 
 inline int ReadKey()

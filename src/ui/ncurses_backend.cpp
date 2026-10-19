@@ -480,19 +480,38 @@ public:
 class NcursesInput final : public ui::IInput
 {
 public:
-  int readKey() override
+  ui::InputEvent readEvent() override
   {
+    if (resize_request)
+    {
+      return ui::InputEvent::Special(ui::Key::Resize);
+    }
+
     int c = getch();
 
 #ifdef KEY_RESIZE
     if (c == KEY_RESIZE)
     {
       resize_request = true;
-      c = -1;
+      return ui::InputEvent::Special(ui::Key::Resize);
     }
 #endif
 
-    return c;
+#ifdef VI_KEYS
+    c = ViKey(c);
+#endif
+
+    if (c == LF)
+    {
+      c = CR;
+    }
+
+    return MapRawKey(c);
+  }
+
+  int readKey() override
+  {
+    return ToLegacyRaw(readEvent());
   }
 
   ui::MouseEvent decodeMouse(ui::MouseFocus focus) override
@@ -503,6 +522,134 @@ public:
   int translateOverlayMouse(int ch) override
   {
     return TranslateOverlayMouse(ch);
+  }
+
+private:
+  static ui::InputEvent MapRawKey(int c)
+  {
+    if (c == KEY_DOWN)
+    {
+      return ui::InputEvent::Special(ui::Key::Down, c);
+    }
+    if (c == KEY_UP)
+    {
+      return ui::InputEvent::Special(ui::Key::Up, c);
+    }
+    if (c == KEY_LEFT)
+    {
+      return ui::InputEvent::Special(ui::Key::Left, c);
+    }
+    if (c == KEY_RIGHT)
+    {
+      return ui::InputEvent::Special(ui::Key::Right, c);
+    }
+    if (c == KEY_NPAGE)
+    {
+      return ui::InputEvent::Special(ui::Key::PageDown, c);
+    }
+    if (c == KEY_PPAGE)
+    {
+      return ui::InputEvent::Special(ui::Key::PageUp, c);
+    }
+    if (c == KEY_HOME)
+    {
+      return ui::InputEvent::Special(ui::Key::Home, c);
+    }
+    if (c == KEY_END)
+    {
+      return ui::InputEvent::Special(ui::Key::End, c);
+    }
+    if (c == KEY_BTAB)
+    {
+      return ui::InputEvent::Special(ui::Key::BackTab, c);
+    }
+    if (c == '\t')
+    {
+      return ui::InputEvent::Special(ui::Key::Tab, c);
+    }
+    if (c == ' ')
+    {
+      return ui::InputEvent::Special(ui::Key::Space, c);
+    }
+    if (c == CR || c == LF)
+    {
+      return ui::InputEvent::Special(ui::Key::Enter, CR);
+    }
+    if (c == ESC)
+    {
+      return ui::InputEvent::Special(ui::Key::Escape, ESC);
+    }
+#ifdef KEY_F
+    if (c == KEY_F(12))
+    {
+      return ui::InputEvent{ui::Key::Function, 12, c, {}};
+    }
+#endif
+#ifdef KEY_MOUSE
+    if (c == KEY_MOUSE)
+    {
+      return ui::InputEvent::Special(ui::Key::Mouse, c);
+    }
+#endif
+    if (c == -1)
+    {
+      return ui::InputEvent::Special(ui::Key::Resize, -1);
+    }
+    return ui::InputEvent::CharKey(c);
+  }
+
+  static int ToLegacyRaw(const ui::InputEvent& ev)
+  {
+    using ui::Key;
+    switch (ev.key)
+    {
+      case Key::Resize:
+        return -1;
+      case Key::Mouse:
+#ifdef KEY_MOUSE
+        return KEY_MOUSE;
+#else
+        return -1;
+#endif
+      case Key::Down:
+        return KEY_DOWN;
+      case Key::Up:
+        return KEY_UP;
+      case Key::Left:
+        return KEY_LEFT;
+      case Key::Right:
+        return KEY_RIGHT;
+      case Key::PageDown:
+        return KEY_NPAGE;
+      case Key::PageUp:
+        return KEY_PPAGE;
+      case Key::Home:
+        return KEY_HOME;
+      case Key::End:
+        return KEY_END;
+      case Key::Tab:
+        return '\t';
+      case Key::BackTab:
+        return KEY_BTAB;
+      case Key::Space:
+        return ' ';
+      case Key::Enter:
+        return CR;
+      case Key::Escape:
+        return ESC;
+      case Key::Function:
+#ifdef KEY_F
+        if (ev.code == 12)
+        {
+          return KEY_F(12);
+        }
+#endif
+        return ev.code;
+      case Key::Char:
+        return ev.code;
+      default:
+        return -1;
+    }
   }
 };
 
