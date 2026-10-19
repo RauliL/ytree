@@ -115,13 +115,25 @@ public:
     auto* entry = Gtk::make_managed<Gtk::Entry>();
     entry->set_text(req.initial);
     entry->set_hexpand(true);
+    entry->set_activates_default(true);
     box->set_spacing(8);
     box->set_margin(12);
     box->append(*label);
     box->append(*entry);
     dialog.add_button("_Cancel", Gtk::ResponseType::CANCEL);
-    dialog.add_button("_OK", Gtk::ResponseType::OK);
+    auto* ok = dialog.add_button("_OK", Gtk::ResponseType::OK);
     dialog.set_default_response(Gtk::ResponseType::OK);
+    if (ok != nullptr)
+    {
+      dialog.set_default_widget(*ok);
+    }
+    entry->signal_activate().connect(
+      [&dialog]()
+      {
+        dialog.response(Gtk::ResponseType::OK);
+      }
+    );
+    entry->grab_focus();
 
     if (RunDialog(dialog) != Gtk::ResponseType::OK)
     {
