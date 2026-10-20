@@ -1,6 +1,7 @@
 #include "archive/macros.hpp"
 #include "core/api.hpp"
 #include "core/archive.hpp"
+#include "util/string-tokenizer.hpp"
 
 static inline bool IsZOOLine(std::string_view line)
 {

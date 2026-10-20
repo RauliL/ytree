@@ -1,4 +1,5 @@
 #include "core/api.hpp"
+#include "util/string-tokenizer.hpp"
 
 #include <chrono>
 #include <unordered_map>

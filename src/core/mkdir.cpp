@@ -2,6 +2,7 @@
 
 #include "core/ui.hpp"
 #include "core/api.hpp"
+#include "util/string-tokenizer.hpp"
 
 std::optional<std::string> MakeDirectory(DirEntry *father_dir_entry)
 {

@@ -1,6 +1,7 @@
 #include "archive/macros.hpp"
 #include "core/api.hpp"
 #include "core/archive.hpp"
+#include "util/string-tokenizer.hpp"
 
 static std::optional<archive_meta::NamedEntry> ParseTARListing(
   std::string_view tar_line

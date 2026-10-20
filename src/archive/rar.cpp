@@ -1,5 +1,6 @@
 #include "archive/macros.hpp"
 #include "core/api.hpp"
+#include "util/string-tokenizer.hpp"
 
 #include <cctype>
 

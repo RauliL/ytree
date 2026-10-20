@@ -1,6 +1,7 @@
 #include "archive/macros.hpp"
 #include "core/archive.hpp"
 #include "core/api.hpp"
+#include "util/string-tokenizer.hpp"
 
 static bool IsZIPLine(std::string_view line)
 {

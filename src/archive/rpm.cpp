@@ -1,5 +1,6 @@
 #include "archive/macros.hpp"
 #include "core/api.hpp"
+#include "util/string-tokenizer.hpp"
 
 static std::optional<archive_meta::NamedEntry> ParseRPMListing(
   std::string_view rpm_line
