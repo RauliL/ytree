@@ -1,3 +1,4 @@
+#include <cstring>
 #include <functional>
 #include <limits>
 
@@ -789,7 +790,7 @@ static void InitializeDirWindowDisplay(DirWindowContext& ctx)
 
   ui::dir_view().showFileSide();
   ui::dir_view().showTreeAtCursor();
-  
+
   if (ctx.dir_entry->login_flag)
   {
     if (ctx.dir_entry->global_flag || ctx.dir_entry->tagged_flag)

@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "ui/curses/curses_ui.hpp"
 
 std::optional<SortSpec> GetKindOfSort()

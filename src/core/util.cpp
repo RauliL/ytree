@@ -1,8 +1,9 @@
+#include <chrono>
+#include <cstring>
+#include <unordered_map>
+
 #include "core/api.hpp"
 #include "util/string-tokenizer.hpp"
-
-#include <chrono>
-#include <unordered_map>
 
 static const std::unordered_map<std::string, CompressMethod> file_extensions =
 {

@@ -3,22 +3,10 @@
 #define _LARGEFILE64_SOURCE 1
 #define _FILE_OFFSET_BITS 64
 
-#include "config.hpp"
-#include "core/entry_meta.hpp"
-
-#include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <ctime>
-#include <filesystem>
 #include <format>
-#include <memory>
-#include <optional>
-#include <string>
-#include <string_view>
-#include <utility>
-#include <vector>
+
+#include "config.hpp"
+#include "core/dir-entry.hpp"
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -183,122 +171,6 @@ enum class ViewMode : int
 };
 
 inline constexpr int QUICK_BAUD_RATE = 9600;
-
-struct Entry
-{
-  std::string name;
-  EntryMeta meta{};
-
-  virtual ~Entry() = default;
-
-  virtual std::filesystem::path GetPath() const = 0;
-
-  bool ChangeModus();
-
-  bool SetModus(const std::string& new_modus_str);
-
-  bool ChangeOwner();
-
-  bool SetOwner(int new_user_id);
-
-  bool ChangeGroup();
-
-  bool SetGroup(int new_group_id);
-
-  virtual bool Delete() = 0;
-};
-
-struct DirEntry;
-
-/*
- * Ownership model:
- *  - Statistic::tree owns the root DirEntry.
- *  - DirEntry::children / DirEntry::files own their entries (shared_ptr).
- *  - DirEntry::parent and FileEntry::dir_entry are weak back-references
- *    (no ownership, no reference cycles).
- *  - Raw DirEntry* / FileEntry* in function signatures are short-lived,
- *    non-owning observers obtained from a shared_ptr.
- *  - SharedDirEntry() recovers the owning shared_ptr from a raw DirEntry*
- *    (via parent->children, or Statistic::tree / disk_statistic.tree).
- */
-struct FileEntry : Entry
-{
-  /** Back reference to owning directory. */
-  std::weak_ptr<DirEntry> dir_entry;
-  bool tagged = false;
-  bool matching = false;
-  std::string symlink_target;
-
-  /**
-   * Owning directory, or null if it has expired.
-   */
-  inline std::shared_ptr<DirEntry> Dir() const
-  {
-    return dir_entry.lock();
-  }
-
-  std::filesystem::path GetPath() const override;
-
-  std::filesystem::path GetRealPath() const;
-
-  std::optional<std::string> GetExtension() const
-  {
-    const auto extension = std::filesystem::path(name).extension();
-
-    if (extension.empty())
-    {
-      return std::nullopt;
-    }
-
-    return extension.string();
-  }
-
-  bool Delete() override;
-
-  bool Remove();
-
-  bool Pipe() const;
-
-  bool PipeTo(FILE* pipe) const;
-};
-
-struct DirEntry : Entry
-{
-  std::vector<std::shared_ptr<FileEntry>> files;
-  std::vector<std::shared_ptr<DirEntry>> children;
-  std::weak_ptr<DirEntry> parent;
-  std::int64_t total_bytes = 0;
-  std::int64_t matching_bytes = 0;
-  std::int64_t tagged_bytes = 0;
-  unsigned int total_files = 0;
-  unsigned int matching_files = 0;
-  unsigned int tagged_files = 0;
-  int cursor_pos = 0;
-  int start_file = 0;
-  bool access_denied = false;
-  bool global_flag = false;
-  bool tagged_flag = false;
-  bool only_tagged = false;
-  bool not_scanned = false;
-  bool big_window = false;
-  bool login_flag = false;
-
-  /**
-   * Parent directory, or null for the root (or if it has expired).
-   */
-  inline std::shared_ptr<DirEntry> Parent() const
-  {
-    return parent.lock();
-  }
-
-  std::filesystem::path GetPath() const override;
-
-  void SetMatchingParam();
-
-  bool Delete() override;
-
-  void UnReadTree();
-};
 
 struct Statistic
 {

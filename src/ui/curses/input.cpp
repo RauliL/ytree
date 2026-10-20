@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "core/tilde.hpp"
 #include "core/ui.hpp"
 #include "ui/mouse.hpp"
@@ -41,6 +43,7 @@ static std::string StrRight(const char* str, std::size_t count)
     }
 #if defined(WITH_UTF8)
     const auto n = std::mbrlen(p, 4, &state);
+
     if (n == static_cast<std::size_t>(-1) || n == static_cast<std::size_t>(-2) || n == 0)
     {
       break;

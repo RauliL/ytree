@@ -1,13 +1,8 @@
 #pragma once
 
-#include <chrono>
 #include <cstdint>
-#include <ctime>
 #include <filesystem>
 #include <optional>
-#include <string>
-#include <string_view>
-#include <system_error>
 
 /**
  * Portable entry metadata shared by filesystem and archive-backed entries.
@@ -60,8 +55,13 @@ public:
   inline bool IsExecutable() const
   {
     using std::filesystem::perms;
-    return (permissions & (perms::owner_exec | perms::group_exec | perms::others_exec))
-           != perms::none;
+
+    return (permissions & (
+        perms::owner_exec |
+        perms::group_exec |
+        perms::others_exec
+      )
+    ) != perms::none;
   }
 
   /**

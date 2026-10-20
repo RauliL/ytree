@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstring>
 
 #include "core/api.hpp"
 #include "core/ui.hpp"

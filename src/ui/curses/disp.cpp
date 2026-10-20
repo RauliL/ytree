@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "core/ui.hpp"
 #include "core/version.hpp"
 #include "ui/curses/curses_ui.hpp"

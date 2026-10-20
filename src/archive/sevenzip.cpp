@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "core/api.hpp"
 
 static constexpr std::string_view kEntriesSeparator = "----------";

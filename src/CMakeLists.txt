@@ -109,7 +109,7 @@ set(
   core/copy.cpp
   core/delete.cpp
   core/edit.cpp
-  core/entry_meta.cpp
+  core/entry-meta.cpp
   core/execute.cpp
   core/filespec.cpp
   core/freesp.cpp

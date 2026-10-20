@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <concepts>
+#include <cstring>
 #include <functional>
 #include <type_traits>
 

@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "core/ui.hpp"
 #include "core/api.hpp"
 
@@ -15,7 +17,11 @@ bool Edit(const DirEntry* dir_entry, const std::string& file_path)
 
   if (!IsReadable(file_path))
   {
-    FormatMessage("Edit not possible!*\"{}\"*{}", file_path.c_str(), std::strerror(errno));
+    FormatMessage(
+      "Edit not possible!*\"{}\"*{}",
+      file_path,
+      std::strerror(errno)
+    );
 
     return false;
   }
@@ -31,14 +37,14 @@ bool Edit(const DirEntry* dir_entry, const std::string& file_path)
     std::filesystem::current_path(path, ec);
     if (ec)
     {
-      FormatMessage("Can't change directory to*\"{}\"", path.c_str());
+      FormatMessage("Can't change directory to*\"{}\"", path.string());
     } else {
       result = SystemCall(command_line);
     }
     std::filesystem::current_path(cwd, ec);
     if (ec)
     {
-      FormatMessage("Can't change directory to*\"{}\"", cwd.c_str());
+      FormatMessage("Can't change directory to*\"{}\"", cwd.string());
     }
   } else {
     result = SystemCall(command_line);

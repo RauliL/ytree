@@ -1,5 +1,5 @@
 #include "core/api.hpp"
-#include "core/entry_meta.hpp"
+#include "core/entry-meta.hpp"
 
 #include <cerrno>
 #include <cstring>

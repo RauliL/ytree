@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "core/ui.hpp"
 #include "core/api.hpp"
 

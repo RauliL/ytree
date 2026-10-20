@@ -1,9 +1,9 @@
+#include <cstring>
+
 #include "core/commands.hpp"
 #include "core/ui.hpp"
 #include "ui/mouse.hpp"
 #include "ui/curses/curses_ui.hpp"
-
-#include <optional>
 
 typedef struct MODIF {
     long pos;

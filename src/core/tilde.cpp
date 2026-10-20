@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "core/api.hpp"
 #include "core/tilde.hpp"
 

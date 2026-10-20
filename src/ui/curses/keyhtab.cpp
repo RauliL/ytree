@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstring>
 
 #include "ui/mouse.hpp"
 #include "core/tilde.hpp"
