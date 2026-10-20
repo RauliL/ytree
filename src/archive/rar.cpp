@@ -1,57 +1,55 @@
+#include "archive/macros.hpp"
 #include "core/api.hpp"
 
 #include <cctype>
 
-static inline bool LooksLikeOldRarListing(std::string_view line)
+static inline bool LooksLikeOldRARListing(std::string_view line)
 {
   return line.size() > 48 && line[48] == ':';
 }
 
-static bool LooksLikeNewRarListing(std::string_view line)
+static inline bool LooksLikeNewRARListing(std::string_view line)
 {
   return line.size() > 36;
 }
 
-static std::optional<archive_meta::NamedEntry> ParseOldRarListing(
+static inline bool IsRARLine(std::string_view line)
+{
+  return LooksLikeOldRARListing(line) || LooksLikeNewRARListing(line);
+}
+
+static std::optional<archive_meta::NamedEntry> ParseOldRARListing(
   std::string_view rar_line
 )
 {
   std::tm tm_struct{};
   archive_meta::NamedEntry entry;
+  StringTokenizer tok(rar_line);
+  std::optional<std::string_view> t;
+
   entry.meta = archive_meta::RegularFile();
 
-  StringTokenizer tok(rar_line);
-
-  auto t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
   // Dateiname
 
   entry.name = *t;
 
-  t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
   // Dateilaenge
 
-  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0])))
-  {
-    return std::nullopt;
-  }
+  REQUIRE_DIGIT(t);
   entry.meta.size = AtoLL(*t);
-
-  t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
   // Packed
 
-  t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
   // Ratio
 
-  t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
   // M-Datum
 
@@ -67,8 +65,7 @@ static std::optional<archive_meta::NamedEntry> ParseOldRarListing(
     }
   }
 
-  t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
   // M-time
 
@@ -86,24 +83,23 @@ static std::optional<archive_meta::NamedEntry> ParseOldRarListing(
   return entry;
 }
 
-static std::optional<archive_meta::NamedEntry> ParseNewRarListing(
+static std::optional<archive_meta::NamedEntry> ParseNewRARListing(
   std::string_view rar_line
 )
 {
   std::tm tm_struct{};
   archive_meta::NamedEntry entry;
+  StringTokenizer tok(rar_line);
+  std::optional<std::string_view> t;
+
   entry.meta = archive_meta::RegularFile();
 
-  StringTokenizer tok(rar_line);
-
-  auto t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
   // Optional encrypted/solid marker from modern unrar.
   if (*t == "*")
   {
-    t = tok.Next(" \t");
-    if (!t) return std::nullopt;
+    REQUIRE_TOKEN(tok, t, " \t");
   }
 
   // Attributes
@@ -118,13 +114,11 @@ static std::optional<archive_meta::NamedEntry> ParseNewRarListing(
 
   if (t->size() == 10)
   {
-    entry.meta.SetFromMode(static_cast<std::uint32_t>(GetModus(std::string(*t))));
+    entry.meta.SetFromMode(*t);
   }
   else if (t->size() == 7)
   {
-    entry.meta.SetFromMode(
-      static_cast<std::uint32_t>(GetModus("-rw-rw-rw-"))
-    );
+    entry.meta.SetFromMode("-rw-rw-rw-");
   } else {
     entry.name.clear();
 
@@ -141,12 +135,9 @@ static std::optional<archive_meta::NamedEntry> ParseNewRarListing(
 
   // Size
 
-  t = tok.Next(" \t");
-  if (!t)
-  {
-    return std::nullopt;
-  }
-  else if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0])))
+  REQUIRE_TOKEN(tok, t, " \t");
+
+  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0])))
   {
     entry.name.clear();
 
@@ -156,11 +147,7 @@ static std::optional<archive_meta::NamedEntry> ParseNewRarListing(
 
   // Date YYYY-MM-DD (may be ????-??-?? for encrypted headers)
 
-  t = tok.Next(" \t");
-  if (!t)
-  {
-    return std::nullopt;
-  }
+  REQUIRE_TOKEN(tok, t, " \t");
 
   bool have_date = false;
   if (t->size() == 10 && (*t)[0] != '?')
@@ -173,11 +160,7 @@ static std::optional<archive_meta::NamedEntry> ParseNewRarListing(
 
   // Time HH:MM (may be ??:??)
 
-  t = tok.Next(" \t");
-  if (!t)
-  {
-    return std::nullopt;
-  }
+  REQUIRE_TOKEN(tok, t, " \t");
 
   if (t->size() == 5 && (*t)[2] == ':' && (*t)[0] != '?')
   {
@@ -196,8 +179,7 @@ static std::optional<archive_meta::NamedEntry> ParseNewRarListing(
 
   // Filename (may contain spaces; take rest of line)
 
-  t = tok.Next("");
-  if (!t)
+  if (!(t = tok.Next("")))
   {
     entry.name.clear();
 
@@ -205,8 +187,10 @@ static std::optional<archive_meta::NamedEntry> ParseNewRarListing(
   }
 
   std::string_view name = *t;
-  while (!name.empty() &&
-         std::isspace(static_cast<unsigned char>(name.front())))
+  while (
+    !name.empty() &&
+    std::isspace(static_cast<unsigned char>(name.front()))
+  )
   {
     name.remove_prefix(1);
   }
@@ -223,17 +207,17 @@ static std::optional<archive_meta::NamedEntry> ParseNewRarListing(
   return entry;
 }
 
-std::optional<archive_meta::NamedEntry> archive_meta::ParseRarListing(
+static std::optional<archive_meta::NamedEntry> ParseRARListing(
   std::string_view rar_line
 )
 {
-  if (LooksLikeOldRarListing(rar_line))
+  if (LooksLikeOldRARListing(rar_line))
   {
-    return ParseOldRarListing(rar_line);
+    return ParseOldRARListing(rar_line);
   }
-  else if (LooksLikeNewRarListing(rar_line))
+  else if (LooksLikeNewRARListing(rar_line))
   {
-    return ParseNewRarListing(rar_line);
+    return ParseNewRARListing(rar_line);
   }
 
   return std::nullopt;
@@ -250,11 +234,8 @@ bool ReadTreeFromRAR(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
   return ReadArchiveListingFilesOnly(
     dir_entry,
     f,
-    [](std::string_view line)
-    {
-      return LooksLikeOldRarListing(line) || LooksLikeNewRarListing(line);
-    },
-    archive_meta::ParseRarListing,
+    IsRARLine,
+    ParseRARListing,
     "rarinfo"
   );
 }

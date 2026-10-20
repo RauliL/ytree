@@ -16,9 +16,7 @@ static inline std::string_view ValueAfter(std::string_view line, std::string_vie
   return line.substr(prefix.size());
 }
 
-namespace {
-
-bool ParseModified(std::string_view value, std::tm* tm_struct)
+static bool ParseModified(std::string_view value, std::tm* tm_struct)
 {
   // Formats: "YYYY-MM-DD HH:MM:SS" or with fractional seconds.
   if (value.size() < 19)
@@ -55,10 +53,11 @@ bool ParseModified(std::string_view value, std::tm* tm_struct)
   tm_struct->tm_min = minute;
   tm_struct->tm_sec = second;
   tm_struct->tm_isdst = -1;
+
   return true;
 }
 
-void ApplyAttributes(std::string_view attributes, EntryMeta& meta)
+static void ApplyAttributes(std::string_view attributes, EntryMeta& meta)
 {
   // Examples: "A -rw-rw-r--", "D", "D_...."
   const bool is_dir =
@@ -69,9 +68,7 @@ void ApplyAttributes(std::string_view attributes, EntryMeta& meta)
   if (unix_mode_pos != std::string_view::npos &&
       attributes.size() - unix_mode_pos >= 10)
   {
-    meta.SetFromMode(static_cast<std::uint32_t>(
-      GetModus(std::string(attributes.substr(unix_mode_pos, 10)))
-    ));
+    meta.SetFromMode(attributes.substr(unix_mode_pos, 10));
     if (is_dir)
     {
       meta.type = std::filesystem::file_type::directory;
@@ -95,14 +92,13 @@ void ApplyAttributes(std::string_view attributes, EntryMeta& meta)
   }
 }
 
-EntryMeta ResetEntry()
+static inline EntryMeta ResetEntry()
 {
-  auto meta = archive_meta::RegularFile();
-  /* Owner/group are not in 7z listings — leave unset. */
-  return meta;
+  // Owner/group are not in 7z listings — leave unset.
+  return archive_meta::RegularFile();
 }
 
-bool FlushEntry(
+static bool FlushEntry(
   const std::shared_ptr<DirEntry>& dir_entry,
   std::string& path_name,
   EntryMeta& meta,
@@ -141,10 +137,9 @@ bool FlushEntry(
   }
 
   path_name.clear();
+
   return true;
 }
-
-} // namespace
 
 bool ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
 {
@@ -217,5 +212,6 @@ bool ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
   }
 
   FinalizeArchiveTree(dir_entry);
+
   return true;
 }

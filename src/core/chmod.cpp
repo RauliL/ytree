@@ -1,7 +1,7 @@
 #include "core/ui.hpp"
 #include "core/api.hpp"
 
-static int GetNewModus(int old_modus, const std::string& new_modus);
+static int GetNewModus(int old_modus, std::string_view modus);
 
 bool Entry::ChangeModus()
 {
@@ -29,20 +29,22 @@ bool GetNewFileModus(int /*y*/, int /*x*/, std::string& modus, const char *term)
 
 bool Entry::SetModus(const std::string& new_modus_str)
 {
+  using std::filesystem::perms;
+
   const auto path = GetPath();
   int new_modus = GetNewModus(meta.Mode(), new_modus_str);
   std::error_code ec;
-  std::filesystem::perms perms;
 
-  new_modus = new_modus | (meta.Mode() & ~(
-    S_IRWXO |
-    S_IRWXG |
-    S_IRWXU |
-    S_ISGID |
-    S_ISUID
+  // Keep file type and the sticky bit; replace the mode bits this editor sets.
+  new_modus = new_modus | (meta.Mode() & ~static_cast<int>(
+    perms::owner_all |
+    perms::group_all |
+    perms::others_all |
+    perms::set_uid |
+    perms::set_gid
   ));
-  perms = static_cast<std::filesystem::perms>(new_modus);
-  std::filesystem::permissions(path, perms, ec);
+  const auto permissions = static_cast<perms>(new_modus);
+  std::filesystem::permissions(path, permissions, ec);
   if (!ec)
   {
     // Erfolgreich modifiziert
@@ -61,48 +63,86 @@ bool Entry::SetModus(const std::string& new_modus_str)
   return false;
 }
 
-static int GetNewModus(int old_modus, const std::string& modus_str)
+static int GetNewModus(int old_modus, std::string_view modus)
 {
-  int new_modus;
-  const char *modus = modus_str.c_str();
+  using std::filesystem::perms;
 
-  new_modus = 0;
+  const auto at = [modus](std::size_t index) -> char
+  {
+    return index < modus.size() ? modus[index] : '\0';
+  };
 
-  if( *modus == '-' ) new_modus |= S_IFREG;
-  if( *modus == 'd' ) new_modus |= S_IFDIR;
+  // 'on' sets that bit. '?' keeps it from old_modus.
+  // set_id is used by the execute columns: 's' sets set-id together with execute,
+  // and '?' keeps both.
+  const auto bits_for = [old_modus](
+    char symbol,
+    char on,
+    perms bit,
+    perms set_id = perms::none
+  ) -> perms
+  {
+    if (symbol == on)
+    {
+      return bit;
+    }
+    else if (symbol == 's' && set_id != perms::none)
+    {
+      return set_id | bit;
+    }
+    else if (symbol == '?')
+    {
+      return static_cast<perms>(old_modus & static_cast<int>(set_id | bit));
+    }
+
+    return perms::none;
+  };
+
+  perms permissions = perms::none;
+
+  // ls-style mode after the type character: rwx for user, group, then other.
+  permissions |= bits_for(at(1), 'r', perms::owner_read);
+  permissions |= bits_for(at(2), 'w', perms::owner_write);
+  permissions |= bits_for(at(3), 'x', perms::owner_exec, perms::set_uid);
+  permissions |= bits_for(at(4), 'r', perms::group_read);
+  permissions |= bits_for(at(5), 'w', perms::group_write);
+  permissions |= bits_for(at(6), 'x', perms::group_exec, perms::set_gid);
+  permissions |= bits_for(at(7), 'r', perms::others_read);
+  permissions |= bits_for(at(8), 'w', perms::others_write);
+  permissions |= bits_for(at(9), 'x', perms::others_exec);
+
+  // File type is not part of std::filesystem::perms. Callers still expect
+  // those bits in the combined mode value.
+  int new_modus = static_cast<int>(permissions);
+
+  switch (at(0))
+  {
+    case '-':
+      new_modus |= S_IFREG;
+      break;
+
+    case 'd':
+      new_modus |= S_IFDIR;
+      break;
+
 #ifdef S_IFLNK
-  if( *modus == 'l' ) new_modus |= S_IFLNK;
-#endif /* S_IFLNK */
-  if( *modus == '?' ) new_modus |= old_modus & S_IFMT;
-  modus++;
+    case 'l':
+      new_modus |= S_IFLNK;
+      break;
+#endif
 
-  if( *modus   == 'r' ) new_modus |= S_IRUSR;
-  if( *modus++ == '?' ) new_modus |= old_modus & S_IRUSR;
-  if( *modus   == 'w' ) new_modus |= S_IWUSR;
-  if( *modus++ == '?' ) new_modus |= old_modus & S_IWUSR;
-  if( *modus   == 'x' ) new_modus |= S_IXUSR;
-  if( *modus   == 's' ) new_modus |= S_ISUID | S_IXUSR;
-  if( *modus++ == '?' ) new_modus |= old_modus & (S_ISUID | S_IXUSR);
+    case '?':
+      new_modus |= old_modus & S_IFMT;
+      break;
 
-  if( *modus   == 'r' ) new_modus |= S_IRGRP;
-  if( *modus++ == '?' ) new_modus |= old_modus & S_IRGRP;
-  if( *modus   == 'w' ) new_modus |= S_IWGRP;
-  if( *modus++ == '?' ) new_modus |= old_modus & S_IWGRP;
-  if( *modus   == 'x' ) new_modus |= S_IXGRP;
-  if( *modus   == 's' ) new_modus |= S_ISGID | S_IXGRP;
-  if( *modus++ == '?' ) new_modus |= old_modus & (S_ISGID | S_IXGRP);
+    default:
+      break;
+  }
 
-  if( *modus   == 'r' ) new_modus |= S_IROTH;
-  if( *modus++ == '?' ) new_modus |= old_modus & S_IROTH;
-  if( *modus   == 'w' ) new_modus |= S_IWOTH;
-  if( *modus++ == '?' ) new_modus |= old_modus & S_IWOTH;
-  if( *modus   == 'x' ) new_modus |= S_IXOTH;
-  if( *modus++ == '?' ) new_modus |= old_modus & S_IXOTH;
-
-  return( new_modus );
+  return new_modus;
 }
 
-int GetModus(const std::string& modus)
+int GetModus(std::string_view modus)
 {
   return GetNewModus(0, modus);
 }

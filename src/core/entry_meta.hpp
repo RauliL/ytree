@@ -64,8 +64,15 @@ public:
            != perms::none;
   }
 
-  /** Apply a POSIX mode including type bits (as from GetModus / st_mode). */
+  /**
+   * Apply a POSIX mode including type bits (as from GetModus / st_mode).
+   */
   void SetFromMode(std::uint32_t mode);
+
+  /**
+   * Apply a POSIX mode from mode string. (That is passed to `GetModus()`).
+   */
+  void SetFromMode(std::string_view mode);
 
   /** POSIX mode with type bits reconstructed from `type` and `permissions`. */
   std::uint32_t Mode() const;
@@ -113,17 +120,5 @@ EntryMeta Directory();
 
 /** Minimal regular-file defaults before a listing parser fills fields. */
 EntryMeta RegularFile();
-
-/**
- * Parse one archive listing line into portable metadata.
- * Fields the format does not provide are left unset (not faked).
- */
-std::optional<NamedEntry> ParseZipListing(std::string_view zip_line);
-std::optional<NamedEntry> ParseRarListing(std::string_view rar_line);
-std::optional<NamedEntry> ParseTarListing(std::string_view tar_line);
-std::optional<NamedEntry> ParseLhaListing(std::string_view lha_line);
-std::optional<NamedEntry> ParseZooListing(std::string_view zoo_line);
-std::optional<NamedEntry> ParseArcListing(std::string_view arc_line);
-std::optional<NamedEntry> ParseRpmListing(std::string_view rpm_line);
 
 }  // namespace archive_meta

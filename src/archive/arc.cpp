@@ -1,102 +1,73 @@
-#include "core/archive.hpp"
+#include "archive/macros.hpp"
 #include "core/api.hpp"
+#include "core/archive.hpp"
 
-/**
- * Dateibaum aus ARC-Listing lesen.
- */
-bool ReadTreeFromARC(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
+static inline bool IsARCEntry(std::string_view line)
 {
-  return ReadArchiveListingFilesOnly(
-    dir_entry,
-    f,
-    [](std::string_view line) {
-      return line.size() > 63 && line[63] == ':';
-    },
-    archive_meta::ParseArcListing,
-    "arcinfo"
-  );
+  return line.size() > 63 && line[63] == ':';
 }
 
-std::optional<archive_meta::NamedEntry> archive_meta::ParseArcListing(
+static std::optional<archive_meta::NamedEntry> ParseARCListing(
   std::string_view arc_line
 )
 {
   std::tm tm_struct{};
-  NamedEntry entry;
-  entry.meta = RegularFile();
-
+  archive_meta::NamedEntry entry;
   StringTokenizer tok(arc_line);
+  std::optional<std::string_view> t;
 
-  auto t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  entry.meta = archive_meta::RegularFile();
 
-  /* Dateiname */
-  /*-----------*/
+  REQUIRE_TOKEN(tok, t, " \t");
+
+  // Dateiname
 
   entry.name = *t;
 
-  t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
-  /* Dateilaenge */
-  /*-------------*/
+  // Dateilaenge
 
-  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0])))
-  {
-    return std::nullopt;
-  }
+  REQUIRE_DIGIT(t);
   entry.meta.size = AtoLL(*t);
 
-  t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
-  /* Stowage */
-  /*---------*/
+  // Stowage
 
-  t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
-  /* SF */
-  /*----*/
+  // SF
 
-  t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
-  /* Size Now */
-  /*----------*/
+  // Size Now
 
-  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0])))
-  {
-    return std::nullopt;
-  }
+  REQUIRE_DIGIT(t);
 
-  t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
-  /* M-Datum */
-  /*---------*/
+  // M-Datum
 
   tm_struct.tm_mday = SvAtoi(*t);
 
-  t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
   tm_struct.tm_mon = ArchiveMonthIndex(*t).value_or(0);
 
-  t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
   tm_struct.tm_year = SvAtoi(*t);
   if (tm_struct.tm_year < 70)
+  {
     tm_struct.tm_year += 100;
+  }
 
-  t = tok.Next(" \t:");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t:");
 
   tm_struct.tm_hour = SvAtoi(*t);
 
-  t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
   if (!t->empty() && t->back() == 'p')
   {
@@ -106,8 +77,7 @@ std::optional<archive_meta::NamedEntry> archive_meta::ParseArcListing(
   const auto min_token = t->empty() ? *t : t->substr(0, t->size() - 1);
   tm_struct.tm_min = SvAtoi(min_token);
 
-  t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
   tm_struct.tm_sec = 0;
   tm_struct.tm_isdst = -1;
@@ -115,4 +85,18 @@ std::optional<archive_meta::NamedEntry> archive_meta::ParseArcListing(
   entry.meta.mtime = std::chrono::system_clock::from_time_t(Mktime(&tm_struct));
 
   return entry;
+}
+
+/**
+ * Dateibaum aus ARC-Listing lesen.
+ */
+bool ReadTreeFromARC(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
+{
+  return ReadArchiveListingFilesOnly(
+    dir_entry,
+    f,
+    IsARCEntry,
+    ParseARCListing,
+    "arcinfo"
+  );
 }

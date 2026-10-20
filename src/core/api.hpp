@@ -36,7 +36,7 @@ std::optional<std::string> ReadFileSpec();
 bool Execute(const DirEntry* dir_entry, const FileEntry* file_entry);
 std::optional<std::string> GetPipeCommand(const std::string& initial = {});
 bool GetNewFileModus(int y, int x, std::string& modus, const char *term);
-int GetModus(const std::string& modus);
+int GetModus(std::string_view modus);
 bool ExecuteCommand(FileEntry* fe_ptr, const std::string& command);
 bool CopyFile(
   Statistic* statistic_ptr,

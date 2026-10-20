@@ -1,3 +1,4 @@
+#include "core/api.hpp"
 #include "core/entry_meta.hpp"
 
 #include <cerrno>
@@ -145,6 +146,11 @@ void EntryMeta::SetFromMode(std::uint32_t mode)
   permissions = static_cast<std::filesystem::perms>(
     mode & static_cast<std::uint32_t>(std::filesystem::perms::mask)
   );
+}
+
+void EntryMeta::SetFromMode(std::string_view mode)
+{
+  SetFromMode(static_cast<std::uint32_t>(GetModus(mode)));
 }
 
 std::uint32_t EntryMeta::Mode() const

@@ -1,122 +1,88 @@
-#include "core/archive.hpp"
+#include "archive/macros.hpp"
 #include "core/api.hpp"
+#include "core/archive.hpp"
 
-/**
- * Dateibaum aus TAR-Listing lesen.
- */
-bool ReadTreeFromTAR(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
-{
-  return ReadArchiveListingWithDirs(
-    dir_entry,
-    f,
-    archive_meta::ParseTarListing,
-    "tarinfo"
-  );
-}
-
-std::optional<archive_meta::NamedEntry> archive_meta::ParseTarListing(
+static std::optional<archive_meta::NamedEntry> ParseTARListing(
   std::string_view tar_line
 )
 {
   int id;
   std::tm tm_struct{};
-  NamedEntry entry;
-
+  archive_meta::NamedEntry entry;
   StringTokenizer tok(tar_line);
+  std::optional<std::string_view> t;
 
-  auto t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
-  /* Attribute */
-  /*-----------*/
+  // Attribute
 
-  if (t->size() != 10) return std::nullopt;
-  entry.meta.SetFromMode(static_cast<std::uint32_t>(GetModus(std::string(*t))));
+  REQUIRE_SIZE(t, 10);
+  entry.meta.SetFromMode(*t);
   entry.meta.nlink = 1;
 
-  t = tok.Next(" \t/");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t/");
 
-  /* Owner */
-  /*-------*/
+  // Owner
   if (const auto owner_id_ptr = GetPasswdUid(std::string(*t)))
   {
     id = *owner_id_ptr;
-  }
-  else
-  {
+  } else {
     id = SvAtoi(*t);
   }
   entry.meta.uid = static_cast<std::uint32_t>(id);
 
-  t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
-  /* Group */
-  /*-------*/
+  // Group
   if (const auto group_id_ptr = GetGroupId(std::string(*t)))
   {
     id = *group_id_ptr;
-  }
-  else
-  {
+  } else {
     id = SvAtoi(*t);
   }
   entry.meta.gid = static_cast<std::uint32_t>(id);
 
-  t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
-  /* Dateilaenge */
-  /*-------------*/
+  // Dateilaenge
 
-  if (t->empty() || !std::isdigit(static_cast<unsigned char>((*t)[0])))
-  {
-    return std::nullopt;
-  }
+  REQUIRE_DIGIT(t);
   entry.meta.size = AtoLL(*t);
 
-  t = tok.Next(" \t");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, " \t");
 
-  /* M-Datum */
-  /*---------*/
+  // M-Datum
 
   if (const auto month = ArchiveMonthIndex(*t))
   {
     tm_struct.tm_mon = *month;
 
-    t = tok.Next(" \t");
-    if (!t) return std::nullopt;
+    REQUIRE_TOKEN(tok, t, " \t");
     tm_struct.tm_mday = SvAtoi(*t);
 
-    t = tok.Next(" \t:");
-    if (!t) return std::nullopt;
+    REQUIRE_TOKEN(tok, t, " \t:");
     tm_struct.tm_hour = SvAtoi(*t);
 
-    t = tok.Next(" \t");
-    if (!t) return std::nullopt;
+    REQUIRE_TOKEN(tok, t, " \t");
     tm_struct.tm_min = SvAtoi(*t);
 
-    t = tok.Next(" \t");
-    if (!t) return std::nullopt;
+    REQUIRE_TOKEN(tok, t, " \t");
     tm_struct.tm_year = SvAtoi(*t) - 1900;
-  }
-  else
-  {
-    /* YYYY-MM-DD form */
-    if (t->size() < 10) return std::nullopt;
+  } else {
+    // YYYY-MM-DD form
+    if (t->size() < 10)
+    {
+      return std::nullopt;
+    }
 
     tm_struct.tm_year = SvAtoi(t->substr(0, 4)) - 1900;
     tm_struct.tm_mon = SvAtoi(t->substr(5, 2)) - 1;
     tm_struct.tm_mday = SvAtoi(t->substr(8, 2));
 
-    t = tok.Next(" \t:");
-    if (!t) return std::nullopt;
+    REQUIRE_TOKEN(tok, t, " \t:");
     tm_struct.tm_hour = SvAtoi(*t);
 
-    t = tok.Next(" \t");
-    if (!t) return std::nullopt;
+    REQUIRE_TOKEN(tok, t, " \t");
     tm_struct.tm_min = SvAtoi(*t);
   }
 
@@ -125,17 +91,13 @@ std::optional<archive_meta::NamedEntry> archive_meta::ParseTarListing(
 
   entry.meta.mtime = std::chrono::system_clock::from_time_t(Mktime(&tm_struct));
 
-  /* Dateiname (may contain spaces; take rest of line) */
-  /*---------------------------------------------------*/
+  // Dateiname (may contain spaces; take rest of line)
 
-  t = tok.Next("");
-  if (!t) return std::nullopt;
+  REQUIRE_TOKEN(tok, t, "");
 
   if (entry.meta.IsLink())
   {
-    /* Symbolischer Link: "name -> target" or "name symbolic link to target" */
-    /*---------------------------------------------------------------------*/
-
+    // Symbolischer Link: "name -> target" or "name symbolic link to target"
     const auto full = *t;
     constexpr std::string_view gnu_arrow = " -> ";
     constexpr std::string_view non_gnu_arrow = " symbolic link to ";
@@ -145,21 +107,32 @@ std::optional<archive_meta::NamedEntry> archive_meta::ParseTarListing(
       entry.name = full.substr(0, pos);
       entry.symlink_target = full.substr(pos + gnu_arrow.size());
     }
-    else if (const auto pos = full.find(non_gnu_arrow);
-             pos != std::string_view::npos)
+    else if (
+      const auto pos = full.find(non_gnu_arrow);
+      pos != std::string_view::npos
+    )
     {
       entry.name = full.substr(0, pos);
       entry.symlink_target = full.substr(pos + non_gnu_arrow.size());
-    }
-    else
-    {
+    } else {
       entry.name = full;
     }
-  }
-  else
-  {
+  } else {
     entry.name = *t;
   }
 
   return entry;
+}
+
+/**
+ * Dateibaum aus TAR-Listing lesen.
+ */
+bool ReadTreeFromTAR(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
+{
+  return ReadArchiveListingWithDirs(
+    dir_entry,
+    f,
+    ParseTARListing,
+    "tarinfo"
+  );
 }
