@@ -1,5 +1,6 @@
-#include "ui/view_info.hpp"
+#include "core/profile.hpp"
 #include "ui/curses/curses_ui.hpp"
+#include "ui/view_info.hpp"
 
 static void PrettyPrintNumber(int y, int x, std::int64_t number);
 

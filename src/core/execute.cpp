@@ -1,5 +1,6 @@
-#include "core/ui.hpp"
 #include "core/api.hpp"
+#include "core/profile.hpp"
+#include "core/ui.hpp"
 
 bool Execute(const DirEntry* dir_entry, const FileEntry* file_entry)
 {

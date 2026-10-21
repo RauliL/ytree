@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstring>
 
+#include "core/path.hpp"
 #include "ui/mouse.hpp"
 #include "ui/curses/curses_ui.hpp"
 
@@ -8,14 +9,13 @@ static constexpr std::size_t MAX_HST_FILE_LINES = 50;
 
 static std::optional<std::string> custom_history_path;
 static std::vector<std::string> history;
+static int cursor_pos = 0;
+static int disp_begin_pos = 0;
 
-static int total_hist()
+static inline int total_hist()
 {
   return static_cast<int>(history.size());
 }
-
-static int cursor_pos     = 0;
-static int disp_begin_pos = 0;
 
 void ReadHistory(const std::optional<std::filesystem::path>& custom_path)
 {

@@ -1,7 +1,8 @@
 #include <cstring>
 
-#include "core/ui.hpp"
 #include "core/api.hpp"
+#include "core/profile.hpp"
+#include "core/ui.hpp"
 
 static bool ViewHexFile(const std::filesystem::path& file_path);
 static bool ViewHexArchiveFile(const std::filesystem::path& file_path);

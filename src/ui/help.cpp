@@ -2,43 +2,45 @@
 
 #include "core/api.hpp"
 #include "core/domain.hpp"
+#include "core/profile.hpp"
 
-#include <optional>
-#include <string_view>
+static constexpr std::size_t HELP_LABEL_WIDTH = 10;
 
-namespace {
-
-constexpr std::size_t HELP_LABEL_WIDTH = 10;
-
-const HelpLines disk_dir_help = {
+static const HelpLines disk_dir_help =
+{
   "DIR       (A)ttribute (D)elete  (F)ilespec  (G)roup (L)og (M)akedir                 (Q)uit",
   "COMMANDS  (O)wner (R)ename (S)howall (^S)how-tagged (T)ag (U)ntag e(X)ecute   (^F) dirmode"
 };
 
-const HelpLines ll_dir_help = {
+static const HelpLines ll_dir_help =
+{
   "DIR       (F)ilespec (L)ogin (S)howall (T)ag (U)ntag e(X)ecute   (^F) dirmode  (Q)uit       ",
   "COMMANDS                                                                    "
 };
 
-const std::string archive_dir_actions =
+static const std::string archive_dir_actions =
   "(F)ilespec (L)og (S)howall (T)ag (U)ntag e(X)ecute   (^F) dirmode  (Q)uit         ";
-const std::string archive_dir_commands =
+static const std::string archive_dir_commands =
   "COMMANDS                                                                    ";
 
-const HelpLines disk_file_help = {
+static const HelpLines disk_file_help =
+{
   "FILE      (A)ttribute (C)opy (D)elete (E)dit (F)ilespec (G)roup (H)ex (L)ogin (M)ove    (Q)uit ",
   "COMMANDS  (O)wner (P)ipe (R)ename (S)ort (T)ag (U)ntag (V)iew e(X)ecute pathcop(Y) (^F)ilemode "
 };
 
-const HelpLines ll_file_help = {
+static const HelpLines ll_file_help =
+{
   "FILE      (F)ilespec (L)ogin (S)ort (T)ag (U)ntag e(X)ecute (^F)ilemode      (Q)uit        ",
   "COMMANDS                                                                   "
 };
 
-const std::string archive_file_actions =
+static const std::string archive_file_actions =
   "(C)opy (F)ilespec (H)ex (P)ipe (S)ort (T)ag (U)ntag (V)iew pathcop(Y) (Q)uit         ";
-const std::string archive_file_commands =
+static const std::string archive_file_commands =
   "COMMANDS  (^F)ilemode                                                        ";
+
+namespace {
 
 /* Overridable USER_MODE banners; start as disk-mode defaults. */
 HelpLines user_dir_help = disk_dir_help;

@@ -1,7 +1,8 @@
 #include <cstring>
 
-#include "core/ui.hpp"
 #include "core/api.hpp"
+#include "core/profile.hpp"
+#include "core/ui.hpp"
 
 bool Edit(const DirEntry* dir_entry, const std::string& file_path)
 {

@@ -1,18 +1,15 @@
-#include "ui/file_format.hpp"
-
 #include "core/api.hpp"
+#include "core/profile.hpp"
+#include "ui/file_format.hpp"
 #include "ui/ui.hpp"
 
-#include <format>
-
-namespace {
-
-std::string MarkCell(const std::shared_ptr<FileEntry>& fe_ptr)
+static std::string MarkCell(const std::shared_ptr<FileEntry>& fe_ptr)
 {
   if (!fe_ptr)
   {
     return {};
   }
+
   return std::format(
     "{}{}",
     fe_ptr->tagged ? TAGGED_SYMBOL : ' ',
@@ -20,26 +17,25 @@ std::string MarkCell(const std::shared_ptr<FileEntry>& fe_ptr)
   );
 }
 
-std::string NameCell(const std::shared_ptr<FileEntry>& fe_ptr)
+static inline std::string NameCell(const std::shared_ptr<FileEntry>& fe_ptr)
 {
   return fe_ptr ? fe_ptr->name : std::string{};
 }
 
-std::string LinkCell(const std::shared_ptr<FileEntry>& fe_ptr)
+static std::string LinkCell(const std::shared_ptr<FileEntry>& fe_ptr)
 {
   if (!fe_ptr || !fe_ptr->meta.IsLink())
   {
     return {};
   }
+
   return fe_ptr->symlink_target;
 }
 
-bool ShowLinkColumn()
+static inline bool ShowLinkColumn()
 {
   return GetFileMaxLinknameLen() > 0;
 }
-
-} // namespace
 
 std::string FormatFileEntryLine(const std::shared_ptr<FileEntry>& fe_ptr)
 {
@@ -395,6 +391,7 @@ TableRow FormatDirTableRow(const DirListRow& row, ViewMode mode)
   TableRow out;
   const DirEntry* de = row.dir_entry.get();
   std::string name = (de && !de->name.empty()) ? de->name : ".";
+
   if (de && de->not_scanned)
   {
     name += "/";
@@ -404,10 +401,12 @@ TableRow FormatDirTableRow(const DirListRow& row, ViewMode mode)
   if (!de)
   {
     const auto cols = DirTableColumnsForMode(mode);
+
     while (out.cells.size() < cols.size())
     {
       out.cells.emplace_back();
     }
+
     return out;
   }
 

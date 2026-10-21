@@ -2,6 +2,7 @@
 #include <cstring>
 
 #include "core/api.hpp"
+#include "core/profile.hpp"
 #include "core/ui.hpp"
 
 inline constexpr std::string_view ARCHIVE_MONTH_NAMES[12] =

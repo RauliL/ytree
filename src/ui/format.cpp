@@ -1,8 +1,6 @@
-#include "ui/format.hpp"
-
 #include "core/api.hpp"
-
-#include <format>
+#include "core/profile.hpp"
+#include "ui/format.hpp"
 
 std::string FormatStatNumber(std::int64_t number)
 {
@@ -55,5 +53,6 @@ std::string FormatStatNumber(std::int64_t number)
   {
     return std::format("[        {:3}{}{:03}]", kilo, number_separator, one);
   }
+
   return std::format("[            {:3}]", one);
 }

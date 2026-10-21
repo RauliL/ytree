@@ -1,6 +1,7 @@
 #include <functional>
 
 #include "core/api.hpp"
+#include "core/profile.hpp"
 #include "core/ui.hpp"
 
 using read_tree_callback = std::function<

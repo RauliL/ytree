@@ -221,13 +221,6 @@ inline int SvAtoi(std::string_view s)
   return static_cast<int>(std::strtol(std::string(s).c_str(), nullptr, 10));
 }
 
-std::optional<std::string> GetProfileValue(const std::string& key);
-
-inline std::string GetProfileValueOrEmpty(const std::string& key)
-{
-  return GetProfileValue(key).value_or(std::string());
-}
-
 inline bool IsReadable(const std::filesystem::path& path)
 {
   return !access(path.c_str(), R_OK);

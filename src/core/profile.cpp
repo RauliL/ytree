@@ -1,10 +1,12 @@
-#include "core/api.hpp"
-
 #include <unordered_map>
 
 #include <toml++/toml.hpp>
 
-struct Profile
+#include "config.hpp"
+#include "core/path.hpp"
+#include "core/profile.hpp"
+
+struct Setting
 {
   std::optional<std::string> def;
   std::optional<std::string> envvar;
@@ -22,7 +24,7 @@ static std::vector<UserAction> dirmenu;
 static std::vector<UserAction> filemenu;
 static std::unordered_map<std::filesystem::path, std::filesystem::path> viewer_mapping;
 
-static std::unordered_map<std::string, Profile> profile =
+static std::unordered_map<std::string_view, Setting> settings =
 {
   { "ARCEXPAND",      { DEFAULT_ARCEXPAND,     std::nullopt,     std::nullopt } },
   { "ARCLIST",        { DEFAULT_ARCLIST,       std::nullopt,     std::nullopt } },
@@ -185,9 +187,9 @@ static void ApplyKeyTable(
 
 static void ApplyMenuValue(const std::string& name, std::string value)
 {
-  const auto entry = profile.find(name);
+  const auto entry = settings.find(name);
 
-  if (entry == std::end(profile))
+  if (entry == std::end(settings))
   {
     return;
   }
@@ -236,9 +238,9 @@ void ReadProfile(const std::optional<std::filesystem::path>& custom_path)
     for (const auto& [key, node] : *global)
     {
       const auto name = std::string{key.str()};
-      auto entry = profile.find(name);
+      auto entry = settings.find(name);
 
-      if (entry != std::end(profile))
+      if (entry != std::end(settings))
       {
         entry->second.value = TomlValueToString(node);
       }
@@ -289,11 +291,11 @@ void ReadProfile(const std::optional<std::filesystem::path>& custom_path)
   ApplyKeyTable(dirmenu, table["dircmd"].as_table(), true);
 }
 
-std::optional<std::string> GetProfileValue(const std::string& name)
+std::optional<std::string> GetProfileValue(std::string_view name)
 {
-  const auto entry = profile.find(name);
+  const auto entry = settings.find(name);
 
-  if (entry != std::end(profile))
+  if (entry != std::end(settings))
   {
     if (entry->second.value)
     {
@@ -313,19 +315,19 @@ std::optional<std::string> GetProfileValue(const std::string& name)
   return {};
 }
 
-double GetDoubleProfileValue(const std::string& name)
+double GetDoubleProfileValue(std::string_view name)
 {
   const auto value = GetProfileValue(name);
 
   return value && !value->empty() ? std::strtod(value->c_str(), nullptr) : 0.0;
 }
 
-int GetIntProfileValue(const std::string& name)
+int GetIntProfileValue(std::string_view name)
 {
   return static_cast<int>(GetDoubleProfileValue(name));
 }
 
-bool GetBooleanProfileValue(const std::string& name)
+bool GetBooleanProfileValue(std::string_view name)
 {
   return GetIntProfileValue(name) != 0;
 }

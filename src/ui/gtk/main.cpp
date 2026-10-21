@@ -1,21 +1,21 @@
+#include <clocale>
+#include <cstdlib>
+
+#include <sys/stat.h>
+
 #include <gtkmm.h>
 
 #include "core/api.hpp"
+#include "core/profile.hpp"
 #include "ui/gtk/gtk_frontend.hpp"
 #include "ui/gtk/main_window.hpp"
 #include "ui/ui.hpp"
-
-#include <clocale>
-#include <cstdlib>
-#include <sys/stat.h>
 
 #ifdef Error
 # undef Error
 #endif
 
-namespace {
-
-void RegisterGtkBackends()
+static void RegisterGtkBackends()
 {
   ui::set_backend(
     &GtkDialogsInstance(),
@@ -28,7 +28,7 @@ void RegisterGtkBackends()
   );
 }
 
-void LoadProfile(
+static void LoadProfile(
   const std::optional<std::filesystem::path>& configuration_file,
   const std::optional<std::filesystem::path>& history_file
 )
@@ -41,8 +41,6 @@ void LoadProfile(
   bypass_small_window = GetBooleanProfileValue("NOSMALLWINDOW");
   initial_directory = GetProfileValue("INITIALDIR");
 }
-
-} // namespace
 
 int main(int argc, char** argv)
 {

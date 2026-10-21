@@ -1,7 +1,8 @@
 #include <cstring>
 
-#include "core/ui.hpp"
 #include "core/api.hpp"
+#include "core/profile.hpp"
+#include "core/ui.hpp"
 
 bool FileEntry::Pipe() const
 {
@@ -52,7 +53,11 @@ bool FileEntry::PipeTo(FILE* pipe_file) const
 
   if ((i = open(from_path.c_str(), O_RDONLY)) == -1)
   {
-    FormatMessage("Can't open file*\"{}\"*{}", from_path.c_str(), std::strerror(errno));
+    FormatMessage(
+      "Can't open file*\"{}\"*{}",
+      from_path.string(),
+      std::strerror(errno)
+    );
 
     return false;
   }

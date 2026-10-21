@@ -5,6 +5,7 @@
 #include <type_traits>
 
 #include "core/commands.hpp"
+#include "core/profile.hpp"
 #include "core/ui.hpp"
 #include "ui/view_info.hpp"
 #include "ui/ui.hpp"

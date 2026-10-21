@@ -1,6 +1,7 @@
 #include <cstring>
 
 #include "core/commands.hpp"
+#include "core/profile.hpp"
 #include "core/ui.hpp"
 #include "ui/mouse.hpp"
 #include "ui/curses/curses_ui.hpp"
