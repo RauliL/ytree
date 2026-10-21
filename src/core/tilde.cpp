@@ -1,5 +1,8 @@
 #include <cstring>
 
+#include <pwd.h>
+#include <unistd.h>
+
 #include "core/api.hpp"
 #include "core/tilde.hpp"
 

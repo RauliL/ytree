@@ -1,13 +1,11 @@
 #pragma once
 
-#define _LARGEFILE64_SOURCE 1
-#define _FILE_OFFSET_BITS 64
-
 #include <format>
 
 #include "config.hpp"
 #include "core/dir-entry.hpp"
 
+#if 0
 #include <dirent.h>
 #include <fcntl.h>
 #include <grp.h>
@@ -17,44 +15,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
-#ifndef S_ISREG
-#define S_ISREG(mode)   (((mode) & S_IFMT) == S_IFREG)
-#endif /* S_ISREG */
-
-#ifndef S_ISDIR
-#define S_ISDIR(mode)   (((mode) & S_IFMT) == S_IFDIR)
-#endif /* S_ISDIR */
-
-#ifndef S_ISCHR
-#define S_ISCHR(mode)   (((mode) & S_IFMT) == S_IFCHR)
-#endif /* S_ISCHR */
-
-#ifndef S_ISBLK
-#define S_ISBLK(mode)   (((mode) & S_IFMT) == S_IFBLK)
-#endif /* S_ISBLK */
-
-#ifndef S_ISFIFO
-#define S_ISFIFO(mode)   (((mode) & S_IFMT) == S_IFIFO)
-#endif /* S_ISFIFO */
-
-#ifndef S_ISLNK
-#ifdef  S_IFLNK
-#define S_ISLNK(mode)   (((mode) & S_IFMT) == S_IFLNK)
-#else
-#define S_ISLNK(mode)   FALSE
-#endif /* S_IFLNK */
-#endif /* S_ISLNK */
-
-#ifndef S_ISSOCK
-#ifdef  S_IFSOCK
-#define S_ISSOCK(mode)   (((mode) & S_IFMT) == S_IFSOCK)
-#else
-#define S_ISSOCK(mode)   FALSE
-#endif /* S_IFSOCK */
-#endif /* S_ISSOCK */
-
-inline constexpr const char* DEFAULT_TREE = ".";
+#endif
 
 #define YTreeError(msg) ErrorEx(msg, __FILE__, __LINE__)
 #define FormatError(...) ErrorEx(std::format(__VA_ARGS__), __FILE__, __LINE__)
@@ -78,8 +39,6 @@ enum class Mode : int
   USER_MODE = 10,
   SEVENZIP_FILE_MODE = 11,
 };
-
-inline constexpr int MAX_MODES = 12;
 
 enum class CompressMethod : int
 {
@@ -132,24 +91,6 @@ struct SortSpec
   SortOrder order = SortOrder::Ascending;
 };
 
-inline constexpr const char* DEFAULT_FILE_SPEC = "*";
-
-inline constexpr const char* TAGSYMBOL_VIEWNAME = "tag";
-inline constexpr const char* FILENAME_VIEWNAME = "fnm";
-inline constexpr const char* ATTRIBUTE_VIEWNAME = "atr";
-inline constexpr const char* LINKCOUNT_VIEWNAME = "lct";
-inline constexpr const char* FILESIZE_VIEWNAME = "fsz";
-inline constexpr const char* MODTIME_VIEWNAME = "mot";
-inline constexpr const char* SYMLINK_VIEWNAME = "lnm";
-inline constexpr const char* UID_VIEWNAME = "uid";
-inline constexpr const char* GID_VIEWNAME = "gid";
-inline constexpr const char* INODE_VIEWNAME = "ino";
-inline constexpr const char* ACCTIME_VIEWNAME = "act";
-inline constexpr const char* CHGTIME_VIEWNAME = "sct";
-
-inline constexpr std::time_t CLOCK_INTERVAL = 1;
-
-inline constexpr const char* ERR_TO_NULL = " 2> /dev/null";
 inline constexpr const char* ERR_TO_STDOUT = " 2>&1 ";
 
 inline constexpr int CR = 13;
@@ -158,8 +99,6 @@ inline constexpr int ESC = 27;
 inline constexpr char LOGIN_ESC = '.';
 
 inline constexpr std::size_t PATH_LENGTH = 1024;
-inline constexpr std::size_t FILE_SPEC_LENGTH = 12 + 1;
-inline constexpr std::size_t DISK_NAME_LENGTH = 12 + 1;
 
 enum class ViewMode : int
 {
@@ -169,8 +108,6 @@ enum class ViewMode : int
   MODE_4 = 3,
   MODE_5 = 4,
 };
-
-inline constexpr int QUICK_BAUD_RATE = 9600;
 
 struct Statistic
 {
@@ -219,16 +156,6 @@ extern std::optional<std::string> initial_directory;
 inline int SvAtoi(std::string_view s)
 {
   return static_cast<int>(std::strtol(std::string(s).c_str(), nullptr, 10));
-}
-
-inline bool IsReadable(const std::filesystem::path& path)
-{
-  return !access(path.c_str(), R_OK);
-}
-
-inline bool IsWriteable(const std::filesystem::path& path)
-{
-  return !access(path.c_str(), W_OK);
 }
 
 template<class... Args>

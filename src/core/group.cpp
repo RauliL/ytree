@@ -1,3 +1,5 @@
+#include <grp.h>
+
 #include "core/api.hpp"
 
 std::optional<std::string> GetGroupName(int gid)

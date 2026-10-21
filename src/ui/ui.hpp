@@ -66,7 +66,7 @@ struct AppOptions
 {
   std::optional<std::filesystem::path> config_file;
   std::optional<std::filesystem::path> history_file;
-  std::string initial_dir = DEFAULT_TREE;
+  std::string initial_dir = ".";
 };
 
 AppOptions ParseAppOptions(int argc, char** argv);

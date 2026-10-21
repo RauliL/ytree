@@ -3,6 +3,7 @@
 
 #include "core/ui.hpp"
 #include "core/api.hpp"
+#include "core/path.hpp"
 
 static bool DeleteSubTree(DirEntry* dir_entry);
 static bool DeleteSingleDirectory(DirEntry* dir_entry);

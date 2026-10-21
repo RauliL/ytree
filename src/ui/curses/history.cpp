@@ -184,10 +184,7 @@ static void PrintHstEntry(int entry_no, int y, int color,
 #endif /* NO_HIGHLIGHT */
 }
 
-
-
-
-int DisplayHistory()
+static int DisplayHistory()
 {
   int i, hilight_no, p_y;
   int hide_left, hide_right;

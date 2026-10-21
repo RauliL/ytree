@@ -3,7 +3,22 @@
 #include <unordered_map>
 
 #include "core/api.hpp"
+#include "core/path.hpp"
+#include "core/stat-macros.hpp"
 #include "util/string-tokenizer.hpp"
+
+static constexpr const char* TAGSYMBOL_VIEWNAME = "tag";
+static constexpr const char* FILENAME_VIEWNAME = "fnm";
+static constexpr const char* ATTRIBUTE_VIEWNAME = "atr";
+static constexpr const char* LINKCOUNT_VIEWNAME = "lct";
+static constexpr const char* FILESIZE_VIEWNAME = "fsz";
+static constexpr const char* MODTIME_VIEWNAME = "mot";
+static constexpr const char* SYMLINK_VIEWNAME = "lnm";
+static constexpr const char* UID_VIEWNAME = "uid";
+static constexpr const char* GID_VIEWNAME = "gid";
+static constexpr const char* INODE_VIEWNAME = "ino";
+static constexpr const char* ACCTIME_VIEWNAME = "act";
+static constexpr const char* CHGTIME_VIEWNAME = "sct";
 
 static const std::unordered_map<std::string, CompressMethod> file_extensions =
 {
@@ -615,9 +630,10 @@ std::string BuildUserFileEntry(
     }
 
     ++i;
+
     const auto rest = std::string_view(tmpl).substr(i);
     const auto append_and_skip = [&](const char* view_name, const auto& formatted)
-  {
+    {
       if (!rest.starts_with(view_name))
       {
         return false;

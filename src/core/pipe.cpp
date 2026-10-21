@@ -1,5 +1,8 @@
 #include <cstring>
 
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "core/api.hpp"
 #include "core/profile.hpp"
 #include "core/ui.hpp"

@@ -2,6 +2,7 @@
 
 #include "core/ui.hpp"
 #include "core/api.hpp"
+#include "core/path.hpp"
 #include "util/scope-guard.hpp"
 
 static bool Move(const std::string&, const std::string&);

@@ -1,5 +1,7 @@
 #include <cstring>
 
+#include <unistd.h>
+
 #include "core/ui.hpp"
 #include "core/api.hpp"
 

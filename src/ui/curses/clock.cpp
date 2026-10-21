@@ -1,6 +1,8 @@
 #include "core/ui.hpp"
 #include "ui/curses/curses_ui.hpp"
 
+static constexpr std::time_t CLOCK_INTERVAL = 1;
+
 void InitClockImpl()
 {
 #if defined(CLOCK_SUPPORT)

@@ -1,5 +1,6 @@
 #include "core/ui.hpp"
 #include "core/api.hpp"
+#include "core/stat-macros.hpp"
 
 static int GetNewModus(int old_modus, std::string_view modus);
 

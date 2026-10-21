@@ -11,7 +11,6 @@ bool GetDiskParameter(
   std::int64_t* capacity
 );
 std::filesystem::path GetPath(const DirEntry* dir_entry);
-bool IsRoot(const std::string& path);
 std::shared_ptr<DirEntry> SharedDirEntry(DirEntry* dir_entry);
 inline std::weak_ptr<DirEntry> WeakDirEntry(DirEntry* dir_entry)
 {
@@ -144,7 +143,6 @@ std::string BuildFilename(
 );
 std::optional<CompressMethod> GetFileMethod(const std::string& filename);
 extern bool MakePath(const std::shared_ptr<DirEntry>& tree, const std::string& dir_path, DirEntry **dest_dir_entry);
-extern bool MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name);
 std::string NormPath(const std::string& in_path);
 void ScanSubTree(DirEntry* dir_entry);
 std::optional<std::string> GetExtViewer(const std::filesystem::path& filename);

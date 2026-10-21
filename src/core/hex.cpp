@@ -1,6 +1,7 @@
 #include <cstring>
 
 #include "core/api.hpp"
+#include "core/path.hpp"
 #include "core/profile.hpp"
 #include "core/ui.hpp"
 

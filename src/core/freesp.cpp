@@ -1,3 +1,5 @@
+#include <unistd.h>
+
 #include "core/api.hpp"
 
 #if defined(__linux__) || defined(__GNU__)
@@ -19,6 +21,8 @@ using FsStat = struct statvfs;
 #else
 using FsStat = struct statfs;
 #endif
+
+static constexpr std::size_t DISK_NAME_LENGTH = 12 + 1;
 
 static bool QueryFs(const char* path, FsStat* buf)
 {

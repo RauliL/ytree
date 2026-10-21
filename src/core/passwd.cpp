@@ -1,3 +1,5 @@
+#include <pwd.h>
+
 #include "core/api.hpp"
 
 std::optional<std::string> GetPasswdName(uid_t uid)

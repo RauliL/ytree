@@ -1,5 +1,9 @@
+#include <pwd.h>
+#include <unistd.h>
+
 #include "core/ui.hpp"
 #include "core/api.hpp"
+#include "core/stat-macros.hpp"
 
 /*
 quit-to-directory (xtree: alt-Q)(ytree: shift-Q, ^Q)

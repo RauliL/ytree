@@ -1,43 +1,12 @@
 #include "core/api.hpp"
 #include "core/entry-meta.hpp"
+#include "core/stat-macros.hpp"
 
 #include <cerrno>
 #include <cstring>
 
-#include <sys/stat.h>
-
 #if defined(S_IFLNK)
 # include <unistd.h>
-#endif
-
-#ifndef S_ISREG
-# define S_ISREG(mode) (((mode) & S_IFMT) == S_IFREG)
-#endif
-#ifndef S_ISDIR
-# define S_ISDIR(mode) (((mode) & S_IFMT) == S_IFDIR)
-#endif
-#ifndef S_ISCHR
-# define S_ISCHR(mode) (((mode) & S_IFMT) == S_IFCHR)
-#endif
-#ifndef S_ISBLK
-# define S_ISBLK(mode) (((mode) & S_IFMT) == S_IFBLK)
-#endif
-#ifndef S_ISFIFO
-# define S_ISFIFO(mode) (((mode) & S_IFMT) == S_IFIFO)
-#endif
-#ifndef S_ISLNK
-# if defined(S_IFLNK)
-#  define S_ISLNK(mode) (((mode) & S_IFMT) == S_IFLNK)
-# else
-#  define S_ISLNK(mode) (false)
-# endif
-#endif
-#ifndef S_ISSOCK
-# if defined(S_IFSOCK)
-#  define S_ISSOCK(mode) (((mode) & S_IFMT) == S_IFSOCK)
-# else
-#  define S_ISSOCK(mode) (false)
-# endif
 #endif
 
 static bool StatPath(const std::filesystem::path& path, struct stat& st)

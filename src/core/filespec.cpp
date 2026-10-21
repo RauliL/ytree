@@ -1,6 +1,8 @@
 #include "core/ui.hpp"
 #include "core/api.hpp"
 
+static constexpr std::size_t FILE_SPEC_LENGTH = 12 + 1;
+
 bool SetFileSpec(const std::string& file_spec)
 {
   if (!SetMatchSpec(file_spec))

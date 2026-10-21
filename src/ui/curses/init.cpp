@@ -1,7 +1,11 @@
+#include <sys/stat.h>
+
 #include "core/profile.hpp"
 #include "core/ui.hpp"
 #include "ui/curses/curses_ui.hpp"
 #include "ui/mouse.hpp"
+
+static constexpr int QUICK_BAUD_RATE = 9600;
 
 static WINDOW *Subwin(WINDOW *orig, int nlines, int ncols,
                       int begin_y, int begin_x);

@@ -2,7 +2,11 @@
 
 #include "core/ui.hpp"
 #include "core/api.hpp"
+#include "core/path.hpp"
+#include "core/stat-macros.hpp"
 #include "util/string-tokenizer.hpp"
+
+static bool MakeDirEntry(DirEntry*, const std::string&);
 
 std::optional<std::string> MakeDirectory(DirEntry *father_dir_entry)
 {
@@ -27,10 +31,7 @@ std::optional<std::string> MakeDirectory(DirEntry *father_dir_entry)
   return name;
 }
 
-
-
-
-bool MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name)
+static bool MakeDirEntry(DirEntry *father_dir_entry, const std::string& dir_name)
 {
   bool result = false;
 

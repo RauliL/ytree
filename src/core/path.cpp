@@ -14,6 +14,50 @@ bool IsRoot(const std::string& path)
     path[0] == std::filesystem::path::preferred_separator;
 }
 
+static bool CheckPermissions(
+  const std::filesystem::path& path,
+  const std::filesystem::perms& owner,
+  const std::filesystem::perms& group,
+  const std::filesystem::perms& others
+)
+{
+  std::error_code ec;
+  const auto status = std::filesystem::status(path, ec);
+
+  if (ec)
+  {
+    return false;
+  }
+
+  const auto perms = status.permissions();
+
+  return (
+    ((perms & owner) != std::filesystem::perms::none) |
+    ((perms & group) != std::filesystem::perms::none) |
+    ((perms & others) != std::filesystem::perms::none)
+  );
+}
+
+bool IsReadable(const std::filesystem::path& path)
+{
+  return CheckPermissions(
+    path,
+    std::filesystem::perms::owner_read,
+    std::filesystem::perms::group_read,
+    std::filesystem::perms::others_read
+  );
+}
+
+bool IsWriteable(const std::filesystem::path& path)
+{
+  return CheckPermissions(
+    path,
+    std::filesystem::perms::owner_write,
+    std::filesystem::perms::group_write,
+    std::filesystem::perms::others_write
+  );
+}
+
 std::filesystem::path FileEntry::GetPath() const
 {
   return ::GetPath(Dir().get()) / name;

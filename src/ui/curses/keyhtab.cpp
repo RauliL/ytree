@@ -122,8 +122,14 @@ static std::vector<std::string> filename_completion_matches(const std::string& t
   return result;
 }
 
-void PrintMtchEntry(int entry_no, int y, int color,
-                   int start_x, int *hide_left, int *hide_right)
+static void PrintMtchEntry(
+  int entry_no,
+  int y,
+  int color,
+  int start_x,
+  int* hide_left,
+  int* hide_right
+)
 {
   int     n;
   char    buffer[BUFSIZ];
@@ -197,13 +203,13 @@ void PrintMtchEntry(int entry_no, int y, int color,
   return;
 }
 
-int DisplayMatches()
+static void DisplayMatches()
 {
-  int i, hilight_no, p_y;
+  int hilight_no = disp_begin_pos + cursor_pos;
+  int p_y = -1;
+  int i;
   int hide_left, hide_right;
 
-  hilight_no = disp_begin_pos + cursor_pos;
-  p_y = -1;
   werase(matches_window);
   for(i=0; i < MatchesWindowHeight(); i++)
   {
@@ -218,7 +224,6 @@ int DisplayMatches()
     PrintMtchEntry(disp_begin_pos + p_y, p_y, HIMTCH_COLOR,
             0, &hide_left, &hide_right);
   }
-  return 0;
 }
 
 std::optional<std::string> GetMatches(const std::string& base)

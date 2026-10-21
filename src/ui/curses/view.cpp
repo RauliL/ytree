@@ -1,7 +1,11 @@
 #include <cstring>
 
+#include <fcntl.h>
+
 #include "core/commands.hpp"
+#include "core/path.hpp"
 #include "core/profile.hpp"
+#include "core/stat-macros.hpp"
 #include "core/ui.hpp"
 #include "ui/mouse.hpp"
 #include "ui/curses/curses_ui.hpp"
@@ -201,7 +205,7 @@ static bool ViewArchiveFile(const std::filesystem::path& file_path)
   return result;
 }
 
-void printhexline(WINDOW *win, char *line, char *buf, int r, long offset)
+static void printhexline(WINDOW *win, char *line, char *buf, int r, long offset)
 {
     int i;
     if (r==0)
@@ -237,7 +241,7 @@ void printhexline(WINDOW *win, char *line, char *buf, int r, long offset)
     return;
 }
 
-void update_line(WINDOW *win, long line)
+static void update_line(WINDOW *win, long line)
 {
     int r;
     std::vector<unsigned char> buf(BYTES);
@@ -258,7 +262,7 @@ void update_line(WINDOW *win, long line)
     printhexline(win, line_string.data(), reinterpret_cast<char*>(buf.data()), r, (line - 1) * (BYTES));
 }
 
-void scroll_down(WINDOW *win)
+static void scroll_down(WINDOW *win)
 {
     scrollok(win,true);
     wscrl(win,1);
@@ -269,7 +273,7 @@ void scroll_down(WINDOW *win)
     doupdate();
 }
 
-void scroll_up(WINDOW *win)
+static void scroll_up(WINDOW *win)
 {
     scrollok(win,true);
     wscrl(win,-1);
@@ -280,7 +284,7 @@ void scroll_up(WINDOW *win)
     doupdate();
 }
 
-void update_all_lines(WINDOW *win, char l)
+static void update_all_lines(WINDOW *win, char l)
 {
     long i;
 
@@ -293,7 +297,7 @@ void update_all_lines(WINDOW *win, char l)
     doupdate();
 }
 
-void Change2Edit(const std::string& file_path)
+static void Change2Edit(const std::string& file_path)
 {
     int i;
 
@@ -313,7 +317,7 @@ void Change2Edit(const std::string& file_path)
     return;
 }
 
-void Change2View(const std::string& file_path)
+static void Change2View(const std::string& file_path)
 {
     int i;
 
@@ -333,7 +337,7 @@ void Change2View(const std::string& file_path)
     return;
 }
 
-void SetupViewWindow(const std::string& file_path)
+static void SetupViewWindow(const std::string& file_path)
 {
     int i;
 
@@ -398,16 +402,22 @@ static ui::InputEvent ReadViewerEvent()
   return ev;
 }
 
-unsigned char hexval(unsigned char v) {
-    if (v >= 'a' && v <= 'f')
-        v = v - 'a' + 10;
-    else if (v >= '0' && v <= '9')
-        v = v - '0';
-    return v;
+static inline unsigned char hexval(unsigned char v)
+{
+  if (v >= 'a' && v <= 'f')
+  {
+    v = v - 'a' + 10;
+  }
+  else if (v >= '0' && v <= '9')
+  {
+    v = v - '0';
+  }
+
+  return v;
 }
 
 
-void change_char(int ch)
+static void change_char(int ch)
 {
 
     CHANGES *cambio=nullptr;
@@ -479,7 +489,7 @@ void change_char(int ch)
 }
 
 
-void move_right(WINDOW *win)
+static void move_right(WINDOW *win)
 {
    fstat(fd,&fdstat);
    cursor_pos_x++;
@@ -510,7 +520,7 @@ void move_right(WINDOW *win)
     return;
 }
 
-void hex_edit(const std::string& file_path)
+static void hex_edit(const std::string& file_path)
 {
     bool QUIT=false;
 

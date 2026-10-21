@@ -1,5 +1,8 @@
 #include <functional>
 
+#include <sys/wait.h>
+#include <unistd.h>
+
 #include "core/api.hpp"
 #include "core/profile.hpp"
 #include "core/ui.hpp"
@@ -85,7 +88,7 @@ bool LoginDisk(const std::string& path)
 
   statistic.path = path;
   statistic.login_path = path;
-  statistic.file_spec = DEFAULT_FILE_SPEC;
+  statistic.file_spec = "*";
   statistic.tape_name = DEFAULT_TAPEDEV;
   statistic.kind_of_sort = { SortKey::Name, SortOrder::Ascending };
   statistic.tree->meta = *root_meta;
@@ -469,7 +472,7 @@ bool LoginDisk(const std::string& path)
       return false;
     }
 
-    command_line += ERR_TO_NULL;
+    command_line += " 2> /dev/null";
 
 #ifdef DEBUG
     std::fprintf(stderr, "system( \"%s\" )\n", command_line.c_str());

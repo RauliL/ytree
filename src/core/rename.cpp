@@ -2,6 +2,7 @@
 
 #include "core/ui.hpp"
 #include "core/api.hpp"
+#include "core/path.hpp"
 
 static bool RenameDirEntry(
   const std::filesystem::path&,
