@@ -104,7 +104,8 @@ std::string MakeExtractCommandLine(
   const std::string& cmd
 );
 std::optional<std::string> MakeDirectory(DirEntry *father_dir_entry);
-extern std::time_t Mktime(std::tm *tm);
+/** Convert local calendar fields in `tm` to a system_clock time_point. */
+EntryMeta::time_type TimePointFromLocalTm(const std::tm& tm);
 bool TryInsertArchiveDirEntry(
   const std::shared_ptr<DirEntry>& tree,
   const char* dir,

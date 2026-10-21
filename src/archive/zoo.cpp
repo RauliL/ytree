@@ -70,7 +70,7 @@ static std::optional<archive_meta::NamedEntry> ParseZOOListing(
 
   tm_struct.tm_isdst = -1;
 
-  entry.meta.mtime = std::chrono::system_clock::from_time_t(Mktime(&tm_struct));
+  entry.meta.mtime = TimePointFromLocalTm(tm_struct);
 
   // Attributes
 

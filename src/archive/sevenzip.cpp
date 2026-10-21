@@ -199,7 +199,7 @@ bool ReadTreeFrom7ZIP(const std::shared_ptr<DirEntry>& dir_entry, FILE* f)
 
       if (ParseModified(ValueAfter(*line, kModifiedPrefix), &tm_struct))
       {
-        meta.mtime = std::chrono::system_clock::from_time_t(Mktime(&tm_struct));
+        meta.mtime = TimePointFromLocalTm(tm_struct);
       }
     }
     else if (StartsWith(*line, kAttributesPrefix))

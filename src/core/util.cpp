@@ -362,6 +362,30 @@ std::string FormatMetaNlink(const EntryMeta& meta)
   return std::to_string(*meta.nlink);
 }
 
+EntryMeta::time_type TimePointFromLocalTm(const std::tm& tm)
+{
+#if defined(YTREE_HAS_STD_CHRONO_TZ)
+  using namespace std::chrono;
+
+  const year_month_day ymd{
+    year{tm.tm_year + 1900},
+    month{static_cast<unsigned>(tm.tm_mon + 1)},
+    day{static_cast<unsigned>(tm.tm_mday)}
+  };
+  const auto local =
+    local_days{ymd} +
+    hours{tm.tm_hour} +
+    minutes{tm.tm_min} +
+    seconds{tm.tm_sec};
+
+  return current_zone()->to_sys(local, choose::earliest);
+#else
+  std::tm local_tm = tm;
+
+  return std::chrono::system_clock::from_time_t(std::mktime(&local_tm));
+#endif
+}
+
 std::string CTime(std::time_t f_time)
 {
 #if defined(YTREE_HAS_STD_CHRONO_TZ)
@@ -370,26 +394,29 @@ std::string CTime(std::time_t f_time)
   const auto tp = system_clock::from_time_t(f_time);
   const auto local = zoned_time{current_zone(), floor<seconds>(tp)};
 
-  if(system_clock::now() - tp > seconds{31536000L})
+  if (system_clock::now() - tp > seconds{31536000L})
   {
-    /* Differenz groesser als 1 Jahr */
-    /*-------------------------------*/
-
+    // Differenz groesser als 1 Jahr
     return std::format("{:%b %e  %Y}", local);
   }
 
   return std::format("{:%b %e %H:%M}", local);
 #else
   std::tm local_tm{};
-  if(localtime_r(&f_time, &local_tm) == nullptr)
+  char buffer[64];
+
+  if (!localtime_r(&f_time, &local_tm))
+  {
     return "?";
+  }
 
   const bool show_year = std::time(nullptr) - f_time > 31536000L;
   const char* format = show_year ? "%b %e  %Y" : "%b %e %H:%M";
 
-  char buffer[64];
-  if(std::strftime(buffer, sizeof(buffer), format, &local_tm) == 0)
+  if (std::strftime(buffer, sizeof(buffer), format, &local_tm) == 0)
+  {
     return "?";
+  }
 
   return buffer;
 #endif

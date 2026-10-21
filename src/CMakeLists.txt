@@ -118,7 +118,6 @@ set(
   core/login.cpp
   core/match.cpp
   core/mkdir.cpp
-  core/mktime.cpp
   core/move.cpp
   core/passwd.cpp
   core/path.cpp

@@ -90,7 +90,7 @@ static std::optional<archive_meta::NamedEntry> ParseTARListing(
   tm_struct.tm_sec = 0;
   tm_struct.tm_isdst = -1;
 
-  entry.meta.mtime = std::chrono::system_clock::from_time_t(Mktime(&tm_struct));
+  entry.meta.mtime = TimePointFromLocalTm(tm_struct);
 
   // Dateiname (may contain spaces; take rest of line)
 
