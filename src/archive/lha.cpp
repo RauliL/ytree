@@ -1,6 +1,7 @@
 #include "archive/macros.hpp"
 #include "core/api.hpp"
 #include "core/archive.hpp"
+#include "util/string.hpp"
 #include "util/string-tokenizer.hpp"
 
 static inline bool IsLHALine(std::string_view line)
@@ -47,13 +48,13 @@ static std::optional<archive_meta::NamedEntry> ParseLHAListing(
   {
     // Owner
 
-    entry.meta.uid = static_cast<std::uint32_t>(SvAtoi(*t));
+    entry.meta.uid = ToInt<std::uint32_t>(*t);
 
     REQUIRE_TOKEN(tok, t, " \t");
 
     // Group
 
-    entry.meta.gid = static_cast<std::uint32_t>(SvAtoi(*t));
+    entry.meta.gid = ToInt<std::uint32_t>(*t);
 
     REQUIRE_TOKEN(tok, t, " \t");
   }
@@ -90,15 +91,15 @@ static std::optional<archive_meta::NamedEntry> ParseLHAListing(
 
   REQUIRE_TOKEN(tok, t, " \t");
 
-  tm_struct.tm_mday = SvAtoi(*t);
+  tm_struct.tm_mday = ToInt(*t);
 
   REQUIRE_TOKEN(tok, t, " \t:");
 
-  tm_struct.tm_hour = SvAtoi(*t);
+  tm_struct.tm_hour = ToInt(*t);
 
   REQUIRE_TOKEN(tok, t, " \t");
 
-  tm_struct.tm_min = SvAtoi(*t);
+  tm_struct.tm_min = ToInt(*t);
 
   REQUIRE_TOKEN(tok, t, " \t");
 
@@ -107,7 +108,7 @@ static std::optional<archive_meta::NamedEntry> ParseLHAListing(
     // ???
     tm_struct.tm_year = 70; // Start UNIX-Time
   } else {
-    tm_struct.tm_year = SvAtoi(*t) - 1900;
+    tm_struct.tm_year = ToInt(*t) - 1900;
     REQUIRE_TOKEN(tok, t, " \t");
   }
 

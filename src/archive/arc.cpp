@@ -1,6 +1,7 @@
 #include "archive/macros.hpp"
 #include "core/api.hpp"
 #include "core/archive.hpp"
+#include "util/string.hpp"
 #include "util/string-tokenizer.hpp"
 
 static inline bool IsARCEntry(std::string_view line)
@@ -50,7 +51,7 @@ static std::optional<archive_meta::NamedEntry> ParseARCListing(
 
   // M-Datum
 
-  tm_struct.tm_mday = SvAtoi(*t);
+  tm_struct.tm_mday = ToInt(*t);
 
   REQUIRE_TOKEN(tok, t, " \t");
 
@@ -58,7 +59,7 @@ static std::optional<archive_meta::NamedEntry> ParseARCListing(
 
   REQUIRE_TOKEN(tok, t, " \t");
 
-  tm_struct.tm_year = SvAtoi(*t);
+  tm_struct.tm_year = ToInt(*t);
   if (tm_struct.tm_year < 70)
   {
     tm_struct.tm_year += 100;
@@ -66,7 +67,7 @@ static std::optional<archive_meta::NamedEntry> ParseARCListing(
 
   REQUIRE_TOKEN(tok, t, " \t:");
 
-  tm_struct.tm_hour = SvAtoi(*t);
+  tm_struct.tm_hour = ToInt(*t);
 
   REQUIRE_TOKEN(tok, t, " \t");
 
@@ -76,7 +77,7 @@ static std::optional<archive_meta::NamedEntry> ParseARCListing(
   }
 
   const auto min_token = t->empty() ? *t : t->substr(0, t->size() - 1);
-  tm_struct.tm_min = SvAtoi(min_token);
+  tm_struct.tm_min = ToInt(min_token);
 
   REQUIRE_TOKEN(tok, t, " \t");
 

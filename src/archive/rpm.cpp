@@ -1,5 +1,6 @@
 #include "archive/macros.hpp"
 #include "core/api.hpp"
+#include "util/string.hpp"
 #include "util/string-tokenizer.hpp"
 
 static std::optional<archive_meta::NamedEntry> ParseRPMListing(
@@ -30,7 +31,7 @@ static std::optional<archive_meta::NamedEntry> ParseRPMListing(
   // M-Datum
 
   {
-    const auto mtime = static_cast<std::time_t>(SvAtoi(*t));
+    const auto mtime = ToInt<std::time_t>(*t);
 
     if (mtime != 0)
     {
@@ -59,7 +60,7 @@ static std::optional<archive_meta::NamedEntry> ParseRPMListing(
   {
     id = *owner_id_ptr;
   } else {
-    id = SvAtoi(*t);
+    id = ToInt(*t);
   }
   entry.meta.uid = static_cast<std::uint32_t>(id);
 
@@ -70,7 +71,7 @@ static std::optional<archive_meta::NamedEntry> ParseRPMListing(
   {
     id = *group_id_ptr;
   } else {
-    id = SvAtoi(*t);
+    id = ToInt(*t);
   }
   entry.meta.gid = static_cast<std::uint32_t>(id);
 

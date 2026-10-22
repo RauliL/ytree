@@ -153,32 +153,6 @@ extern bool      resize_request;
 extern bool      bypass_small_window;
 extern std::optional<std::string> initial_directory;
 
-inline int SvAtoi(std::string_view s)
-{
-  return static_cast<int>(std::strtol(std::string(s).c_str(), nullptr, 10));
-}
-
-template<class... Args>
-std::string Join(Args&&... args)
-{
-  std::string result;
-  bool first = true;
-  auto append = [&result, &first](const std::string& part)
-  {
-    if (first)
-    {
-      first = false;
-    } else {
-      result.append(1, ' ');
-    }
-    result.append(part);
-  };
-
-  (append(args), ...);
-
-  return result;
-}
-
 // Forward decls used by Format* macros / domain helpers.
 void ErrorEx(const std::string& msg, const std::string& module, int line);
 void Warning(const std::string& msg);

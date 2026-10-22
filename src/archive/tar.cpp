@@ -1,6 +1,7 @@
 #include "archive/macros.hpp"
 #include "core/api.hpp"
 #include "core/archive.hpp"
+#include "util/string.hpp"
 #include "util/string-tokenizer.hpp"
 
 static std::optional<archive_meta::NamedEntry> ParseTARListing(
@@ -28,7 +29,7 @@ static std::optional<archive_meta::NamedEntry> ParseTARListing(
   {
     id = *owner_id_ptr;
   } else {
-    id = SvAtoi(*t);
+    id = ToInt(*t);
   }
   entry.meta.uid = static_cast<std::uint32_t>(id);
 
@@ -39,7 +40,7 @@ static std::optional<archive_meta::NamedEntry> ParseTARListing(
   {
     id = *group_id_ptr;
   } else {
-    id = SvAtoi(*t);
+    id = ToInt(*t);
   }
   entry.meta.gid = static_cast<std::uint32_t>(id);
 
@@ -59,16 +60,16 @@ static std::optional<archive_meta::NamedEntry> ParseTARListing(
     tm_struct.tm_mon = *month;
 
     REQUIRE_TOKEN(tok, t, " \t");
-    tm_struct.tm_mday = SvAtoi(*t);
+    tm_struct.tm_mday = ToInt(*t);
 
     REQUIRE_TOKEN(tok, t, " \t:");
-    tm_struct.tm_hour = SvAtoi(*t);
+    tm_struct.tm_hour = ToInt(*t);
 
     REQUIRE_TOKEN(tok, t, " \t");
-    tm_struct.tm_min = SvAtoi(*t);
+    tm_struct.tm_min = ToInt(*t);
 
     REQUIRE_TOKEN(tok, t, " \t");
-    tm_struct.tm_year = SvAtoi(*t) - 1900;
+    tm_struct.tm_year = ToInt(*t) - 1900;
   } else {
     // YYYY-MM-DD form
     if (t->size() < 10)
@@ -76,15 +77,15 @@ static std::optional<archive_meta::NamedEntry> ParseTARListing(
       return std::nullopt;
     }
 
-    tm_struct.tm_year = SvAtoi(t->substr(0, 4)) - 1900;
-    tm_struct.tm_mon = SvAtoi(t->substr(5, 2)) - 1;
-    tm_struct.tm_mday = SvAtoi(t->substr(8, 2));
+    tm_struct.tm_year = ToInt(t->substr(0, 4)) - 1900;
+    tm_struct.tm_mon = ToInt(t->substr(5, 2)) - 1;
+    tm_struct.tm_mday = ToInt(t->substr(8, 2));
 
     REQUIRE_TOKEN(tok, t, " \t:");
-    tm_struct.tm_hour = SvAtoi(*t);
+    tm_struct.tm_hour = ToInt(*t);
 
     REQUIRE_TOKEN(tok, t, " \t");
-    tm_struct.tm_min = SvAtoi(*t);
+    tm_struct.tm_min = ToInt(*t);
   }
 
   tm_struct.tm_sec = 0;

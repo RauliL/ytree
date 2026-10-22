@@ -1,8 +1,7 @@
 #include "archive/macros.hpp"
 #include "core/api.hpp"
+#include "util/string.hpp"
 #include "util/string-tokenizer.hpp"
-
-#include <cctype>
 
 static inline bool LooksLikeOldRARListing(std::string_view line)
 {
@@ -56,9 +55,9 @@ static std::optional<archive_meta::NamedEntry> ParseOldRARListing(
 
   if (t->size() == 8)
   {
-    tm_struct.tm_mday = SvAtoi(t->substr(0, 2));
-    tm_struct.tm_mon = SvAtoi(t->substr(3, 2));
-    tm_struct.tm_year = SvAtoi(t->substr(6, 2));
+    tm_struct.tm_mday = ToInt(t->substr(0, 2));
+    tm_struct.tm_mon = ToInt(t->substr(3, 2));
+    tm_struct.tm_year = ToInt(t->substr(6, 2));
 
     if (tm_struct.tm_year < 70)
     {
@@ -72,8 +71,8 @@ static std::optional<archive_meta::NamedEntry> ParseOldRARListing(
 
   if (t->size() == 5)
   {
-    tm_struct.tm_hour = SvAtoi(t->substr(0, 2));
-    tm_struct.tm_min = SvAtoi(t->substr(3, 2));
+    tm_struct.tm_hour = ToInt(t->substr(0, 2));
+    tm_struct.tm_min = ToInt(t->substr(3, 2));
   }
 
   tm_struct.tm_sec = 0;
@@ -153,9 +152,9 @@ static std::optional<archive_meta::NamedEntry> ParseNewRARListing(
   bool have_date = false;
   if (t->size() == 10 && (*t)[0] != '?')
   {
-    tm_struct.tm_year = SvAtoi(t->substr(0, 4)) - 1900;
-    tm_struct.tm_mon = SvAtoi(t->substr(5, 2)) - 1;
-    tm_struct.tm_mday = SvAtoi(t->substr(8, 2));
+    tm_struct.tm_year = ToInt(t->substr(0, 4)) - 1900;
+    tm_struct.tm_mon = ToInt(t->substr(5, 2)) - 1;
+    tm_struct.tm_mday = ToInt(t->substr(8, 2));
     have_date = true;
   }
 
@@ -165,8 +164,8 @@ static std::optional<archive_meta::NamedEntry> ParseNewRARListing(
 
   if (t->size() == 5 && (*t)[2] == ':' && (*t)[0] != '?')
   {
-    tm_struct.tm_hour = SvAtoi(t->substr(0, 2));
-    tm_struct.tm_min = SvAtoi(t->substr(3, 2));
+    tm_struct.tm_hour = ToInt(t->substr(0, 2));
+    tm_struct.tm_min = ToInt(t->substr(3, 2));
     have_date = true;
   }
 

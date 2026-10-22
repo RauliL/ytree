@@ -2,6 +2,7 @@
 #include "core/api.hpp"
 #include "core/archive.hpp"
 #include "core/stat-macros.hpp"
+#include "util/string.hpp"
 #include "util/string-tokenizer.hpp"
 
 static inline bool IsZOOLine(std::string_view line)
@@ -40,7 +41,7 @@ static std::optional<archive_meta::NamedEntry> ParseZOOListing(
 
   // M-Datum
 
-  tm_struct.tm_mday = SvAtoi(*t);
+  tm_struct.tm_mday = ToInt(*t);
 
   REQUIRE_TOKEN(tok, t, " \t:");
 
@@ -48,7 +49,7 @@ static std::optional<archive_meta::NamedEntry> ParseZOOListing(
 
   REQUIRE_TOKEN(tok, t, " \t");
 
-  tm_struct.tm_year = SvAtoi(*t);
+  tm_struct.tm_year = ToInt(*t);
   if (tm_struct.tm_year < 70)
   {
     tm_struct.tm_year += 100;
@@ -56,15 +57,15 @@ static std::optional<archive_meta::NamedEntry> ParseZOOListing(
 
   REQUIRE_TOKEN(tok, t, " \t:");
 
-  tm_struct.tm_hour = SvAtoi(*t);
+  tm_struct.tm_hour = ToInt(*t);
 
   REQUIRE_TOKEN(tok, t, " \t:");
 
-  tm_struct.tm_min = SvAtoi(*t);
+  tm_struct.tm_min = ToInt(*t);
 
   REQUIRE_TOKEN(tok, t, " \t");
 
-  tm_struct.tm_sec = SvAtoi(*t);
+  tm_struct.tm_sec = ToInt(*t);
 
   REQUIRE_TOKEN(tok, t, " \t");
 

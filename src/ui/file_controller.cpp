@@ -343,22 +343,6 @@ static bool SortByExtension(const FileEntry* e1, const FileEntry* e2)
     ? Compare(ext1, ext2)
     : CompareIgnoreCase(ext1, ext2);
 
-  /* Ok, this isn't optimized */
-  if (
-    (do_case && !ext1.compare(ext2)) ||
-    (!do_case && !strcasecmp(ext1.c_str(), ext2.c_str()))
-  )
-  {
-    return SortByName(e1, e2);
-  }
-
-  if (do_case)
-  {
-    result = ext1.compare(ext2);
-  } else {
-    result = strcasecmp(ext1.c_str(), ext2.c_str());
-  }
-
   return (do_case ? result : -result) < 0;
 }
 

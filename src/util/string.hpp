@@ -2,6 +2,16 @@
 
 #include <string>
 
+template<class T = int>
+inline int ToInt(std::string_view input)
+{
+  return static_cast<T>(std::strtol(
+    std::string(input).c_str(),
+    nullptr,
+    10
+  ));
+}
+
 template<class... Args>
 std::string Join(Args&&... args)
 {

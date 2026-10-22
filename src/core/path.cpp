@@ -1,18 +1,7 @@
-#include "core/api.hpp"
+#include "core/dir-entry.hpp"
+#include "core/path.hpp"
 
 #include <peelo/xdg.hpp>
-
-static inline bool IsAbsolute(const std::string& path)
-{
-  return !path.empty() &&
-    path[0] == std::filesystem::path::preferred_separator;
-}
-
-bool IsRoot(const std::string& path)
-{
-  return path.length() == 1 &&
-    path[0] == std::filesystem::path::preferred_separator;
-}
 
 static bool CheckPermissions(
   const std::filesystem::path& path,
@@ -58,56 +47,23 @@ bool IsWriteable(const std::filesystem::path& path)
   );
 }
 
-std::filesystem::path FileEntry::GetPath() const
+std::optional<std::string_view> GetExtension(std::string_view path)
 {
-  return ::GetPath(Dir().get()) / name;
-}
+  std::string_view::size_type dot;
 
-std::filesystem::path FileEntry::GetRealPath() const
-{
-  if (mode == Mode::DISK_MODE || mode == Mode::USER_MODE)
+  if (path.empty() || path == "." || path == "..")
   {
-    return GetPath();
+    return std::nullopt;
   }
 
-  if (meta.IsLink())
-  {
-    if (IsAbsolute(symlink_target))
-    {
-      return symlink_target;
-    }
+  dot = path.rfind('.');
 
-    return ::GetPath(Dir().get()) / symlink_target;
+  if (dot == 0 || dot == std::string_view::npos)
+  {
+    return std::nullopt;
   }
 
-  return ::GetPath(Dir().get()) / name;
-}
-
-std::filesystem::path DirEntry::GetPath() const
-{
-  std::string result;
-
-  // Parents are owned by the tree, so the raw cursor stays valid while the
-  // temporary `shared_ptr` returned by `Parent()` goes away.
-  for (auto ptr = this; ptr;)
-  {
-    const auto parent = ptr->Parent();
-    const auto is_root = IsRoot(ptr->name);
-
-    if (!is_root)
-    {
-      result.insert(0, ptr->name);
-    }
-    // A nameless root (archive placeholder) doesn't contribute a separator.
-    if (parent && !parent->name.empty())
-    {
-      result.insert(result.begin(), std::filesystem::path::preferred_separator);
-    }
-
-    ptr = parent.get();
-  }
-
-  return result;
+  return path.substr(dot);
 }
 
 std::filesystem::path GetPath(const DirEntry* entry)
