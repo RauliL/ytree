@@ -25,7 +25,9 @@ New features include:
 
 ## Building
 
-Requires a C++20 compiler, CMake 3.14+, and ncurses.
+Requires a C++20 compiler and CMake 3.32+. The terminal UI is drawn with
+[libterm](https://github.com/rizukirr/libterm), which CMake fetches while
+configuring.
 
 In most instances, it should be sufficient to:
 

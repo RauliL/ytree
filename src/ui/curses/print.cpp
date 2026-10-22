@@ -47,7 +47,7 @@ unsigned char MakePrintable(int ch)
 {
   if (std::iscntrl(ch) && static_cast<unsigned char>(ch) < ' ')
   {
-    return ACS_BLOCK;
+    return '?';
   }
 
   return static_cast<unsigned char>(ch);

@@ -2,7 +2,9 @@
 
 #include <fcntl.h>
 
+#include "core/api.hpp"
 #include "core/commands.hpp"
+#include "core/domain.hpp"
 #include "core/path.hpp"
 #include "core/profile.hpp"
 #include "core/stat-macros.hpp"
@@ -840,7 +842,28 @@ bool InternalView(const std::filesystem::path& file_path)
             break;
     }
     }
+    wmove(stdscr, 0, 0);
+    wclrtoeol(stdscr);
     Print(stdscr, 0, 0, "Path: ", MENU_COLOR);
+    if (COLS > 10)
+    {
+      const auto width = static_cast<std::size_t>(COLS - 10);
+      Print(
+        stdscr,
+        0,
+        6,
+        std::format("{:<{}}", FormFilename(statistic.path, width), width),
+        HIMENUS_COLOR
+      );
+    }
+    for (int row = LINES - 3; row < LINES; ++row)
+    {
+      if (row >= 0)
+      {
+        wmove(stdscr, row, 0);
+        wclrtoeol(stdscr);
+      }
+    }
     delwin(VIEW);
     delwin(BORDER);
     touchwin(stdscr);

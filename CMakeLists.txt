@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.32)
 
 project(YTree LANGUAGES C CXX)
 
@@ -24,6 +24,15 @@ fetchcontent_declare(
     v3.4.0
 )
 fetchcontent_makeavailable(tomlplusplus)
+
+fetchcontent_declare(
+  libterm
+  GIT_REPOSITORY
+    https://github.com/rizukirr/libterm.git
+  GIT_TAG
+    v0.1.2
+)
+fetchcontent_makeavailable(libterm)
 
 add_subdirectory(man)
 add_subdirectory(share)

@@ -1,72 +1,13 @@
 #pragma once
 
 /**
- * ncurses binding and UI layout constants.
- * UI translation units include this (usually via ytree.hpp).
+ * Terminal UI binding and layout constants.
+ * The curses-shaped surface is implemented on libterm (ui/term/term_curses.hpp).
  * Core should prefer core/ui.hpp ports over these types.
  */
 
 #include "config.hpp"
-
-#if defined(WITH_UTF8) && __has_include(<ncursesw/ncurses.h>)
-# include <ncursesw/ncurses.h>
-#elif defined(WITH_UTF8) && __has_include(<ncursesw/curses.h>)
-# include <ncursesw/curses.h>
-#elif defined(CURSES_HAVE_NCURSES_NCURSES_H)
-# include <ncurses/ncurses.h>
-#elif defined(CURSES_HAVE_NCURSES_H)
-# include <ncurses.h>
-#elif defined(CURSES_HAVE_NCURSES_CURSES_H)
-# include <ncurses/curses.h>
-#else
-# include <curses.h>
-#endif
-
-#ifndef KEY_BTAB
-#define KEY_BTAB  0x1d
-#endif
-
-#ifndef KEY_END
-#define KEY_END   KEY_EOL
-#endif
-
-/* Line-drawing fallbacks when ACS_* is unavailable */
-#ifndef ACS_ULCORNER
-#define ACS_ULCORNER '+'
-#endif
-#ifndef ACS_URCORNER
-#define ACS_URCORNER '+'
-#endif
-#ifndef ACS_LLCORNER
-#define ACS_LLCORNER '+'
-#endif
-#ifndef ACS_LRCORNER
-#define ACS_LRCORNER '+'
-#endif
-#ifndef ACS_VLINE
-#define ACS_VLINE    '|'
-#endif
-#ifndef ACS_HLINE
-#define ACS_HLINE    '-'
-#endif
-#ifndef ACS_RTEE
-#define ACS_RTEE    '+'
-#endif
-#ifndef ACS_LTEE
-#define ACS_LTEE    '+'
-#endif
-#ifndef ACS_BTEE
-#define ACS_BTEE    '+'
-#endif
-#ifndef ACS_TTEE
-#define ACS_TTEE    '+'
-#endif
-#ifndef ACS_BLOCK
-#define ACS_BLOCK   '?'
-#endif
-#ifndef ACS_LARROW
-#define ACS_LARROW  '<'
-#endif
+#include "ui/term/term_curses.hpp"
 
 #define DIR_COLOR        1
 #define FILE_COLOR       2

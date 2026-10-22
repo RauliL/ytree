@@ -53,27 +53,6 @@ else()
   )
 endif()
 
-set(CURSES_NEED_NCURSES TRUE)
-if(WITH_UTF8)
-  set(CURSES_NEED_WIDE TRUE)
-endif()
-
-include(FindCurses)
-
-if(NOT CURSES_FOUND)
-  if(WITH_UTF8)
-    message(
-      FATAL_ERROR
-      "wide ncurses development package is required (e.g. libncurses-dev / libncursesw-dev)"
-    )
-  else()
-    message(
-      FATAL_ERROR
-      "ncurses development package is required (e.g. libncurses-dev)"
-    )
-  endif()
-endif()
-
 check_cxx_source_compiles("
 #include <chrono>
 int main()
@@ -167,6 +146,7 @@ set(
   ui/curses/mouse.cpp
   ui/curses/ncurses_backend.cpp
   ui/curses/print.cpp
+  ui/term/term_curses.cpp
   ui/curses/sort.cpp
   ui/curses/stat.cpp
   ui/curses/view.cpp
@@ -213,13 +193,12 @@ target_include_directories(
   ytree
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    $<BUILD_INTERFACE:${CURSES_INCLUDE_DIR}>
 )
 target_link_libraries(
   ytree
   PRIVATE
     ytree_ui_shared
-    ${CURSES_LIBRARIES}
+    Libterm::libterm
 )
 
 install(
