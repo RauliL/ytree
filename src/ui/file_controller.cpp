@@ -246,6 +246,52 @@ static void ReadGlobalFileList(const DirEntry* dir_entry)
   max_linkname_len = global_max_linkname_len;
 }
 
+static inline int Compare(
+  const std::optional<std::string_view>& a,
+  const std::optional<std::string_view>& b
+)
+{
+  return a && b ? a->compare(*b) : a ? a->compare("") : b->compare("");
+}
+
+static int CompareIgnoreCase(std::string_view a, std::string_view b)
+{
+  if (a.empty() || b.empty())
+  {
+    if (a.size() == b.size())
+    {
+      return 0;
+    }
+
+    return a.size() < b.size() ? -1 : 1;
+  }
+
+  const auto n = std::min(a.size(), b.size());
+
+  if (const int cmp = strncasecmp(a.data(), b.data(), n))
+  {
+    return cmp;
+  }
+  else if (a.size() == b.size())
+  {
+    return 0;
+  }
+
+  return a.size() < b.size() ? -1 : 1;
+}
+
+static inline int CompareIgnoreCase(
+  const std::optional<std::string_view>& a,
+  const std::optional<std::string_view>& b
+)
+{
+  return a && b
+    ? CompareIgnoreCase(*a, *b)
+    : a
+    ? CompareIgnoreCase(*a, "")
+    : CompareIgnoreCase(*b, "");
+}
+
 static void SortFileEntryList()
 {
   std::function<bool(const FileEntry*, const FileEntry*)> compare;
@@ -291,9 +337,11 @@ static bool SortByName(const FileEntry* e1, const FileEntry* e2)
 
 static bool SortByExtension(const FileEntry* e1, const FileEntry* e2)
 {
-  const auto ext1 = e1->GetExtension().value_or("");
-  const auto ext2 = e2->GetExtension().value_or("");
-  int result;
+  const auto ext1 = e1->GetExtension();
+  const auto ext2 = e2->GetExtension();
+  const int result = do_case
+    ? Compare(ext1, ext2)
+    : CompareIgnoreCase(ext1, ext2);
 
   /* Ok, this isn't optimized */
   if (

@@ -108,9 +108,11 @@ set(
   core/chown.cpp
   core/copy.cpp
   core/delete.cpp
+  core/dir-entry.cpp
   core/edit.cpp
   core/entry-meta.cpp
   core/execute.cpp
+  core/file-entry.cpp
   core/filespec.cpp
   core/freesp.cpp
   core/group.cpp

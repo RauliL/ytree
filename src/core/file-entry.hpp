@@ -35,17 +35,7 @@ struct FileEntry : Entry
 
   std::filesystem::path GetRealPath() const;
 
-  std::optional<std::string> GetExtension() const
-  {
-    const auto extension = std::filesystem::path(name).extension();
-
-    if (extension.empty())
-    {
-      return std::nullopt;
-    }
-
-    return extension.string();
-  }
+  std::optional<std::string_view> GetExtension() const;
 
   bool Delete() override;
 
