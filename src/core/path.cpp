@@ -21,8 +21,8 @@ static bool CheckPermissions(
   const auto perms = status.permissions();
 
   return (
-    ((perms & owner) != std::filesystem::perms::none) |
-    ((perms & group) != std::filesystem::perms::none) |
+    ((perms & owner) != std::filesystem::perms::none) ||
+    ((perms & group) != std::filesystem::perms::none) ||
     ((perms & others) != std::filesystem::perms::none)
   );
 }
