@@ -4,6 +4,7 @@
 #include "core/path.hpp"
 #include "core/profile.hpp"
 #include "core/ui.hpp"
+#include "util/string.hpp"
 
 bool Edit(const DirEntry* dir_entry, const std::string& file_path)
 {

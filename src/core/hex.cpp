@@ -4,6 +4,7 @@
 #include "core/path.hpp"
 #include "core/profile.hpp"
 #include "core/ui.hpp"
+#include "util/string.hpp"
 
 static bool ViewHexFile(const std::filesystem::path& file_path);
 static bool ViewHexArchiveFile(const std::filesystem::path& file_path);

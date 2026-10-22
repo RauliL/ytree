@@ -6,6 +6,7 @@
 #include "core/api.hpp"
 #include "core/profile.hpp"
 #include "core/ui.hpp"
+#include "util/string.hpp"
 
 bool FileEntry::Pipe() const
 {

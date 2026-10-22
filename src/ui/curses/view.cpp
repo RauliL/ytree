@@ -9,6 +9,7 @@
 #include "core/ui.hpp"
 #include "ui/mouse.hpp"
 #include "ui/curses/curses_ui.hpp"
+#include "util/string.hpp"
 
 typedef struct MODIF {
     long pos;

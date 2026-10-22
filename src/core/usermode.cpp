@@ -1,5 +1,6 @@
 #include "core/api.hpp"
 #include "core/commands.hpp"
+#include "util/string.hpp"
 
 using UserActionLookup = std::optional<std::string> (*)(int chkey, int* pchremap);
 
